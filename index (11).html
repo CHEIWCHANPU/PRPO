@@ -1,0 +1,1735 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PR/PO Dashboard | CHEIW CHAN DATA</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0d0f14;
+    --surface: #161920;
+    --surface2: #1e2230;
+    --border: #2a2f3d;
+    --accent: #00e5a0;
+    --accent2: #6c63ff;
+    --warn: #f59e0b;
+    --danger: #ef4444;
+    --success: #10b981;
+    --text: #e8eaf0;
+    --muted: #7b8097;
+    --font: 'IBM Plex Sans Thai', sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .logo-mark {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+
+  .logo-text {
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+
+  .logo-sub {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    display: block;
+  }
+
+  .nav-tabs {
+    display: flex;
+    gap: 0.25rem;
+  }
+
+  .nav-tab {
+    padding: 0.4rem 1rem;
+    font-family: var(--font);
+    font-size: 0.8rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: transparent;
+    color: var(--muted);
+  }
+
+  .nav-tab:hover { background: var(--surface2); color: var(--text); }
+  .nav-tab.active { background: var(--accent); color: #000; }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .sync-btn {
+    padding: 0.4rem 0.9rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .sync-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .last-sync {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+
+  /* MAIN */
+  main { padding: 1.5rem 2rem; max-width: 1400px; margin: 0 auto; }
+
+  /* PAGE VIEWS */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* STAT CARDS */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.15s;
+  }
+
+  .stat-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+
+  .stat-card.total::before { background: var(--accent2); }
+  .stat-card.done::before { background: var(--success); }
+  .stat-card.progress::before { background: var(--warn); }
+  .stat-card.incomplete::before { background: var(--danger); }
+
+  .stat-label {
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .stat-value {
+    font-family: var(--mono);
+    font-size: 2.2rem;
+    font-weight: 500;
+    line-height: 1;
+    margin-bottom: 0.35rem;
+  }
+
+  .stat-card.total .stat-value { color: var(--accent2); }
+  .stat-card.done .stat-value { color: var(--success); }
+  .stat-card.progress .stat-value { color: var(--warn); }
+  .stat-card.incomplete .stat-value { color: var(--danger); }
+
+  .stat-meta { font-size: 0.75rem; color: var(--muted); }
+
+  /* CHARTS ROW */
+  .chart-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+  }
+
+  .chart-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  .chart-wrap { position: relative; height: 180px; }
+
+  /* TOOLBAR */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .search-box {
+    flex: 1;
+    min-width: 200px;
+    position: relative;
+  }
+
+  .search-box input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.55rem 1rem 0.55rem 2.5rem;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 0.85rem;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+
+  .search-box input:focus { border-color: var(--accent); }
+  .search-box input::placeholder { color: var(--muted); }
+
+  .search-icon {
+    position: absolute;
+    left: 0.8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  .filter-select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.55rem 0.9rem;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 0.82rem;
+    cursor: pointer;
+    outline: none;
+  }
+
+  .filter-select:focus { border-color: var(--accent); }
+
+  .btn {
+    padding: 0.55rem 1.1rem;
+    border-radius: 8px;
+    font-family: var(--font);
+    font-size: 0.82rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-primary:hover { background: #00c98a; }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--accent); }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-danger:hover { background: #dc2626; }
+
+  /* TABLE */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+
+  thead th {
+    background: var(--surface2);
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    white-space: nowrap;
+    user-select: none;
+  }
+
+  thead th:hover { color: var(--text); }
+  thead th.sort-asc::after { content: ' ↑'; color: var(--accent); }
+  thead th.sort-desc::after { content: ' ↓'; color: var(--accent); }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+    cursor: pointer;
+  }
+
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); }
+
+  tbody td {
+    padding: 0.7rem 1rem;
+    vertical-align: middle;
+  }
+
+  .no-num { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); }
+
+  .part-no {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .part-name { font-weight: 500; }
+
+  .vol {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    text-align: right;
+  }
+
+  .date-cell { font-family: var(--mono); font-size: 0.78rem; color: var(--muted); }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .badge-done { background: rgba(16,185,129,0.15); color: var(--success); border: 1px solid rgba(16,185,129,0.3); }
+  .badge-progress { background: rgba(245,158,11,0.15); color: var(--warn); border: 1px solid rgba(245,158,11,0.3); }
+  .badge-incomplete { background: rgba(239,68,68,0.15); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
+
+  .days-left {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+  }
+
+  .days-urgent { background: rgba(239,68,68,0.15); color: var(--danger); }
+  .days-warn { background: rgba(245,158,11,0.15); color: var(--warn); }
+  .days-ok { background: rgba(16,185,129,0.15); color: var(--success); }
+  .days-done { background: rgba(123,128,151,0.15); color: var(--muted); }
+
+  .row-actions {
+    display: flex;
+    gap: 0.4rem;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  tbody tr:hover .row-actions { opacity: 1; }
+
+  .icon-btn {
+    width: 28px; height: 28px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--muted);
+    font-size: 0.75rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .icon-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,229,160,0.1); }
+  .icon-btn.del:hover { border-color: var(--danger); color: var(--danger); background: rgba(239,68,68,0.1); }
+
+  .table-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .pagination {
+    display: flex;
+    gap: 0.25rem;
+  }
+
+  .page-btn {
+    width: 30px; height: 30px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--muted);
+    font-size: 0.78rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+    font-family: var(--mono);
+  }
+
+  .page-btn:hover, .page-btn.active { border-color: var(--accent); color: var(--accent); }
+  .page-btn.active { background: rgba(0,229,160,0.1); }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    width: 640px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    transform: scale(0.95);
+    transition: transform 0.2s;
+  }
+
+  .modal-overlay.open .modal { transform: scale(1); }
+
+  .modal-header {
+    padding: 1.5rem 1.5rem 1rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .modal-title {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .modal-close {
+    width: 32px; height: 32px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .modal-close:hover { border-color: var(--danger); color: var(--danger); }
+
+  .modal-body { padding: 1.5rem; }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+  .form-group.full { grid-column: 1 / -1; }
+
+  .form-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .form-input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.6rem 0.9rem;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+
+  .form-input:focus { border-color: var(--accent); }
+  .form-input::placeholder { color: var(--muted); }
+
+  select.form-input option { background: var(--surface2); }
+
+  .modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+  }
+
+  /* DETAIL PANEL */
+  .detail-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+
+  .detail-overlay.open { opacity: 1; pointer-events: all; }
+
+  .detail-panel {
+    position: fixed;
+    top: 0; right: 0;
+    width: 480px;
+    height: 100vh;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    padding: 2rem;
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    z-index: 1001;
+  }
+
+  .detail-overlay.open .detail-panel { transform: translateX(0); }
+
+  .detail-header { margin-bottom: 1.5rem; }
+
+  .detail-part-no {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    color: var(--accent);
+    margin-bottom: 0.35rem;
+  }
+
+  .detail-name {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .detail-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .detail-field {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+  }
+
+  .detail-field-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.3rem;
+  }
+
+  .detail-field-value {
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .detail-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+  }
+
+  /* NOTIFICATION */
+  .toast-container {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .toast {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.82rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 260px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    animation: slideIn 0.3s ease;
+  }
+
+  .toast.success { border-color: var(--success); }
+  .toast.error { border-color: var(--danger); }
+  .toast.info { border-color: var(--accent2); }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  /* PROGRESS BAR */
+  .progress-bar-wrap { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; margin: 1rem 0; }
+  .progress-bar { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width 1s ease; }
+
+  /* SUMMARY PAGE */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .maker-list { margin-top: 0.75rem; }
+
+  .maker-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.82rem;
+  }
+
+  .maker-row:last-child { border-bottom: none; }
+  .maker-bar { flex: 1; margin: 0 1rem; height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden; }
+  .maker-fill { height: 100%; background: var(--accent); border-radius: 2px; }
+  .maker-count { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); }
+
+  /* SPINNER */
+  .spinner {
+    width: 20px; height: 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    display: inline-block;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* EMPTY */
+  .empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--muted);
+  }
+
+  .empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .chart-row { grid-template-columns: 1fr; }
+    header { padding: 0 1rem; }
+    main { padding: 1rem; }
+    .detail-panel { width: 100%; }
+  }
+
+  /* APPS SCRIPT INSTRUCTION */
+  .instruction-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .instruction-card h3 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.05em;
+  }
+
+  .code-block {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--accent2);
+    overflow-x: auto;
+    margin-top: 0.5rem;
+    white-space: pre;
+    line-height: 1.8;
+  }
+
+  .step-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px; height: 22px;
+    background: var(--accent);
+    color: #000;
+    border-radius: 50%;
+    font-size: 0.7rem;
+    font-weight: 700;
+    margin-right: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  .step-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    font-size: 0.83rem;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .step-row:last-child { border-bottom: none; }
+
+  .url-display {
+    background: var(--bg);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    padding: 0.4rem 0.75rem;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--accent);
+    margin-top: 0.5rem;
+    word-break: break-all;
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-mark">🏭</div>
+    <div>
+      <span class="logo-text">PR/PO Tracker</span>
+      <span class="logo-sub">CHEIW CHAN DATA · 2026</span>
+    </div>
+  </div>
+
+  <nav class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('dashboard')">📊 Dashboard</button>
+    <button class="nav-tab" onclick="showPage('list')">📋 รายการ</button>
+    <button class="nav-tab" onclick="showPage('summary')">📈 Summary</button>
+    <button class="nav-tab" onclick="showPage('setup')">⚙️ Setup</button>
+  </nav>
+
+  <div class="header-actions">
+    <span class="last-sync" id="lastSync">—</span>
+    <button class="sync-btn" onclick="syncData()">
+      <span id="syncIcon">⟳</span> Sync Sheet
+    </button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ═══════════════ DASHBOARD PAGE ═══════════════ -->
+  <div class="page active" id="page-dashboard">
+    <div class="stat-grid">
+      <div class="stat-card total" onclick="filterByStatus('')">
+        <div class="stat-label">ทั้งหมด</div>
+        <div class="stat-value" id="cnt-total">—</div>
+        <div class="stat-meta">รายการทั้งหมด</div>
+      </div>
+      <div class="stat-card done" onclick="filterByStatus('เสร็จแล้ว')">
+        <div class="stat-label">เสร็จแล้ว ✅</div>
+        <div class="stat-value" id="cnt-done">—</div>
+        <div class="stat-meta">ส่งครบแล้ว</div>
+      </div>
+      <div class="stat-card progress" onclick="filterByStatus('กำลังดำเนินการ')">
+        <div class="stat-label">กำลังดำเนินการ ♻</div>
+        <div class="stat-value" id="cnt-progress">—</div>
+        <div class="stat-meta">อยู่ระหว่างดำเนินการ</div>
+      </div>
+      <div class="stat-card incomplete" onclick="filterByStatus('ส่งยังไม่ครบ')">
+        <div class="stat-label">ส่งยังไม่ครบ ❌</div>
+        <div class="stat-value" id="cnt-incomplete">—</div>
+        <div class="stat-meta">ต้องติดตาม</div>
+      </div>
+    </div>
+
+    <div id="progressSection" style="margin-bottom:1.5rem">
+      <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--muted);margin-bottom:0.4rem">
+        <span>% ความสำเร็จ</span>
+        <span id="pct-value" style="font-family:var(--mono);color:var(--accent)">—</span>
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" id="progressBar" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="chart-row">
+      <div class="chart-card">
+        <div class="chart-title">สัดส่วนสถานะ</div>
+        <div class="chart-wrap"><canvas id="chartStatus"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">VOLUME ตาม MAKER</div>
+        <div class="chart-wrap"><canvas id="chartMaker"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">วันนัดส่ง (รายสัปดาห์)</div>
+        <div class="chart-wrap"><canvas id="chartTimeline"></canvas></div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <div style="padding:1rem 1rem 0.5rem;display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:0.78rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)">รายการล่าสุด / ใกล้ถึงกำหนด</span>
+        <button class="btn btn-secondary" onclick="showPage('list')" style="font-size:0.75rem">ดูทั้งหมด →</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>NO.</th><th>PART NO.</th><th>PART NAME</th><th>MODEL</th>
+            <th>วันนัดส่ง</th><th>เหลือ (วัน)</th><th>สถานะ</th><th>MAKER</th>
+          </tr>
+        </thead>
+        <tbody id="dashTableBody"><tr><td colspan="8" class="empty"><div class="spinner"></div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════════ LIST PAGE ═══════════════ -->
+  <div class="page" id="page-list">
+    <div class="toolbar">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="ค้นหา Part No., Part Name, Maker..." oninput="renderTable()">
+      </div>
+      <select class="filter-select" id="filterStatus" onchange="renderTable()">
+        <option value="">สถานะทั้งหมด</option>
+        <option value="เสร็จแล้ว">✅ เสร็จแล้ว</option>
+        <option value="กำลังดำเนินการ">♻ กำลังดำเนินการ</option>
+        <option value="ส่งยังไม่ครบ">❌ ส่งยังไม่ครบ</option>
+      </select>
+      <select class="filter-select" id="filterMaker" onchange="renderTable()">
+        <option value="">Maker ทั้งหมด</option>
+      </select>
+      <button class="btn btn-primary" onclick="openAddModal()">+ เพิ่มรายการ</button>
+      <button class="btn btn-secondary" onclick="syncData()">⟳ Sync</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortTable('no')">NO.</th>
+            <th onclick="sortTable('partNo')">PART NO.</th>
+            <th onclick="sortTable('partName')">PART NAME</th>
+            <th onclick="sortTable('model')">MODEL</th>
+            <th onclick="sortTable('volume')">VOLUME</th>
+            <th onclick="sortTable('prDate')">เปิด P/R</th>
+            <th onclick="sortTable('dueDate')">วันนัดส่ง</th>
+            <th onclick="sortTable('actualDate')">วันเข้าจริง</th>
+            <th>สถานที่</th>
+            <th onclick="sortTable('status')">สถานะ</th>
+            <th onclick="sortTable('maker')">MAKER</th>
+            <th onclick="sortTable('daysLeft')">เหลือ (วัน)</th>
+            <th>PO/ORDER</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="mainTableBody">
+          <tr><td colspan="14" class="empty"><div class="spinner"></div></td></tr>
+        </tbody>
+      </table>
+      <div class="table-footer">
+        <span id="tableInfo">—</span>
+        <div class="pagination" id="pagination"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ SUMMARY PAGE ═══════════════ -->
+  <div class="page" id="page-summary">
+    <div class="summary-grid">
+      <div class="chart-card">
+        <div class="chart-title">สถิติภาพรวม</div>
+        <div style="margin-top:1rem">
+          <div class="maker-row"><span>จำนวนรายการทั้งหมด</span><span class="maker-count" id="s-total" style="color:var(--accent2)">—</span></div>
+          <div class="maker-row"><span>เสร็จสมบูรณ์</span><span class="maker-count" id="s-done" style="color:var(--success)">—</span></div>
+          <div class="maker-row"><span>กำลังดำเนินการ</span><span class="maker-count" id="s-progress" style="color:var(--warn)">—</span></div>
+          <div class="maker-row"><span>ส่งยังไม่ครบ</span><span class="maker-count" id="s-incomplete" style="color:var(--danger)">—</span></div>
+          <div class="maker-row"><span>Volume รวมทั้งหมด</span><span class="maker-count" id="s-volume" style="color:var(--text)">—</span></div>
+          <div class="maker-row"><span>% ความสำเร็จ</span><span class="maker-count" id="s-pct" style="color:var(--accent)">—</span></div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">กราฟสถานะ (Donut)</div>
+        <div class="chart-wrap"><canvas id="chartStatus2"></canvas></div>
+      </div>
+
+      <div class="chart-card" style="grid-column:1/-1">
+        <div class="chart-title">Volume ตาม Maker</div>
+        <div class="chart-wrap" style="height:220px"><canvas id="chartMaker2"></canvas></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">Maker Rankings</div>
+        <div class="maker-list" id="makerList">—</div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">สถานที่ส่ง</div>
+        <div class="chart-wrap"><canvas id="chartLocation"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ SETUP PAGE ═══════════════ -->
+  <div class="page" id="page-setup">
+    <div class="instruction-card">
+      <h3>🔗 การเชื่อม Google Apps Script กับ Dashboard นี้</h3>
+      <p style="font-size:0.82rem;color:var(--muted);margin-top:0.5rem">ทำตามขั้นตอนด้านล่างเพื่อเชื่อม Google Sheet ของคุณเข้ากับ Dashboard</p>
+    </div>
+
+    <div class="instruction-card">
+      <div class="step-row"><span class="step-badge">1</span><span><strong>เปิด Google Sheet</strong> ของคุณ → คลิก <strong>Extensions</strong> → <strong>Apps Script</strong></span></div>
+      <div class="step-row"><span class="step-badge">2</span><span><strong>ลบโค้ดเดิม</strong>ทิ้งทั้งหมด แล้ว <strong>วางโค้ด Apps Script</strong> ด้านล่างนี้</span></div>
+      <div class="step-row"><span class="step-badge">3</span><span>คลิก <strong>Save</strong> 💾 แล้วคลิก <strong>Deploy → New Deployment</strong></span></div>
+      <div class="step-row"><span class="step-badge">4</span><span>เลือก Type = <strong>Web App</strong>, Execute as = <strong>Me</strong>, Access = <strong>Anyone</strong> → Deploy</span></div>
+      <div class="step-row"><span class="step-badge">5</span><span><strong>คัดลอก URL</strong> ที่ได้ มาวางในช่อง "Web App URL" ด้านล่าง แล้วกด <strong>บันทึก</strong></span></div>
+      <div class="step-row"><span class="step-badge">6</span><span>อัปโหลดไฟล์ <code>index.html</code> ขึ้น <strong>GitHub Pages</strong> แล้วเปิด URL จาก GitHub</span></div>
+    </div>
+
+    <div class="instruction-card">
+      <h3>📋 Apps Script Code (วาง ทั้งหมดใน Code.gs)</h3>
+      <div class="code-block" id="appsScriptCode">// ─── CHEIW CHAN PR/PO TRACKER · Apps Script ───
+const SHEET_NAME = "PR/PO";
+const SS = SpreadsheetApp.getActiveSpreadsheet();
+
+function doGet(e) {
+  const action = e.parameter.action || "getData";
+  let result;
+  try {
+    if (action === "getData")   result = getData();
+    else if (action === "add")  result = addRow(e.parameter);
+    else if (action === "edit") result = editRow(e.parameter);
+    else if (action === "del")  result = deleteRow(e.parameter);
+    else result = { error: "Unknown action" };
+  } catch(err) {
+    result = { error: err.message };
+  }
+  return ContentService
+    .createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function getData() {
+  const sheet = SS.getSheetByName(SHEET_NAME);
+  const rows  = sheet.getDataRange().getValues();
+  const data  = [];
+  for (let i = 8; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r[0] && !r[1]) continue;
+    data.push({
+      no:         r[0],  partNo:   r[1],  partName: r[2],
+      model:      r[3],  volume:   r[4],  prDate:   formatDate(r[5]),
+      dueDate:    formatDate(r[6]),  actualDate: formatDate(r[7]),
+      location:   r[8],  status:   r[9],  maker:    r[10],
+      daysLeft:   r[11], poNo:     r[12], note:     r[13],
+      rowIndex:   i + 1
+    });
+  }
+  return { success: true, data, updated: new Date().toLocaleString("th-TH") };
+}
+
+function formatDate(v) {
+  if (!v) return "";
+  if (v instanceof Date) return Utilities.formatDate(v, "Asia/Bangkok", "dd/MM/yyyy");
+  return String(v);
+}
+
+function addRow(p) {
+  const sheet = SS.getSheetByName(SHEET_NAME);
+  const last  = sheet.getLastRow();
+  const no    = last - 7;
+  sheet.appendRow([
+    no, p.partNo, p.partName, p.model, p.volume,
+    p.prDate, p.dueDate, p.actualDate || "",
+    p.location, p.status, p.maker, p.daysLeft || "",
+    p.poNo || "", p.note || ""
+  ]);
+  updateTimestamp();
+  return { success: true };
+}
+
+function editRow(p) {
+  const sheet = SS.getSheetByName(SHEET_NAME);
+  const ri    = parseInt(p.rowIndex);
+  const cols  = [p.partNo, p.partName, p.model, p.volume,
+                 p.prDate, p.dueDate, p.actualDate || "",
+                 p.location, p.status, p.maker, p.daysLeft || "",
+                 p.poNo || "", p.note || ""];
+  for (let c = 0; c < cols.length; c++) {
+    sheet.getRange(ri, c + 2).setValue(cols[c]);
+  }
+  updateTimestamp();
+  return { success: true };
+}
+
+function deleteRow(p) {
+  const sheet = SS.getSheetByName(SHEET_NAME);
+  sheet.deleteRow(parseInt(p.rowIndex));
+  updateTimestamp();
+  return { success: true };
+}
+
+function updateTimestamp() {
+  const sheet = SS.getSheetByName(SHEET_NAME);
+  sheet.getRange("A22").setValue(
+    "อัปเดตล่าสุด: " + Utilities.formatDate(new Date(), "Asia/Bangkok", "dd/MM/yyyy HH:mm")
+    + " | จัดทำโดย: CHEIW CHAN DATA"
+  );
+}</div>
+      <button class="btn btn-secondary" onclick="copyCode()" style="margin-top:0.75rem">📋 คัดลอกโค้ด</button>
+    </div>
+
+    <div class="instruction-card">
+      <h3>⚙️ ตั้งค่า Web App URL</h3>
+      <p style="font-size:0.82rem;color:var(--muted);margin-top:0.35rem">หลัง Deploy แล้ว วาง URL ที่ได้ที่นี่</p>
+      <div style="display:flex;gap:0.75rem;margin-top:0.75rem;align-items:center">
+        <input type="text" class="form-input" id="webAppUrl" placeholder="https://script.google.com/macros/s/..." style="flex:1">
+        <button class="btn btn-primary" onclick="saveUrl()">บันทึก</button>
+        <button class="btn btn-secondary" onclick="testUrl()">ทดสอบ</button>
+      </div>
+      <div class="url-display" id="currentUrl" style="display:none"></div>
+    </div>
+
+    <div class="instruction-card">
+      <h3>🚀 อัปโหลดขึ้น GitHub Pages</h3>
+      <div class="step-row"><span class="step-badge">1</span><span>ดาวน์โหลดไฟล์ <code>index.html</code> จากหน้านี้</span></div>
+      <div class="step-row"><span class="step-badge">2</span><span>สร้าง Repository ใหม่บน GitHub (ตั้งชื่อ เช่น <code>prpo-dashboard</code>)</span></div>
+      <div class="step-row"><span class="step-badge">3</span><span>Upload ไฟล์ <code>index.html</code> เข้า Repository</span></div>
+      <div class="step-row"><span class="step-badge">4</span><span>ไปที่ Settings → Pages → Source = main branch → Save</span></div>
+      <div class="step-row"><span class="step-badge">5</span><span>GitHub จะให้ URL เช่น <code>https://username.github.io/prpo-dashboard</code></span></div>
+      <button class="btn btn-primary" onclick="downloadHTML()" style="margin-top:0.75rem">⬇️ ดาวน์โหลด index.html</button>
+    </div>
+  </div>
+
+</main>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">เพิ่มรายการใหม่</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editRowIndex">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">PART NO. *</label>
+          <input type="text" class="form-input" id="f-partNo" placeholder="เช่น 11057-1778B">
+        </div>
+        <div class="form-group">
+          <label class="form-label">PART NAME *</label>
+          <input type="text" class="form-input" id="f-partName" placeholder="เช่น BRACKET">
+        </div>
+        <div class="form-group">
+          <label class="form-label">MODEL</label>
+          <input type="text" class="form-input" id="f-model" placeholder="เช่น 8901/8951">
+        </div>
+        <div class="form-group">
+          <label class="form-label">VOLUME</label>
+          <input type="number" class="form-input" id="f-volume" placeholder="250">
+        </div>
+        <div class="form-group">
+          <label class="form-label">เปิด P/R</label>
+          <input type="text" class="form-input" id="f-prDate" placeholder="7/6/2026">
+        </div>
+        <div class="form-group">
+          <label class="form-label">วันนัดส่ง</label>
+          <input type="text" class="form-input" id="f-dueDate" placeholder="13/6/2026">
+        </div>
+        <div class="form-group">
+          <label class="form-label">วันเข้าส่งจริง</label>
+          <input type="text" class="form-input" id="f-actualDate" placeholder="13/6/2026">
+        </div>
+        <div class="form-group">
+          <label class="form-label">สถานที่ส่ง</label>
+          <select class="form-input" id="f-location">
+            <option>CCIR</option><option>CCIS</option><option>CCI</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">สถานะ *</label>
+          <select class="form-input" id="f-status">
+            <option value="กำลังดำเนินการ ♻">กำลังดำเนินการ ♻</option>
+            <option value="เสร็จแล้ว ✅">เสร็จแล้ว ✅</option>
+            <option value="ส่งยังไม่ครบ ❌">ส่งยังไม่ครบ ❌</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">MAKER</label>
+          <input type="text" class="form-input" id="f-maker" placeholder="เช่น KOBAYU">
+        </div>
+        <div class="form-group">
+          <label class="form-label">PO / ORDER NO.</label>
+          <input type="text" class="form-input" id="f-poNo">
+        </div>
+        <div class="form-group">
+          <label class="form-label">หมายเหตุ</label>
+          <input type="text" class="form-input" id="f-note">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveItem()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL PANEL -->
+<div class="detail-overlay" id="detailOverlay" onclick="closeDetail(event)">
+  <div class="detail-panel" id="detailPanel">
+    <div class="detail-header">
+      <div class="detail-part-no" id="d-partNo"></div>
+      <div class="detail-name" id="d-partName"></div>
+      <div class="detail-meta" id="d-meta"></div>
+    </div>
+    <div class="detail-grid" id="d-grid"></div>
+    <div class="detail-actions" id="d-actions"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ─── CONFIG ───
+let WEB_APP_URL = localStorage.getItem('prpo_url') || '';
+let allData = [];
+let filteredData = [];
+let sortCol = 'no';
+let sortDir = 'asc';
+let currentPage = 1;
+const perPage = 20;
+let charts = {};
+let editingItem = null;
+
+// ─── DEMO DATA (ใช้เมื่อยังไม่ได้ตั้งค่า URL) ───
+const DEMO = [
+  { no:1, partNo:'11057-1778B', partName:'BRACKET', model:'8901/8951', volume:250, prDate:'7/6/2026', dueDate:'13/6/2026', actualDate:'13/6/2026', location:'CCIR', status:'เสร็จแล้ว ✅', maker:'เจริญลาภ', daysLeft:'✅ Done', poNo:'', note:'', rowIndex:9 },
+  { no:2, partNo:'9091140860', partName:'NUT', model:'VD00', volume:5000, prDate:'13/6/2026', dueDate:'20/6/2026', actualDate:'', location:'CCIS', status:'กำลังดำเนินการ ♻', maker:'KOBAYU', daysLeft:3, poNo:'', note:'', rowIndex:10 },
+  { no:3, partNo:'9091140480', partName:'NUT PROJECT', model:'VD00', volume:1000, prDate:'13/6/2026', dueDate:'20/6/2026', actualDate:'', location:'CCIS', status:'กำลังดำเนินการ ♻', maker:'KOBAYU', daysLeft:3, poNo:'', note:'', rowIndex:11 },
+  { no:4, partNo:'9091140680', partName:'NUT PROJECTION', model:'VD00', volume:2000, prDate:'13/6/2026', dueDate:'20/6/2026', actualDate:'', location:'CCIS', status:'กำลังดำเนินการ ♻', maker:'KOBAYU', daysLeft:3, poNo:'', note:'', rowIndex:12 },
+  { no:5, partNo:'9049008200', partName:'STUD BOLT', model:'VD00', volume:2500, prDate:'13/6/2026', dueDate:'20/6/2026', actualDate:'', location:'CCIS', status:'กำลังดำเนินการ ♻', maker:'IWATA', daysLeft:3, poNo:'', note:'', rowIndex:13 },
+  { no:6, partNo:'8977982450', partName:'STUD WELD', model:'VD00', volume:2000, prDate:'13/6/2026', dueDate:'20/6/2026', actualDate:'', location:'CCIS', status:'กำลังดำเนินการ ♻', maker:'THAI ASAKAWA', daysLeft:3, poNo:'', note:'', rowIndex:14 },
+  { no:7, partNo:'8981970261-2', partName:'DISTANCE', model:'VD00', volume:500, prDate:'13/6/2026', dueDate:'20/6/2026', actualDate:'', location:'CCIS', status:'กำลังดำเนินการ ♻', maker:'P-WAT', daysLeft:3, poNo:'', note:'', rowIndex:15 },
+  { no:8, partNo:'13061-2288A', partName:'BOSS', model:'2199', volume:1000, prDate:'14/6/2026', dueDate:'24/6/2026', actualDate:'17/6/2026', location:'CCIR', status:'ส่งยังไม่ครบ ❌', maker:'GRM', daysLeft:7, poNo:'', note:'', rowIndex:16 },
+  { no:9, partNo:'53101-MMAA-DA02-H1', partName:'BOSS,R HNDL', model:'MMAA', volume:100, prDate:'17/6/2026', dueDate:'18/7/2026', actualDate:'', location:'CCIS', status:'กำลังดำเนินการ ♻', maker:'YTT', daysLeft:31, poNo:'', note:'', rowIndex:17 },
+  { no:10, partNo:'53151-MMAA-DA02-H1', partName:'BOSS,L HNDL', model:'MMAA', volume:100, prDate:'17/6/2026', dueDate:'18/7/2026', actualDate:'', location:'CCIS', status:'กำลังดำเนินการ ♻', maker:'YTT', daysLeft:31, poNo:'', note:'', rowIndex:18 },
+  { no:11, partNo:'77234-GGZ-J000', partName:'SPG SEAT LOCK', model:'K0GA', volume:150, prDate:'17/6/2026', dueDate:'18/7/2026', actualDate:'', location:'CCIS', status:'กำลังดำเนินการ ♻', maker:'นำสินสปริง', daysLeft:31, poNo:'', note:'', rowIndex:19 },
+];
+
+// ─── INIT ───
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('prpo_url');
+  if (saved) {
+    document.getElementById('webAppUrl').value = saved;
+    document.getElementById('currentUrl').textContent = saved;
+    document.getElementById('currentUrl').style.display = 'block';
+  }
+  loadData();
+});
+
+// ─── PAGE NAV ───
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'summary') renderSummary();
+}
+
+// ─── DATA ───
+async function loadData() {
+  if (!WEB_APP_URL) {
+    allData = DEMO;
+    processData();
+    showToast('ℹ️ ใช้ข้อมูลตัวอย่าง — ตั้งค่า URL ใน Setup เพื่อเชื่อม Sheet จริง', 'info');
+    return;
+  }
+  try {
+    const res = await fetch(WEB_APP_URL + '?action=getData');
+    const json = await res.json();
+    if (json.success) {
+      allData = json.data;
+      document.getElementById('lastSync').textContent = json.updated;
+      processData();
+      showToast('✅ Sync สำเร็จ', 'success');
+    }
+  } catch(e) {
+    allData = DEMO;
+    processData();
+    showToast('⚠️ ไม่สามารถเชื่อมต่อได้ — ใช้ข้อมูล Cache', 'error');
+  }
+}
+
+async function syncData() {
+  const icon = document.getElementById('syncIcon');
+  icon.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px"></span>';
+  await loadData();
+  icon.textContent = '⟳';
+  document.getElementById('lastSync').textContent = new Date().toLocaleTimeString('th-TH');
+}
+
+function processData() {
+  const done       = allData.filter(r => r.status && r.status.includes('เสร็จแล้ว')).length;
+  const progress   = allData.filter(r => r.status && r.status.includes('กำลังดำเนินการ')).length;
+  const incomplete = allData.filter(r => r.status && r.status.includes('ยังไม่ครบ')).length;
+  const total      = allData.length;
+  const pct        = total ? Math.round(done / total * 100) : 0;
+
+  document.getElementById('cnt-total').textContent     = total;
+  document.getElementById('cnt-done').textContent      = done;
+  document.getElementById('cnt-progress').textContent  = progress;
+  document.getElementById('cnt-incomplete').textContent = incomplete;
+  document.getElementById('pct-value').textContent     = pct + '%';
+  setTimeout(() => { document.getElementById('progressBar').style.width = pct + '%'; }, 100);
+
+  populateMakerFilter();
+  renderDashTable();
+  renderTable();
+  renderCharts();
+}
+
+function populateMakerFilter() {
+  const makers = [...new Set(allData.map(r => r.maker).filter(Boolean))].sort();
+  const sel = document.getElementById('filterMaker');
+  sel.innerHTML = '<option value="">Maker ทั้งหมด</option>';
+  makers.forEach(m => {
+    const o = document.createElement('option');
+    o.value = m; o.textContent = m;
+    sel.appendChild(o);
+  });
+}
+
+// ─── DASHBOARD TABLE ───
+function renderDashTable() {
+  const urgent = allData
+    .filter(r => !r.status.includes('เสร็จแล้ว'))
+    .sort((a,b) => (Number(a.daysLeft)||999) - (Number(b.daysLeft)||999))
+    .slice(0, 8);
+  const tbody = document.getElementById('dashTableBody');
+  tbody.innerHTML = urgent.length ? urgent.map(r => `
+    <tr onclick="openDetail(${JSON.stringify(r).replace(/"/g,'&quot;')})">
+      <td class="no-num">${r.no}</td>
+      <td class="part-no">${r.partNo}</td>
+      <td class="part-name">${r.partName}</td>
+      <td><span style="font-family:var(--mono);font-size:0.75rem;color:var(--muted)">${r.model}</span></td>
+      <td class="date-cell">${r.dueDate}</td>
+      <td>${daysTag(r.daysLeft)}</td>
+      <td>${statusBadge(r.status)}</td>
+      <td style="font-size:0.8rem">${r.maker}</td>
+    </tr>`).join('') :
+    `<tr><td colspan="8" class="empty"><div class="empty-icon">🎉</div><div>ทุกรายการเสร็จสมบูรณ์!</div></td></tr>`;
+}
+
+// ─── MAIN TABLE ───
+function getFiltered() {
+  const q      = document.getElementById('searchInput').value.toLowerCase();
+  const status = document.getElementById('filterStatus').value;
+  const maker  = document.getElementById('filterMaker').value;
+  return allData.filter(r => {
+    const matchQ = !q || [r.partNo,r.partName,r.maker,r.model,r.poNo].some(v => (v||'').toLowerCase().includes(q));
+    const matchS = !status || (r.status||'').includes(status);
+    const matchM = !maker  || r.maker === maker;
+    return matchQ && matchS && matchM;
+  });
+}
+
+function renderTable() {
+  filteredData = getFiltered();
+  filteredData.sort((a,b) => {
+    let va = a[sortCol], vb = b[sortCol];
+    if (sortCol === 'volume' || sortCol === 'daysLeft') { va = Number(va)||0; vb = Number(vb)||0; }
+    else { va = String(va||'').toLowerCase(); vb = String(vb||'').toLowerCase(); }
+    return sortDir === 'asc' ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
+  });
+
+  const total   = filteredData.length;
+  const pages   = Math.ceil(total / perPage);
+  currentPage   = Math.min(currentPage, pages || 1);
+  const start   = (currentPage - 1) * perPage;
+  const pageData = filteredData.slice(start, start + perPage);
+
+  const tbody = document.getElementById('mainTableBody');
+  tbody.innerHTML = pageData.length ? pageData.map(r => `
+    <tr onclick="openDetail(${JSON.stringify(r).replace(/"/g,'&quot;')})">
+      <td class="no-num">${r.no}</td>
+      <td class="part-no">${r.partNo}</td>
+      <td class="part-name">${r.partName}</td>
+      <td style="font-family:var(--mono);font-size:0.75rem">${r.model}</td>
+      <td class="vol">${Number(r.volume).toLocaleString()}</td>
+      <td class="date-cell">${r.prDate}</td>
+      <td class="date-cell">${r.dueDate}</td>
+      <td class="date-cell">${r.actualDate||'—'}</td>
+      <td style="font-size:0.78rem">${r.location}</td>
+      <td>${statusBadge(r.status)}</td>
+      <td style="font-size:0.8rem">${r.maker}</td>
+      <td>${daysTag(r.daysLeft)}</td>
+      <td style="font-family:var(--mono);font-size:0.75rem;color:var(--muted)">${r.poNo||'—'}</td>
+      <td>
+        <div class="row-actions" onclick="event.stopPropagation()">
+          <button class="icon-btn" onclick="openEditModal(${JSON.stringify(r).replace(/"/g,'&quot;')})" title="แก้ไข">✏️</button>
+          <button class="icon-btn del" onclick="deleteItem(${r.rowIndex})" title="ลบ">🗑️</button>
+        </div>
+      </td>
+    </tr>`).join('') :
+    `<tr><td colspan="14" class="empty"><div class="empty-icon">🔍</div><div>ไม่พบรายการที่ค้นหา</div></td></tr>`;
+
+  document.getElementById('tableInfo').textContent = `แสดง ${start+1}–${Math.min(start+perPage,total)} จาก ${total} รายการ`;
+  renderPagination(pages);
+}
+
+function sortTable(col) {
+  if (sortCol === col) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  else { sortCol = col; sortDir = 'asc'; }
+  document.querySelectorAll('thead th').forEach(th => th.classList.remove('sort-asc','sort-desc'));
+  renderTable();
+}
+
+function renderPagination(pages) {
+  const el = document.getElementById('pagination');
+  el.innerHTML = '';
+  for (let i = 1; i <= pages; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
+    btn.textContent = i;
+    btn.onclick = () => { currentPage = i; renderTable(); };
+    el.appendChild(btn);
+  }
+}
+
+function filterByStatus(s) {
+  showPage('list');
+  document.querySelector('.nav-tab:nth-child(2)').classList.add('active');
+  document.querySelector('.nav-tab:first-child').classList.remove('active');
+  document.getElementById('filterStatus').value = s;
+  renderTable();
+}
+
+// ─── HELPERS ───
+function statusBadge(status) {
+  if (!status) return '—';
+  if (status.includes('เสร็จแล้ว'))       return `<span class="badge badge-done">✅ เสร็จแล้ว</span>`;
+  if (status.includes('กำลังดำเนินการ'))  return `<span class="badge badge-progress">♻ ดำเนินการ</span>`;
+  if (status.includes('ยังไม่ครบ'))       return `<span class="badge badge-incomplete">❌ ยังไม่ครบ</span>`;
+  return `<span class="badge">${status}</span>`;
+}
+
+function daysTag(days) {
+  if (String(days).includes('Done') || String(days).includes('✅')) return `<span class="days-left days-done">Done</span>`;
+  const n = Number(days);
+  if (isNaN(n)) return `<span class="days-left days-ok">${days}</span>`;
+  if (n <= 3)  return `<span class="days-left days-urgent">${n}d</span>`;
+  if (n <= 10) return `<span class="days-left days-warn">${n}d</span>`;
+  return `<span class="days-left days-ok">${n}d</span>`;
+}
+
+// ─── CHARTS ───
+const PALETTE = ['#00e5a0','#6c63ff','#f59e0b','#ef4444','#3b82f6','#ec4899','#14b8a6','#f97316'];
+
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+function renderCharts() {
+  const done       = allData.filter(r => r.status && r.status.includes('เสร็จแล้ว')).length;
+  const progress   = allData.filter(r => r.status && r.status.includes('กำลังดำเนินการ')).length;
+  const incomplete = allData.filter(r => r.status && r.status.includes('ยังไม่ครบ')).length;
+
+  // Status donut
+  destroyChart('status');
+  charts.status = new Chart(document.getElementById('chartStatus'), {
+    type: 'doughnut',
+    data: {
+      labels: ['เสร็จแล้ว','กำลังดำเนินการ','ส่งยังไม่ครบ'],
+      datasets: [{ data: [done, progress, incomplete], backgroundColor: ['#10b981','#f59e0b','#ef4444'], borderWidth: 0, hoverOffset: 6 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#7b8097', font: { size: 10 } } } } }
+  });
+
+  // Maker bar
+  const makerMap = {};
+  allData.forEach(r => { makerMap[r.maker] = (makerMap[r.maker]||0) + Number(r.volume||0); });
+  const makersSorted = Object.entries(makerMap).sort((a,b) => b[1]-a[1]).slice(0,6);
+
+  destroyChart('maker');
+  charts.maker = new Chart(document.getElementById('chartMaker'), {
+    type: 'bar',
+    data: {
+      labels: makersSorted.map(m => m[0]),
+      datasets: [{ data: makersSorted.map(m => m[1]), backgroundColor: PALETTE, borderRadius: 4 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: { x: { ticks: { color:'#7b8097', font:{size:9} }, grid:{color:'#2a2f3d'} }, y: { ticks: { color:'#7b8097', font:{size:9} }, grid:{display:false} } }
+    }
+  });
+
+  // Timeline (by dueDate week)
+  const weekMap = {};
+  allData.forEach(r => {
+    const d = r.dueDate;
+    if (d) weekMap[d] = (weekMap[d]||0) + 1;
+  });
+  const weeks = Object.entries(weekMap).sort((a,b) => a[0].localeCompare(b[0]));
+
+  destroyChart('timeline');
+  charts.timeline = new Chart(document.getElementById('chartTimeline'), {
+    type: 'line',
+    data: {
+      labels: weeks.map(w => w[0]),
+      datasets: [{ data: weeks.map(w => w[1]), borderColor: '#00e5a0', backgroundColor: 'rgba(0,229,160,0.1)', fill: true, tension: 0.3, pointBackgroundColor: '#00e5a0', pointRadius: 4 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { ticks: { color:'#7b8097', font:{size:9} }, grid:{color:'#2a2f3d'} }, y: { ticks: { color:'#7b8097', font:{size:9} }, grid:{color:'#2a2f3d'} } }
+    }
+  });
+}
+
+// ─── SUMMARY ───
+function renderSummary() {
+  const done       = allData.filter(r => r.status && r.status.includes('เสร็จแล้ว')).length;
+  const progress   = allData.filter(r => r.status && r.status.includes('กำลังดำเนินการ')).length;
+  const incomplete = allData.filter(r => r.status && r.status.includes('ยังไม่ครบ')).length;
+  const total      = allData.length;
+  const totalVol   = allData.reduce((s,r) => s + Number(r.volume||0), 0);
+  const pct        = total ? Math.round(done / total * 100) : 0;
+
+  document.getElementById('s-total').textContent     = total;
+  document.getElementById('s-done').textContent      = done;
+  document.getElementById('s-progress').textContent  = progress;
+  document.getElementById('s-incomplete').textContent = incomplete;
+  document.getElementById('s-volume').textContent    = totalVol.toLocaleString();
+  document.getElementById('s-pct').textContent       = pct + '%';
+
+  // Maker list
+  const makerMap = {};
+  allData.forEach(r => { makerMap[r.maker] = (makerMap[r.maker]||0) + 1; });
+  const sorted = Object.entries(makerMap).sort((a,b) => b[1]-a[1]);
+  const maxV   = sorted[0]?.[1] || 1;
+  document.getElementById('makerList').innerHTML = sorted.map(([m,c]) => `
+    <div class="maker-row">
+      <span>${m}</span>
+      <div class="maker-bar"><div class="maker-fill" style="width:${c/maxV*100}%"></div></div>
+      <span class="maker-count">${c}</span>
+    </div>`).join('');
+
+  // Charts
+  destroyChart('status2');
+  charts.status2 = new Chart(document.getElementById('chartStatus2'), {
+    type: 'doughnut',
+    data: {
+      labels: ['เสร็จแล้ว','กำลังดำเนินการ','ส่งยังไม่ครบ'],
+      datasets: [{ data: [done, progress, incomplete], backgroundColor: ['#10b981','#f59e0b','#ef4444'], borderWidth: 0, hoverOffset: 8 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#7b8097', font:{size:11} }, position:'bottom' } } }
+  });
+
+  const makersSorted = Object.entries(makerMap).sort((a,b) => b[1]-a[1]);
+  destroyChart('maker2');
+  charts.maker2 = new Chart(document.getElementById('chartMaker2'), {
+    type: 'bar',
+    data: {
+      labels: makersSorted.map(m => m[0]),
+      datasets: [{ data: makersSorted.map(m => m[1]), backgroundColor: PALETTE, borderRadius: 6 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { ticks: { color:'#7b8097' }, grid:{color:'#2a2f3d'} }, y: { ticks: { color:'#7b8097' }, grid:{color:'#2a2f3d'} } }
+    }
+  });
+
+  const locMap = {};
+  allData.forEach(r => { locMap[r.location] = (locMap[r.location]||0) + 1; });
+
+  destroyChart('location');
+  charts.location = new Chart(document.getElementById('chartLocation'), {
+    type: 'pie',
+    data: {
+      labels: Object.keys(locMap),
+      datasets: [{ data: Object.values(locMap), backgroundColor: PALETTE, borderWidth: 0 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color:'#7b8097' }, position:'bottom' } } }
+  });
+}
+
+// ─── MODAL ADD/EDIT ───
+function openAddModal() {
+  editingItem = null;
+  document.getElementById('modalTitle').textContent = '➕ เพิ่มรายการใหม่';
+  document.getElementById('editRowIndex').value = '';
+  ['partNo','partName','model','volume','prDate','dueDate','actualDate','poNo','note'].forEach(f => {
+    document.getElementById('f-' + f).value = '';
+  });
+  document.getElementById('f-status').value = 'กำลังดำเนินการ ♻';
+  document.getElementById('f-location').value = 'CCIS';
+  document.getElementById('f-maker').value = '';
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function openEditModal(item) {
+  editingItem = item;
+  document.getElementById('modalTitle').textContent = '✏️ แก้ไขรายการ';
+  document.getElementById('editRowIndex').value = item.rowIndex;
+  document.getElementById('f-partNo').value     = item.partNo;
+  document.getElementById('f-partName').value   = item.partName;
+  document.getElementById('f-model').value      = item.model;
+  document.getElementById('f-volume').value     = item.volume;
+  document.getElementById('f-prDate').value     = item.prDate;
+  document.getElementById('f-dueDate').value    = item.dueDate;
+  document.getElementById('f-actualDate').value = item.actualDate;
+  document.getElementById('f-location').value   = item.location;
+  document.getElementById('f-status').value     = item.status;
+  document.getElementById('f-maker').value      = item.maker;
+  document.getElementById('f-poNo').value       = item.poNo;
+  document.getElementById('f-note').value       = item.note;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+
+async function saveItem() {
+  const rowIndex = document.getElementById('editRowIndex').value;
+  const params = {
+    partNo:     document.getElementById('f-partNo').value,
+    partName:   document.getElementById('f-partName').value,
+    model:      document.getElementById('f-model').value,
+    volume:     document.getElementById('f-volume').value,
+    prDate:     document.getElementById('f-prDate').value,
+    dueDate:    document.getElementById('f-dueDate').value,
+    actualDate: document.getElementById('f-actualDate').value,
+    location:   document.getElementById('f-location').value,
+    status:     document.getElementById('f-status').value,
+    maker:      document.getElementById('f-maker').value,
+    poNo:       document.getElementById('f-poNo').value,
+    note:       document.getElementById('f-note').value,
+  };
+
+  if (!params.partNo || !params.partName) {
+    showToast('❌ กรุณากรอก Part No. และ Part Name', 'error'); return;
+  }
+
+  // Local update
+  if (rowIndex && editingItem) {
+    const idx = allData.findIndex(r => r.rowIndex === parseInt(rowIndex));
+    if (idx >= 0) allData[idx] = { ...allData[idx], ...params };
+  } else {
+    allData.push({ ...params, no: allData.length + 1, daysLeft: '', rowIndex: allData.length + 9 });
+  }
+
+  closeModal();
+  processData();
+  showToast(rowIndex ? '✅ แก้ไขสำเร็จ' : '✅ เพิ่มรายการสำเร็จ', 'success');
+
+  // Sync to sheet
+  if (WEB_APP_URL) {
+    const action = rowIndex ? 'edit' : 'add';
+    const p = new URLSearchParams({ action, rowIndex, ...params });
+    try {
+      await fetch(WEB_APP_URL + '?' + p.toString());
+    } catch(e) { showToast('⚠️ บันทึกใน Sheet ไม่สำเร็จ', 'error'); }
+  }
+}
+
+// ─── DELETE ───
+async function deleteItem(rowIndex) {
+  if (!confirm('ลบรายการนี้?')) return;
+  allData = allData.filter(r => r.rowIndex !== rowIndex);
+  processData();
+  showToast('🗑️ ลบรายการสำเร็จ', 'success');
+  if (WEB_APP_URL) {
+    try { await fetch(WEB_APP_URL + '?action=del&rowIndex=' + rowIndex); } catch(e) {}
+  }
+}
+
+// ─── DETAIL PANEL ───
+function openDetail(item) {
+  if (typeof item === 'string') item = JSON.parse(item);
+  document.getElementById('d-partNo').textContent   = item.partNo;
+  document.getElementById('d-partName').textContent = item.partName;
+  document.getElementById('d-meta').innerHTML       = `${statusBadge(item.status)} ${daysTag(item.daysLeft)}`;
+
+  const fields = [
+    ['MODEL', item.model], ['VOLUME', Number(item.volume).toLocaleString()],
+    ['MAKER', item.maker], ['สถานที่', item.location],
+    ['เปิด P/R', item.prDate], ['วันนัดส่ง', item.dueDate],
+    ['วันเข้าจริง', item.actualDate || '—'], ['PO/ORDER', item.poNo || '—'],
+    ['หมายเหตุ', item.note || '—'], ['เหลือ (วัน)', String(item.daysLeft)]
+  ];
+
+  document.getElementById('d-grid').innerHTML = fields.map(([l,v]) => `
+    <div class="detail-field">
+      <div class="detail-field-label">${l}</div>
+      <div class="detail-field-value">${v}</div>
+    </div>`).join('');
+
+  document.getElementById('d-actions').innerHTML = `
+    <button class="btn btn-primary" onclick="openEditModal(${JSON.stringify(item).replace(/"/g,'&quot;')});closeDetail(null)" style="flex:1">✏️ แก้ไข</button>
+    <button class="btn btn-danger" onclick="deleteItem(${item.rowIndex});closeDetail(null)" style="flex:1">🗑️ ลบ</button>`;
+
+  document.getElementById('detailOverlay').classList.add('open');
+}
+
+function closeDetail(e) {
+  if (!e || e.target === document.getElementById('detailOverlay')) {
+    document.getElementById('detailOverlay').classList.remove('open');
+  }
+}
+
+// ─── SETUP ───
+function saveUrl() {
+  const url = document.getElementById('webAppUrl').value.trim();
+  WEB_APP_URL = url;
+  localStorage.setItem('prpo_url', url);
+  document.getElementById('currentUrl').textContent = url;
+  document.getElementById('currentUrl').style.display = url ? 'block' : 'none';
+  showToast('✅ บันทึก URL สำเร็จ — กำลัง Sync...', 'success');
+  syncData();
+}
+
+async function testUrl() {
+  const url = document.getElementById('webAppUrl').value.trim();
+  if (!url) { showToast('❌ กรุณากรอก URL ก่อน', 'error'); return; }
+  try {
+    const res = await fetch(url + '?action=getData');
+    const j   = await res.json();
+    showToast(j.success ? `✅ เชื่อมต่อสำเร็จ! พบ ${j.data.length} รายการ` : '❌ Response ไม่ถูกต้อง', j.success ? 'success' : 'error');
+  } catch(e) { showToast('❌ ไม่สามารถเชื่อมต่อ: ' + e.message, 'error'); }
+}
+
+function copyCode() {
+  navigator.clipboard.writeText(document.getElementById('appsScriptCode').textContent);
+  showToast('📋 คัดลอกโค้ดแล้ว!', 'success');
+}
+
+function downloadHTML() {
+  const blob = new Blob([document.documentElement.outerHTML], { type: 'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'index.html';
+  a.click();
+  showToast('⬇️ กำลังดาวน์โหลด...', 'info');
+}
+
+// ─── TOAST ───
+function showToast(msg, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+</script>
+</body>
+</html>
