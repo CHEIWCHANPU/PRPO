@@ -456,6 +456,7 @@
         </select>
         <select class="filter-select" id="filterMaker" onchange="renderTable()"><option value="">Maker ทั้งหมด</option></select>
         <button class="btn btn-primary" onclick="openAddModal()">+ เพิ่มรายการ</button>
+        <button class="btn btn-secondary" onclick="exportCSV()">⬇️ Export CSV</button>
         <button class="btn btn-secondary" onclick="syncData()">⟳ Sync</button>
       </div>
       <div class="table-wrap">
@@ -897,13 +898,21 @@ function populateMakerFilter() {
 }
 
 function renderDashTable() {
-  const urgent = allData.filter(r => !r.status.includes('เสร็จแล้ว')).sort((a,b) => (Number(a.daysLeft)||999) - (Number(b.daysLeft)||999)).slice(0,8);
-  document.getElementById('dashTableBody').innerHTML = urgent.length ? urgent.map(r => `
-    <tr class="${Number(r.daysLeft)<=3?'row-urgent':Number(r.daysLeft)<=7?'row-warn':''}" onclick="openDetail(${JSON.stringify(r).replace(/"/g,'&quot;')})">
+  const urgent = allData
+    .filter(r => !normalizeStatus(r.status).includes('เสร็จแล้ว'))
+    .sort((a,b) => {
+      const da = r => (r.daysLeft === 'Done' || r.daysLeft === '' || r.daysLeft === null) ? 9999 : (Number(r.daysLeft) || 9999);
+      return da(a) - da(b);
+    }).slice(0,8);
+  document.getElementById('dashTableBody').innerHTML = urgent.length ? urgent.map(r => {
+    const dl = Number(r.daysLeft);
+    const rowCls = (!isNaN(dl) && dl <= 3) ? 'row-urgent' : (!isNaN(dl) && dl <= 7) ? 'row-warn' : '';
+    return `<tr class="${rowCls}" onclick="openDetail(${JSON.stringify(r).replace(/"/g,'&quot;')})">
       <td class="no-num">${r.no}</td><td class="part-no">${r.partNo}</td><td class="part-name">${r.partName}</td>
       <td style="font-family:var(--mono);font-size:0.7rem;color:var(--muted)">${r.model}</td>
       <td class="date-cell">${r.dueDate}</td><td>${daysTag(r.daysLeft, r.status)}</td><td>${statusBadge(r.status)}</td><td style="font-size:0.77rem">${r.maker}</td>
-    </tr>`).join('') : `<tr><td colspan="8" class="empty"><div class="empty-icon">🎉</div><div>ทุกรายการเสร็จสมบูรณ์!</div></td></tr>`;
+    </tr>`;
+  }).join('') : `<tr><td colspan="8" class="empty"><div class="empty-icon">🎉</div><div>ทุกรายการเสร็จสมบูรณ์!</div></td></tr>`;
 }
 
 function getFiltered() {
@@ -922,8 +931,15 @@ function renderTable() {
   filteredData = getFiltered();
   filteredData.sort((a,b) => {
     let va = a[sortCol], vb = b[sortCol];
-    if (['volume','daysLeft','no'].includes(sortCol)) { va = Number(va)||0; vb = Number(vb)||0; }
-    else { va = String(va||'').toLowerCase(); vb = String(vb||'').toLowerCase(); }
+    if (sortCol === 'daysLeft') {
+      // Done → sort ไปท้ายสุด
+      const toNum = v => (v === 'Done' || v === '' || v === null || v === undefined) ? 9999 : (Number(v) || 9999);
+      va = toNum(va); vb = toNum(vb);
+    } else if (['volume','no'].includes(sortCol)) {
+      va = Number(va)||0; vb = Number(vb)||0;
+    } else {
+      va = String(va||'').toLowerCase(); vb = String(vb||'').toLowerCase();
+    }
     return sortDir === 'asc' ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
   });
   const total = filteredData.length;
@@ -932,8 +948,12 @@ function renderTable() {
   const start = (currentPage - 1) * perPage;
   const pageData = filteredData.slice(start, start + perPage);
 
-  document.getElementById('mainTableBody').innerHTML = pageData.length ? pageData.map((r,i) => `
-    <tr class="${Number(r.daysLeft)<=3&&!r.status.includes('เสร็จแล้ว')?'row-urgent':Number(r.daysLeft)<=7&&!r.status.includes('เสร็จแล้ว')?'row-warn':''}" onclick="openDetail(${JSON.stringify(r).replace(/"/g,'&quot;')})">
+  document.getElementById('mainTableBody').innerHTML = pageData.length ? pageData.map((r,i) => {
+    const normSt = normalizeStatus(r.status);
+    const isDone = normSt.includes('เสร็จแล้ว');
+    const dl = Number(r.daysLeft);
+    const rowCls = isDone ? '' : (!isNaN(dl) && dl <= 3) ? 'row-urgent' : (!isNaN(dl) && dl <= 7) ? 'row-warn' : '';
+    return `<tr class="${rowCls}" onclick="openDetail(${JSON.stringify(r).replace(/"/g,'&quot;')})">
       <td class="no-num">${start+i+1}</td><td class="part-no">${r.partNo}</td><td class="part-name">${r.partName}</td>
       <td style="font-family:var(--mono);font-size:0.7rem">${r.model}</td><td class="vol">${Number(r.volume).toLocaleString()}</td>
       <td class="date-cell">${r.prDate}</td><td class="date-cell">${r.dueDate}</td><td class="date-cell">${r.actualDate||'—'}</td>
@@ -943,7 +963,8 @@ function renderTable() {
         <button class="icon-btn" onclick="openEditModal(${JSON.stringify(r).replace(/"/g,'&quot;')})" title="แก้ไข">✏️</button>
         <button class="icon-btn del" onclick="deleteItem(${r.rowIndex})" title="ลบ">🗑️</button>
       </div></td>
-    </tr>`).join('') : `<tr><td colspan="14" class="empty"><div class="empty-icon">🔍</div><div>ไม่พบรายการที่ค้นหา</div></td></tr>`;
+    </tr>`;
+  }).join('') : `<tr><td colspan="14" class="empty"><div class="empty-icon">🔍</div><div>ไม่พบรายการที่ค้นหา</div></td></tr>`;
 
   document.getElementById('tableInfo').textContent = total > 0 ? `แสดง ${start+1}–${Math.min(start+perPage,total)} จาก ${total} รายการ` : 'ไม่พบรายการ';
   renderPagination(pages);
@@ -987,14 +1008,17 @@ function statusBadge(status) {
 }
 
 function daysTag(days, status) {
-  // ถ้าเสร็จแล้ว → แสดง —
-  if ((status && status.includes('เสร็จแล้ว')) ||
-      String(days).includes('Done') || String(days).includes('✅')) {
-    return `<span class="days-left days-done">—</span>`;
+  // normalize status ก่อน
+  const normStatus = normalizeStatus(status);
+  // ถ้าเสร็จแล้ว → แสดง ✅ Done
+  if (normStatus.includes('เสร็จแล้ว') ||
+      String(days) === 'Done' || String(days).includes('✅')) {
+    return `<span class="days-left days-done">✅ Done</span>`;
   }
-  // ถ้าเป็น TRUE/FALSE จาก sheet (กันเหนียว)
-  if (String(days).toUpperCase() === 'TRUE')  return `<span class="days-left days-done">—</span>`;
-  if (String(days).toUpperCase() === 'FALSE') return `<span class="days-left days-warn">—</span>`;
+  // ถ้าเป็น TRUE/FALSE จาก sheet ที่ยังหลุดมา (กันเหนียว)
+  const daysStr = String(days).trim().toUpperCase();
+  if (daysStr === 'TRUE')  return `<span class="days-left days-done">✅ Done</span>`;
+  if (daysStr === 'FALSE') return `<span class="days-left days-warn">—</span>`;
   const n = Number(days);
   if (isNaN(n) || days === '' || days === null || days === undefined)
     return `<span class="days-left days-ok">—</span>`;
