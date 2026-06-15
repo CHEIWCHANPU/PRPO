@@ -497,7 +497,7 @@
 
       <div class="summary-grid">
         <div class="chart-card">
-          <div class="chart-title">สถิติภาพรวม (ทั้งหมด)</div>
+          <div class="chart-title" id="s-card-title">สถิติภาพรวม</div>
           <div style="margin-top:0.65rem">
             <div class="maker-row"><span>รายการทั้งหมด</span><span class="maker-count" id="s-total" style="color:var(--accent2)">—</span></div>
             <div class="maker-row"><span>เสร็จสมบูรณ์</span><span class="maker-count" id="s-done" style="color:var(--success)">—</span></div>
@@ -508,12 +508,12 @@
           </div>
         </div>
         <div class="chart-card">
-          <div class="chart-title">สัดส่วนสถานะ (%)</div>
+          <div class="chart-title" id="s-bars-title">สัดส่วนสถานะ (%)</div>
           <div id="statusBars" style="margin-top:0.75rem;display:flex;flex-direction:column;gap:0.85rem"></div>
         </div>
-        <div class="chart-card" style="grid-column:1/-1"><div class="chart-title">Volume ตาม Maker</div><div class="chart-wrap" style="height:195px"><canvas id="chartMaker2"></canvas></div></div>
-        <div class="chart-card"><div class="chart-title">Maker Rankings</div><div class="maker-list" id="makerList">—</div></div>
-        <div class="chart-card"><div class="chart-title">สถานที่ส่ง</div><div class="chart-wrap"><canvas id="chartLocation"></canvas></div></div>
+        <div class="chart-card" style="grid-column:1/-1"><div class="chart-title" id="s-maker-chart-title">Volume ตาม Maker</div><div class="chart-wrap" style="height:195px"><canvas id="chartMaker2"></canvas></div></div>
+        <div class="chart-card"><div class="chart-title" id="s-maker-rank-title">Maker Rankings</div><div class="maker-list" id="makerList">—</div></div>
+        <div class="chart-card"><div class="chart-title" id="s-location-title">สถานที่ส่ง</div><div class="chart-wrap"><canvas id="chartLocation"></canvas></div></div>
       </div>
     </div>
 
@@ -1108,6 +1108,9 @@ function renderMonthTabs() {
 function selectMonthTab(m) {
   activeMonthTab = m;
   renderMonthTabs();
+  const mData = getMonthData();
+  const mLabel = activeMonthTab ? `${getMonthLabel(activeMonthTab)} 2026` : null;
+  renderSummaryCards(mData, mLabel);
 }
 
 function renderMonthContent() {
@@ -1196,13 +1199,32 @@ function renderStatusBars(done, progress, incomplete, total) {
   }).join('');
 }
 
-function renderSummary() {
-  const done = allData.filter(r => r.status && r.status.includes('เสร็จแล้ว')).length;
-  const progress = allData.filter(r => r.status && r.status.includes('กำลังดำเนินการ')).length;
-  const incomplete = allData.filter(r => r.status && r.status.includes('ยังไม่ครบ')).length;
-  const total = allData.length;
-  const totalVol = allData.reduce((s,r) => s + Number(r.volume||0), 0);
+function getMonthData() {
+  // Returns allData filtered by the active month tab (dueDate)
+  const m = activeMonthTab;
+  const year = 2026;
+  if (!m) return allData;
+  return allData.filter(r => {
+    const p = parseMonthYear(r.dueDate);
+    return p && p.month === m && p.year === year;
+  });
+}
+
+function renderSummaryCards(data, monthLabel) {
+  const done = data.filter(r => r.status && r.status.includes('เสร็จแล้ว')).length;
+  const progress = data.filter(r => r.status && r.status.includes('กำลังดำเนินการ')).length;
+  const incomplete = data.filter(r => r.status && r.status.includes('ยังไม่ครบ')).length;
+  const total = data.length;
+  const totalVol = data.reduce((s,r) => s + Number(r.volume||0), 0);
   const pct = total ? Math.round(done / total * 100) : 0;
+
+  const label = monthLabel ? `สถิติ ${monthLabel}` : 'สถิติภาพรวม';
+  document.getElementById('s-card-title').textContent = label;
+  document.getElementById('s-bars-title').textContent = `สัดส่วนสถานะ (${monthLabel || 'ทั้งหมด'})`;
+  document.getElementById('s-maker-chart-title').textContent = `Volume ตาม Maker (${monthLabel || 'ทั้งหมด'})`;
+  document.getElementById('s-maker-rank-title').textContent = `Maker Rankings (${monthLabel || 'ทั้งหมด'})`;
+  document.getElementById('s-location-title').textContent = `สถานที่ส่ง (${monthLabel || 'ทั้งหมด'})`;
+
   document.getElementById('s-total').textContent = total;
   document.getElementById('s-done').textContent = done;
   document.getElementById('s-progress').textContent = progress;
@@ -1210,33 +1232,42 @@ function renderSummary() {
   document.getElementById('s-volume').textContent = totalVol.toLocaleString();
   document.getElementById('s-pct').textContent = pct + '%';
 
-  // Render status as bar %
   renderStatusBars(done, progress, incomplete, total);
 
-  // Monthly tabs
-  renderMonthTabs();
-
   const makerMap = {};
-  allData.forEach(r => { makerMap[r.maker] = (makerMap[r.maker]||0) + 1; });
+  data.forEach(r => { makerMap[r.maker] = (makerMap[r.maker]||0) + 1; });
   const sorted = Object.entries(makerMap).sort((a,b) => b[1]-a[1]);
   const maxV = sorted[0]?.[1] || 1;
-  document.getElementById('makerList').innerHTML = sorted.map(([m,c]) => `
-    <div class="maker-row"><span>${m}</span><div class="maker-bar"><div class="maker-fill" style="width:${c/maxV*100}%"></div></div><span class="maker-count">${c}</span></div>`).join('');
+  document.getElementById('makerList').innerHTML = sorted.length
+    ? sorted.map(([m,c]) => `<div class="maker-row"><span>${m}</span><div class="maker-bar"><div class="maker-fill" style="width:${c/maxV*100}%"></div></div><span class="maker-count">${c}</span></div>`).join('')
+    : '<div style="color:var(--muted);font-size:0.82rem">ไม่มีข้อมูล</div>';
 
-  const ms = Object.entries(makerMap).sort((a,b) => b[1]-a[1]);
   destroyChart('maker2');
-  charts.maker2 = new Chart(document.getElementById('chartMaker2'), {
-    type:'bar', data:{ labels:ms.map(m=>m[0]), datasets:[{ data:ms.map(m=>m[1]), backgroundColor:PALETTE, borderRadius:6 }] },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{ticks:{color:'#64748b'},grid:{color:'#1c2130'}}, y:{ticks:{color:'#64748b'},grid:{color:'#1c2130'}} } }
-  });
+  if (sorted.length) {
+    charts.maker2 = new Chart(document.getElementById('chartMaker2'), {
+      type:'bar', data:{ labels:sorted.map(m=>m[0]), datasets:[{ data:sorted.map(m=>m[1]), backgroundColor:PALETTE, borderRadius:6 }] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{ticks:{color:'#64748b'},grid:{color:'#1c2130'}}, y:{ticks:{color:'#64748b'},grid:{color:'#1c2130'}} } }
+    });
+  }
 
   const locMap = {};
-  allData.forEach(r => { locMap[r.location] = (locMap[r.location]||0) + 1; });
+  data.forEach(r => { locMap[r.location] = (locMap[r.location]||0) + 1; });
   destroyChart('location');
-  charts.location = new Chart(document.getElementById('chartLocation'), {
-    type:'pie', data:{ labels:Object.keys(locMap), datasets:[{ data:Object.values(locMap), backgroundColor:PALETTE, borderWidth:0 }] },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ labels:{color:'#64748b'}, position:'bottom' } } }
-  });
+  if (Object.keys(locMap).length) {
+    charts.location = new Chart(document.getElementById('chartLocation'), {
+      type:'pie', data:{ labels:Object.keys(locMap), datasets:[{ data:Object.values(locMap), backgroundColor:PALETTE, borderWidth:0 }] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ labels:{color:'#64748b'}, position:'bottom' } } }
+    });
+  }
+}
+
+function renderSummary() {
+  // Monthly tabs first
+  renderMonthTabs();
+  // Bottom cards use month-filtered data
+  const mData = getMonthData();
+  const mLabel = activeMonthTab ? `${getMonthLabel(activeMonthTab)} 2026` : null;
+  renderSummaryCards(mData, mLabel);
 }
 
 function openAddModal() {
