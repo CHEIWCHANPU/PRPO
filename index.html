@@ -546,15 +546,38 @@ function getData() {
   const sheet = SS.getSheetByName(SHEET_NAME);
   const rows  = sheet.getDataRange().getValues();
   const data  = [];
+  const today = new Date(); today.setHours(0,0,0,0);
   for (let i = 8; i < rows.length; i++) {
     const r = rows[i];
     if (!r[0] && !r[1]) continue;
+
+    // --- แปลงสถานะ: รองรับ checkbox (TRUE/FALSE) และ text ---
+    let statusRaw = r[9];
+    let status;
+    if (statusRaw === true  || String(statusRaw).toUpperCase() === "TRUE")  status = "เสร็จแล้ว ✅";
+    else if (statusRaw === false || String(statusRaw).toUpperCase() === "FALSE") status = "กำลังดำเนินการ ♻";
+    else status = String(statusRaw || "กำลังดำเนินการ ♻");
+
+    // --- คำนวณ daysLeft ใหม่เสมอ (ไม่อ่านจาก Sheet เพื่อกัน formula เพี้ยน) ---
+    let daysLeft;
+    if (status.includes("เสร็จแล้ว")) {
+      daysLeft = "Done";
+    } else {
+      const due = r[6];
+      if (due instanceof Date) {
+        const d = new Date(due); d.setHours(0,0,0,0);
+        daysLeft = Math.round((d - today) / 86400000);
+      } else {
+        daysLeft = "";
+      }
+    }
+
     data.push({
       no: r[0], partNo: r[1], partName: r[2],
       model: r[3], volume: r[4], prDate: formatDate(r[5]),
       dueDate: formatDate(r[6]), actualDate: formatDate(r[7]),
-      location: r[8], status: r[9], maker: r[10],
-      daysLeft: r[11], poNo: r[12], note: r[13],
+      location: r[8], status: status, maker: r[10],
+      daysLeft: daysLeft, poNo: r[12], note: r[13],
       rowIndex: i + 1
     });
   }
@@ -584,15 +607,26 @@ function addRow(p) {
 function editRow(p) {
   const sheet = SS.getSheetByName(SHEET_NAME);
   const ri    = parseInt(p.rowIndex);
-  const cols  = [
+
+  // ถ้า column สถานะใช้ checkbox ให้แปลงกลับเป็น TRUE/FALSE
+  // ถ้าใช้ text ให้เขียน text ตรง ๆ — ตรวจสอบจาก cell เดิม
+  const existingCell = sheet.getRange(ri, 10);
+  const existingVal  = existingCell.getValue();
+  let statusToWrite  = p.status;
+  if (typeof existingVal === "boolean") {
+    // cell เป็น checkbox → เขียนกลับเป็น boolean
+    statusToWrite = p.status.includes("เสร็จแล้ว");
+  }
+
+  const cols = [
     p.partNo, p.partName, p.model, Number(p.volume) || 0,
     p.prDate, p.dueDate, p.actualDate || "",
-    p.location, p.status, p.maker
+    p.location, statusToWrite, p.maker
   ];
   for (let c = 0; c < cols.length; c++) {
     sheet.getRange(ri, c + 2).setValue(cols[c]);
   }
-  // ข้าม col L (daysLeft) ไม่เขียนทับ
+  // col L (index 12) = daysLeft — ข้ามไม่เขียนทับ (ปล่อยให้ formula Sheet คำนวณเอง)
   sheet.getRange(ri, 13).setValue(p.poNo || "");
   sheet.getRange(ri, 14).setValue(p.note || "");
   updateTimestamp();
@@ -809,8 +843,34 @@ async function syncData() {
   document.getElementById('lastSync').textContent = 'ซิงค์ล่าสุด: ' + new Date().toLocaleTimeString('th-TH');
 }
 
+function parseThaiDate(str) {
+  if (!str) return null;
+  // รองรับ d/M/yyyy หรือ dd/MM/yyyy
+  const parts = String(str).split('/');
+  if (parts.length !== 3) return null;
+  const d = parseInt(parts[0]), m = parseInt(parts[1]) - 1, y = parseInt(parts[2]);
+  if (isNaN(d) || isNaN(m) || isNaN(y)) return null;
+  const date = new Date(y, m, d); date.setHours(0,0,0,0);
+  return date;
+}
+
 function processData() {
-  allData.forEach((r, i) => { r.no = i + 1; }); // fix numbering
+  const today = new Date(); today.setHours(0,0,0,0);
+  allData.forEach((r, i) => {
+    r.no = i + 1;
+    // normalize status (กัน TRUE/FALSE จาก Sheet)
+    r.status = normalizeStatus(r.status);
+    // คำนวณ daysLeft ใหม่เสมอ
+    if (r.status.includes('เสร็จแล้ว')) {
+      r.daysLeft = 'Done';
+    } else if (r.dueDate) {
+      const due = parseThaiDate(r.dueDate);
+      if (due) r.daysLeft = Math.round((due - today) / 86400000);
+      else r.daysLeft = '';
+    } else {
+      r.daysLeft = '';
+    }
+  });
   const done = allData.filter(r => r.status && r.status.includes('เสร็จแล้ว')).length;
   const progress = allData.filter(r => r.status && r.status.includes('กำลังดำเนินการ')).length;
   const incomplete = allData.filter(r => r.status && r.status.includes('ยังไม่ครบ')).length;
@@ -842,7 +902,7 @@ function renderDashTable() {
     <tr class="${Number(r.daysLeft)<=3?'row-urgent':Number(r.daysLeft)<=7?'row-warn':''}" onclick="openDetail(${JSON.stringify(r).replace(/"/g,'&quot;')})">
       <td class="no-num">${r.no}</td><td class="part-no">${r.partNo}</td><td class="part-name">${r.partName}</td>
       <td style="font-family:var(--mono);font-size:0.7rem;color:var(--muted)">${r.model}</td>
-      <td class="date-cell">${r.dueDate}</td><td>${daysTag(r.daysLeft)}</td><td>${statusBadge(r.status)}</td><td style="font-size:0.77rem">${r.maker}</td>
+      <td class="date-cell">${r.dueDate}</td><td>${daysTag(r.daysLeft, r.status)}</td><td>${statusBadge(r.status)}</td><td style="font-size:0.77rem">${r.maker}</td>
     </tr>`).join('') : `<tr><td colspan="8" class="empty"><div class="empty-icon">🎉</div><div>ทุกรายการเสร็จสมบูรณ์!</div></td></tr>`;
 }
 
@@ -878,7 +938,7 @@ function renderTable() {
       <td style="font-family:var(--mono);font-size:0.7rem">${r.model}</td><td class="vol">${Number(r.volume).toLocaleString()}</td>
       <td class="date-cell">${r.prDate}</td><td class="date-cell">${r.dueDate}</td><td class="date-cell">${r.actualDate||'—'}</td>
       <td style="font-size:0.73rem">${r.location}</td><td>${statusBadge(r.status)}</td><td style="font-size:0.77rem">${r.maker}</td>
-      <td>${daysTag(r.daysLeft)}</td><td style="font-family:var(--mono);font-size:0.7rem;color:var(--muted)">${r.poNo||'—'}</td>
+      <td>${daysTag(r.daysLeft, r.status)}</td><td style="font-family:var(--mono);font-size:0.7rem;color:var(--muted)">${r.poNo||'—'}</td>
       <td><div class="row-actions" onclick="event.stopPropagation()">
         <button class="icon-btn" onclick="openEditModal(${JSON.stringify(r).replace(/"/g,'&quot;')})" title="แก้ไข">✏️</button>
         <button class="icon-btn del" onclick="deleteItem(${r.rowIndex})" title="ลบ">🗑️</button>
@@ -909,19 +969,37 @@ function filterByStatus(s) {
   document.getElementById('filterStatus').value = s; renderTable();
 }
 
-function statusBadge(status) {
-  if (!status) return '—';
-  if (status.includes('เสร็จแล้ว'))      return `<span class="badge badge-done">✅ เสร็จแล้ว</span>`;
-  if (status.includes('กำลังดำเนินการ')) return `<span class="badge badge-progress">♻ ดำเนินการ</span>`;
-  if (status.includes('ยังไม่ครบ'))      return `<span class="badge badge-incomplete">❌ ยังไม่ครบ</span>`;
-  return `<span class="badge">${status}</span>`;
+function normalizeStatus(status) {
+  if (!status && status !== false) return '';
+  const s = String(status).trim().toUpperCase();
+  if (s === 'TRUE')  return 'เสร็จแล้ว ✅';
+  if (s === 'FALSE') return 'กำลังดำเนินการ ♻';
+  return String(status).trim();
 }
 
-function daysTag(days) {
-  if (String(days).includes('Done') || String(days).includes('✅')) return `<span class="days-left days-done">Done</span>`;
+function statusBadge(status) {
+  const s = normalizeStatus(status);
+  if (!s) return '—';
+  if (s.includes('เสร็จแล้ว'))      return `<span class="badge badge-done">✅ เสร็จแล้ว</span>`;
+  if (s.includes('กำลังดำเนินการ')) return `<span class="badge badge-progress">♻ ดำเนินการ</span>`;
+  if (s.includes('ยังไม่ครบ'))      return `<span class="badge badge-incomplete">❌ ยังไม่ครบ</span>`;
+  return `<span class="badge">${s}</span>`;
+}
+
+function daysTag(days, status) {
+  // ถ้าเสร็จแล้ว → แสดง —
+  if ((status && status.includes('เสร็จแล้ว')) ||
+      String(days).includes('Done') || String(days).includes('✅')) {
+    return `<span class="days-left days-done">—</span>`;
+  }
+  // ถ้าเป็น TRUE/FALSE จาก sheet (กันเหนียว)
+  if (String(days).toUpperCase() === 'TRUE')  return `<span class="days-left days-done">—</span>`;
+  if (String(days).toUpperCase() === 'FALSE') return `<span class="days-left days-warn">—</span>`;
   const n = Number(days);
-  if (isNaN(n)) return `<span class="days-left days-ok">${days||'—'}</span>`;
-  if (n <= 0)  return `<span class="days-left days-urgent">วันนี้!</span>`;
+  if (isNaN(n) || days === '' || days === null || days === undefined)
+    return `<span class="days-left days-ok">—</span>`;
+  if (n < 0)   return `<span class="days-left days-urgent">เกิน ${Math.abs(n)}d</span>`;
+  if (n === 0) return `<span class="days-left days-urgent">วันนี้!</span>`;
   if (n <= 3)  return `<span class="days-left days-urgent">${n}d</span>`;
   if (n <= 7)  return `<span class="days-left days-warn">${n}d</span>`;
   return `<span class="days-left days-ok">${n}d</span>`;
@@ -1055,7 +1133,7 @@ function openDetail(item) {
   if (typeof item === 'string') item = JSON.parse(item);
   document.getElementById('d-partNo').textContent = item.partNo;
   document.getElementById('d-partName').textContent = item.partName;
-  document.getElementById('d-meta').innerHTML = `${statusBadge(item.status)} ${daysTag(item.daysLeft)}`;
+  document.getElementById('d-meta').innerHTML = `${statusBadge(item.status)} ${daysTag(item.daysLeft, item.status)}`;
   const fields = [['MODEL',item.model],['VOLUME',Number(item.volume).toLocaleString()],['MAKER',item.maker],['สถานที่',item.location],['เปิด P/R',item.prDate],['วันนัดส่ง',item.dueDate],['วันเข้าจริง',item.actualDate||'—'],['PO/ORDER',item.poNo||'—'],['หมายเหตุ',item.note||'—'],['เหลือ (วัน)',String(item.daysLeft)]];
   document.getElementById('d-grid').innerHTML = fields.map(([l,v]) => `<div class="detail-field"><div class="detail-field-label">${l}</div><div class="detail-field-value">${v}</div></div>`).join('');
   document.getElementById('d-actions').innerHTML = `
