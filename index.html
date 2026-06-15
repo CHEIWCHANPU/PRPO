@@ -791,6 +791,88 @@
     margin-top: 0.5rem;
     word-break: break-all;
   }
+
+  /* ── URGENT TAB BADGE ─────────────────────────── */
+  .nav-tab { position: relative; }
+  .tab-badge {
+    position: absolute;
+    top: -6px; right: -6px;
+    background: var(--danger);
+    color: #fff;
+    font-size: 0.6rem;
+    font-weight: 700;
+    border-radius: 50%;
+    width: 18px; height: 18px;
+    display: flex; align-items: center; justify-content: center;
+    animation: pulse-badge 1.2s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  @keyframes pulse-badge {
+    0%,100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239,68,68,0.6); }
+    50%      { transform: scale(1.15); box-shadow: 0 0 0 5px rgba(239,68,68,0); }
+  }
+
+  /* ── ALERT POPUP (ใกล้ส่ง 2 วัน) ───────────────── */
+  .alert-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 10000;
+    display: flex; align-items: center; justify-content: center;
+    animation: fadeIn 0.2s ease;
+  }
+  .alert-box {
+    background: var(--surface);
+    border: 2px solid var(--danger);
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 460px; width: 90%;
+    box-shadow: 0 0 40px rgba(239,68,68,0.3);
+  }
+  .alert-header {
+    display: flex; align-items: center; gap: 0.75rem;
+    font-size: 1.1rem; font-weight: 700; color: var(--danger);
+    margin-bottom: 1rem;
+  }
+  .alert-header span { font-size: 1.6rem; }
+  .alert-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--danger);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.6rem;
+    font-size: 0.83rem;
+  }
+  .alert-item-name { font-weight: 600; color: var(--text); margin-bottom: 0.2rem; }
+  .alert-item-meta { color: var(--muted); font-size: 0.75rem; }
+  .alert-item-days {
+    font-family: var(--mono);
+    color: var(--danger);
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+  .alert-close {
+    margin-top: 1.25rem;
+    width: 100%;
+    padding: 0.65rem;
+    background: var(--danger);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font);
+    transition: opacity 0.2s;
+  }
+  .alert-close:hover { opacity: 0.85; }
+
+  /* ── TOAST URGENT ───────────────────────────────── */
+  .toast.urgent {
+    border-color: var(--danger);
+    background: #1a0f0f;
+  }
 </style>
 </head>
 <body>
@@ -806,8 +888,8 @@
   </div>
 
   <nav class="nav-tabs">
-    <button class="nav-tab active" onclick="showPage('dashboard')">📊 Dashboard</button>
-    <button class="nav-tab" onclick="showPage('list')">📋 รายการ</button>
+    <button class="nav-tab active" id="tab-dashboard" onclick="showPage('dashboard')">📊 Dashboard</button>
+    <button class="nav-tab" id="tab-list" onclick="showPage('list')">📋 รายการ</button>
     <button class="nav-tab" onclick="showPage('summary')">📈 Summary</button>
     <button class="nav-tab" onclick="showPage('setup')">⚙️ Setup</button>
   </nav>
@@ -1201,7 +1283,7 @@ function updateTimestamp() {
 
 <script>
 // ─── CONFIG ───
-let WEB_APP_URL = localStorage.getItem('prpo_url') || '';
+let WEB_APP_URL = localStorage.getItem('prpo_url') || 'https://script.google.com/macros/s/AKfycbyMethTIz0vquS2asGGxqtQvmi-uq4DPcnR7Zr-O9j8bGqcsshBRgDOP9Wz_cZeguCcRA/exec';
 let allData = [];
 let filteredData = [];
 let sortCol = 'no';
@@ -1228,7 +1310,7 @@ const DEMO = [
 
 // ─── INIT ───
 window.addEventListener('DOMContentLoaded', () => {
-  const saved = localStorage.getItem('prpo_url');
+  const saved = localStorage.getItem('prpo_url') || WEB_APP_URL;
   if (saved) {
     document.getElementById('webAppUrl').value = saved;
     document.getElementById('currentUrl').textContent = saved;
@@ -1278,7 +1360,83 @@ async function syncData() {
   document.getElementById('lastSync').textContent = new Date().toLocaleTimeString('th-TH');
 }
 
+// ─── CALC DAYS LEFT REAL-TIME ────────────────────────────────
+function calcDaysLeft(dueDateStr, status) {
+  if (status && (status.includes('เสร็จแล้ว') || status.includes('Done'))) return 'Done';
+  if (!dueDateStr) return '';
+  const parts = String(dueDateStr).split('/');
+  if (parts.length < 3) return '';
+  const due = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+  if (isNaN(due)) return '';
+  const today = new Date(); today.setHours(0,0,0,0);
+  return Math.round((due - today) / 86400000);
+}
+
+// ─── ALERT POPUP ─────────────────────────────────────────────
+let alertShownSession = false;
+
+function showUrgentAlert(items2days) {
+  if (alertShownSession) return;
+  alertShownSession = true;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'alert-overlay';
+  overlay.innerHTML = \`
+    <div class="alert-box">
+      <div class="alert-header">
+        <span>🚨</span>
+        <div>แจ้งเตือน! มีรายการใกล้ถึงวันส่ง</div>
+      </div>
+      \${items2days.map(r => \`
+        <div class="alert-item">
+          <div class="alert-item-name">\${r.partNo} — \${r.partName}</div>
+          <div class="alert-item-meta">Model: \${r.model} | Maker: \${r.maker} | วันนัดส่ง: \${r.dueDate}</div>
+          <div class="alert-item-days">\${r.daysLeft <= 0 ? (r.daysLeft === 0 ? '⚠️ วันนี้คือวันส่ง!' : \`⛔ เกินกำหนด \${Math.abs(r.daysLeft)} วัน\`) : \`⏰ เหลือ \${r.daysLeft} วัน\`}</div>
+        </div>\`).join('')}
+      <button class="alert-close" onclick="this.closest('.alert-overlay').remove()">
+        รับทราบ — ปิด
+      </button>
+    </div>\`;
+  document.body.appendChild(overlay);
+}
+
+// ─── UPDATE TAB BADGE ────────────────────────────────────────
+function updateTabBadge(urgentCount) {
+  // ลบ badge เก่า
+  document.querySelectorAll('.tab-badge').forEach(b => b.remove());
+  if (urgentCount > 0) {
+    const tab = document.getElementById('tab-dashboard');
+    if (tab) {
+      const badge = document.createElement('span');
+      badge.className = 'tab-badge';
+      badge.textContent = urgentCount;
+      tab.appendChild(badge);
+    }
+    // เปลี่ยน title แท็บ browser
+    document.title = \`🔴 (\${urgentCount}) PR/PO TRACKER — ด่วน!\`;
+  } else {
+    document.title = 'PR/PO Dashboard | CHEIW CHAN DATA';
+  }
+}
+
 function processData() {
+  // ── คำนวณ daysLeft real-time ──
+  allData = allData.map(r => ({
+    ...r,
+    daysLeft: calcDaysLeft(r.dueDate, r.status)
+  }));
+
+  // ── รายการใกล้ถึงกำหนด ≤ 3 วัน (ไม่รวมเสร็จแล้ว) ──
+  const urgentItems  = allData.filter(r => r.daysLeft !== 'Done' && r.daysLeft !== '' && Number(r.daysLeft) <= 3);
+  const alert2Items  = allData.filter(r => r.daysLeft !== 'Done' && r.daysLeft !== '' && Number(r.daysLeft) <= 2);
+
+  // Badge บน tab
+  updateTabBadge(urgentItems.length);
+
+  // Popup แจ้งเตือน (≤ 2 วัน) — แสดงครั้งเดียวต่อ session
+  if (alert2Items.length > 0) {
+    setTimeout(() => showUrgentAlert(alert2Items), 800);
+  }
   const done       = allData.filter(r => r.status && r.status.includes('เสร็จแล้ว')).length;
   const progress   = allData.filter(r => r.status && r.status.includes('กำลังดำเนินการ')).length;
   const incomplete = allData.filter(r => r.status && r.status.includes('ยังไม่ครบ')).length;
@@ -1424,10 +1582,14 @@ function statusBadge(status) {
 }
 
 function daysTag(days) {
-  if (String(days).includes('Done') || String(days).includes('✅')) return `<span class="days-left days-done">Done</span>`;
+  if (days === '' || days === null || days === undefined) return `<span style="color:var(--muted)">—</span>`;
+  if (String(days) === 'Done' || String(days).includes('✅')) return `<span class="days-left days-done">✅ Done</span>`;
   const n = Number(days);
   if (isNaN(n)) return `<span class="days-left days-ok">${days}</span>`;
-  if (n <= 3)  return `<span class="days-left days-urgent">${n}d</span>`;
+  if (n < 0)   return `<span class="days-left days-urgent" title="เกินกำหนด">⛔ ${Math.abs(n)}d</span>`;
+  if (n === 0) return `<span class="days-left days-urgent" style="animation:pulse-badge 1s infinite">🔥 วันนี้!</span>`;
+  if (n <= 2)  return `<span class="days-left days-urgent">🚨 ${n}d</span>`;
+  if (n <= 3)  return `<span class="days-left days-urgent">⚠️ ${n}d</span>`;
   if (n <= 10) return `<span class="days-left days-warn">${n}d</span>`;
   return `<span class="days-left days-ok">${n}d</span>`;
 }
