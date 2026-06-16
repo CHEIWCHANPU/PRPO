@@ -1026,6 +1026,16 @@ function renumberSupply(sheet) {
         <div class="url-display" id="currentUrl" style="display:none"></div>
       </div>
       <div class="instruction-card">
+        <h3>📊 เชื่อมต่อ Google Sheet</h3>
+        <p style="font-size:0.78rem;color:var(--muted);margin-top:0.3rem;margin-bottom:0.75rem">วาง URL ของ Google Sheet เพื่อเปิดดูข้อมูลต้นทางได้โดยตรง</p>
+        <div style="display:flex;gap:0.6rem;align-items:center">
+          <input type="text" class="form-input" id="googleSheetUrl" placeholder="https://docs.google.com/spreadsheets/d/..." style="flex:1">
+          <button class="btn btn-primary" onclick="saveSheetUrl()" style="white-space:nowrap">💾 บันทึก</button>
+          <button class="btn btn-secondary" id="openSheetBtn" onclick="openGoogleSheet()" style="white-space:nowrap;display:none">📊 เปิด Sheet</button>
+        </div>
+        <div id="sheetUrlDisplay" style="display:none;margin-top:0.55rem;font-size:0.72rem;color:var(--muted);font-family:var(--mono);word-break:break-all"></div>
+      </div>
+      <div class="instruction-card">
         <div class="setup-grid">
 
           <div class="setup-action" onclick="downloadHTML()">
@@ -1228,6 +1238,13 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('webAppUrl').value = saved;
     document.getElementById('currentUrl').textContent = saved;
     document.getElementById('currentUrl').style.display = 'block';
+  }
+  const savedSheet = localStorage.getItem('prpo_sheet_url');
+  if (savedSheet) {
+    document.getElementById('googleSheetUrl').value = savedSheet;
+    document.getElementById('sheetUrlDisplay').textContent = savedSheet;
+    document.getElementById('sheetUrlDisplay').style.display = 'block';
+    document.getElementById('openSheetBtn').style.display = '';
   }
   // Date chip
   const now = new Date();
@@ -1860,6 +1877,21 @@ function saveUrl() {
   document.getElementById('currentUrl').textContent = url;
   document.getElementById('currentUrl').style.display = url ? 'block' : 'none';
   showToast('✅ บันทึก URL สำเร็จ — กำลัง Sync...', 'success'); syncData();
+}
+function saveSheetUrl() {
+  const url = document.getElementById('googleSheetUrl').value.trim();
+  if (!url) { showToast('❌ กรุณากรอก Google Sheet URL ก่อน', 'error'); return; }
+  if (!url.includes('docs.google.com/spreadsheets')) { showToast('❌ URL ไม่ถูกต้อง กรุณาใช้ลิงก์ Google Sheets', 'error'); return; }
+  localStorage.setItem('prpo_sheet_url', url);
+  document.getElementById('sheetUrlDisplay').textContent = url;
+  document.getElementById('sheetUrlDisplay').style.display = 'block';
+  document.getElementById('openSheetBtn').style.display = '';
+  showToast('✅ บันทึก Google Sheet URL แล้ว', 'success');
+}
+function openGoogleSheet() {
+  const url = localStorage.getItem('prpo_sheet_url') || document.getElementById('googleSheetUrl').value.trim();
+  if (!url) { showToast('❌ ยังไม่ได้ตั้งค่า Google Sheet URL', 'error'); return; }
+  window.open(url, '_blank');
 }
 async function testUrl() {
   const url = document.getElementById('webAppUrl').value.trim();
