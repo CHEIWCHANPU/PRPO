@@ -919,12 +919,22 @@ function addSupplier(p) {
   const ss    = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(SUPPLY_SHEET);
   if (!sheet) return { success: false, error: "ไม่พบ Sheet: " + SUPPLY_SHEET };
-  const lastRow = sheet.getLastRow();
-  const no      = lastRow >= SUPPLY_START_ROW ? lastRow - SUPPLY_START_ROW + 2 : 1;
-  sheet.appendRow([
-    no, p.name||"", p.contact||"", p.phone||"",
+
+  // หาแถวว่างแรกหลัง Header (ไม่ใช้ appendRow เพื่อป้องกันปัญหาแถวว่างระหว่างกลาง)
+  const maxRow = Math.max(sheet.getLastRow(), SUPPLY_START_ROW - 1);
+  let targetRow = -1;
+  if (maxRow >= SUPPLY_START_ROW) {
+    const vals = sheet.getRange(SUPPLY_START_ROW, 2, maxRow - SUPPLY_START_ROW + 1, 1).getValues();
+    for (let i = 0; i < vals.length; i++) {
+      if (!vals[i][0]) { targetRow = SUPPLY_START_ROW + i; break; }
+    }
+  }
+  if (targetRow === -1) targetRow = maxRow + 1;
+
+  sheet.getRange(targetRow, 1, 1, 8).setValues([[
+    0, p.name||"", p.contact||"", p.phone||"",
     p.email||"", p.category||"", Number(p.leadtime)||"", p.note||""
-  ]);
+  ]]);
   renumberSupply(sheet);
   return { success: true };
 }
@@ -991,12 +1001,17 @@ function renumberColumn(sheet) {
 function renumberSupply(sheet) {
   const lastRow = sheet.getLastRow();
   if (lastRow < SUPPLY_START_ROW) return;
-  const numRows = lastRow - SUPPLY_START_ROW + 1;
-  const noCol   = sheet.getRange(SUPPLY_START_ROW, 1, numRows, 1).getValues();
-  for (let i = 0; i < noCol.length; i++) {
-    if (noCol[i][0] !== "") noCol[i][0] = i + 1;
+  const numRows  = lastRow - SUPPLY_START_ROW + 1;
+  const allCols  = sheet.getRange(SUPPLY_START_ROW, 1, numRows, 2).getValues();
+  let counter = 1;
+  for (let i = 0; i < allCols.length; i++) {
+    if (allCols[i][1]) { // มีชื่อบริษัทใน col B
+      allCols[i][0] = counter++;
+    } else {
+      allCols[i][0] = ""; // แถวว่าง ล้าง NO.
+    }
   }
-  sheet.getRange(SUPPLY_START_ROW, 1, numRows, 1).setValues(noCol);
+  sheet.getRange(SUPPLY_START_ROW, 1, numRows, 1).setValues(allCols.map(r => [r[0]]));
 }
 </div>
         <button class="btn btn-secondary" onclick="copyCode()" style="margin-top:0.75rem">📋 คัดลอกโค้ด</button>
