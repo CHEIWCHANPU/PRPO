@@ -1856,7 +1856,7 @@ function openDetail(item) {
   document.getElementById('d-meta').innerHTML = `${statusBadge(item.status)} ${daysTag(item.daysLeft, item.status)}`;
 
   // SLA check
-  const sladays = parseInt(localStorage.getItem('prpo_sla') || '14');
+  const sladays = parseInt(localStorage.getItem('prpo_sla') || '30');
   let slaHtml = '';
   const pr = parseThaiDate(item.prDate);
   if (pr) {
