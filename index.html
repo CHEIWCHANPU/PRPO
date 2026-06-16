@@ -454,6 +454,32 @@
     .summary-grid { grid-template-columns: 1fr; }
     .setup-grid { grid-template-columns: 1fr; }
   }
+
+  /* ── SUPPLIER CARDS ── */
+  .supplier-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:1.1rem 1.2rem; transition:all 0.15s; }
+  .supplier-card:hover { border-color:var(--accent); transform:translateY(-2px); box-shadow:0 4px 20px rgba(0,0,0,0.2); }
+  .supplier-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:0.8rem; }
+  .supplier-avatar { width:42px; height:42px; border-radius:10px; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+  .supplier-name { font-size:0.9rem; font-weight:700; color:var(--text); }
+  .supplier-category { font-size:0.68rem; color:var(--muted); margin-top:2px; font-family:var(--mono); }
+  .supplier-field { display:flex; align-items:center; gap:0.45rem; font-size:0.77rem; color:var(--muted); padding:0.28rem 0; border-bottom:1px solid var(--border); }
+  .supplier-field:last-child { border-bottom:none; }
+  .supplier-field-val { color:var(--text); font-size:0.79rem; }
+  .supplier-actions { display:flex; gap:0.4rem; margin-top:0.75rem; }
+
+  /* ── HISTORY LOG ── */
+  .log-badge { display:inline-flex; padding:0.12rem 0.55rem; border-radius:5px; font-size:0.65rem; font-weight:700; }
+  .log-badge.add { background:rgba(16,185,129,0.12); color:var(--success); border:1px solid rgba(16,185,129,0.2); }
+  .log-badge.edit { background:rgba(99,102,241,0.12); color:var(--accent2); border:1px solid rgba(99,102,241,0.2); }
+  .log-badge.del { background:rgba(239,68,68,0.12); color:var(--danger); border:1px solid rgba(239,68,68,0.2); }
+
+  /* ── LEAD TIME TABLE ── */
+  .lt-bar-wrap { display:flex; align-items:center; gap:0.5rem; }
+  .lt-bar { height:6px; border-radius:3px; min-width:4px; transition:width 0.5s ease; }
+  .lt-ontime { color:var(--success); font-family:var(--mono); font-size:0.72rem; font-weight:700; }
+  .lt-late { color:var(--danger); font-family:var(--mono); font-size:0.72rem; font-weight:700; }
+  #page-leadtime thead th { cursor:pointer; }
+  #page-leadtime thead th:hover { color:var(--text); }
 </style>
 </head>
 <body>
@@ -489,6 +515,15 @@
     </button>
     <button class="nav-item" onclick="exportCSV()">
       <span class="nav-icon">⬇️</span><span class="nav-text">Export CSV</span>
+    </button>
+    <button class="nav-item" id="nav-supplier" onclick="showPage('supplier',this)">
+      <span class="nav-icon">🏭</span><span class="nav-text">Supplier</span>
+    </button>
+    <button class="nav-item" id="nav-history" onclick="showPage('history',this)">
+      <span class="nav-icon">📝</span><span class="nav-text">History Log</span>
+    </button>
+    <button class="nav-item" id="nav-leadtime" onclick="showPage('leadtime',this)">
+      <span class="nav-icon">⏱️</span><span class="nav-text">Lead Time</span>
     </button>
     <button class="nav-item" id="nav-setup" onclick="showPage('setup',this)">
       <span class="nav-icon">⚙️</span><span class="nav-text">ตั้งค่า</span>
@@ -618,16 +653,16 @@
       <div class="toolbar">
         <div class="search-box">
           <span class="search-icon">🔍</span>
-          <input type="text" id="searchInput" placeholder="ค้นหา Part No., Part Name, Maker, PO..." oninput="renderTable()">
+          <input type="text" id="searchInput" placeholder="ค้นหา Part No., Part Name, Maker, PO..." oninput="currentPage=1;renderTable()">
         </div>
-        <select class="filter-select" id="filterStatus" onchange="renderTable()">
+        <select class="filter-select" id="filterStatus" onchange="currentPage=1;renderTable()">
           <option value="">สถานะทั้งหมด</option>
           <option value="เสร็จแล้ว">✅ เสร็จแล้ว</option>
           <option value="กำลังดำเนินการ">♻ กำลังดำเนินการ</option>
           <option value="ส่งยังไม่ครบ">❌ ส่งยังไม่ครบ</option>
         </select>
-        <select class="filter-select" id="filterMaker" onchange="renderTable()"><option value="">Maker ทั้งหมด</option></select>
-        <select class="filter-select" id="filterLocation" onchange="renderTable()"><option value="">สถานที่ทั้งหมด</option></select>
+        <select class="filter-select" id="filterMaker" onchange="currentPage=1;renderTable()"><option value="">Maker ทั้งหมด</option></select>
+        <select class="filter-select" id="filterLocation" onchange="currentPage=1;renderTable()"><option value="">สถานที่ทั้งหมด</option></select>
         <button class="btn btn-primary" onclick="openAddModal()">+ เพิ่มรายการ</button>
         <button class="btn btn-ghost" onclick="exportCSV()" title="Export CSV">⬇️ CSV</button>
       </div>
@@ -852,6 +887,102 @@ function updateTimestamp() {
         </div>
       </div>
     </div>
+
+    <!-- SUPPLIER DATABASE -->
+    <div class="page" id="page-supplier">
+      <div class="page-header">
+        <div class="page-header-left">
+          <h1>🏭 Supplier / Maker Database</h1>
+          <p>จัดการข้อมูลผู้ผลิตและซัพพลายเออร์</p>
+        </div>
+        <button class="btn btn-primary" onclick="openSupplierModal()">+ เพิ่ม Supplier</button>
+      </div>
+      <div class="toolbar" style="margin-bottom:0.9rem">
+        <div class="search-box" style="max-width:340px">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="supplierSearch" placeholder="ค้นหาชื่อ, เบอร์, หมวดหมู่..." oninput="renderSuppliers()">
+        </div>
+      </div>
+      <div id="supplierGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem"></div>
+    </div>
+
+    <!-- HISTORY LOG -->
+    <div class="page" id="page-history">
+      <div class="page-header">
+        <div class="page-header-left">
+          <h1>📝 History Log</h1>
+          <p>บันทึกการแก้ไข เพิ่ม และลบรายการทั้งหมด</p>
+        </div>
+        <button class="btn btn-secondary" onclick="clearHistory()">🗑️ ล้าง Log</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th style="width:140px">เวลา</th>
+            <th style="width:80px">การกระทำ</th>
+            <th>Part No.</th>
+            <th>Part Name</th>
+            <th>รายละเอียด</th>
+          </tr></thead>
+          <tbody id="historyBody">
+            <tr><td colspan="5" class="empty"><div class="empty-icon">📋</div><div class="empty-title">ยังไม่มีประวัติ</div><div class="empty-sub">เมื่อเพิ่ม แก้ไข หรือลบรายการ จะบันทึกที่นี่</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- LEAD TIME ANALYSIS -->
+    <div class="page" id="page-leadtime">
+      <div class="page-header">
+        <div class="page-header-left">
+          <h1>⏱️ วิเคราะห์ Lead Time</h1>
+          <p>เปรียบเทียบ Lead Time จริง vs กำหนด แยกตาม Maker</p>
+        </div>
+      </div>
+      <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:1.3rem">
+        <div class="stat-card total" style="cursor:default">
+          <div class="stat-top"><div class="stat-icon-wrap">📦</div></div>
+          <div class="stat-label">Maker ทั้งหมด</div>
+          <div class="stat-value" id="lt-maker-count" style="color:var(--accent2)">—</div>
+          <div class="stat-meta">ที่มีรายการส่งแล้ว</div>
+        </div>
+        <div class="stat-card done" style="cursor:default">
+          <div class="stat-top"><div class="stat-icon-wrap">✅</div></div>
+          <div class="stat-label">On-Time Rate</div>
+          <div class="stat-value" id="lt-ontime-rate" style="color:var(--success)">—</div>
+          <div class="stat-meta">ส่งตรงเวลา</div>
+        </div>
+        <div class="stat-card incomplete" style="cursor:default">
+          <div class="stat-top"><div class="stat-icon-wrap">⚠️</div></div>
+          <div class="stat-label">ส่งช้าที่สุด</div>
+          <div class="stat-value" id="lt-worst-maker" style="color:var(--danger);font-size:1.1rem">—</div>
+          <div class="stat-meta" id="lt-worst-days">Lead time เกินกำหนด</div>
+        </div>
+      </div>
+      <div class="chart-row" style="grid-template-columns:1fr 1fr;margin-bottom:1.3rem">
+        <div class="chart-card" style="grid-column:1/-1">
+          <div class="chart-header"><div class="chart-title">Lead Time เฉลี่ยต่อ Maker (วัน)</div></div>
+          <div class="chart-wrap" style="height:220px"><canvas id="chartLeadTime"></canvas></div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-title-bar">
+          <span class="table-title-label">📊 รายงาน Lead Time แต่ละ Maker</span>
+        </div>
+        <table>
+          <thead><tr>
+            <th onclick="sortLT('maker')">MAKER</th>
+            <th onclick="sortLT('total')">รายการทั้งหมด</th>
+            <th onclick="sortLT('done')">ส่งแล้ว</th>
+            <th onclick="sortLT('avgLead')">Lead Time เฉลี่ย (วัน)</th>
+            <th onclick="sortLT('ontime')">On-Time</th>
+            <th onclick="sortLT('late')">ส่งช้า</th>
+            <th onclick="sortLT('ontimeRate')">% ตรงเวลา</th>
+          </tr></thead>
+          <tbody id="leadTimeBody"></tbody>
+        </table>
+      </div>
+    </div>
   </main>
 </div>
 
@@ -912,6 +1043,10 @@ function updateTimestamp() {
 
 <script>
 let WEB_APP_URL = localStorage.getItem('prpo_url') || '';
+let suppliers = JSON.parse(localStorage.getItem('prpo_suppliers') || '[]');
+let historyLog = JSON.parse(localStorage.getItem('prpo_history') || '[]');
+let ltSortCol = 'avgLead';
+let ltSortDir = 'desc';
 let allData = [];
 let filteredData = [];
 let sortCol = 'no';
@@ -988,9 +1123,12 @@ function showPage(name, btn) {
   document.getElementById('page-' + name).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  const titles = { dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', summary:'📈 สรุปภาพรวม', setup:'⚙️ ตั้งค่าระบบ' };
+  const titles = { dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', summary:'📈 สรุปภาพรวม', setup:'⚙️ ตั้งค่าระบบ', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis' };
   document.getElementById('topbarTitle').textContent = titles[name] || name;
   if (name === 'summary') renderSummary();
+  if (name === 'supplier') renderSuppliers();
+  if (name === 'leadtime') renderLeadTime();
+  if (name === 'history') renderHistory();
 }
 
 /* ── NOTIFICATIONS ── */
@@ -1505,6 +1643,8 @@ async function saveItem() {
   } else {
     allData.push({ ...params, no: allData.length + 1, daysLeft: '', rowIndex: allData.length + 9 });
   }
+  const logAction = rowIndex ? 'edit' : 'add';
+  addHistoryLog(logAction, params.partNo, params.partName, rowIndex ? 'แก้ไขข้อมูล' : 'เพิ่มรายการใหม่');
   closeModal(); processData();
   showToast(rowIndex ? '✅ แก้ไขสำเร็จ' : '✅ เพิ่มรายการสำเร็จ', 'success');
   if (WEB_APP_URL) {
@@ -1515,6 +1655,8 @@ async function saveItem() {
 }
 async function deleteItem(rowIndex) {
   if (!confirm('ต้องการลบรายการนี้?')) return;
+  const delItem = allData.find(r => r.rowIndex === rowIndex);
+  if(delItem) addHistoryLog('del', delItem.partNo, delItem.partName, 'ลบรายการ');
   allData = allData.filter(r => r.rowIndex !== rowIndex);
   processData(); showToast('🗑️ ลบรายการสำเร็จ', 'success');
   if (WEB_APP_URL) { try { await fetch(WEB_APP_URL + '?action=del&rowIndex=' + rowIndex); } catch(e) {} }
@@ -1591,5 +1733,31 @@ function showToast(msg, type = 'info') {
   setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateX(16px)'; el.style.transition = 'all 0.25s'; setTimeout(() => el.remove(), 260); }, 3200);
 }
 </script>
+
+<!-- SUPPLIER MODAL -->
+<div class="modal-overlay" id="supplierModalOverlay" onclick="if(event.target===this)closeSupplierModal()">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <div class="modal-title" id="supplierModalTitle">🏭 เพิ่ม Supplier</div>
+      <button class="modal-close" onclick="closeSupplierModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="s-id">
+      <div class="form-grid">
+        <div class="form-group full"><label class="form-label">ชื่อบริษัท / Maker *</label><input type="text" class="form-input" id="s-name" placeholder="เช่น KOBAYU CO.,LTD."></div>
+        <div class="form-group"><label class="form-label">ชื่อผู้ติดต่อ</label><input type="text" class="form-input" id="s-contact" placeholder="คุณ สมชาย"></div>
+        <div class="form-group"><label class="form-label">เบอร์โทร</label><input type="text" class="form-input" id="s-phone" placeholder="02-xxx-xxxx"></div>
+        <div class="form-group"><label class="form-label">Email</label><input type="text" class="form-input" id="s-email" placeholder="contact@company.com"></div>
+        <div class="form-group"><label class="form-label">หมวดหมู่สินค้า</label><input type="text" class="form-input" id="s-category" placeholder="เช่น NUT, BOLT, BRACKET"></div>
+        <div class="form-group"><label class="form-label">Lead Time ปกติ (วัน)</label><input type="number" class="form-input" id="s-leadtime" placeholder="14" min="1"></div>
+        <div class="form-group full"><label class="form-label">หมายเหตุ</label><input type="text" class="form-input" id="s-note" placeholder="ข้อมูลเพิ่มเติม"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeSupplierModal()">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveSupplier()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
