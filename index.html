@@ -513,9 +513,6 @@
     <button class="nav-item" onclick="syncData()">
       <span class="nav-icon" id="sidebarSyncIcon">⟳</span><span class="nav-text">Sync Sheet</span>
     </button>
-    <button class="nav-item" onclick="exportCSV()">
-      <span class="nav-icon">⬇️</span><span class="nav-text">Export CSV</span>
-    </button>
     <button class="nav-item" id="nav-supplier" onclick="showPage('supplier',this)">
       <span class="nav-icon">🏭</span><span class="nav-text">Supplier</span>
     </button>
@@ -664,7 +661,6 @@
         <select class="filter-select" id="filterMaker" onchange="currentPage=1;renderTable()"><option value="">Maker ทั้งหมด</option></select>
         <select class="filter-select" id="filterLocation" onchange="currentPage=1;renderTable()"><option value="">สถานที่ทั้งหมด</option></select>
         <button class="btn btn-primary" onclick="openAddModal()">+ เพิ่มรายการ</button>
-        <button class="btn btn-ghost" onclick="exportCSV()" title="Export CSV">⬇️ CSV</button>
       </div>
       <div class="table-wrap">
         <table>
@@ -741,7 +737,7 @@
         <p>ทำตามขั้นตอนด้านล่างเพื่อเชื่อม Google Sheet เข้ากับ Dashboard แบบ Real-time</p>
       </div>
       <div class="instruction-card">
-        <div class="step-row"><span class="step-badge">1</span><span>เปิด Google Sheet → <strong>Extensions</strong> → <strong>Apps Script</strong></span></div>
+        <div class="step-row"><span class="step-badge">1</span><span>เปิด Google Sheet (Sheet: <strong>📋 กรอกข้อมูล</strong>) → <strong>Extensions</strong> → <strong>Apps Script</strong></span></div>
         <div class="step-row"><span class="step-badge">2</span><span>ลบโค้ดเดิมทั้งหมด แล้ววางโค้ดด้านล่าง</span></div>
         <div class="step-row"><span class="step-badge">3</span><span>กด Save 💾 แล้วเลือก <strong>Deploy → New Deployment</strong></span></div>
         <div class="step-row"><span class="step-badge">4</span><span>เลือก Type = Web App, Execute as = Me, Access = Anyone → Deploy</span></div>
@@ -749,118 +745,225 @@
       </div>
       <div class="instruction-card">
         <h3>📋 Apps Script Code</h3>
-        <div class="code-block" id="appsScriptCode">// ─── CHEIW CHAN PR/PO TRACKER · Apps Script ───
-const SHEET_NAME = "PR/PO";
-const SS = SpreadsheetApp.getActiveSpreadsheet();
+        <div class="code-block" id="appsScriptCode">// ═══════════════════════════════════════════════════════════════════════════
+//  CHIEWCHAN INDUSTRY CO.,LTD. — PR/PO TRACKER · Apps Script v2
+//  Sheet: "📋 กรอกข้อมูล"
+//  Header: Row 5  |  Data: Row 6 onwards
+//
+//  Columns (A=1):
+//  A=NO. | B=PART NO. | C=PART NAME | D=MODEL | E=VOLUME
+//  F=เปิด P/R | G=วันนัดส่ง | H=วันเข้าส่งจริง | I=สถานที่ส่ง
+//  J=สถานะ | K=MAKER | L=เหลือ(วัน) | M=PO/ORDER NO. | N=หมายเหตุ
+// ═══════════════════════════════════════════════════════════════════════════
+
+const SHEET_NAME = "📋 กรอกข้อมูล";
+const DATA_START_ROW = 6;   // แถวที่ข้อมูลเริ่ม (หลัง header row 5)
+const HEADER_ROW = 5;
 
 function doGet(e) {
-  const action = e.parameter.action || "getData";
+  // ─── CORS headers ───
+  const output = ContentService.createTextOutput();
+  output.setMimeType(ContentService.MimeType.JSON);
+
+  const action = (e && e.parameter && e.parameter.action) || "getData";
   let result;
+
   try {
-    if (action === "getData")   result = getData();
-    else if (action === "add")  result = addRow(e.parameter);
-    else if (action === "edit") result = editRow(e.parameter);
-    else if (action === "del")  result = deleteRow(e.parameter);
-    else result = { error: "Unknown action" };
-  } catch(err) {
-    result = { error: err.message };
+    if      (action === "getData")   result = getData();
+    else if (action === "add")       result = addRow(e.parameter);
+    else if (action === "edit")      result = editRow(e.parameter);
+    else if (action === "del")       result = deleteRow(e.parameter);
+    else if (action === "ping")      result = { success: true, message: "pong" };
+    else                             result = { success: false, error: "Unknown action: " + action };
+  } catch (err) {
+    result = { success: false, error: err.message, stack: err.stack };
   }
-  return ContentService
-    .createTextOutput(JSON.stringify(result))
-    .setMimeType(ContentService.MimeType.JSON);
+
+  output.setContent(JSON.stringify(result));
+  return output;
 }
 
+// ─── READ ALL DATA ───────────────────────────────────────────────────────
 function getData() {
-  const sheet = SS.getSheetByName(SHEET_NAME);
-  const rows  = sheet.getDataRange().getValues();
+  const ss    = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) return { success: false, error: "ไม่พบ Sheet: " + SHEET_NAME };
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow < DATA_START_ROW) return { success: true, data: [], updated: fmtNow() };
+
+  const numRows = lastRow - DATA_START_ROW + 1;
+  const rows    = sheet.getRange(DATA_START_ROW, 1, numRows, 14).getValues();
+
+  const today = new Date(); today.setHours(0, 0, 0, 0);
   const data  = [];
-  const today = new Date(); today.setHours(0,0,0,0);
-  for (let i = 8; i < rows.length; i++) {
-    const r = rows[i];
-    if (!r[0] && !r[1]) continue;
-    let statusRaw = r[9];
-    let status;
-    if (statusRaw === true  || String(statusRaw).toUpperCase() === "TRUE")  status = "เสร็จแล้ว ✅";
-    else if (statusRaw === false || String(statusRaw).toUpperCase() === "FALSE") status = "กำลังดำเนินการ ♻";
-    else status = String(statusRaw || "กำลังดำเนินการ ♻");
+
+  rows.forEach((r, idx) => {
+    // ข้ามแถวว่าง (ต้องมีอย่างน้อย Part No. หรือ Part Name)
+    if (!r[1] && !r[2]) return;
+
+    const status = normalizeStatus(r[9]);
     let daysLeft;
     if (status.includes("เสร็จแล้ว")) {
       daysLeft = "Done";
     } else {
       const due = r[6];
-      if (due instanceof Date) {
-        const d = new Date(due); d.setHours(0,0,0,0);
+      if (due instanceof Date && !isNaN(due)) {
+        const d = new Date(due); d.setHours(0, 0, 0, 0);
         daysLeft = Math.round((d - today) / 86400000);
-      } else { daysLeft = ""; }
+      } else {
+        daysLeft = "";
+      }
     }
+
     data.push({
-      no: r[0], partNo: r[1], partName: r[2],
-      model: r[3], volume: r[4], prDate: formatDate(r[5]),
-      dueDate: formatDate(r[6]), actualDate: formatDate(r[7]),
-      location: r[8], status: status, maker: r[10],
-      daysLeft: daysLeft, poNo: r[12], note: r[13],
-      rowIndex: i + 1
+      no:         r[0] || (idx + 1),
+      partNo:     String(r[1] || "").trim(),
+      partName:   String(r[2] || "").trim(),
+      model:      String(r[3] || "").trim(),
+      volume:     r[4] || 0,
+      prDate:     fmtDate(r[5]),
+      dueDate:    fmtDate(r[6]),
+      actualDate: fmtDate(r[7]),
+      location:   String(r[8] || "").trim(),
+      status:     status,
+      maker:      String(r[10] || "").trim(),
+      daysLeft:   daysLeft,
+      poNo:       String(r[12] || "").trim(),
+      note:       String(r[13] || "").trim(),
+      rowIndex:   DATA_START_ROW + idx   // แถวจริงใน Sheet
     });
-  }
-  return { success: true, data, updated: new Date().toLocaleString("th-TH") };
+  });
+
+  return { success: true, data: data, updated: fmtNow() };
 }
 
-function formatDate(v) {
-  if (!v) return "";
-  if (v instanceof Date) return Utilities.formatDate(v, "Asia/Bangkok", "d/M/yyyy");
-  return String(v);
-}
-
+// ─── ADD ROW ─────────────────────────────────────────────────────────────
 function addRow(p) {
-  const sheet = SS.getSheetByName(SHEET_NAME);
-  const last  = sheet.getLastRow();
-  const no    = last - 7;
+  const ss    = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) return { success: false, error: "ไม่พบ Sheet: " + SHEET_NAME };
+
+  const lastRow = sheet.getLastRow();
+  const no      = lastRow >= DATA_START_ROW ? lastRow - DATA_START_ROW + 2 : 1;
+
   sheet.appendRow([
-    no, p.partNo, p.partName, p.model, Number(p.volume) || 0,
-    p.prDate, p.dueDate, p.actualDate || "",
-    p.location, p.status, p.maker, "",
-    p.poNo || "", p.note || ""
+    no,
+    p.partNo    || "",
+    p.partName  || "",
+    p.model     || "",
+    Number(p.volume) || 0,
+    p.prDate    || "",
+    p.dueDate   || "",
+    p.actualDate || "",
+    p.location  || "",
+    p.status    || "กำลังดำเนินการ ♻",
+    p.maker     || "",
+    "",                     // L = เหลือ (วัน) — คำนวณโดย script
+    p.poNo      || "",
+    p.note      || ""
   ]);
-  updateTimestamp();
+
+  updateTimestamp(sheet);
   return { success: true };
 }
 
+// ─── EDIT ROW ────────────────────────────────────────────────────────────
 function editRow(p) {
-  const sheet = SS.getSheetByName(SHEET_NAME);
-  const ri    = parseInt(p.rowIndex);
-  const existingCell = sheet.getRange(ri, 10);
-  const existingVal  = existingCell.getValue();
-  let statusToWrite  = p.status;
+  const ss    = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) return { success: false, error: "ไม่พบ Sheet: " + SHEET_NAME };
+
+  const ri = parseInt(p.rowIndex);
+  if (isNaN(ri) || ri < DATA_START_ROW) return { success: false, error: "rowIndex ไม่ถูกต้อง" };
+
+  // ตรวจสอบว่าสถานะเดิมเป็น Boolean หรือ Text
+  const existingStatusCell = sheet.getRange(ri, 10);
+  const existingVal        = existingStatusCell.getValue();
+  let statusToWrite        = p.status || "กำลังดำเนินการ ♻";
   if (typeof existingVal === "boolean") {
-    statusToWrite = p.status.includes("เสร็จแล้ว");
+    statusToWrite = p.status && p.status.includes("เสร็จแล้ว");
   }
+
+  // เขียนคอลัมน์ B–K (2–11), M–N (13–14)
   const cols = [
-    p.partNo, p.partName, p.model, Number(p.volume) || 0,
-    p.prDate, p.dueDate, p.actualDate || "",
-    p.location, statusToWrite, p.maker
+    p.partNo    || "",    // B
+    p.partName  || "",    // C
+    p.model     || "",    // D
+    Number(p.volume) || 0, // E
+    p.prDate    || "",    // F
+    p.dueDate   || "",    // G
+    p.actualDate || "",   // H
+    p.location  || "",    // I
+    statusToWrite,        // J
+    p.maker     || ""     // K
   ];
+
   for (let c = 0; c < cols.length; c++) {
     sheet.getRange(ri, c + 2).setValue(cols[c]);
   }
   sheet.getRange(ri, 13).setValue(p.poNo || "");
   sheet.getRange(ri, 14).setValue(p.note || "");
-  updateTimestamp();
+
+  updateTimestamp(sheet);
   return { success: true };
 }
 
+// ─── DELETE ROW ──────────────────────────────────────────────────────────
 function deleteRow(p) {
-  const sheet = SS.getSheetByName(SHEET_NAME);
-  sheet.deleteRow(parseInt(p.rowIndex));
-  updateTimestamp();
+  const ss    = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) return { success: false, error: "ไม่พบ Sheet: " + SHEET_NAME };
+
+  const ri = parseInt(p.rowIndex);
+  if (isNaN(ri) || ri < DATA_START_ROW) return { success: false, error: "rowIndex ไม่ถูกต้อง" };
+
+  sheet.deleteRow(ri);
+
+  // Re-number column A after delete
+  renumberColumn(sheet);
+  updateTimestamp(sheet);
   return { success: true };
 }
 
-function updateTimestamp() {
-  const sheet = SS.getSheetByName(SHEET_NAME);
-  sheet.getRange("A2").setValue(
-    "อัปเดตล่าสุด: " + Utilities.formatDate(new Date(), "Asia/Bangkok", "dd/MM/yyyy HH:mm")
-  );
-}</div>
+// ─── HELPERS ─────────────────────────────────────────────────────────────
+function normalizeStatus(raw) {
+  if (raw === true  || String(raw).toUpperCase() === "TRUE")  return "เสร็จแล้ว ✅";
+  if (raw === false || String(raw).toUpperCase() === "FALSE") return "กำลังดำเนินการ ♻";
+  const s = String(raw || "").trim();
+  return s || "กำลังดำเนินการ ♻";
+}
+
+function fmtDate(v) {
+  if (!v) return "";
+  if (v instanceof Date && !isNaN(v)) {
+    return Utilities.formatDate(v, "Asia/Bangkok", "d/M/yyyy");
+  }
+  const s = String(v).trim();
+  // ถ้าเป็น "-" ให้คืน empty string
+  return s === "-" ? "" : s;
+}
+
+function fmtNow() {
+  return Utilities.formatDate(new Date(), "Asia/Bangkok", "dd/MM/yyyy HH:mm:ss");
+}
+
+function updateTimestamp(sheet) {
+  // ใส่ timestamp ที่ cell A2
+  sheet.getRange("A2").setValue("อัปเดตล่าสุด: " + fmtNow());
+}
+
+function renumberColumn(sheet) {
+  const lastRow = sheet.getLastRow();
+  if (lastRow < DATA_START_ROW) return;
+  const numRows = lastRow - DATA_START_ROW + 1;
+  const noCol   = sheet.getRange(DATA_START_ROW, 1, numRows, 1).getValues();
+  for (let i = 0; i < noCol.length; i++) {
+    if (noCol[i][0] !== "") noCol[i][0] = i + 1;
+  }
+  sheet.getRange(DATA_START_ROW, 1, numRows, 1).setValues(noCol);
+}
+</div>
         <button class="btn btn-secondary" onclick="copyCode()" style="margin-top:0.75rem">📋 คัดลอกโค้ด</button>
       </div>
       <div class="instruction-card">
@@ -874,11 +977,7 @@ function updateTimestamp() {
       </div>
       <div class="instruction-card">
         <div class="setup-grid">
-          <div class="setup-action" onclick="exportCSV()">
-            <div class="setup-action-icon">📊</div>
-            <div class="setup-action-label">Export CSV</div>
-            <div class="setup-action-sub">ดาวน์โหลดข้อมูลเป็น CSV</div>
-          </div>
+
           <div class="setup-action" onclick="downloadHTML()">
             <div class="setup-action-icon">⬇️</div>
             <div class="setup-action-label">ดาวน์โหลด HTML</div>
@@ -1060,17 +1159,17 @@ let notifOpen = false;
 let activeMonthTab = null;
 
 const DEMO = [
-  { no:1,  partNo:'11057-1778B',        partName:'BRACKET',       model:'8901/8951', volume:250,  prDate:'7/6/2026',  dueDate:'13/6/2026', actualDate:'13/6/2026', location:'CCIR', status:'เสร็จแล้ว ✅',       maker:'เจริญลาภ',    daysLeft:'Done', poNo:'', note:'', rowIndex:9 },
-  { no:2,  partNo:'9091140860',         partName:'NUT',            model:'VD00',      volume:5000, prDate:'8/6/2026',  dueDate:'26/6/2026', actualDate:'',          location:'CCIS', status:'กำลังดำเนินการ ♻', maker:'KOBAYU',      daysLeft:10, poNo:'1033-6/NM188-03', note:'', rowIndex:10 },
-  { no:3,  partNo:'9091140480',         partName:'NUT PROJECT',    model:'VD00',      volume:1000, prDate:'8/6/2026',  dueDate:'26/6/2026', actualDate:'',          location:'CCIS', status:'กำลังดำเนินการ ♻', maker:'KOBAYU',      daysLeft:10, poNo:'', note:'', rowIndex:11 },
-  { no:4,  partNo:'9091140680',         partName:'NUT PROJECTION', model:'VD00',      volume:2000, prDate:'8/6/2026',  dueDate:'26/6/2026', actualDate:'',          location:'CCIS', status:'กำลังดำเนินการ ♻', maker:'KOBAYU',      daysLeft:10, poNo:'1038-8/NM188-03', note:'', rowIndex:12 },
-  { no:5,  partNo:'9049008200',         partName:'STUD BOLT',      model:'VD00',      volume:2500, prDate:'8/6/2026',  dueDate:'15/6/2026', actualDate:'',          location:'CCIS', status:'กำลังดำเนินการ ♻', maker:'IWATA',       daysLeft:-1, poNo:'', note:'', rowIndex:13 },
-  { no:6,  partNo:'8977982450',         partName:'STUD WELD',      model:'VD00',      volume:2000, prDate:'8/6/2026',  dueDate:'15/6/2026', actualDate:'',          location:'CCIS', status:'กำลังดำเนินการ ♻', maker:'THAI ASAKAWA',daysLeft:-1, poNo:'', note:'', rowIndex:14 },
-  { no:7,  partNo:'8981970261-2',       partName:'DISTANCE',       model:'VD00',      volume:500,  prDate:'8/6/2026',  dueDate:'15/6/2026', actualDate:'',          location:'CCIS', status:'กำลังดำเนินการ ♻', maker:'P-WAT',       daysLeft:-1, poNo:'', note:'', rowIndex:15 },
-  { no:8,  partNo:'13061-2288A',        partName:'BOSS',           model:'2199',      volume:1000, prDate:'9/6/2026',  dueDate:'19/6/2026', actualDate:'17/6/2026', location:'CCIR', status:'ส่งยังไม่ครบ ❌',   maker:'GRM',         daysLeft:3,  poNo:'', note:'ส่งแล้ว 200 pcs', rowIndex:16 },
-  { no:9,  partNo:'53101-MMAA-DA02-H1', partName:'BOSS,R HNDL',   model:'MMAA',      volume:100,  prDate:'12/6/2026', dueDate:'13/7/2026', actualDate:'',          location:'CCIS', status:'กำลังดำเนินการ ♻', maker:'YTT',         daysLeft:27, poNo:'', note:'', rowIndex:17 },
-  { no:10, partNo:'53151-MMAA-DA02-H1', partName:'BOSS,L HNDL',   model:'MMAA',      volume:100,  prDate:'12/6/2026', dueDate:'13/7/2026', actualDate:'',          location:'CCIS', status:'กำลังดำเนินการ ♻', maker:'YTT',         daysLeft:27, poNo:'', note:'', rowIndex:18 },
-  { no:11, partNo:'77234-GGZ-J000',     partName:'SPG SEAT LOCK',  model:'K0GA',      volume:150,  prDate:'12/6/2026', dueDate:'13/7/2026', actualDate:'',          location:'CCIS', status:'กำลังดำเนินการ ♻', maker:'นำสินสปริง', daysLeft:27, poNo:'', note:'', rowIndex:19 },
+  { no:1,  partNo:'11057-1778B',        partName:'BRACKET',       model:'8901/8951', volume:250,  prDate:'7/6/2026',  dueDate:'13/6/2026', actualDate:'13/6/2026', location:'CCIR', status:'เสร็จแล้ว ✅',       maker:'เจริญลาภ',    daysLeft:'Done', poNo:'', note:'', rowIndex:6 },
+  { no:2,  partNo:'9091140860',         partName:'NUT',            model:'VD00',      volume:5000, prDate:'8/6/2026',  dueDate:'26/6/2026', actualDate:'',          location:'CCIS', status:'กำลังดำเนินการ ♻', maker:'KOBAYU',      daysLeft:10, poNo:'1033-6/NM188-03', note:'', rowIndex:7 },
+  { no:3,  partNo:'9091140480',         partName:'NUT PROJECT',    model:'VD00',      volume:1000, prDate:'8/6/2026',  dueDate:'26/6/2026', actualDate:'',          location:'CCIS', status:'กำลังดำเนินการ ♻', maker:'KOBAYU',      daysLeft:10, poNo:'', note:'', rowIndex:8 },
+  { no:4,  partNo:'9091140680',         partName:'NUT PROJECTION', model:'VD00',      volume:2000, prDate:'8/6/2026',  dueDate:'26/6/2026', actualDate:'',          location:'CCIS', status:'กำลังดำเนินการ ♻', maker:'KOBAYU',      daysLeft:10, poNo:'1038-8/NM188-03', note:'', rowIndex:9 },
+  { no:5,  partNo:'9049008200',         partName:'STUD BOLT',      model:'VD00',      volume:2500, prDate:'8/6/2026',  dueDate:'15/6/2026', actualDate:'',          location:'CCIS', status:'กำลังดำเนินการ ♻', maker:'IWATA',       daysLeft:-1, poNo:'', note:'', rowIndex:10 },
+  { no:6,  partNo:'8977982450',         partName:'STUD WELD',      model:'VD00',      volume:2000, prDate:'8/6/2026',  dueDate:'15/6/2026', actualDate:'',          location:'CCIS', status:'กำลังดำเนินการ ♻', maker:'THAI ASAKAWA',daysLeft:-1, poNo:'', note:'', rowIndex:11 },
+  { no:7,  partNo:'8981970261-2',       partName:'DISTANCE',       model:'VD00',      volume:500,  prDate:'8/6/2026',  dueDate:'15/6/2026', actualDate:'',          location:'CCIS', status:'กำลังดำเนินการ ♻', maker:'P-WAT',       daysLeft:-1, poNo:'', note:'', rowIndex:12 },
+  { no:8,  partNo:'13061-2288A',        partName:'BOSS',           model:'2199',      volume:1000, prDate:'9/6/2026',  dueDate:'19/6/2026', actualDate:'17/6/2026', location:'CCIR', status:'ส่งยังไม่ครบ ❌',   maker:'GRM',         daysLeft:3,  poNo:'', note:'ส่งแล้ว 200 pcs', rowIndex:13 },
+  { no:9,  partNo:'53101-MMAA-DA02-H1', partName:'BOSS,R HNDL',   model:'MMAA',      volume:100,  prDate:'12/6/2026', dueDate:'13/7/2026', actualDate:'',          location:'CCIS', status:'กำลังดำเนินการ ♻', maker:'YTT',         daysLeft:27, poNo:'', note:'', rowIndex:14 },
+  { no:10, partNo:'53151-MMAA-DA02-H1', partName:'BOSS,L HNDL',   model:'MMAA',      volume:100,  prDate:'12/6/2026', dueDate:'13/7/2026', actualDate:'',          location:'CCIS', status:'กำลังดำเนินการ ♻', maker:'YTT',         daysLeft:27, poNo:'', note:'', rowIndex:15 },
+  { no:11, partNo:'77234-GGZ-J000',     partName:'SPG SEAT LOCK',  model:'K0GA',      volume:150,  prDate:'12/6/2026', dueDate:'13/7/2026', actualDate:'',          location:'CCIS', status:'กำลังดำเนินการ ♻', maker:'นำสินสปริง', daysLeft:27, poNo:'', note:'', rowIndex:16 },
 ];
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -1641,7 +1740,7 @@ async function saveItem() {
     const idx = allData.findIndex(r => r.rowIndex === parseInt(rowIndex));
     if (idx >= 0) allData[idx] = { ...allData[idx], ...params };
   } else {
-    allData.push({ ...params, no: allData.length + 1, daysLeft: '', rowIndex: allData.length + 9 });
+    allData.push({ ...params, no: allData.length + 1, daysLeft: '', rowIndex: allData.length + 6 });
   }
   const logAction = rowIndex ? 'edit' : 'add';
   addHistoryLog(logAction, params.partNo, params.partName, rowIndex ? 'แก้ไขข้อมูล' : 'เพิ่มรายการใหม่');
@@ -1731,6 +1830,264 @@ function showToast(msg, type = 'info') {
   const el = document.createElement('div'); el.className = `toast ${type}`; el.textContent = msg;
   container.appendChild(el);
   setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateX(16px)'; el.style.transition = 'all 0.25s'; setTimeout(() => el.remove(), 260); }, 3200);
+}
+
+/* ══════════════════════════════════════════════════════
+   HISTORY LOG
+══════════════════════════════════════════════════════ */
+function addHistoryLog(action, partNo, partName, detail) {
+  const entry = {
+    id: Date.now(),
+    time: new Date().toLocaleString('th-TH'),
+    action,
+    partNo: partNo || '',
+    partName: partName || '',
+    detail: detail || ''
+  };
+  historyLog.unshift(entry);
+  if (historyLog.length > 200) historyLog = historyLog.slice(0, 200);
+  localStorage.setItem('prpo_history', JSON.stringify(historyLog));
+}
+function renderHistory() {
+  const tbody = document.getElementById('historyBody');
+  if (!historyLog.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty"><div class="empty-icon">📋</div><div class="empty-title">ยังไม่มีประวัติ</div><div class="empty-sub">เมื่อเพิ่ม แก้ไข หรือลบรายการ จะบันทึกที่นี่</div></td></tr>';
+    return;
+  }
+  const labels = { add:'➕ เพิ่ม', edit:'✏️ แก้ไข', del:'🗑️ ลบ' };
+  const cls    = { add:'add', edit:'edit', del:'del' };
+  tbody.innerHTML = historyLog.map(e => `
+    <tr>
+      <td class="date-cell">${e.time}</td>
+      <td><span class="log-badge ${cls[e.action]||'edit'}">${labels[e.action]||e.action}</span></td>
+      <td class="part-no">${e.partNo}</td>
+      <td class="part-name">${e.partName}</td>
+      <td style="font-size:0.76rem;color:var(--muted)">${e.detail}</td>
+    </tr>`).join('');
+}
+function clearHistory() {
+  if (!confirm('ต้องการล้างประวัติทั้งหมด?')) return;
+  historyLog = [];
+  localStorage.removeItem('prpo_history');
+  renderHistory();
+  showToast('🗑️ ล้างประวัติแล้ว', 'success');
+}
+
+/* ══════════════════════════════════════════════════════
+   SUPPLIER DATABASE
+══════════════════════════════════════════════════════ */
+function openSupplierModal(id) {
+  document.getElementById('s-id').value = id || '';
+  if (id) {
+    const s = suppliers.find(x => x.id === id);
+    if (!s) return;
+    document.getElementById('supplierModalTitle').textContent = '✏️ แก้ไข Supplier';
+    document.getElementById('s-name').value     = s.name     || '';
+    document.getElementById('s-contact').value  = s.contact  || '';
+    document.getElementById('s-phone').value    = s.phone    || '';
+    document.getElementById('s-email').value    = s.email    || '';
+    document.getElementById('s-category').value = s.category || '';
+    document.getElementById('s-leadtime').value = s.leadtime || '';
+    document.getElementById('s-note').value     = s.note     || '';
+  } else {
+    document.getElementById('supplierModalTitle').textContent = '🏭 เพิ่ม Supplier';
+    ['name','contact','phone','email','category','leadtime','note'].forEach(f => {
+      document.getElementById('s-'+f).value = '';
+    });
+  }
+  document.getElementById('supplierModalOverlay').classList.add('open');
+}
+function closeSupplierModal() {
+  document.getElementById('supplierModalOverlay').classList.remove('open');
+}
+function saveSupplier() {
+  const name = document.getElementById('s-name').value.trim();
+  if (!name) { showToast('❌ กรุณากรอกชื่อ Supplier', 'error'); return; }
+  const id = document.getElementById('s-id').value || String(Date.now());
+  const data = {
+    id, name,
+    contact:  document.getElementById('s-contact').value.trim(),
+    phone:    document.getElementById('s-phone').value.trim(),
+    email:    document.getElementById('s-email').value.trim(),
+    category: document.getElementById('s-category').value.trim(),
+    leadtime: document.getElementById('s-leadtime').value,
+    note:     document.getElementById('s-note').value.trim()
+  };
+  const idx = suppliers.findIndex(s => s.id === id);
+  if (idx >= 0) suppliers[idx] = data; else suppliers.push(data);
+  localStorage.setItem('prpo_suppliers', JSON.stringify(suppliers));
+  closeSupplierModal();
+  renderSuppliers();
+  showToast('✅ บันทึก Supplier สำเร็จ', 'success');
+}
+function deleteSupplier(id) {
+  if (!confirm('ต้องการลบ Supplier นี้?')) return;
+  suppliers = suppliers.filter(s => s.id !== id);
+  localStorage.setItem('prpo_suppliers', JSON.stringify(suppliers));
+  renderSuppliers();
+  showToast('🗑️ ลบ Supplier แล้ว', 'success');
+}
+function renderSuppliers() {
+  const q    = (document.getElementById('supplierSearch')?.value || '').toLowerCase();
+  const grid = document.getElementById('supplierGrid');
+  const list = suppliers.filter(s => !q ||
+    (s.name    ||'').toLowerCase().includes(q) ||
+    (s.category||'').toLowerCase().includes(q) ||
+    (s.phone   ||'').includes(q)
+  );
+  if (!list.length) {
+    grid.innerHTML = '<div style="color:var(--muted);font-size:0.85rem;padding:2rem 0;text-align:center;grid-column:1/-1">' +
+      (suppliers.length ? '🔍 ไม่พบ Supplier ที่ค้นหา' : '🏭 ยังไม่มี Supplier — กด + เพิ่ม Supplier') + '</div>';
+    return;
+  }
+  const makerCount = {};
+  allData.forEach(r => { if(r.maker) makerCount[r.maker] = (makerCount[r.maker]||0)+1; });
+  grid.innerHTML = list.map(s => {
+    const initials = s.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const prCount  = makerCount[s.name] || 0;
+    return `<div class="supplier-card">
+      <div class="supplier-header">
+        <div style="display:flex;align-items:center;gap:0.7rem">
+          <div class="supplier-avatar">${initials}</div>
+          <div>
+            <div class="supplier-name">${s.name}</div>
+            <div class="supplier-category">${s.category || 'ไม่ระบุหมวดหมู่'}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:0.3rem">
+          <button class="icon-btn" onclick="openSupplierModal('${s.id}')" title="แก้ไข">✏️</button>
+          <button class="icon-btn del" onclick="deleteSupplier('${s.id}')" title="ลบ">🗑️</button>
+        </div>
+      </div>
+      ${s.contact  ? `<div class="supplier-field">👤 <span class="supplier-field-val">${s.contact}</span></div>` : ''}
+      ${s.phone    ? `<div class="supplier-field">📞 <span class="supplier-field-val">${s.phone}</span></div>` : ''}
+      ${s.email    ? `<div class="supplier-field">✉️ <span class="supplier-field-val">${s.email}</span></div>` : ''}
+      ${s.leadtime ? `<div class="supplier-field">⏱️ Lead Time: <span class="supplier-field-val" style="color:var(--accent)">${s.leadtime} วัน</span></div>` : ''}
+      <div class="supplier-field">📦 รายการใน PR/PO: <span class="supplier-field-val" style="color:var(--accent2)">${prCount} รายการ</span></div>
+      ${s.note ? `<div class="supplier-field" style="border-bottom:none">📋 <span style="color:var(--muted);font-size:0.74rem">${s.note}</span></div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════════════
+   LEAD TIME ANALYSIS
+══════════════════════════════════════════════════════ */
+function calcLeadTimeStats() {
+  const makerData = {};
+  allData.forEach(r => {
+    const m = r.maker || 'ไม่ระบุ';
+    if (!makerData[m]) makerData[m] = { total:0, done:0, ontime:0, late:0, leadDays:[] };
+    makerData[m].total++;
+    if (r.status && r.status.includes('เสร็จแล้ว')) {
+      makerData[m].done++;
+      if (r.prDate && r.actualDate) {
+        const pr  = parseThaiDate(r.prDate);
+        const ac  = parseThaiDate(r.actualDate);
+        const due = parseThaiDate(r.dueDate);
+        if (pr && ac) {
+          const lead = Math.round((ac - pr) / 86400000);
+          makerData[m].leadDays.push(lead);
+          if (due && ac <= due) makerData[m].ontime++;
+          else makerData[m].late++;
+        }
+      }
+    }
+  });
+  return Object.entries(makerData).map(([name, d]) => ({
+    maker:      name,
+    total:      d.total,
+    done:       d.done,
+    ontime:     d.ontime,
+    late:       d.late,
+    avgLead:    d.leadDays.length ? Math.round(d.leadDays.reduce((a,b)=>a+b,0)/d.leadDays.length) : null,
+    ontimeRate: d.done ? Math.round(d.ontime/d.done*100) : null
+  }));
+}
+function sortLT(col) {
+  if (ltSortCol === col) ltSortDir = ltSortDir === 'asc' ? 'desc' : 'asc';
+  else { ltSortCol = col; ltSortDir = 'desc'; }
+  renderLeadTime();
+}
+function renderLeadTime() {
+  const stats    = calcLeadTimeStats();
+  const withLead = stats.filter(s => s.avgLead !== null);
+
+  // KPIs
+  document.getElementById('lt-maker-count').textContent   = withLead.length || '—';
+  const totalDone   = withLead.reduce((s,r) => s+r.done, 0);
+  const totalOntime = withLead.reduce((s,r) => s+r.ontime, 0);
+  document.getElementById('lt-ontime-rate').textContent = totalDone ? Math.round(totalOntime/totalDone*100)+'%' : '—';
+  const worst = [...withLead].sort((a,b) => (b.avgLead||0)-(a.avgLead||0))[0];
+  if (worst) {
+    document.getElementById('lt-worst-maker').textContent = worst.maker;
+    document.getElementById('lt-worst-days').textContent  = `เฉลี่ย ${worst.avgLead} วัน`;
+  } else {
+    document.getElementById('lt-worst-maker').textContent = '—';
+    document.getElementById('lt-worst-days').textContent  = 'Lead time เกินกำหนด';
+  }
+
+  // Chart
+  const sorted    = [...withLead].sort((a,b) => (b.avgLead||0)-(a.avgLead||0)).slice(0,10);
+  const cs        = getComputedStyle(document.documentElement);
+  const chartText = cs.getPropertyValue('--chart-text').trim() || '#64748b';
+  const gridColor = cs.getPropertyValue('--surface2').trim()   || '#182030';
+  destroyChart('leadtime');
+  if (document.getElementById('chartLeadTime') && sorted.length) {
+    charts.leadtime = new Chart(document.getElementById('chartLeadTime'), {
+      type: 'bar',
+      data: {
+        labels: sorted.map(s => s.maker),
+        datasets: [{
+          label: 'Lead Time เฉลี่ย (วัน)',
+          data:  sorted.map(s => s.avgLead),
+          backgroundColor: sorted.map(s =>
+            s.avgLead > 20 ? '#ef4444' : s.avgLead > 10 ? '#f59e0b' : '#10b981'),
+          borderRadius: 5, borderSkipped: false
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks:{color:chartText,font:{size:9}}, grid:{display:false} },
+          y: { ticks:{color:chartText,font:{size:9}}, grid:{color:gridColor}, beginAtZero:true }
+        }
+      }
+    });
+  }
+
+  // Table
+  let rows = [...stats];
+  rows.sort((a,b) => {
+    let va = a[ltSortCol], vb = b[ltSortCol];
+    if (va === null) va = -1;
+    if (vb === null) vb = -1;
+    return ltSortDir === 'asc' ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
+  });
+  const maxLead = Math.max(...rows.map(r => r.avgLead||0), 1);
+  document.getElementById('leadTimeBody').innerHTML = rows.length ? rows.map(r => {
+    const barW   = Math.round((r.avgLead||0)/maxLead*80);
+    const barCol = !r.avgLead ? 'var(--border)' : r.avgLead > 20 ? 'var(--danger)' : r.avgLead > 10 ? 'var(--warn)' : 'var(--success)';
+    const rateCol = r.ontimeRate === null ? 'var(--muted)' : r.ontimeRate >= 80 ? 'var(--success)' : r.ontimeRate >= 60 ? 'var(--warn)' : 'var(--danger)';
+    return `<tr>
+      <td class="maker-cell"><strong>${r.maker}</strong></td>
+      <td style="text-align:center;font-family:var(--mono)">${r.total}</td>
+      <td style="text-align:center;font-family:var(--mono);color:var(--success)">${r.done}</td>
+      <td>
+        <div class="lt-bar-wrap">
+          <div class="lt-bar" style="width:${barW}px;background:${barCol}"></div>
+          <span style="font-family:var(--mono);font-size:0.74rem;color:${barCol}">
+            ${r.avgLead !== null ? r.avgLead+' วัน' : '—'}
+          </span>
+        </div>
+      </td>
+      <td class="lt-ontime">${r.ontime > 0 ? r.ontime : '—'}</td>
+      <td class="lt-late">${r.late > 0 ? r.late : '—'}</td>
+      <td style="font-family:var(--mono);font-size:0.8rem;font-weight:700;color:${rateCol}">
+        ${r.ontimeRate !== null ? r.ontimeRate+'%' : '—'}
+      </td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="7" class="empty">ไม่มีข้อมูล</td></tr>';
 }
 </script>
 
