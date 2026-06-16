@@ -1311,11 +1311,30 @@ function parseThaiDate(str) {
   const date = new Date(y, m, d); date.setHours(0,0,0,0);
   return date;
 }
+
+/* แปลงวันที่จาก API ที่อาจเป็น Date string ให้เป็น d/M/yyyy */
+function sanitizeDateStr(val) {
+  if (!val) return '';
+  const s = String(val).trim();
+  if (!s || s === '-') return '';
+  // ถ้าเป็นรูปแบบ d/M/yyyy อยู่แล้ว
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) return s;
+  // ถ้าเป็น Date string จาก JavaScript (เช่น "Fri Jun 26 2026 07:00:00 GMT+0700...")
+  const d = new Date(s);
+  if (!isNaN(d.getTime())) {
+    return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+  }
+  return s;
+}
 function processData() {
   const today = new Date(); today.setHours(0,0,0,0);
   allData.forEach((r, i) => {
     r.no = i + 1;
     r.status = normalizeStatus(r.status);
+    // ทำความสะอาด date fields ที่อาจส่งมาเป็น Date string จาก API
+    r.prDate     = sanitizeDateStr(r.prDate);
+    r.dueDate    = sanitizeDateStr(r.dueDate);
+    r.actualDate = sanitizeDateStr(r.actualDate);
     if (r.status.includes('เสร็จแล้ว')) {
       r.daysLeft = 'Done';
     } else if (r.dueDate) {
