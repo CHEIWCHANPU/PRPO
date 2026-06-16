@@ -1177,6 +1177,7 @@ function renumberSupply(sheet) {
         <div class="form-group"><label class="form-label">MAKER</label><input type="text" class="form-input" id="f-maker" placeholder="เช่น KOBAYU"></div>
         <div class="form-group"><label class="form-label">PO / ORDER NO.</label><input type="text" class="form-input" id="f-poNo"></div>
         <div class="form-group"><label class="form-label">หมายเหตุ</label><input type="text" class="form-input" id="f-note"></div>
+        <div class="form-group full"><label class="form-label">🔗 Link เอกสาร PR / ใบเสนอราคา</label><input type="text" class="form-input" id="f-prLink" placeholder="https://drive.google.com/..."></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -1219,7 +1220,7 @@ let notifOpen = false;
 let activeMonthTab = null;
 
 const DEMO = [
-  { no:1,  partNo:'11057-1778B',        partName:'BRACKET',       model:'8901/8951', volume:250,  prDate:'7/6/2026',  dueDate:'13/6/2026', actualDate:'13/6/2026', location:'CCIR', status:'เสร็จแล้ว ✅',       maker:'เจริญลาภ',    daysLeft:'Done', poNo:'', note:'', rowIndex:6 },
+  { no:1,  partNo:'11057-1778B',        partName:'BRACKET',       model:'8901/8951', volume:250,  prDate:'7/6/2026',  dueDate:'13/6/2026', actualDate:'13/6/2026', location:'CCIR', status:'เสร็จแล้ว ✅',       maker:'เจริญลาภ',    daysLeft:'Done', poNo:'', note:'', prLink:'', rowIndex:6 },
   { no:2,  partNo:'9091140860',         partName:'NUT',            model:'VD00',      volume:5000, prDate:'8/6/2026',  dueDate:'26/6/2026', actualDate:'',          location:'CCIS', status:'กำลังดำเนินการ ♻', maker:'KOBAYU',      daysLeft:10, poNo:'1033-6/NM188-03', note:'', rowIndex:7 },
   { no:3,  partNo:'9091140480',         partName:'NUT PROJECT',    model:'VD00',      volume:1000, prDate:'8/6/2026',  dueDate:'26/6/2026', actualDate:'',          location:'CCIS', status:'กำลังดำเนินการ ♻', maker:'KOBAYU',      daysLeft:10, poNo:'', note:'', rowIndex:8 },
   { no:4,  partNo:'9091140680',         partName:'NUT PROJECTION', model:'VD00',      volume:2000, prDate:'8/6/2026',  dueDate:'26/6/2026', actualDate:'',          location:'CCIS', status:'กำลังดำเนินการ ♻', maker:'KOBAYU',      daysLeft:10, poNo:'1038-8/NM188-03', note:'', rowIndex:9 },
@@ -1801,7 +1802,7 @@ function openAddModal() {
   editingItem = null;
   document.getElementById('modalTitle').textContent = '➕ เพิ่มรายการใหม่';
   document.getElementById('editRowIndex').value = '';
-  ['partNo','partName','model','volume','prDate','dueDate','actualDate','poNo','note'].forEach(f => { document.getElementById('f-' + f).value = ''; });
+  ['partNo','partName','model','volume','prDate','dueDate','actualDate','poNo','note','prLink'].forEach(f => { document.getElementById('f-' + f).value = ''; });
   document.getElementById('f-status').value = 'กำลังดำเนินการ ♻';
   document.getElementById('f-location').value = 'CCIS';
   document.getElementById('f-maker').value = '';
@@ -1812,7 +1813,7 @@ function openEditModal(item) {
   editingItem = item;
   document.getElementById('modalTitle').textContent = '✏️ แก้ไขรายการ';
   document.getElementById('editRowIndex').value = item.rowIndex;
-  ['partNo','partName','model','volume','prDate','dueDate','actualDate','location','status','maker','poNo','note'].forEach(f => { document.getElementById('f-' + f).value = item[f] || ''; });
+  ['partNo','partName','model','volume','prDate','dueDate','actualDate','location','status','maker','poNo','note','prLink'].forEach(f => { document.getElementById('f-' + f).value = item[f] || ''; });
   document.getElementById('modalOverlay').classList.add('open');
 }
 function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
@@ -1820,7 +1821,7 @@ function closeModal() { document.getElementById('modalOverlay').classList.remove
 async function saveItem() {
   const rowIndex = document.getElementById('editRowIndex').value;
   const params = {};
-  ['partNo','partName','model','volume','prDate','dueDate','actualDate','location','status','maker','poNo','note'].forEach(f => { params[f] = document.getElementById('f-' + f).value; });
+  ['partNo','partName','model','volume','prDate','dueDate','actualDate','location','status','maker','poNo','note','prLink'].forEach(f => { params[f] = document.getElementById('f-' + f).value; });
   if (!params.partNo || !params.partName) { showToast('❌ กรุณากรอก Part No. และ Part Name', 'error'); return; }
   if (rowIndex && editingItem) {
     const idx = allData.findIndex(r => r.rowIndex === parseInt(rowIndex));
@@ -1853,6 +1854,43 @@ function openDetail(item) {
   document.getElementById('d-partNo').textContent = item.partNo;
   document.getElementById('d-partName').textContent = item.partName;
   document.getElementById('d-meta').innerHTML = `${statusBadge(item.status)} ${daysTag(item.daysLeft, item.status)}`;
+
+  // SLA check
+  const sladays = parseInt(localStorage.getItem('prpo_sla') || '14');
+  let slaHtml = '';
+  const pr = parseThaiDate(item.prDate);
+  if (pr) {
+    if (item.status && item.status.includes('เสร็จแล้ว') && item.actualDate) {
+      const ac = parseThaiDate(item.actualDate);
+      if (ac) {
+        const totalDays = Math.round((ac - pr) / 86400000);
+        const ok = totalDays <= sladays;
+        slaHtml = `<div class="detail-field" style="grid-column:1/-1">
+          <div class="detail-field-label">📏 SLA Actual (กำหนด ${sladays} วัน)</div>
+          <div class="detail-field-value" style="color:${ok?'var(--success)':'var(--danger)'}">
+            ${ok?'✅ ส่งทัน SLA':'❌ ส่งเกิน SLA'} — ใช้เวลาจริง <strong>${totalDays} วัน</strong>
+          </div></div>`;
+      }
+    } else if (item.dueDate) {
+      const due = parseThaiDate(item.dueDate);
+      if (due) {
+        const totalDays = Math.round((due - pr) / 86400000);
+        const ok = totalDays <= sladays;
+        slaHtml = `<div class="detail-field" style="grid-column:1/-1">
+          <div class="detail-field-label">📏 SLA Check (กำหนด ${sladays} วัน)</div>
+          <div class="detail-field-value" style="color:${ok?'var(--success)':'var(--danger)'}">
+            ${ok?'✅ อยู่ใน SLA':'⚠️ เกิน SLA'} — ระยะ PR→นัดส่ง <strong>${totalDays} วัน</strong>
+          </div></div>`;
+      }
+    }
+  }
+
+  // PR Link
+  const prLinkHtml = item.prLink ? `<div class="detail-field" style="grid-column:1/-1">
+    <div class="detail-field-label">🔗 เอกสาร PR / ใบเสนอราคา</div>
+    <div class="detail-field-value"><a href="${item.prLink}" target="_blank" style="color:var(--accent);text-decoration:none">📎 เปิดเอกสาร →</a></div>
+  </div>` : '';
+
   const fields = [
     ['MODEL',item.model],['VOLUME',Number(item.volume).toLocaleString()],
     ['MAKER',item.maker],['สถานที่',item.location],
@@ -1860,9 +1898,14 @@ function openDetail(item) {
     ['วันเข้าจริง',item.actualDate||'—'],['PO/ORDER',item.poNo||'—'],
     ['เหลือ (วัน)',String(item.daysLeft)],['หมายเหตุ',item.note||'—']
   ];
-  document.getElementById('d-grid').innerHTML = fields.map(([l,v]) => `<div class="detail-field"><div class="detail-field-label">${l}</div><div class="detail-field-value">${v}</div></div>`).join('');
+  document.getElementById('d-grid').innerHTML =
+    fields.map(([l,v]) => `<div class="detail-field"><div class="detail-field-label">${l}</div><div class="detail-field-value">${v}</div></div>`).join('')
+    + prLinkHtml + slaHtml;
+
+  const safeItem = JSON.stringify(item).replace(/"/g,'&quot;');
   document.getElementById('d-actions').innerHTML = `
-    <button class="btn btn-primary" onclick="openEditModal(${JSON.stringify(item).replace(/"/g,'&quot;')});closeDetail(null)" style="flex:1">✏️ แก้ไข</button>
+    <button class="btn btn-primary" onclick="openEditModal(${safeItem});closeDetail(null)" style="flex:1">✏️ แก้ไข</button>
+    ${item.prLink ? `<button class="btn btn-secondary" onclick="window.open('${item.prLink}','_blank')" style="flex:1">📎 เอกสาร</button>` : ''}
     <button class="btn btn-danger" onclick="deleteItem(${item.rowIndex});closeDetail(null)" style="flex:1">🗑️ ลบ</button>`;
   document.getElementById('detailOverlay').classList.add('open');
 }
