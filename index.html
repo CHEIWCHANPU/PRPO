@@ -2845,7 +2845,7 @@ function calcLeadTimeStats() {
   const makerData = {};
   allData.forEach(r => {
     const m = r.maker || 'ไม่ระบุ';
-    if (!makerData[m]) makerData[m] = { total:0, done:0, ontime:0, late:0, leadDays:[] };
+    if (!makerData[m]) makerData[m] = { total:0, done:0, ontime:0, late:0, leadDays:[], doneWithLead:0 };
     makerData[m].total++;
     if (r.status && r.status.includes('เสร็จแล้ว')) {
       makerData[m].done++;
@@ -2856,8 +2856,12 @@ function calcLeadTimeStats() {
         if (pr && ac) {
           const lead = Math.round((ac - pr) / 86400000);
           makerData[m].leadDays.push(lead);
-          if (due && ac <= due) makerData[m].ontime++;
-          else makerData[m].late++;
+          makerData[m].doneWithLead++;
+          if (due) {
+            if (ac <= due) makerData[m].ontime++;
+            else makerData[m].late++;
+          }
+          // ถ้าไม่มี dueDate → ไม่นับ ontime/late เพราะไม่มีข้อมูลพอ
         }
       }
     }
@@ -2869,7 +2873,8 @@ function calcLeadTimeStats() {
     ontime:     d.ontime,
     late:       d.late,
     avgLead:    d.leadDays.length ? Math.round(d.leadDays.reduce((a,b)=>a+b,0)/d.leadDays.length) : null,
-    ontimeRate: d.done ? Math.round(d.ontime/d.done*100) : null
+    // หารด้วย doneWithLead ที่มี dueDate เท่านั้น (ontime+late) ให้ถูกต้อง
+    ontimeRate: (d.ontime + d.late) > 0 ? Math.round(d.ontime/(d.ontime+d.late)*100) : null
   }));
 }
 function sortLT(col) {
@@ -2929,9 +2934,11 @@ function renderLeadTime() {
   let rows = [...stats];
   rows.sort((a,b) => {
     let va = a[ltSortCol], vb = b[ltSortCol];
-    if (va === null) va = -1;
-    if (vb === null) vb = -1;
-    return ltSortDir === 'asc' ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
+    if (va === null || va === undefined) va = ltSortDir === 'asc' ? Infinity : -Infinity;
+    if (vb === null || vb === undefined) vb = ltSortDir === 'asc' ? Infinity : -Infinity;
+    if (typeof va === 'string' && typeof vb === 'string')
+      return ltSortDir === 'asc' ? va.localeCompare(vb,'th') : vb.localeCompare(va,'th');
+    return ltSortDir === 'asc' ? (va > vb ? 1 : va < vb ? -1 : 0) : (va < vb ? 1 : va > vb ? -1 : 0);
   });
   const maxLead = Math.max(...rows.map(r => r.avgLead||0), 1);
   document.getElementById('leadTimeBody').innerHTML = rows.length ? rows.map(r => {
