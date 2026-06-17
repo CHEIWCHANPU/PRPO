@@ -2777,7 +2777,9 @@ function renderGantt() {
     const dow = dt.getDay();
     const isToday = dt.getTime() === today.getTime();
     const isWknd  = dow === 0 || dow === 6;
-    headHtml += `<th style="min-width:28px;width:28px${isWknd?';opacity:0.45':''}">${d}<br><span style="font-size:0.58rem;opacity:0.6">${DAY_TH[dow]}</span></th>`;
+    const thStyle  = isToday ? 'min-width:28px;width:28px;color:#facc15;font-weight:700' : `min-width:28px;width:28px${isWknd?';opacity:0.45':''}`;
+    const subStyle = isToday ? 'font-size:0.58rem;color:#facc15;opacity:1' : 'font-size:0.58rem;opacity:0.6';
+    headHtml += `<th style="${thStyle}">${d}<br><span style="${subStyle}">${DAY_TH[dow]}</span></th>`;
   }
   headHtml += '</tr>';
   document.getElementById('ganttHead').innerHTML = headHtml;
