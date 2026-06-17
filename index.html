@@ -769,7 +769,7 @@
         <table>
           <thead><tr>
             <th onclick="sortTable('no')">NO.</th>
-            <th style="width:36px;text-align:center" title="งานสำคัญ">⭐</th>
+            <th style="width:36px;text-align:center;padding:0" title="งานสำคัญ">⭐</th>
             <th onclick="sortTable('partNo')">PART NO.</th>
             <th onclick="sortTable('partName')">PART NAME</th>
             <th onclick="sortTable('model')">MODEL</th>
@@ -1779,7 +1779,7 @@ function renderTable() {
     const commentDot = commentCount > 0 ? `<span style="display:inline-flex;align-items:center;gap:2px;font-size:0.62rem;background:rgba(99,102,241,0.15);color:var(--accent2);border-radius:8px;padding:1px 5px;margin-left:3px">💬${commentCount}</span>` : '';
     return `<tr class="${rowCls}" onclick="openDetail(${JSON.stringify(r).replace(/"/g,'&quot;')})">
       <td class="no-num">${start+i+1}</td>
-      <td style="text-align:center" onclick="event.stopPropagation()">
+      <td style="text-align:center;width:36px;padding:0" onclick="event.stopPropagation()">
         <button class="star-btn ${isStarred ? 'starred' : ''}" onclick="toggleStar('${itemKey}',this)" title="${isStarred ? 'ยกเลิกงานสำคัญ' : 'ทำเครื่องหมายงานสำคัญ'}">⭐</button>
       </td>
       <td class="part-no">${r.partNo}</td>
