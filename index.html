@@ -995,6 +995,7 @@
 //  F=เปิด P/R | G=วันนัดส่ง | H=วันเข้าจริง | I=สถานที่
 //  J=สถานะ  | K=MAKER     | L=เหลือ(วัน) | M=PO/ORDER | N=หมายเหตุ
 //  O=STARRED (TRUE/FALSE)  | P=COMMENTS (JSON string)   ← ใหม่ v4
+//  Q=ส่งแล้ว (RECEIVED QTY)                              ← ใหม่ v5
 //
 //  Supply Columns (A=1):
 //  A=NO. | B=ชื่อบริษัท | C=ชื่อผู้ติดต่อ | D=เบอร์โทร
@@ -1006,7 +1007,7 @@ const SUPPLY_SHEET     = "supply";
 const DATA_START_ROW   = 6;
 const SUPPLY_START_ROW = 3;
 const HEADER_ROW       = 5;
-const TOTAL_COLS       = 16;  // A–P (เพิ่ม O=STARRED, P=COMMENTS)
+const TOTAL_COLS       = 17;  // A–Q (เพิ่ม O=STARRED, P=COMMENTS, Q=ส่งแล้ว)
 
 function doGet(e) {
   const output = ContentService.createTextOutput();
@@ -1058,7 +1059,7 @@ function getData() {
         daysLeft = Math.round((d - today) / 86400000);
       } else { daysLeft = ""; }
     }
-    // คอลัมน์ O (index 14) = STARRED, P (index 15) = COMMENTS
+    // คอลัมน์ O (index 14) = STARRED, P (index 15) = COMMENTS, Q (index 16) = ส่งแล้ว
     let comments = [];
     try { comments = JSON.parse(String(r[15] || "[]")); } catch(e) { comments = []; }
     data.push({
@@ -1078,6 +1079,7 @@ function getData() {
       note:       String(r[13] || "").trim(),
       starred:    r[14] === true || String(r[14]).toUpperCase() === "TRUE",
       comments:   comments,
+      receivedQty: r[16] === "" || r[16] === null || r[16] === undefined ? "" : Number(r[16]) || 0,
       rowIndex:   DATA_START_ROW + idx
     });
   });
@@ -1096,7 +1098,7 @@ function addRow(p) {
     no, p.partNo||"", p.partName||"", p.model||"",
     Number(p.volume)||0, p.prDate||"", p.dueDate||"", p.actualDate||"",
     p.location||"", p.status||"กำลังดำเนินการ ♻", p.maker||"", "",
-    p.poNo||"", p.note||"", false, "[]"
+    p.poNo||"", p.note||"", false, "[]", p.receivedQty===""||p.receivedQty===undefined?"":Number(p.receivedQty)||0
   ]);
   updateTimestamp(sheet);
   return { success: true };
@@ -1120,6 +1122,7 @@ function editRow(p) {
   for (let c = 0; c < cols.length; c++) sheet.getRange(ri, c + 2).setValue(cols[c]);
   sheet.getRange(ri, 13).setValue(p.poNo||"");
   sheet.getRange(ri, 14).setValue(p.note||"");
+  sheet.getRange(ri, 17).setValue(p.receivedQty===""||p.receivedQty===undefined?"":Number(p.receivedQty)||0);
   // ไม่แตะ col O (STARRED) และ P (COMMENTS) เมื่อ edit ข้อมูลหลัก
   updateTimestamp(sheet);
   return { success: true };
@@ -1245,11 +1248,13 @@ function delSupplier(p) {
 
 // ─── HELPERS ────────────────────────────────────────────────────────────
 function ensureHeaders(sheet) {
-  // เพิ่ม header O5=STARRED, P5=COMMENTS ถ้ายังไม่มี
+  // เพิ่ม header O5=STARRED, P5=COMMENTS, Q5=ส่งแล้ว ถ้ายังไม่มี
   const oVal = sheet.getRange(HEADER_ROW, 15).getValue();
   const pVal = sheet.getRange(HEADER_ROW, 16).getValue();
+  const qVal = sheet.getRange(HEADER_ROW, 17).getValue();
   if (!oVal) sheet.getRange(HEADER_ROW, 15).setValue("STARRED");
   if (!pVal) sheet.getRange(HEADER_ROW, 16).setValue("COMMENTS");
+  if (!qVal) sheet.getRange(HEADER_ROW, 17).setValue("ส่งแล้ว");
 }
 function normalizeStatus(raw) {
   if (raw === true  || String(raw).toUpperCase() === "TRUE")  return "เสร็จแล้ว ✅";
@@ -2573,12 +2578,12 @@ function downloadHTML() {
 
 /* ── EXPORT CSV ── */
 function exportCSV() {
-  const headers = ['NO.','PART NO.','PART NAME','MODEL','VOLUME','เปิด P/R','วันนัดส่ง','วันเข้าจริง','สถานที่','สถานะ','MAKER','เหลือ (วัน)','PO/ORDER','หมายเหตุ'];
+  const headers = ['NO.','PART NO.','PART NAME','MODEL','VOLUME','เปิด P/R','วันนัดส่ง','วันเข้าจริง','สถานที่','สถานะ','MAKER','เหลือ (วัน)','PO/ORDER','หมายเหตุ','ส่งแล้ว'];
   const rows = allData.map(r => [
     r.no, r.partNo, r.partName, r.model, r.volume,
     r.prDate, r.dueDate, r.actualDate||'', r.location,
     normalizeStatus(r.status), r.maker, r.daysLeft,
-    r.poNo||'', r.note||''
+    r.poNo||'', r.note||'', (r.receivedQty===undefined||r.receivedQty===null)?'':r.receivedQty
   ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(','));
   const csv = '\uFEFF' + [headers.join(','), ...rows].join('\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
