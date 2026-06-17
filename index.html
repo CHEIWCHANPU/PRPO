@@ -889,25 +889,27 @@
       <div class="instruction-card">
         <h3>📋 Apps Script Code</h3>
         <div class="code-block" id="appsScriptCode">// ═══════════════════════════════════════════════════════════════════════════
-//  CHIEWCHAN INDUSTRY CO.,LTD. — PR/PO TRACKER · Apps Script v3
+//  CHIEWCHAN INDUSTRY CO.,LTD. — PR/PO TRACKER · Apps Script v4
 //  Sheet "📋 กรอกข้อมูล": Header Row5 | Data Row6+
 //  Sheet "supply":          Header Row2 | Data Row3+
 //
 //  PR/PO Columns (A=1):
-//  A=NO. | B=PART NO. | C=PART NAME | D=MODEL | E=VOLUME
-//  F=เปิด P/R | G=วันนัดส่ง | H=วันเข้าส่งจริง | I=สถานที่ส่ง
-//  J=สถานะ | K=MAKER | L=เหลือ(วัน) | M=PO/ORDER NO. | N=หมายเหตุ
+//  A=NO.    | B=PART NO.  | C=PART NAME | D=MODEL    | E=VOLUME
+//  F=เปิด P/R | G=วันนัดส่ง | H=วันเข้าจริง | I=สถานที่
+//  J=สถานะ  | K=MAKER     | L=เหลือ(วัน) | M=PO/ORDER | N=หมายเหตุ
+//  O=STARRED (TRUE/FALSE)  | P=COMMENTS (JSON string)   ← ใหม่ v4
 //
 //  Supply Columns (A=1):
 //  A=NO. | B=ชื่อบริษัท | C=ชื่อผู้ติดต่อ | D=เบอร์โทร
 //  E=EMAIL | F=หมวดหมู่สินค้า | G=LEADTIME | H=หมายเหตุ
 // ═══════════════════════════════════════════════════════════════════════════
 
-const SHEET_NAME    = "📋 กรอกข้อมูล";
-const SUPPLY_SHEET  = "supply";
+const SHEET_NAME       = "📋 กรอกข้อมูล";
+const SUPPLY_SHEET     = "supply";
 const DATA_START_ROW   = 6;
 const SUPPLY_START_ROW = 3;
-const HEADER_ROW    = 5;
+const HEADER_ROW       = 5;
+const TOTAL_COLS       = 16;  // A–P (เพิ่ม O=STARRED, P=COMMENTS)
 
 function doGet(e) {
   const output = ContentService.createTextOutput();
@@ -919,6 +921,8 @@ function doGet(e) {
     else if (action === "add")            result = addRow(e.parameter);
     else if (action === "edit")           result = editRow(e.parameter);
     else if (action === "del")            result = deleteRow(e.parameter);
+    else if (action === "setStar")        result = setStar(e.parameter);
+    else if (action === "setComments")    result = setComments(e.parameter);
     else if (action === "getSuppliers")   result = getSuppliers();
     else if (action === "addSupplier")    result = addSupplier(e.parameter);
     else if (action === "editSupplier")   result = editSupplier(e.parameter);
@@ -937,10 +941,11 @@ function getData() {
   const ss    = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(SHEET_NAME);
   if (!sheet) return { success: false, error: "ไม่พบ Sheet: " + SHEET_NAME };
+  ensureHeaders(sheet);
   const lastRow = sheet.getLastRow();
   if (lastRow < DATA_START_ROW) return { success: true, data: [], updated: fmtNow() };
   const numRows = lastRow - DATA_START_ROW + 1;
-  const rows    = sheet.getRange(DATA_START_ROW, 1, numRows, 14).getValues();
+  const rows    = sheet.getRange(DATA_START_ROW, 1, numRows, TOTAL_COLS).getValues();
   const today   = new Date(); today.setHours(0, 0, 0, 0);
   const data    = [];
   rows.forEach((r, idx) => {
@@ -956,6 +961,9 @@ function getData() {
         daysLeft = Math.round((d - today) / 86400000);
       } else { daysLeft = ""; }
     }
+    // คอลัมน์ O (index 14) = STARRED, P (index 15) = COMMENTS
+    let comments = [];
+    try { comments = JSON.parse(String(r[15] || "[]")); } catch(e) { comments = []; }
     data.push({
       no:         r[0] || (idx + 1),
       partNo:     String(r[1] || "").trim(),
@@ -971,6 +979,8 @@ function getData() {
       daysLeft:   daysLeft,
       poNo:       String(r[12] || "").trim(),
       note:       String(r[13] || "").trim(),
+      starred:    r[14] === true || String(r[14]).toUpperCase() === "TRUE",
+      comments:   comments,
       rowIndex:   DATA_START_ROW + idx
     });
   });
@@ -982,13 +992,14 @@ function addRow(p) {
   const ss    = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(SHEET_NAME);
   if (!sheet) return { success: false, error: "ไม่พบ Sheet: " + SHEET_NAME };
+  ensureHeaders(sheet);
   const lastRow = sheet.getLastRow();
   const no      = lastRow >= DATA_START_ROW ? lastRow - DATA_START_ROW + 2 : 1;
   sheet.appendRow([
     no, p.partNo||"", p.partName||"", p.model||"",
     Number(p.volume)||0, p.prDate||"", p.dueDate||"", p.actualDate||"",
     p.location||"", p.status||"กำลังดำเนินการ ♻", p.maker||"", "",
-    p.poNo||"", p.note||""
+    p.poNo||"", p.note||"", false, "[]"
   ]);
   updateTimestamp(sheet);
   return { success: true };
@@ -1012,6 +1023,7 @@ function editRow(p) {
   for (let c = 0; c < cols.length; c++) sheet.getRange(ri, c + 2).setValue(cols[c]);
   sheet.getRange(ri, 13).setValue(p.poNo||"");
   sheet.getRange(ri, 14).setValue(p.note||"");
+  // ไม่แตะ col O (STARRED) และ P (COMMENTS) เมื่อ edit ข้อมูลหลัก
   updateTimestamp(sheet);
   return { success: true };
 }
@@ -1029,6 +1041,32 @@ function deleteRow(p) {
   return { success: true };
 }
 
+// ─── PR/PO: SET STAR ────────────────────────────────────────────────────
+function setStar(p) {
+  const ss    = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) return { success: false, error: "ไม่พบ Sheet: " + SHEET_NAME };
+  const ri = parseInt(p.rowIndex);
+  if (isNaN(ri) || ri < DATA_START_ROW) return { success: false, error: "rowIndex ไม่ถูกต้อง" };
+  const val = p.starred === "true" || p.starred === true;
+  sheet.getRange(ri, 15).setValue(val);  // คอลัมน์ O
+  return { success: true };
+}
+
+// ─── PR/PO: SET COMMENTS ────────────────────────────────────────────────
+function setComments(p) {
+  const ss    = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) return { success: false, error: "ไม่พบ Sheet: " + SHEET_NAME };
+  const ri = parseInt(p.rowIndex);
+  if (isNaN(ri) || ri < DATA_START_ROW) return { success: false, error: "rowIndex ไม่ถูกต้อง" };
+  // p.comments คือ JSON string ของ array
+  const raw = p.comments || "[]";
+  try { JSON.parse(raw); } catch(e) { return { success: false, error: "comments ไม่ใช่ JSON ที่ถูกต้อง" }; }
+  sheet.getRange(ri, 16).setValue(raw);  // คอลัมน์ P
+  return { success: true };
+}
+
 // ─── SUPPLIER: READ ─────────────────────────────────────────────────────
 function getSuppliers() {
   const ss    = SpreadsheetApp.getActiveSpreadsheet();
@@ -1040,9 +1078,9 @@ function getSuppliers() {
   const rows    = sheet.getRange(SUPPLY_START_ROW, 1, numRows, 8).getValues();
   const data    = [];
   rows.forEach((r, idx) => {
-    if (!r[1]) return; // ข้ามแถวว่าง (ต้องมีชื่อบริษัท)
+    if (!r[1]) return;
     data.push({
-      id:       SUPPLY_START_ROW + idx,  // ใช้ rowIndex เป็น id
+      id:       SUPPLY_START_ROW + idx,
       no:       r[0] || (idx + 1),
       name:     String(r[1] || "").trim(),
       contact:  String(r[2] || "").trim(),
@@ -1062,8 +1100,6 @@ function addSupplier(p) {
   const ss    = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(SUPPLY_SHEET);
   if (!sheet) return { success: false, error: "ไม่พบ Sheet: " + SUPPLY_SHEET };
-
-  // หาแถวว่างแรกหลัง Header (ไม่ใช้ appendRow เพื่อป้องกันปัญหาแถวว่างระหว่างกลาง)
   const maxRow = Math.max(sheet.getLastRow(), SUPPLY_START_ROW - 1);
   let targetRow = -1;
   if (maxRow >= SUPPLY_START_ROW) {
@@ -1073,7 +1109,6 @@ function addSupplier(p) {
     }
   }
   if (targetRow === -1) targetRow = maxRow + 1;
-
   sheet.getRange(targetRow, 1, 1, 8).setValues([[
     0, p.name||"", p.contact||"", p.phone||"",
     p.email||"", p.category||"", Number(p.leadtime)||"", p.note||""
@@ -1112,6 +1147,13 @@ function delSupplier(p) {
 }
 
 // ─── HELPERS ────────────────────────────────────────────────────────────
+function ensureHeaders(sheet) {
+  // เพิ่ม header O5=STARRED, P5=COMMENTS ถ้ายังไม่มี
+  const oVal = sheet.getRange(HEADER_ROW, 15).getValue();
+  const pVal = sheet.getRange(HEADER_ROW, 16).getValue();
+  if (!oVal) sheet.getRange(HEADER_ROW, 15).setValue("STARRED");
+  if (!pVal) sheet.getRange(HEADER_ROW, 16).setValue("COMMENTS");
+}
 function normalizeStatus(raw) {
   if (raw === true  || String(raw).toUpperCase() === "TRUE")  return "เสร็จแล้ว ✅";
   if (raw === false || String(raw).toUpperCase() === "FALSE") return "กำลังดำเนินการ ♻";
@@ -1148,10 +1190,10 @@ function renumberSupply(sheet) {
   const allCols  = sheet.getRange(SUPPLY_START_ROW, 1, numRows, 2).getValues();
   let counter = 1;
   for (let i = 0; i < allCols.length; i++) {
-    if (allCols[i][1]) { // มีชื่อบริษัทใน col B
+    if (allCols[i][1]) {
       allCols[i][0] = counter++;
     } else {
-      allCols[i][0] = ""; // แถวว่าง ล้าง NO.
+      allCols[i][0] = "";
     }
   }
   sheet.getRange(SUPPLY_START_ROW, 1, numRows, 1).setValues(allCols.map(r => [r[0]]));
@@ -1545,7 +1587,6 @@ function processData() {
   allData.forEach((r, i) => {
     r.no = i + 1;
     r.status = normalizeStatus(r.status);
-    // ทำความสะอาด date fields ที่อาจส่งมาเป็น Date string จาก API
     r.prDate     = sanitizeDateStr(r.prDate);
     r.dueDate    = sanitizeDateStr(r.dueDate);
     r.actualDate = sanitizeDateStr(r.actualDate);
@@ -1556,7 +1597,23 @@ function processData() {
       if (due) r.daysLeft = Math.round((due - today) / 86400000);
       else r.daysLeft = '';
     } else { r.daysLeft = ''; }
+
+    // ── Merge starred จาก Sheet → starredItems (source of truth คือ Sheet) ──
+    const itemKey = String(r.rowIndex || r.partNo);
+    if (r.starred === true) {
+      if (!starredItems.includes(itemKey)) starredItems.push(itemKey);
+    } else if (r.starred === false) {
+      const si = starredItems.indexOf(itemKey);
+      if (si !== -1) starredItems.splice(si, 1);
+    }
+
+    // ── Merge comments จาก Sheet → localStorage (Sheet เป็น source of truth) ──
+    if (Array.isArray(r.comments) && r.comments.length > 0) {
+      const cKey = 'comments_' + itemKey;
+      localStorage.setItem(cKey, JSON.stringify(r.comments));
+    }
   });
+  localStorage.setItem('prpo_starred', JSON.stringify(starredItems));
   const done = allData.filter(r => r.status && r.status.includes('เสร็จแล้ว')).length;
   const progress = allData.filter(r => r.status && r.status.includes('กำลังดำเนินการ')).length;
   const incomplete = allData.filter(r => r.status && r.status.includes('ยังไม่ครบ')).length;
@@ -1633,22 +1690,37 @@ function toggleStarFilter() {
   currentPage = 1; renderTable();
 }
 
-function toggleStar(key, btnEl) {
+async function toggleStar(key, btnEl) {
   key = String(key);
   const idx = starredItems.indexOf(key);
-  if (idx === -1) {
+  const nowStarred = idx === -1;
+  if (nowStarred) {
     starredItems.push(key);
     btnEl.classList.add('starred');
     btnEl.title = 'ยกเลิกงานสำคัญ';
-    showToast('⭐ ทำเครื่องหมายงานสำคัญแล้ว', 'success');
   } else {
     starredItems.splice(idx, 1);
     btnEl.classList.remove('starred');
     btnEl.title = 'ทำเครื่องหมายงานสำคัญ';
-    showToast('☆ ยกเลิกงานสำคัญแล้ว', 'info');
   }
   localStorage.setItem('prpo_starred', JSON.stringify(starredItems));
   if (filterStar) renderTable();
+  // ซิงค์กับ Sheet ถ้ามี URL
+  if (WEB_APP_URL) {
+    try {
+      const res  = await fetch(`${WEB_APP_URL}?action=setStar&rowIndex=${key}&starred=${nowStarred}`);
+      const json = await res.json();
+      if (json.success) {
+        showToast(nowStarred ? '⭐ ทำเครื่องหมายงานสำคัญแล้ว · บันทึก Sheet' : '☆ ยกเลิกงานสำคัญแล้ว · บันทึก Sheet', nowStarred ? 'success' : 'info');
+      } else {
+        showToast('⚠️ ซิงค์ดาวไม่สำเร็จ: ' + json.error, 'error');
+      }
+    } catch(e) {
+      showToast((nowStarred ? '⭐ ' : '☆ ') + 'บันทึกในเครื่อง (ซิงค์ Sheet ไม่สำเร็จ)', 'info');
+    }
+  } else {
+    showToast(nowStarred ? '⭐ ทำเครื่องหมายงานสำคัญแล้ว' : '☆ ยกเลิกงานสำคัญแล้ว', nowStarred ? 'success' : 'info');
+  }
 }
 
 /* ── MAIN TABLE ── */
@@ -2091,7 +2163,7 @@ function openDetail(item) {
     <button class="btn btn-danger" onclick="deleteItem(${item.rowIndex});closeDetail(null)" style="flex:1">🗑️ ลบ</button>`;
   document.getElementById('detailOverlay').classList.add('open');
   currentDetailKey = getCommentKey(item);
-  renderComments(currentDetailKey);
+  renderComments(currentDetailKey, item.rowIndex);
 }
 function closeDetail(e) {
   if (!e || e.target === document.getElementById('detailOverlay')) document.getElementById('detailOverlay').classList.remove('open');
@@ -2110,16 +2182,28 @@ function loadComments(key) {
   try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch { return []; }
 }
 
-function saveComments(key, comments) {
+async function saveComments(key, comments, rowIndex) {
   localStorage.setItem(key, JSON.stringify(comments));
+  if (WEB_APP_URL && rowIndex) {
+    try {
+      const res  = await fetch(`${WEB_APP_URL}?action=setComments&rowIndex=${rowIndex}&comments=${encodeURIComponent(JSON.stringify(comments))}`);
+      const json = await res.json();
+      if (!json.success) showToast('⚠️ ซิงค์ Comment ไม่สำเร็จ: ' + json.error, 'error');
+    } catch(e) {
+      showToast('⚠️ ซิงค์ Comment ไม่สำเร็จ: ' + e.message, 'error');
+    }
+  }
 }
 
-function renderComments(key) {
+function renderComments(key, rowIndex) {
   const comments = loadComments(key);
   const wrap = document.getElementById('d-comments');
   if (!wrap) return;
 
   const TAG_LABELS = { update:'🔄 อัปเดต', issue:'⚠️ ปัญหา', done:'✅ เสร็จ', info:'💬 ทั่วไป' };
+  const syncNote = WEB_APP_URL
+    ? `<span style="color:var(--success);font-size:0.62rem">● ซิงค์กับ Sheet</span>`
+    : `<span style="color:var(--warn);font-size:0.62rem">● เก็บในเครื่องนี้</span>`;
 
   let listHtml = '';
   if (comments.length === 0) {
@@ -2131,7 +2215,7 @@ function renderComments(key) {
           <span class="comment-author">👤 ${c.author || 'ไม่ระบุชื่อ'}</span>
           <span class="comment-time">${c.time}</span>
           <span class="comment-tag ${c.tag}">${TAG_LABELS[c.tag] || c.tag}</span>
-          <button class="comment-del" onclick="deleteComment('${key}',${idx})" title="ลบ">✕</button>
+          <button class="comment-del" onclick="deleteComment('${key}',${idx},${rowIndex||'null'})" title="ลบ">✕</button>
         </div>
         <div class="comment-text">${c.text.replace(/\n/g,'<br>')}</div>
       </div>`).join('');
@@ -2142,6 +2226,7 @@ function renderComments(key) {
     <div class="comment-section-title">
       💬 ความคืบหน้า / บันทึกทีม
       ${comments.length > 0 ? `<span class="comment-count-badge">${comments.length}</span>` : ''}
+      ${syncNote}
     </div>
     <div class="comment-list">${listHtml}</div>
     <div class="comment-input-wrap">
@@ -2156,17 +2241,16 @@ function renderComments(key) {
       </div>
       <textarea class="comment-textarea" id="c-text" rows="3" placeholder="เช่น โทรแล้ว Maker ยืนยันส่ง 20 มิ.ย. / รอใบเสนอราคาเพิ่ม..."></textarea>
       <div class="comment-submit-row">
-        <button class="comment-submit" onclick="addComment('${key}')">+ บันทึก</button>
-        <span style="font-size:0.69rem;color:var(--muted)">บันทึกลงเครื่องนี้ · ${comments.length} รายการ</span>
+        <button class="comment-submit" onclick="addComment('${key}',${rowIndex||'null'})">+ บันทึก</button>
+        <span style="font-size:0.69rem;color:var(--muted)">${comments.length} รายการ</span>
       </div>
     </div>`;
 
-  // scroll list to bottom
   const list = wrap.querySelector('.comment-list');
   if (list) list.scrollTop = list.scrollHeight;
 }
 
-function addComment(key) {
+async function addComment(key, rowIndex) {
   const author = (document.getElementById('c-author')?.value || '').trim();
   const text   = (document.getElementById('c-text')?.value   || '').trim();
   const tag    = document.getElementById('c-tag')?.value || 'update';
@@ -2178,16 +2262,15 @@ function addComment(key) {
 
   const comments = loadComments(key);
   comments.push({ author, text, tag, time });
-  saveComments(key, comments);
-  renderComments(key);
-  showToast('✅ บันทึกความคืบหน้าแล้ว', 'success');
+  await saveComments(key, comments, rowIndex);
+  renderComments(key, rowIndex);
 }
 
-function deleteComment(key, idx) {
+async function deleteComment(key, idx, rowIndex) {
   const comments = loadComments(key);
   comments.splice(idx, 1);
-  saveComments(key, comments);
-  renderComments(key);
+  await saveComments(key, comments, rowIndex);
+  renderComments(key, rowIndex);
   showToast('🗑️ ลบบันทึกแล้ว', 'info');
 }
 
