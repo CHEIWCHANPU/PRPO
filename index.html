@@ -1519,7 +1519,10 @@ function closeNotif() {
 }
 let dismissedNotifs = new Set(JSON.parse(localStorage.getItem('dismissedNotifs') || '[]'));
 
-function notifKey(r) { return r.partNo + '|' + r.daysLeft; }
+function notifKey(r) {
+  // ไม่ใช้ daysLeft เพราะเปลี่ยนทุกวัน → key จะไม่ตรงกับที่ dismiss ไว้
+  return (r.rowIndex || r.partNo) + '';
+}
 
 function dismissNotif(key, e) {
   e.stopPropagation();
@@ -1639,6 +1642,8 @@ function sanitizeDateStr(val) {
   }
   return s;
 }
+let dueAlertsShown = false;
+
 function processData() {
   const today = new Date(); today.setHours(0,0,0,0);
   allData.forEach((r, i) => {
@@ -1696,7 +1701,10 @@ function processData() {
   renderTable();
   renderCharts();
   buildNotifications();
-  setTimeout(showDueAlerts, 800);
+  if (!dueAlertsShown) {
+    dueAlertsShown = true;
+    setTimeout(showDueAlerts, 800);
+  }
 }
 
 function populateFilters() {
@@ -1808,6 +1816,7 @@ function renderTable() {
     } else {
       va = String(va||'').toLowerCase(); vb = String(vb||'').toLowerCase();
     }
+    if (va === vb) return (a.rowIndex||0) - (b.rowIndex||0); // tie-break by rowIndex → stable order
     return sortDir === 'asc' ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
   });
   const total = filteredData.length;
@@ -1822,7 +1831,7 @@ function renderTable() {
     const rowCls = isDone ? '' : (!isNaN(dl) && dl <= 3) ? 'row-urgent' : (!isNaN(dl) && dl <= 7) ? 'row-warn' : '';
     const itemKey = r.rowIndex || r.partNo;
     const isStarred = starredItems.includes(String(itemKey));
-    const commentCount = loadComments('comments_' + itemKey).length;
+    const commentCount = loadComments(getCommentKey(r)).length;
     const commentDot = commentCount > 0 ? `<span style="display:inline-flex;align-items:center;gap:2px;font-size:0.62rem;background:rgba(99,102,241,0.15);color:var(--accent2);border-radius:8px;padding:1px 5px;margin-left:3px">💬${commentCount}</span>` : '';
     return `<tr class="${rowCls}" onclick="openDetail(${JSON.stringify(r).replace(/"/g,'&quot;')})">
       <td class="no-num">${start+i+1}</td>
@@ -1961,7 +1970,14 @@ function renderCharts() {
   }
 
   const weekMap = {};
-  allData.forEach(r => { if (r.dueDate) weekMap[r.dueDate] = (weekMap[r.dueDate]||0) + 1; });
+  allData.forEach(r => {
+    if (!r.dueDate) return;
+    const d = parseThaiDate(r.dueDate);
+    if (!d) return;
+    // normalize เป็น d/M/yyyy เสมอ กัน "7/6/2026" กับ "07/6/2026" นับเป็นคนละ key
+    const key = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+    weekMap[key] = (weekMap[key]||0) + 1;
+  });
   const weeks = Object.entries(weekMap).sort((a,b) => {
     const pa = parseThaiDate(a[0]), pb = parseThaiDate(b[0]);
     return (pa||0) - (pb||0);
@@ -2139,7 +2155,8 @@ async function saveItem() {
     const idx = allData.findIndex(r => r.rowIndex === parseInt(rowIndex));
     if (idx >= 0) allData[idx] = { ...allData[idx], ...params };
   } else {
-    allData.push({ ...params, no: allData.length + 1, daysLeft: '', rowIndex: allData.length + 6 });
+    const maxRowIndex = allData.reduce((mx, r) => Math.max(mx, r.rowIndex || 0), 0);
+    allData.push({ ...params, no: allData.length + 1, daysLeft: '', rowIndex: maxRowIndex + 1 });
   }
   const logAction = rowIndex ? 'edit' : 'add';
   addHistoryLog(logAction, params.partNo, params.partName, rowIndex ? 'แก้ไขข้อมูล' : 'เพิ่มรายการใหม่');
@@ -2233,7 +2250,10 @@ function closeDetail(e) {
 let currentDetailKey = null;
 
 function getCommentKey(item) {
-  return 'comments_' + (item.rowIndex || item.partNo || item.no);
+  // ใช้ rowIndex เสมอ — partNo อาจซ้ำกันได้ถ้ามีหลายรุ่น
+  if (item.rowIndex) return 'comments_' + item.rowIndex;
+  if (item.no)       return 'comments_no_' + item.no;
+  return 'comments_' + (item.partNo || 'unknown');
 }
 
 function loadComments(key) {
