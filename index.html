@@ -425,16 +425,25 @@
   .maker-count { font-family: var(--mono); font-size: 0.69rem; color: var(--muted); white-space: nowrap; }
 
   /* TOAST */
-  .toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.4rem; }
+  .toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
   .toast {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-    padding: 0.7rem 1.1rem; font-size: 0.79rem; display: flex; align-items: center; gap: 0.5rem;
-    min-width: 240px; box-shadow: 0 6px 28px rgba(0,0,0,0.45);
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 0.75rem 1.1rem; font-size: 0.79rem; display: flex; align-items: center; gap: 0.6rem;
+    min-width: 260px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
     animation: slideIn 0.22s ease; max-width: 360px;
   }
   .toast.success { border-color: var(--success); }
-  .toast.error { border-color: var(--danger); }
-  .toast.info { border-color: var(--accent2); }
+  .toast.error   { border-color: var(--danger); }
+  .toast.info    { border-color: var(--accent2); }
+  .toast.urgent  { border-color: var(--danger); background: rgba(239,68,68,0.08); }
+  .toast.warndue { border-color: var(--warn);   background: rgba(245,158,11,0.08); }
+  .toast-icon { font-size: 1.1rem; flex-shrink:0; }
+  .toast-body { flex:1; min-width:0; }
+  .toast-title { font-weight:700; color:var(--text); font-size:0.8rem; }
+  .toast-sub   { font-size:0.7rem; color:var(--muted); margin-top:1px; }
+  .toast-chip  { display:inline-block; font-size:0.64rem; font-weight:700; padding:0.1rem 0.45rem; border-radius:5px; margin-top:0.25rem; }
+  .toast-chip.urgent { background:rgba(239,68,68,0.15); color:var(--danger); }
+  .toast-chip.warndue{ background:rgba(245,158,11,0.12); color:var(--warn); }
   @keyframes slideIn { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
 
   .spinner { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.65s linear infinite; display: inline-block; flex-shrink: 0; }
@@ -1384,15 +1393,6 @@ function renumberSupply(sheet) {
 </div>
 
 
-<!-- ALERT POPUP PANEL -->
-<div class="alert-popup" id="alertPopup">
-  <div class="alert-popup-header">
-    <div class="alert-popup-title">🔔 การแจ้งเตือน <span class="alert-popup-badge" id="alertPopupBadge">0</span></div>
-    <button class="alert-popup-close" onclick="closeAlertPopup()" title="ปิด">✕</button>
-  </div>
-  <div class="alert-popup-list" id="alertPopupList"></div>
-</div>
-
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
@@ -1556,7 +1556,6 @@ async function loadData() {
   } catch(e) { allData = DEMO; processData(); showToast('⚠️ ไม่สามารถเชื่อมต่อ — ใช้ข้อมูล Demo', 'error'); }
 }
 async function syncData() {
-  alertPopupDismissed = false;
   const icon = document.getElementById('syncIcon');
   const sIcon = document.getElementById('sidebarSyncIcon');
   const spin = '<span class="spinner" style="width:12px;height:12px;border-width:2px"></span>';
@@ -1648,7 +1647,7 @@ function processData() {
   renderTable();
   renderCharts();
   buildNotifications();
-  buildAlertPopup();
+  setTimeout(showDueAlerts, 800);
 }
 
 function populateFilters() {
@@ -2341,12 +2340,29 @@ function exportCSV() {
 }
 
 
-/* ══════════════════════════════════════════════════════
-   ALERT POPUP — แจ้งเตือนรายการใกล้ถึงวันส่ง
-══════════════════════════════════════════════════════ */
-let alertPopupDismissed = false;
 
-function buildAlertPopup() {
+/* ── TOAST ── */
+function showToast(msg, type = 'info', duration = 3200) {
+  const container = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  if (typeof msg === 'object') {
+    el.innerHTML = `
+      <div class="toast-icon">${msg.icon || '🔔'}</div>
+      <div class="toast-body">
+        <div class="toast-title">${msg.title}</div>
+        ${msg.sub  ? `<div class="toast-sub">${msg.sub}</div>` : ''}
+        ${msg.chip ? `<span class="toast-chip ${msg.chipCls||''}">${msg.chip}</span>` : ''}
+      </div>`;
+  } else {
+    el.textContent = msg;
+  }
+  container.appendChild(el);
+  setTimeout(() => { el.style.opacity='0'; el.style.transform='translateX(16px)'; el.style.transition='all 0.25s'; setTimeout(()=>el.remove(),260); }, duration);
+}
+
+/* ── NOTIFY TOAST — แจ้งเตือนรายการใกล้ถึงวันส่ง ── */
+function showDueAlerts() {
   const urgent = [], warn = [];
   allData.forEach(r => {
     if (r.status && r.status.includes('เสร็จแล้ว')) return;
@@ -2356,45 +2372,22 @@ function buildAlertPopup() {
       else if (d <= 7) warn.push(r);
     }
   });
-  const total = urgent.length + warn.length;
-  if (total === 0 || alertPopupDismissed) return;
-
-  document.getElementById('alertPopupBadge').textContent = total;
-
+  // แสดงแบบ stagger ทีละรายการ
   const items = [
-    ...urgent.map(r => ({ r, cls:'urgent', icon:'🚨', label: r.daysLeft < 0 ? `เกิน ${Math.abs(r.daysLeft)} วัน` : 'วันนี้!' })),
-    ...warn.map(r =>   ({ r, cls:'warn',   icon:'⚠️', label: `เหลือ ${r.daysLeft} วัน` }))
+    ...urgent.map(r => ({ r, cls:'urgent', icon:'🚨', chip: r.daysLeft < 0 ? `⚠ เกิน ${Math.abs(r.daysLeft)} วัน` : '⚠ วันนี้!' })),
+    ...warn.map(r   => ({ r, cls:'warndue', icon:'⏰', chip: `▲ เหลือ ${r.daysLeft} วัน` }))
   ];
-
-  document.getElementById('alertPopupList').innerHTML = items.map(({ r, cls, icon, label }) => `
-    <div class="alert-popup-item" onclick="openDetail(${JSON.stringify(r).replace(/"/g,'&quot;')});closeAlertPopup()">
-      <div class="alert-popup-icon ${cls}">${icon}</div>
-      <div class="alert-popup-body">
-        <div class="alert-popup-name">${r.partName}</div>
-        <div class="alert-popup-sub">${r.partNo} · ${r.maker}</div>
-        <span class="alert-popup-chip ${cls}">▲ ${label}</span>
-      </div>
-    </div>`).join('');
-
-  const popup = document.getElementById('alertPopup');
-  popup.classList.add('show');
-  // auto-hide หลัง 10 วินาที ถ้าไม่มีการ interact
-  setTimeout(() => {
-    if (popup.classList.contains('show')) popup.classList.remove('show');
-  }, 10000);
-}
-
-function closeAlertPopup() {
-  alertPopupDismissed = true;
-  document.getElementById('alertPopup').classList.remove('show');
-}
-
-/* ── TOAST ── */
-function showToast(msg, type = 'info') {
-  const container = document.getElementById('toastContainer');
-  const el = document.createElement('div'); el.className = `toast ${type}`; el.textContent = msg;
-  container.appendChild(el);
-  setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateX(16px)'; el.style.transition = 'all 0.25s'; setTimeout(() => el.remove(), 260); }, 3200);
+  items.slice(0, 5).forEach((item, i) => {
+    setTimeout(() => {
+      showToast({
+        icon:    item.icon,
+        title:   item.r.partName,
+        sub:     `${item.r.partNo} · ${item.r.maker}`,
+        chip:    item.chip,
+        chipCls: item.cls
+      }, item.cls, 5000 + i * 500);
+    }, i * 350);
+  });
 }
 
 /* ══════════════════════════════════════════════════════
