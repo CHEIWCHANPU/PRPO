@@ -382,6 +382,37 @@
   .detail-field-value { font-size: 0.87rem; font-weight: 500; }
   .detail-actions { display: flex; gap: 0.6rem; padding-top: 0.5rem; }
 
+  /* COMMENTS */
+  .comment-section { margin-top: 1.4rem; border-top: 1px solid var(--border); padding-top: 1.1rem; }
+  .comment-section-title { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.85rem; display: flex; align-items: center; gap: 0.5rem; }
+  .comment-count-badge { background: var(--accent2); color: #fff; font-size: 0.58rem; font-weight: 700; padding: 0.1rem 0.42rem; border-radius: 10px; }
+  .comment-list { display: flex; flex-direction: column; gap: 0.65rem; margin-bottom: 0.9rem; max-height: 320px; overflow-y: auto; }
+  .comment-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 0.7rem 0.9rem; }
+  .comment-item.important { border-left: 3px solid var(--warn); }
+  .comment-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem; flex-wrap: wrap; }
+  .comment-author { font-size: 0.7rem; font-weight: 700; color: var(--accent); }
+  .comment-time { font-size: 0.64rem; color: var(--muted); font-family: var(--mono); }
+  .comment-tag { font-size: 0.59rem; font-weight: 700; padding: 0.1rem 0.45rem; border-radius: 8px; }
+  .comment-tag.update { background: rgba(99,102,241,0.15); color: var(--accent2); }
+  .comment-tag.issue  { background: rgba(239,68,68,0.12); color: var(--danger); }
+  .comment-tag.done   { background: rgba(16,185,129,0.12); color: var(--success); }
+  .comment-tag.info   { background: rgba(0,229,160,0.1); color: var(--accent); }
+  .comment-text { font-size: 0.81rem; line-height: 1.55; color: var(--text); word-break: break-word; }
+  .comment-del { margin-left: auto; background: none; border: none; cursor: pointer; font-size: 0.75rem; color: var(--muted); padding: 0.1rem 0.3rem; border-radius: 5px; transition: color 0.15s; }
+  .comment-del:hover { color: var(--danger); }
+  .comment-input-wrap { display: flex; flex-direction: column; gap: 0.5rem; }
+  .comment-input-row { display: flex; gap: 0.5rem; }
+  .comment-name-input { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 0.4rem 0.7rem; font-size: 0.78rem; color: var(--text); font-family: var(--font); outline: none; transition: border-color 0.15s; }
+  .comment-name-input:focus { border-color: var(--accent2); }
+  .comment-tag-select { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 0.4rem 0.55rem; font-size: 0.75rem; color: var(--text); font-family: var(--font); outline: none; cursor: pointer; }
+  .comment-textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 0.6rem 0.8rem; font-size: 0.8rem; color: var(--text); font-family: var(--font); resize: none; outline: none; line-height: 1.55; transition: border-color 0.15s; }
+  .comment-textarea:focus { border-color: var(--accent2); }
+  .comment-submit-row { display: flex; align-items: center; gap: 0.5rem; }
+  .comment-submit { background: var(--accent2); border: none; color: #fff; font-family: var(--font); font-size: 0.78rem; font-weight: 600; padding: 0.45rem 1.1rem; border-radius: 8px; cursor: pointer; transition: opacity 0.15s; }
+  .comment-submit:hover { opacity: 0.85; }
+  .comment-empty { text-align: center; padding: 1.2rem; color: var(--muted); font-size: 0.78rem; }
+
+
   /* SUMMARY */
   .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
   #monthTabs button:hover { border-color: var(--accent) !important; color: var(--accent) !important; }
@@ -488,6 +519,57 @@
   .lt-late { color:var(--danger); font-family:var(--mono); font-size:0.72rem; font-weight:700; }
   #page-leadtime thead th { cursor:pointer; }
   #page-leadtime thead th:hover { color:var(--text); }
+
+  /* ── GANTT ── */
+  .gantt-controls { display:flex; align-items:center; gap:0.7rem; flex-wrap:wrap; margin-bottom:1.1rem; }
+  .gantt-controls select, .gantt-controls input[type=month] {
+    background:var(--surface2); border:1px solid var(--border); border-radius:8px;
+    color:var(--text); font-family:var(--font); font-size:0.78rem; padding:0.38rem 0.65rem;
+  }
+  .gantt-nav-btn {
+    background:var(--surface2); border:1px solid var(--border); border-radius:8px;
+    color:var(--text); font-size:0.85rem; padding:0.35rem 0.75rem; cursor:pointer; transition:all 0.15s;
+  }
+  .gantt-nav-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .gantt-month-label { font-size:0.9rem; font-weight:700; color:var(--text); min-width:120px; text-align:center; }
+  .gantt-legend { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:0.9rem; }
+  .gantt-legend-item { display:flex; align-items:center; gap:0.4rem; font-size:0.72rem; color:var(--muted); }
+  .gantt-legend-dot { width:10px; height:10px; border-radius:3px; flex-shrink:0; }
+  .gantt-wrap { overflow-x:auto; border:1px solid var(--border); border-radius:14px; background:var(--surface); }
+  .gantt-table { width:100%; border-collapse:collapse; min-width:700px; }
+  .gantt-table th { background:var(--surface2); color:var(--muted); font-size:0.68rem; font-weight:600; text-align:center; padding:0.45rem 0.2rem; border-bottom:1px solid var(--border); border-right:1px solid var(--border); white-space:nowrap; letter-spacing:0.03em; }
+  .gantt-table th.day-today { color:var(--accent); background:var(--glow-accent); }
+  .gantt-table th.label-col { text-align:left; padding-left:0.75rem; min-width:160px; max-width:200px; position:sticky; left:0; z-index:2; background:var(--surface2); }
+  .gantt-table td { border-bottom:1px solid var(--border); border-right:1px solid var(--border); padding:0; height:34px; }
+  .gantt-table td.label-col {
+    padding:0.3rem 0.75rem; font-size:0.73rem; color:var(--text); position:sticky; left:0; z-index:1;
+    background:var(--surface); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px;
+  }
+  .gantt-table tr:hover td { background:rgba(255,255,255,0.025); }
+  .gantt-table tr:hover td.label-col { background:var(--surface2); }
+  .gantt-bar-cell { position:relative; }
+  .gantt-bar {
+    position:absolute; top:6px; bottom:6px; border-radius:5px; opacity:0.88;
+    display:flex; align-items:center; padding:0 6px; font-size:0.62rem; font-weight:600;
+    color:#fff; white-space:nowrap; overflow:hidden; cursor:pointer; transition:opacity 0.15s;
+    box-sizing:border-box;
+  }
+  .gantt-bar:hover { opacity:1; z-index:10; }
+  .gantt-bar.done    { background:#10b981; }
+  .gantt-bar.progress{ background:#6366f1; }
+  .gantt-bar.warn    { background:#f59e0b; }
+  .gantt-bar.urgent  { background:#ef4444; }
+  .gantt-bar.incomplete { background:#ef4444; opacity:0.7; }
+  .gantt-today-line  { position:absolute; top:0; bottom:0; width:2px; background:var(--accent); opacity:0.7; z-index:5; pointer-events:none; }
+  .gantt-day-weekend { background:rgba(255,255,255,0.02); }
+  .gantt-kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:0.85rem; margin-bottom:1.1rem; }
+  .gantt-kpi { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:0.85rem 1rem; }
+  .gantt-kpi-label { font-size:0.68rem; color:var(--muted); margin-bottom:0.3rem; }
+  .gantt-kpi-val { font-size:1.25rem; font-weight:700; }
+  .gantt-empty { padding:3rem; text-align:center; color:var(--muted); font-size:0.82rem; }
+  .gantt-density-row { display:flex; margin-bottom:0.7rem; border:1px solid var(--border); border-radius:10px; overflow:hidden; background:var(--surface); }
+  .gantt-density-cell { flex:1; height:32px; display:flex; align-items:center; justify-content:center; font-size:0.65rem; font-weight:700; color:var(--muted); border-right:1px solid var(--border); transition:background 0.15s; cursor:default; }
+  .gantt-density-cell:last-child { border-right:none; }
 </style>
 </head>
 <body>
@@ -513,6 +595,9 @@
     </button>
     <button class="nav-item" id="nav-summary" onclick="showPage('summary',this)">
       <span class="nav-icon">📈</span><span class="nav-text">สรุปภาพรวม</span>
+    </button>
+    <button class="nav-item" id="nav-gantt" onclick="showPage('gantt',this)">
+      <span class="nav-icon">📅</span><span class="nav-text">Timeline / Gantt</span>
     </button>
     <div class="nav-label" style="margin-top:0.7rem">จัดการ</div>
     <button class="nav-item" onclick="openAddModal()">
@@ -737,6 +822,54 @@
           <div class="chart-title" id="s-location-title">สถานที่ส่ง</div>
           <div class="chart-wrap"><canvas id="chartLocation"></canvas></div>
         </div>
+      </div>
+    </div>
+
+    <!-- GANTT -->
+    <div class="page" id="page-gantt">
+      <div class="page-header">
+        <div class="page-header-left">
+          <h1>📅 Timeline / Gantt Chart</h1>
+          <p>ภาพรวมงานทั้งหมดตามวันนัดส่ง — ดูว่าวันไหนงานกระจุกตัว</p>
+        </div>
+      </div>
+      <div class="gantt-kpi-row" id="ganttKpiRow">
+        <div class="gantt-kpi"><div class="gantt-kpi-label">รายการในเดือนนี้</div><div class="gantt-kpi-val" id="gkpi-total" style="color:var(--accent2)">—</div></div>
+        <div class="gantt-kpi"><div class="gantt-kpi-label">เสร็จแล้ว</div><div class="gantt-kpi-val" id="gkpi-done" style="color:var(--success)">—</div></div>
+        <div class="gantt-kpi"><div class="gantt-kpi-label">กำลังดำเนินการ</div><div class="gantt-kpi-val" id="gkpi-prog" style="color:var(--accent2)">—</div></div>
+        <div class="gantt-kpi"><div class="gantt-kpi-label">เลยกำหนด / วันนี้</div><div class="gantt-kpi-val" id="gkpi-late" style="color:var(--danger)">—</div></div>
+      </div>
+      <div class="gantt-controls">
+        <button class="gantt-nav-btn" onclick="ganttPrevMonth()">◀</button>
+        <div class="gantt-month-label" id="ganttMonthLabel">—</div>
+        <button class="gantt-nav-btn" onclick="ganttNextMonth()">▶</button>
+        <button class="gantt-nav-btn" onclick="ganttGoToday()" style="font-size:0.72rem;color:var(--accent);border-color:var(--accent)">วันนี้</button>
+        <div style="flex:1"></div>
+        <select id="ganttFilterStatus" onchange="renderGantt()">
+          <option value="">สถานะทั้งหมด</option>
+          <option value="เสร็จแล้ว">✅ เสร็จแล้ว</option>
+          <option value="กำลังดำเนินการ">♻ กำลังดำเนินการ</option>
+          <option value="ยังไม่ครบ">❌ ยังไม่ครบ</option>
+        </select>
+        <select id="ganttFilterMaker" onchange="renderGantt()"><option value="">Maker ทั้งหมด</option></select>
+        <select id="ganttGroupBy" onchange="renderGantt()">
+          <option value="item">แยกตามรายการ</option>
+          <option value="maker">แยกตาม Maker</option>
+        </select>
+      </div>
+      <div class="gantt-legend">
+        <div class="gantt-legend-item"><div class="gantt-legend-dot" style="background:#10b981"></div>เสร็จแล้ว</div>
+        <div class="gantt-legend-item"><div class="gantt-legend-dot" style="background:#6366f1"></div>กำลังดำเนินการ</div>
+        <div class="gantt-legend-item"><div class="gantt-legend-dot" style="background:#f59e0b"></div>เหลือ ≤ 7 วัน</div>
+        <div class="gantt-legend-item"><div class="gantt-legend-dot" style="background:#ef4444"></div>เลยกำหนด / วันนี้</div>
+        <div class="gantt-legend-item"><div class="gantt-legend-dot" style="background:var(--accent);opacity:0.7"></div>วันนี้</div>
+      </div>
+      <div id="ganttDensityWrap" style="margin-bottom:0.5rem"></div>
+      <div class="gantt-wrap">
+        <table class="gantt-table" id="ganttTable">
+          <thead id="ganttHead"></thead>
+          <tbody id="ganttBody"></tbody>
+        </table>
       </div>
     </div>
 
@@ -1206,6 +1339,7 @@ function renumberSupply(sheet) {
     <div class="detail-meta" id="d-meta"></div>
     <div class="detail-grid" id="d-grid"></div>
     <div class="detail-actions" id="d-actions"></div>
+    <div class="comment-section" id="d-comments"></div>
   </div>
 </div>
 
@@ -1301,12 +1435,13 @@ function showPage(name, btn) {
   document.getElementById('page-' + name).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  const titles = { dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', summary:'📈 สรุปภาพรวม', setup:'⚙️ ตั้งค่าระบบ', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis' };
+  const titles = { dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', summary:'📈 สรุปภาพรวม', gantt:'📅 Timeline / Gantt', setup:'⚙️ ตั้งค่าระบบ', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis' };
   document.getElementById('topbarTitle').textContent = titles[name] || name;
   if (name === 'summary') renderSummary();
   if (name === 'supplier') loadSuppliers();
   if (name === 'leadtime') renderLeadTime();
   if (name === 'history') renderHistory();
+  if (name === 'gantt') renderGantt();
 }
 
 /* ── NOTIFICATIONS ── */
@@ -1557,13 +1692,15 @@ function renderTable() {
     const rowCls = isDone ? '' : (!isNaN(dl) && dl <= 3) ? 'row-urgent' : (!isNaN(dl) && dl <= 7) ? 'row-warn' : '';
     const itemKey = r.rowIndex || r.partNo;
     const isStarred = starredItems.includes(String(itemKey));
+    const commentCount = loadComments('comments_' + itemKey).length;
+    const commentDot = commentCount > 0 ? `<span style="display:inline-flex;align-items:center;gap:2px;font-size:0.62rem;background:rgba(99,102,241,0.15);color:var(--accent2);border-radius:8px;padding:1px 5px;margin-left:3px">💬${commentCount}</span>` : '';
     return `<tr class="${rowCls}" onclick="openDetail(${JSON.stringify(r).replace(/"/g,'&quot;')})">
       <td class="no-num">${start+i+1}</td>
       <td style="text-align:center" onclick="event.stopPropagation()">
         <button class="star-btn ${isStarred ? 'starred' : ''}" onclick="toggleStar('${itemKey}',this)" title="${isStarred ? 'ยกเลิกงานสำคัญ' : 'ทำเครื่องหมายงานสำคัญ'}">⭐</button>
       </td>
       <td class="part-no">${r.partNo}</td>
-      <td class="part-name">${r.partName}</td>
+      <td class="part-name">${r.partName}${commentDot}</td>
       <td style="font-family:var(--mono);font-size:0.7rem">${r.model}</td>
       <td class="vol">${Number(r.volume).toLocaleString()}</td>
       <td class="date-cell">${r.prDate}</td>
@@ -1953,10 +2090,107 @@ function openDetail(item) {
     ${item.prLink ? `<button class="btn btn-secondary" onclick="window.open('${item.prLink}','_blank')" style="flex:1">📎 เอกสาร</button>` : ''}
     <button class="btn btn-danger" onclick="deleteItem(${item.rowIndex});closeDetail(null)" style="flex:1">🗑️ ลบ</button>`;
   document.getElementById('detailOverlay').classList.add('open');
+  currentDetailKey = getCommentKey(item);
+  renderComments(currentDetailKey);
 }
 function closeDetail(e) {
   if (!e || e.target === document.getElementById('detailOverlay')) document.getElementById('detailOverlay').classList.remove('open');
 }
+
+/* ══════════════════════════════════════════════════════
+   COMMENTS / ความคืบหน้า
+══════════════════════════════════════════════════════ */
+let currentDetailKey = null;
+
+function getCommentKey(item) {
+  return 'comments_' + (item.rowIndex || item.partNo || item.no);
+}
+
+function loadComments(key) {
+  try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch { return []; }
+}
+
+function saveComments(key, comments) {
+  localStorage.setItem(key, JSON.stringify(comments));
+}
+
+function renderComments(key) {
+  const comments = loadComments(key);
+  const wrap = document.getElementById('d-comments');
+  if (!wrap) return;
+
+  const TAG_LABELS = { update:'🔄 อัปเดต', issue:'⚠️ ปัญหา', done:'✅ เสร็จ', info:'💬 ทั่วไป' };
+
+  let listHtml = '';
+  if (comments.length === 0) {
+    listHtml = `<div class="comment-empty">ยังไม่มีความคืบหน้า — เพิ่มบันทึกแรกได้เลย</div>`;
+  } else {
+    listHtml = comments.map((c, idx) => `
+      <div class="comment-item ${c.tag === 'issue' ? 'important' : ''}">
+        <div class="comment-header">
+          <span class="comment-author">👤 ${c.author || 'ไม่ระบุชื่อ'}</span>
+          <span class="comment-time">${c.time}</span>
+          <span class="comment-tag ${c.tag}">${TAG_LABELS[c.tag] || c.tag}</span>
+          <button class="comment-del" onclick="deleteComment('${key}',${idx})" title="ลบ">✕</button>
+        </div>
+        <div class="comment-text">${c.text.replace(/\n/g,'<br>')}</div>
+      </div>`).join('');
+  }
+
+  const savedName = localStorage.getItem('prpo_username') || '';
+  wrap.innerHTML = `
+    <div class="comment-section-title">
+      💬 ความคืบหน้า / บันทึกทีม
+      ${comments.length > 0 ? `<span class="comment-count-badge">${comments.length}</span>` : ''}
+    </div>
+    <div class="comment-list">${listHtml}</div>
+    <div class="comment-input-wrap">
+      <div class="comment-input-row">
+        <input class="comment-name-input" id="c-author" placeholder="ชื่อของคุณ" value="${savedName}" oninput="localStorage.setItem('prpo_username',this.value)">
+        <select class="comment-tag-select" id="c-tag">
+          <option value="update">🔄 อัปเดต</option>
+          <option value="info">💬 ทั่วไป</option>
+          <option value="issue">⚠️ ปัญหา</option>
+          <option value="done">✅ เสร็จ</option>
+        </select>
+      </div>
+      <textarea class="comment-textarea" id="c-text" rows="3" placeholder="เช่น โทรแล้ว Maker ยืนยันส่ง 20 มิ.ย. / รอใบเสนอราคาเพิ่ม..."></textarea>
+      <div class="comment-submit-row">
+        <button class="comment-submit" onclick="addComment('${key}')">+ บันทึก</button>
+        <span style="font-size:0.69rem;color:var(--muted)">บันทึกลงเครื่องนี้ · ${comments.length} รายการ</span>
+      </div>
+    </div>`;
+
+  // scroll list to bottom
+  const list = wrap.querySelector('.comment-list');
+  if (list) list.scrollTop = list.scrollHeight;
+}
+
+function addComment(key) {
+  const author = (document.getElementById('c-author')?.value || '').trim();
+  const text   = (document.getElementById('c-text')?.value   || '').trim();
+  const tag    = document.getElementById('c-tag')?.value || 'update';
+  if (!text) { showToast('⚠️ กรุณาพิมพ์ข้อความก่อนบันทึก', 'error'); return; }
+
+  const now = new Date();
+  const time = now.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'}) + ' ' +
+               now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+
+  const comments = loadComments(key);
+  comments.push({ author, text, tag, time });
+  saveComments(key, comments);
+  renderComments(key);
+  showToast('✅ บันทึกความคืบหน้าแล้ว', 'success');
+}
+
+function deleteComment(key, idx) {
+  const comments = loadComments(key);
+  comments.splice(idx, 1);
+  saveComments(key, comments);
+  renderComments(key);
+  showToast('🗑️ ลบบันทึกแล้ว', 'info');
+}
+
 
 /* ── SETUP ── */
 function saveUrl() {
@@ -2227,6 +2461,175 @@ function renderSuppliers() {
       ${s.note ? `<div class="supplier-field" style="border-bottom:none">📋 <span style="color:var(--muted);font-size:0.74rem">${s.note}</span></div>` : ''}
     </div>`;
   }).join('');
+}
+
+/* ══════════════════════════════════════════════════════
+   GANTT CHART
+══════════════════════════════════════════════════════ */
+let ganttYear  = new Date().getFullYear();
+let ganttMonth = new Date().getMonth(); // 0-based
+
+function ganttPrevMonth() { ganttMonth--; if (ganttMonth < 0) { ganttMonth = 11; ganttYear--; } renderGantt(); }
+function ganttNextMonth() { ganttMonth++; if (ganttMonth > 11) { ganttMonth = 0; ganttYear++; } renderGantt(); }
+function ganttGoToday()   { ganttYear = new Date().getFullYear(); ganttMonth = new Date().getMonth(); renderGantt(); }
+
+function populateGanttFilters() {
+  const makers = [...new Set(allData.map(r => r.maker).filter(Boolean))].sort();
+  const sel = document.getElementById('ganttFilterMaker');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Maker ทั้งหมด</option>';
+  makers.forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m; sel.appendChild(o); });
+  sel.value = cur;
+}
+
+function renderGantt() {
+  populateGanttFilters();
+  const today     = new Date(); today.setHours(0,0,0,0);
+  const daysInMonth = new Date(ganttYear, ganttMonth + 1, 0).getDate();
+  const monthStart  = new Date(ganttYear, ganttMonth, 1);
+  const monthEnd    = new Date(ganttYear, ganttMonth, daysInMonth);
+  const MONTH_TH = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+                    'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  document.getElementById('ganttMonthLabel').textContent = MONTH_TH[ganttMonth] + ' ' + ganttYear;
+
+  const filterStatus = document.getElementById('ganttFilterStatus').value;
+  const filterMaker  = document.getElementById('ganttFilterMaker').value;
+  const groupBy      = document.getElementById('ganttGroupBy').value;
+
+  // Filter data — show items whose prDate..dueDate range overlaps with current month
+  let rows = allData.filter(r => {
+    if (filterStatus && !(r.status||'').includes(filterStatus)) return false;
+    if (filterMaker  && r.maker !== filterMaker) return false;
+    const due = parseThaiDate(r.dueDate);
+    const pr  = parseThaiDate(r.prDate) || due;
+    if (!due) return false;
+    return due >= monthStart && pr <= monthEnd || (pr <= monthEnd && due >= monthStart);
+  });
+
+  // KPIs (count items with dueDate in this month)
+  const monthRows = allData.filter(r => {
+    const due = parseThaiDate(r.dueDate);
+    return due && due.getFullYear() === ganttYear && due.getMonth() === ganttMonth;
+  });
+  document.getElementById('gkpi-total').textContent = monthRows.length;
+  document.getElementById('gkpi-done').textContent  = monthRows.filter(r => r.status.includes('เสร็จแล้ว')).length;
+  document.getElementById('gkpi-prog').textContent  = monthRows.filter(r => r.status.includes('กำลังดำเนินการ')).length;
+  document.getElementById('gkpi-late').textContent  = monthRows.filter(r => !r.status.includes('เสร็จแล้ว') && typeof r.daysLeft === 'number' && r.daysLeft <= 0).length;
+
+  // Density bar — count due items per day
+  const density = Array(daysInMonth).fill(0);
+  allData.forEach(r => {
+    const due = parseThaiDate(r.dueDate);
+    if (due && due.getFullYear() === ganttYear && due.getMonth() === ganttMonth) {
+      density[due.getDate()-1]++;
+    }
+  });
+  const maxD = Math.max(...density, 1);
+  const densityWrap = document.getElementById('ganttDensityWrap');
+  densityWrap.innerHTML = '<div style="font-size:0.64rem;color:var(--muted);margin-bottom:3px;padding-left:2px">📊 ความหนาแน่นงานนัดส่งต่อวัน</div><div class="gantt-density-row" id="ganttDensityRow"></div>';
+  const densityRow = document.getElementById('ganttDensityRow');
+  for (let d = 0; d < daysInMonth; d++) {
+    const isToday = today.getFullYear()===ganttYear && today.getMonth()===ganttMonth && today.getDate()===(d+1);
+    const pct = density[d]/maxD;
+    const bg = pct === 0 ? 'transparent' :
+               pct < 0.35 ? 'rgba(99,102,241,0.2)' :
+               pct < 0.65 ? 'rgba(245,158,11,0.45)' : 'rgba(239,68,68,0.55)';
+    const cell = document.createElement('div');
+    cell.className = 'gantt-density-cell';
+    cell.style.background = isToday ? 'var(--glow-accent)' : bg;
+    cell.style.color = isToday ? 'var(--accent)' : density[d] > 0 ? 'var(--text)' : 'transparent';
+    cell.title = `${d+1} ${MONTH_TH[ganttMonth]}: ${density[d]} งาน`;
+    cell.textContent = density[d] > 0 ? density[d] : '';
+    densityRow.appendChild(cell);
+  }
+
+  // Build table header
+  const DAY_TH = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+  let headHtml = '<tr><th class="label-col">รายการ</th>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dt  = new Date(ganttYear, ganttMonth, d);
+    const dow = dt.getDay();
+    const isToday = dt.getTime() === today.getTime();
+    const isWknd  = dow === 0 || dow === 6;
+    headHtml += `<th style="min-width:28px;width:28px${isWknd?';opacity:0.45':''}${isToday?';color:var(--accent);background:var(--glow-accent)':''}">${d}<br><span style="font-size:0.58rem;opacity:0.6">${DAY_TH[dow]}</span></th>`;
+  }
+  headHtml += '</tr>';
+  document.getElementById('ganttHead').innerHTML = headHtml;
+
+  // Group rows
+  let groups = [];
+  if (groupBy === 'maker') {
+    const makerMap = {};
+    rows.forEach(r => {
+      const key = r.maker || 'ไม่ระบุ';
+      if (!makerMap[key]) makerMap[key] = [];
+      makerMap[key].push(r);
+    });
+    Object.entries(makerMap).sort().forEach(([maker, items]) => {
+      groups.push({ label: '🏭 ' + maker, items, isGroup: true });
+      items.forEach(r => groups.push({ label: r.partName || r.partNo, items: [r], isGroup: false }));
+    });
+  } else {
+    rows.forEach(r => groups.push({ label: (r.partNo ? r.partNo + ' · ' : '') + (r.partName||''), items: [r], isGroup: false }));
+  }
+
+  if (groups.length === 0) {
+    document.getElementById('ganttBody').innerHTML = `<tr><td colspan="${daysInMonth+1}" class="gantt-empty">ไม่มีรายการในเดือนนี้</td></tr>`;
+    return;
+  }
+
+  // Render rows
+  let bodyHtml = '';
+  groups.forEach(g => {
+    if (g.isGroup) {
+      bodyHtml += `<tr style="background:var(--surface2)"><td class="label-col" style="font-size:0.72rem;font-weight:700;color:var(--accent2)" colspan="${daysInMonth+1}">${g.label}</td></tr>`;
+      return;
+    }
+    const r = g.items[0];
+    const due = parseThaiDate(r.dueDate);
+    const pr  = parseThaiDate(r.prDate) || due;
+    if (!due) return;
+
+    // Clamp to month
+    const barStart = Math.max(0, Math.round((pr  - monthStart) / 86400000));
+    const barEnd   = Math.min(daysInMonth-1, Math.round((due - monthStart) / 86400000));
+
+    const isDone = r.status.includes('เสร็จแล้ว');
+    const isLate = !isDone && typeof r.daysLeft === 'number' && r.daysLeft < 0;
+    const isWarn = !isDone && typeof r.daysLeft === 'number' && r.daysLeft >= 0 && r.daysLeft <= 7;
+    const isIncomp = r.status.includes('ยังไม่ครบ');
+    const barClass = isDone ? 'done' : isLate ? 'urgent' : isIncomp ? 'incomplete' : isWarn ? 'warn' : 'progress';
+
+    const label = g.label.length > 28 ? g.label.slice(0,26)+'…' : g.label;
+
+    bodyHtml += `<tr onclick="openDetail(${JSON.stringify(r).replace(/"/g,'&quot;')})" style="cursor:pointer">`;
+    bodyHtml += `<td class="label-col" title="${g.label}">${label}</td>`;
+
+    for (let d = 0; d < daysInMonth; d++) {
+      const dt = new Date(ganttYear, ganttMonth, d+1);
+      const isToday = dt.getTime() === today.getTime();
+      const isWknd  = dt.getDay() === 0 || dt.getDay() === 6;
+      let cellStyle = isWknd ? 'background:rgba(255,255,255,0.015)' : '';
+      if (isToday) cellStyle = 'background:var(--glow-accent)';
+
+      if (d === barStart) {
+        // bar spans from barStart to barEnd
+        const span = barEnd - barStart + 1;
+        bodyHtml += `<td class="gantt-bar-cell" colspan="${span}" style="${cellStyle};position:relative">`;
+        bodyHtml += `<div class="gantt-bar ${barClass}" style="left:3px;right:3px">${span >= 4 ? label : ''}</div>`;
+        if (isToday && d >= barStart && d <= barEnd) bodyHtml += `<div class="gantt-today-line" style="left:50%"></div>`;
+        bodyHtml += `</td>`;
+        d = barEnd; // skip cells covered by colspan
+      } else {
+        bodyHtml += `<td style="${cellStyle}">`;
+        if (isToday) bodyHtml += `<div class="gantt-today-line" style="left:50%"></div>`;
+        bodyHtml += `</td>`;
+      }
+    }
+    bodyHtml += '</tr>';
+  });
+
+  document.getElementById('ganttBody').innerHTML = bodyHtml;
 }
 
 /* ══════════════════════════════════════════════════════
