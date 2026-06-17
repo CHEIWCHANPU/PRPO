@@ -1863,10 +1863,10 @@ function statusBadge(status) {
 function daysTag(days, status) {
   const normStatus = normalizeStatus(status);
   if (normStatus.includes('เสร็จแล้ว') || String(days) === 'Done' || String(days).includes('✅')) {
-    return `<span class="days-left days-done">✅ Done</span>`;
+    return `<span class="days-left days-done">Done</span>`;
   }
   const daysStr = String(days).trim().toUpperCase();
-  if (daysStr === 'TRUE')  return `<span class="days-left days-done">✅ Done</span>`;
+  if (daysStr === 'TRUE')  return `<span class="days-left days-done">Done</span>`;
   if (daysStr === 'FALSE') return `<span class="days-left days-warn">—</span>`;
   const n = Number(days);
   if (isNaN(n) || days === '' || days === null || days === undefined) return `<span class="days-left days-ok">—</span>`;
