@@ -1173,7 +1173,17 @@
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
-let WEB_APP_URL = localStorage.getItem('prpo_url') || '';
+/* ══════════════════════════════════════════════════════
+   ⚙️ ตั้งค่าเริ่มต้น (ฝังไว้ในไฟล์ ไม่ใช่ localStorage)
+   วาง Web App URL และ Google Sheet URL ของคุณแทนที่ข้อความ
+   ในเครื่องหมาย '' ด้านล่างนี้ แล้วบันทึกไฟล์ — จากนั้นไม่ว่า
+   จะเปิดไฟล์นี้ที่เครื่องไหน/เบราว์เซอร์ไหน ก็จะเชื่อมต่อและ
+   โหลดข้อมูลได้ทันที โดยไม่ต้องตั้งค่าใหม่ทุกครั้ง
+══════════════════════════════════════════════════════ */
+const DEFAULT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxJrjtHhcT8Ar7pzmE2jZKMX-dKl75BnLeNerPAZZVINHd85K7_Fn3AigKg5733TjOdtA/exec';
+const DEFAULT_SHEET_URL   = 'https://docs.google.com/spreadsheets/d/1TaZlcjm9u1D3m-sBW5sTD1df1GIPXlrMHv_A5755bU8/edit?gid=789432946#gid=789432946';
+
+let WEB_APP_URL = localStorage.getItem('prpo_url') || (DEFAULT_WEB_APP_URL.startsWith('วาง_') ? '' : DEFAULT_WEB_APP_URL);
 let suppliers = [];
 let historyLog = JSON.parse(localStorage.getItem('prpo_history') || '[]');
 let starredItems = JSON.parse(localStorage.getItem('prpo_starred') || '[]');
@@ -1207,18 +1217,20 @@ const DEMO = [
 ];
 
 window.addEventListener('DOMContentLoaded', () => {
-  const saved = localStorage.getItem('prpo_url');
+  const saved = localStorage.getItem('prpo_url') || (DEFAULT_WEB_APP_URL.startsWith('วาง_') ? '' : DEFAULT_WEB_APP_URL);
   if (saved) {
     document.getElementById('webAppUrl').value = saved;
     document.getElementById('currentUrl').textContent = saved;
     document.getElementById('currentUrl').style.display = 'block';
+    if (!localStorage.getItem('prpo_url')) localStorage.setItem('prpo_url', saved);
   }
-  const savedSheet = localStorage.getItem('prpo_sheet_url');
+  const savedSheet = localStorage.getItem('prpo_sheet_url') || (DEFAULT_SHEET_URL.startsWith('วาง_') ? '' : DEFAULT_SHEET_URL);
   if (savedSheet) {
     document.getElementById('googleSheetUrl').value = savedSheet;
     document.getElementById('sheetUrlDisplay').textContent = savedSheet;
     document.getElementById('sheetUrlDisplay').style.display = 'block';
     document.getElementById('openSheetBtn').style.display = '';
+    if (!localStorage.getItem('prpo_sheet_url')) localStorage.setItem('prpo_sheet_url', savedSheet);
   }
   // Date chip
   const now = new Date();
@@ -2267,7 +2279,7 @@ function saveSheetUrl() {
   showToast('✅ บันทึก Google Sheet URL แล้ว', 'success');
 }
 function openGoogleSheet() {
-  const url = localStorage.getItem('prpo_sheet_url') || document.getElementById('googleSheetUrl').value.trim();
+  const url = localStorage.getItem('prpo_sheet_url') || document.getElementById('googleSheetUrl').value.trim() || (DEFAULT_SHEET_URL.startsWith('วาง_') ? '' : DEFAULT_SHEET_URL);
   if (!url) { showToast('❌ ยังไม่ได้ตั้งค่า Google Sheet URL', 'error'); return; }
   window.open(url, '_blank');
 }
