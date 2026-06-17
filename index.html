@@ -451,6 +451,11 @@
   .toast-chip  { display:inline-block; font-size:0.64rem; font-weight:700; padding:0.1rem 0.45rem; border-radius:5px; margin-top:0.25rem; }
   .toast-chip.urgent { background:rgba(239,68,68,0.15); color:var(--danger); }
   .toast-chip.warndue{ background:rgba(245,158,11,0.12); color:var(--warn); }
+  .toast-close { width:20px; height:20px; border:none; background:none; color:var(--muted); font-size:0.85rem; cursor:pointer; border-radius:5px; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-left:0.2rem; transition:all 0.12s; }
+  .toast-close:hover { background:var(--surface2); color:var(--text); }
+  .toast-mute-btn { display:flex; align-items:center; gap:0.35rem; padding:0.28rem 0.75rem; background:var(--surface2); border:1px solid var(--border); border-radius:20px; font-size:0.72rem; cursor:pointer; color:var(--muted); transition:all 0.18s; font-family:var(--font); }
+  .toast-mute-btn:hover { border-color:var(--warn); color:var(--warn); }
+  .toast-mute-btn.muted { border-color:var(--success); color:var(--success); background:rgba(16,185,129,0.08); }
   @keyframes slideIn { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
 
   .spinner { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.65s linear infinite; display: inline-block; flex-shrink: 0; }
@@ -657,6 +662,7 @@
       <div class="notif-wrap">
         <div class="icon-action bell" onclick="toggleNotif()" id="notifBell" style="position:relative">🔔<div class="notif-dot" id="notifDot"></div></div>
       </div>
+      <button class="toast-mute-btn" id="toastMuteBtn" onclick="toggleToastMute()" title="เปิด/ปิด popup แจ้งเตือน">🔕 ปิด popup</button>
     </div>
   </div>
 
@@ -1453,6 +1459,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const now = new Date();
   document.getElementById('currentDateChip').textContent = now.toLocaleDateString('th-TH', {day:'numeric',month:'short',year:'numeric'});
   initTheme();
+  initToastMuteBtn();
   document.addEventListener('click', (e) => {
     if (notifOpen && !e.target.closest('#notifPanel') && !e.target.closest('#notifBell')) closeNotif();
   });
@@ -2383,11 +2390,31 @@ function exportCSV() {
 
 
 
+/* ── TOAST MUTE ── */
+let toastMuted = localStorage.getItem('toastMuted') === 'true';
+function toggleToastMute() {
+  toastMuted = !toastMuted;
+  localStorage.setItem('toastMuted', toastMuted);
+  const btn = document.getElementById('toastMuteBtn');
+  if (toastMuted) {
+    btn.textContent = '🔔 เปิด popup';
+    btn.classList.add('muted');
+  } else {
+    btn.textContent = '🔕 ปิด popup';
+    btn.classList.remove('muted');
+  }
+}
+function initToastMuteBtn() {
+  const btn = document.getElementById('toastMuteBtn');
+  if (toastMuted) { btn.textContent = '🔔 เปิด popup'; btn.classList.add('muted'); }
+}
+
 /* ── TOAST ── */
 function showToast(msg, type = 'info', duration = 3200) {
   const container = document.getElementById('toastContainer');
   const el = document.createElement('div');
   el.className = `toast ${type}`;
+  const closeBtn = `<button class="toast-close" onclick="this.closest('.toast').remove()" title="ปิด">✕</button>`;
   if (typeof msg === 'object') {
     el.innerHTML = `
       <div class="toast-icon">${msg.icon || '🔔'}</div>
@@ -2395,16 +2422,18 @@ function showToast(msg, type = 'info', duration = 3200) {
         <div class="toast-title">${msg.title}</div>
         ${msg.sub  ? `<div class="toast-sub">${msg.sub}</div>` : ''}
         ${msg.chip ? `<span class="toast-chip ${msg.chipCls||''}">${msg.chip}</span>` : ''}
-      </div>`;
+      </div>${closeBtn}`;
   } else {
-    el.textContent = msg;
+    el.style.justifyContent = 'space-between';
+    el.innerHTML = `<span style="flex:1">${msg}</span>${closeBtn}`;
   }
   container.appendChild(el);
-  setTimeout(() => { el.style.opacity='0'; el.style.transform='translateX(16px)'; el.style.transition='all 0.25s'; setTimeout(()=>el.remove(),260); }, duration);
+  setTimeout(() => { if (el.parentNode) { el.style.opacity='0'; el.style.transform='translateX(16px)'; el.style.transition='all 0.25s'; setTimeout(()=>el.remove(),260); } }, duration);
 }
 
 /* ── NOTIFY TOAST — แจ้งเตือนรายการใกล้ถึงวันส่ง ── */
 function showDueAlerts() {
+  if (toastMuted) return;
   const urgent = [], warn = [];
   allData.forEach(r => {
     if (r.status && r.status.includes('เสร็จแล้ว')) return;
