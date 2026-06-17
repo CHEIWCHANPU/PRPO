@@ -1383,6 +1383,16 @@ function renumberSupply(sheet) {
   </div>
 </div>
 
+
+<!-- ALERT POPUP PANEL -->
+<div class="alert-popup" id="alertPopup">
+  <div class="alert-popup-header">
+    <div class="alert-popup-title">🔔 การแจ้งเตือน <span class="alert-popup-badge" id="alertPopupBadge">0</span></div>
+    <button class="alert-popup-close" onclick="closeAlertPopup()" title="ปิด">✕</button>
+  </div>
+  <div class="alert-popup-list" id="alertPopupList"></div>
+</div>
+
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
@@ -1546,6 +1556,7 @@ async function loadData() {
   } catch(e) { allData = DEMO; processData(); showToast('⚠️ ไม่สามารถเชื่อมต่อ — ใช้ข้อมูล Demo', 'error'); }
 }
 async function syncData() {
+  alertPopupDismissed = false;
   const icon = document.getElementById('syncIcon');
   const sIcon = document.getElementById('sidebarSyncIcon');
   const spin = '<span class="spinner" style="width:12px;height:12px;border-width:2px"></span>';
@@ -1637,6 +1648,7 @@ function processData() {
   renderTable();
   renderCharts();
   buildNotifications();
+  buildAlertPopup();
 }
 
 function populateFilters() {
@@ -2326,6 +2338,55 @@ function exportCSV() {
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
   a.download = `PR-PO-Export-${new Date().toISOString().split('T')[0]}.csv`; a.click();
   showToast(`⬇️ Export ${allData.length} รายการสำเร็จ`, 'success');
+}
+
+
+/* ══════════════════════════════════════════════════════
+   ALERT POPUP — แจ้งเตือนรายการใกล้ถึงวันส่ง
+══════════════════════════════════════════════════════ */
+let alertPopupDismissed = false;
+
+function buildAlertPopup() {
+  const urgent = [], warn = [];
+  allData.forEach(r => {
+    if (r.status && r.status.includes('เสร็จแล้ว')) return;
+    const d = Number(r.daysLeft);
+    if (!isNaN(d)) {
+      if (d <= 0)      urgent.push(r);
+      else if (d <= 7) warn.push(r);
+    }
+  });
+  const total = urgent.length + warn.length;
+  if (total === 0 || alertPopupDismissed) return;
+
+  document.getElementById('alertPopupBadge').textContent = total;
+
+  const items = [
+    ...urgent.map(r => ({ r, cls:'urgent', icon:'🚨', label: r.daysLeft < 0 ? `เกิน ${Math.abs(r.daysLeft)} วัน` : 'วันนี้!' })),
+    ...warn.map(r =>   ({ r, cls:'warn',   icon:'⚠️', label: `เหลือ ${r.daysLeft} วัน` }))
+  ];
+
+  document.getElementById('alertPopupList').innerHTML = items.map(({ r, cls, icon, label }) => `
+    <div class="alert-popup-item" onclick="openDetail(${JSON.stringify(r).replace(/"/g,'&quot;')});closeAlertPopup()">
+      <div class="alert-popup-icon ${cls}">${icon}</div>
+      <div class="alert-popup-body">
+        <div class="alert-popup-name">${r.partName}</div>
+        <div class="alert-popup-sub">${r.partNo} · ${r.maker}</div>
+        <span class="alert-popup-chip ${cls}">▲ ${label}</span>
+      </div>
+    </div>`).join('');
+
+  const popup = document.getElementById('alertPopup');
+  popup.classList.add('show');
+  // auto-hide หลัง 10 วินาที ถ้าไม่มีการ interact
+  setTimeout(() => {
+    if (popup.classList.contains('show')) popup.classList.remove('show');
+  }, 10000);
+}
+
+function closeAlertPopup() {
+  alertPopupDismissed = true;
+  document.getElementById('alertPopup').classList.remove('show');
 }
 
 /* ── TOAST ── */
