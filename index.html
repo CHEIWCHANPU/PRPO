@@ -538,7 +538,6 @@
   .gantt-wrap { overflow-x:auto; border:1px solid var(--border); border-radius:14px; background:var(--surface); }
   .gantt-table { width:100%; border-collapse:collapse; min-width:700px; }
   .gantt-table th { background:var(--surface2); color:var(--muted); font-size:0.68rem; font-weight:600; text-align:center; padding:0.45rem 0.2rem; border-bottom:1px solid var(--border); border-right:1px solid var(--border); white-space:nowrap; letter-spacing:0.03em; }
-  .gantt-table th.day-today { color:var(--accent); background:var(--glow-accent); }
   .gantt-table th.label-col { text-align:left; padding-left:0.75rem; min-width:160px; max-width:200px; position:sticky; left:0; z-index:2; background:var(--surface2); }
   .gantt-table td { border-bottom:1px solid var(--border); border-right:1px solid var(--border); padding:0; height:34px; }
   .gantt-table td.label-col {
@@ -560,7 +559,6 @@
   .gantt-bar.warn    { background:#f59e0b; }
   .gantt-bar.urgent  { background:#ef4444; }
   .gantt-bar.incomplete { background:#ef4444; opacity:0.7; }
-  .gantt-today-line  { position:absolute; top:0; bottom:0; width:2px; background:var(--accent); opacity:0.7; z-index:5; pointer-events:none; }
   .gantt-day-weekend { background:rgba(255,255,255,0.02); }
   .gantt-kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:0.85rem; margin-bottom:1.1rem; }
   .gantt-kpi { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:0.85rem 1rem; }
@@ -2619,8 +2617,8 @@ function renderGantt() {
                pct < 0.65 ? 'rgba(245,158,11,0.45)' : 'rgba(239,68,68,0.55)';
     const cell = document.createElement('div');
     cell.className = 'gantt-density-cell';
-    cell.style.background = isToday ? 'var(--glow-accent)' : bg;
-    cell.style.color = isToday ? 'var(--accent)' : density[d] > 0 ? 'var(--text)' : 'transparent';
+    cell.style.background = bg;
+    cell.style.color = density[d] > 0 ? 'var(--text)' : 'transparent';
     cell.title = `${d+1} ${MONTH_TH[ganttMonth]}: ${density[d]} งาน`;
     cell.textContent = density[d] > 0 ? density[d] : '';
     densityRow.appendChild(cell);
@@ -2634,7 +2632,7 @@ function renderGantt() {
     const dow = dt.getDay();
     const isToday = dt.getTime() === today.getTime();
     const isWknd  = dow === 0 || dow === 6;
-    headHtml += `<th style="min-width:28px;width:28px${isWknd?';opacity:0.45':''}${isToday?';color:var(--accent);background:var(--glow-accent)':''}">${d}<br><span style="font-size:0.58rem;opacity:0.6">${DAY_TH[dow]}</span></th>`;
+    headHtml += `<th style="min-width:28px;width:28px${isWknd?';opacity:0.45':''}">${d}<br><span style="font-size:0.58rem;opacity:0.6">${DAY_TH[dow]}</span></th>`;
   }
   headHtml += '</tr>';
   document.getElementById('ganttHead').innerHTML = headHtml;
@@ -2693,19 +2691,19 @@ function renderGantt() {
       const isToday = dt.getTime() === today.getTime();
       const isWknd  = dt.getDay() === 0 || dt.getDay() === 6;
       let cellStyle = isWknd ? 'background:rgba(255,255,255,0.015)' : '';
-      if (isToday) cellStyle = 'background:var(--glow-accent)';
+      if (false) cellStyle = '';
 
       if (d === barStart) {
         // bar spans from barStart to barEnd
         const span = barEnd - barStart + 1;
         bodyHtml += `<td class="gantt-bar-cell" colspan="${span}" style="${cellStyle};position:relative">`;
         bodyHtml += `<div class="gantt-bar ${barClass}" style="left:3px;right:3px">${span >= 4 ? label : ''}</div>`;
-        if (isToday && d >= barStart && d <= barEnd) bodyHtml += `<div class="gantt-today-line" style="left:50%"></div>`;
+        
         bodyHtml += `</td>`;
         d = barEnd; // skip cells covered by colspan
       } else {
         bodyHtml += `<td style="${cellStyle}">`;
-        if (isToday) bodyHtml += `<div class="gantt-today-line" style="left:50%"></div>`;
+        
         bodyHtml += `</td>`;
       }
     }
