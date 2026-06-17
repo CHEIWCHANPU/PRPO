@@ -2058,7 +2058,7 @@ async function saveItem() {
     allData.push({ ...params, no: allData.length + 1, daysLeft: '', rowIndex: maxRowIndex + 1 });
   }
   const logAction = rowIndex ? 'edit' : 'add';
-  addHistoryLog(logAction, params.partNo, params.partName, rowIndex ? 'แก้ไขข้อมูล' : 'เพิ่มรายการใหม่');
+  await addHistoryLog(logAction, params.partNo, params.partName, rowIndex ? 'แก้ไขข้อมูล' : 'เพิ่มรายการใหม่');
   closeModal(); processData();
   showToast(rowIndex ? '✅ แก้ไขสำเร็จ' : '✅ เพิ่มรายการสำเร็จ', 'success');
   if (WEB_APP_URL) {
@@ -2070,7 +2070,7 @@ async function saveItem() {
 async function deleteItem(rowIndex) {
   if (!confirm('ต้องการลบรายการนี้?')) return;
   const delItem = allData.find(r => r.rowIndex === rowIndex);
-  if(delItem) addHistoryLog('del', delItem.partNo, delItem.partName, 'ลบรายการ');
+  if(delItem) await addHistoryLog('del', delItem.partNo, delItem.partName, 'ลบรายการ');
   allData = allData.filter(r => r.rowIndex !== rowIndex);
   processData(); showToast('🗑️ ลบรายการสำเร็จ', 'success');
   if (WEB_APP_URL) { try { await fetch(WEB_APP_URL + '?action=del&rowIndex=' + rowIndex); } catch(e) {} }
@@ -2524,7 +2524,7 @@ function showDueAlerts() {
 /* ══════════════════════════════════════════════════════
    HISTORY LOG
 ══════════════════════════════════════════════════════ */
-function addHistoryLog(action, partNo, partName, detail) {
+async function addHistoryLog(action, partNo, partName, detail) {
   const entry = {
     id: Date.now(),
     time: new Date().toLocaleString('th-TH'),
@@ -2536,6 +2536,20 @@ function addHistoryLog(action, partNo, partName, detail) {
   historyLog.unshift(entry);
   if (historyLog.length > 200) historyLog = historyLog.slice(0, 200);
   localStorage.setItem('prpo_history', JSON.stringify(historyLog));
+
+  // ✅ ซิงค์ Log ไป Google Sheet คอลัมน์ R (fire-and-forget)
+  if (WEB_APP_URL) {
+    try {
+      const params = new URLSearchParams({
+        action:   'addLog',
+        logAction: action,
+        partNo:    partNo   || '',
+        partName:  partName || '',
+        detail:    detail   || ''
+      });
+      await fetch(WEB_APP_URL + '?' + params.toString());
+    } catch(e) { /* เงียบ — ไม่รบกวน user */ }
+  }
 }
 function renderHistory() {
   const tbody = document.getElementById('historyBody');
@@ -2554,12 +2568,19 @@ function renderHistory() {
       <td style="font-size:0.76rem;color:var(--muted)">${e.detail}</td>
     </tr>`).join('');
 }
-function clearHistory() {
+async function clearHistory() {
   if (!confirm('ต้องการล้างประวัติทั้งหมด?')) return;
   historyLog = [];
   localStorage.removeItem('prpo_history');
   renderHistory();
   showToast('🗑️ ล้างประวัติแล้ว', 'success');
+
+  // ✅ ล้าง Log ใน Sheet ด้วย
+  if (WEB_APP_URL) {
+    try {
+      await fetch(WEB_APP_URL + '?action=clearLogs');
+    } catch(e) { /* เงียบ */ }
+  }
 }
 
 /* ══════════════════════════════════════════════════════
