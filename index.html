@@ -159,7 +159,7 @@
 
   /* NOTIF PANEL */
   .notif-panel {
-    position: fixed; top: 68px; right: 4rem; width: 350px; background: var(--surface);
+    position: fixed; top: 68px; right: 5.5rem; width: 350px; background: var(--surface);
     border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 12px 48px rgba(0,0,0,0.5);
     z-index: 999; display: none; overflow: hidden; animation: slideDown 0.18s ease;
   }
@@ -313,8 +313,9 @@
   .days-ok { background: rgba(16,185,129,0.08); color: var(--success); border: 1px solid rgba(16,185,129,0.15); }
   .days-done { background: rgba(100,116,139,0.1); color: var(--muted); border: 1px solid rgba(100,116,139,0.15); }
 
-  .row-actions { display: flex; gap: 0.3rem; opacity: 0; transition: opacity 0.12s; }
+  .row-actions { display: flex; gap: 0.3rem; opacity: 0; transition: opacity 0.12s; min-width: 64px; }
   tbody tr:hover .row-actions { opacity: 1; }
+  .table-wrap { padding-right: 0.5rem; }
   .icon-btn {
     width: 27px; height: 27px; border: 1px solid var(--border); border-radius: 7px; background: var(--surface);
     color: var(--muted); font-size: 0.7rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.12s;
@@ -425,7 +426,7 @@
   .maker-count { font-family: var(--mono); font-size: 0.69rem; color: var(--muted); white-space: nowrap; }
 
   /* TOAST */
-  .toast-container { position: fixed; bottom: 1.5rem; right: 4rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
+  .toast-container { position: fixed; bottom: 1.5rem; right: 5.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
   .toast {
     background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
     padding: 0.75rem 1.1rem; font-size: 0.79rem; display: flex; align-items: center; gap: 0.6rem;
