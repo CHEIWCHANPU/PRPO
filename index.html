@@ -314,6 +314,10 @@
   .days-done { background: rgba(100,116,139,0.1); color: var(--muted); border: 1px solid rgba(100,116,139,0.15); }
 
   .row-actions { display: flex; gap: 0.3rem; opacity: 0; transition: opacity 0.12s; min-width: 64px; }
+  /* sticky action column */
+  .col-actions { position: sticky; right: 0; background: var(--surface); z-index: 2; width: 70px; min-width: 70px; }
+  tbody tr:hover .col-actions { background: var(--surface2); }
+  .col-actions::before { content:''; position:absolute; left:0; top:0; bottom:0; width:1px; background:var(--border); }
   tbody tr:hover .row-actions { opacity: 1; }
   .table-wrap { padding-right: 0.5rem; }
   .icon-btn {
@@ -1793,7 +1797,7 @@ function renderTable() {
       <td class="maker-cell">${r.maker}</td>
       <td>${daysTag(r.daysLeft, r.status)}</td>
       <td style="font-family:var(--mono);font-size:0.69rem;color:var(--muted)">${r.poNo||'—'}</td>
-      <td><div class="row-actions" onclick="event.stopPropagation()">
+      <td class="col-actions"><div class="row-actions" onclick="event.stopPropagation()">
         <button class="icon-btn" onclick="openEditModal(${JSON.stringify(r).replace(/"/g,'&quot;')})" title="แก้ไข">✏️</button>
         <button class="icon-btn del" onclick="deleteItem(${r.rowIndex})" title="ลบ">🗑️</button>
       </div></td>
