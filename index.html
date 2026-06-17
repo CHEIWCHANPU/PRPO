@@ -321,6 +321,14 @@
   }
   .icon-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--glow-accent); }
   .icon-btn.del:hover { border-color: var(--danger); color: var(--danger); background: var(--glow-danger); }
+  .star-btn {
+    background: none; border: none; cursor: pointer; font-size: 1.05rem; padding: 0.1rem 0.2rem;
+    line-height: 1; transition: transform 0.15s; display: flex; align-items: center; justify-content: center;
+    filter: grayscale(1); opacity: 0.35;
+  }
+  .star-btn:hover { transform: scale(1.3); filter: grayscale(0); opacity: 1; }
+  .star-btn.starred { filter: grayscale(0); opacity: 1; }
+  .filter-star-active { border-color: var(--warn) !important; color: var(--warn) !important; background: var(--glow-warn) !important; }
 
   .table-footer { display: flex; align-items: center; justify-content: space-between; padding: 0.65rem 0.9rem; border-top: 1px solid var(--border); background: var(--surface2); font-size: 0.69rem; color: var(--muted); }
   .pagination { display: flex; gap: 0.2rem; }
@@ -660,12 +668,14 @@
         </select>
         <select class="filter-select" id="filterMaker" onchange="currentPage=1;renderTable()"><option value="">Maker ทั้งหมด</option></select>
         <select class="filter-select" id="filterLocation" onchange="currentPage=1;renderTable()"><option value="">สถานที่ทั้งหมด</option></select>
+        <button class="btn btn-ghost" id="filterStarBtn" onclick="toggleStarFilter()" style="font-size:0.85rem;padding:0.38rem 0.9rem;gap:0.3rem">⭐ งานสำคัญ</button>
         <button class="btn btn-primary" onclick="openAddModal()">+ เพิ่มรายการ</button>
       </div>
       <div class="table-wrap">
         <table>
           <thead><tr>
             <th onclick="sortTable('no')">NO.</th>
+            <th style="width:36px;text-align:center" title="งานสำคัญ">⭐</th>
             <th onclick="sortTable('partNo')">PART NO.</th>
             <th onclick="sortTable('partName')">PART NAME</th>
             <th onclick="sortTable('model')">MODEL</th>
@@ -680,7 +690,7 @@
             <th>PO/ORDER</th>
             <th></th>
           </tr></thead>
-          <tbody id="mainTableBody"><tr><td colspan="14" class="empty"><div class="spinner"></div></td></tr></tbody>
+          <tbody id="mainTableBody"><tr><td colspan="15" class="empty"><div class="spinner"></div></td></tr></tbody>
         </table>
         <div class="table-footer">
           <span id="tableInfo">—</span>
@@ -1177,7 +1187,7 @@ function renumberSupply(sheet) {
         <div class="form-group"><label class="form-label">MAKER</label><input type="text" class="form-input" id="f-maker" placeholder="เช่น KOBAYU"></div>
         <div class="form-group"><label class="form-label">PO / ORDER NO.</label><input type="text" class="form-input" id="f-poNo"></div>
         <div class="form-group"><label class="form-label">หมายเหตุ</label><input type="text" class="form-input" id="f-note"></div>
-        <div class="form-group full"><label class="form-label">🔗 Link เอกสาร PR </label><input type="text" class="form-input" id="f-prLink" placeholder="https://drive.google.com/..."></div>
+        <div class="form-group full"><label class="form-label">🔗 Link เอกสาร PR / ใบเสนอราคา</label><input type="text" class="form-input" id="f-prLink" placeholder="https://drive.google.com/..."></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -1205,6 +1215,7 @@ function renumberSupply(sheet) {
 let WEB_APP_URL = localStorage.getItem('prpo_url') || '';
 let suppliers = [];
 let historyLog = JSON.parse(localStorage.getItem('prpo_history') || '[]');
+let starredItems = JSON.parse(localStorage.getItem('prpo_starred') || '[]');
 let ltSortCol = 'avgLead';
 let ltSortDir = 'desc';
 let allData = [];
@@ -1477,6 +1488,34 @@ function renderDashTable() {
   }).join('') : `<tr><td colspan="8" class="empty"><div class="empty-icon">🎉</div><div class="empty-title">ทุกรายการเสร็จสมบูรณ์!</div></td></tr>`;
 }
 
+let filterStar = false;
+
+function toggleStarFilter() {
+  filterStar = !filterStar;
+  const btn = document.getElementById('filterStarBtn');
+  if (filterStar) btn.classList.add('filter-star-active');
+  else btn.classList.remove('filter-star-active');
+  currentPage = 1; renderTable();
+}
+
+function toggleStar(key, btnEl) {
+  key = String(key);
+  const idx = starredItems.indexOf(key);
+  if (idx === -1) {
+    starredItems.push(key);
+    btnEl.classList.add('starred');
+    btnEl.title = 'ยกเลิกงานสำคัญ';
+    showToast('⭐ ทำเครื่องหมายงานสำคัญแล้ว', 'success');
+  } else {
+    starredItems.splice(idx, 1);
+    btnEl.classList.remove('starred');
+    btnEl.title = 'ทำเครื่องหมายงานสำคัญ';
+    showToast('☆ ยกเลิกงานสำคัญแล้ว', 'info');
+  }
+  localStorage.setItem('prpo_starred', JSON.stringify(starredItems));
+  if (filterStar) renderTable();
+}
+
 /* ── MAIN TABLE ── */
 function getFiltered() {
   const q = (document.getElementById('searchInput').value || '').toLowerCase();
@@ -1488,7 +1527,8 @@ function getFiltered() {
     const matchS = !status || (r.status||'').includes(status);
     const matchM = !maker || r.maker === maker;
     const matchL = !location || r.location === location;
-    return matchQ && matchS && matchM && matchL;
+    const matchStar = !filterStar || starredItems.includes(String(r.rowIndex || r.partNo));
+    return matchQ && matchS && matchM && matchL && matchStar;
   });
 }
 function renderTable() {
@@ -1515,8 +1555,13 @@ function renderTable() {
     const isDone = r.status.includes('เสร็จแล้ว');
     const dl = Number(r.daysLeft);
     const rowCls = isDone ? '' : (!isNaN(dl) && dl <= 3) ? 'row-urgent' : (!isNaN(dl) && dl <= 7) ? 'row-warn' : '';
+    const itemKey = r.rowIndex || r.partNo;
+    const isStarred = starredItems.includes(String(itemKey));
     return `<tr class="${rowCls}" onclick="openDetail(${JSON.stringify(r).replace(/"/g,'&quot;')})">
       <td class="no-num">${start+i+1}</td>
+      <td style="text-align:center" onclick="event.stopPropagation()">
+        <button class="star-btn ${isStarred ? 'starred' : ''}" onclick="toggleStar('${itemKey}',this)" title="${isStarred ? 'ยกเลิกงานสำคัญ' : 'ทำเครื่องหมายงานสำคัญ'}">⭐</button>
+      </td>
       <td class="part-no">${r.partNo}</td>
       <td class="part-name">${r.partName}</td>
       <td style="font-family:var(--mono);font-size:0.7rem">${r.model}</td>
@@ -1534,7 +1579,7 @@ function renderTable() {
         <button class="icon-btn del" onclick="deleteItem(${r.rowIndex})" title="ลบ">🗑️</button>
       </div></td>
     </tr>`;
-  }).join('') : `<tr><td colspan="14" class="empty"><div class="empty-icon">🔍</div><div class="empty-title">ไม่พบรายการที่ค้นหา</div><div class="empty-sub">ลองเปลี่ยนตัวกรองหรือคำค้นหา</div></td></tr>`;
+  }).join('') : `<tr><td colspan="15" class="empty"><div class="empty-icon">🔍</div><div class="empty-title">ไม่พบรายการที่ค้นหา</div><div class="empty-sub">ลองเปลี่ยนตัวกรองหรือคำค้นหา</div></td></tr>`;
 
   document.getElementById('tableInfo').textContent = total > 0 ? `แสดง ${start+1}–${Math.min(start+perPage,total)} จาก ${total} รายการ` : 'ไม่พบรายการ';
   renderPagination(pages);
