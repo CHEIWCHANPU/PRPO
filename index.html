@@ -781,8 +781,8 @@
             <th onclick="sortTable('status')">สถานะ</th>
             <th onclick="sortTable('maker')">MAKER</th>
             <th onclick="sortTable('daysLeft')">เหลือ (วัน)</th>
-            <th></th>
             <th>PO/ORDER</th>
+            <th></th>
           </tr></thead>
           <tbody id="mainTableBody"><tr><td colspan="15" class="empty"><div class="spinner"></div></td></tr></tbody>
         </table>
@@ -1793,11 +1793,11 @@ function renderTable() {
       <td>${statusBadge(r.status)}</td>
       <td class="maker-cell">${r.maker}</td>
       <td>${daysTag(r.daysLeft, r.status)}</td>
+      <td style="font-family:var(--mono);font-size:0.69rem;color:var(--muted)">${r.poNo||'—'}</td>
       <td><div class="row-actions" onclick="event.stopPropagation()">
         <button class="icon-btn" onclick="openEditModal(${JSON.stringify(r).replace(/"/g,'&quot;')})" title="แก้ไข">✏️</button>
         <button class="icon-btn del" onclick="deleteItem(${r.rowIndex})" title="ลบ">🗑️</button>
       </div></td>
-      <td style="font-family:var(--mono);font-size:0.69rem;color:var(--muted)">${r.poNo||'—'}</td>
     </tr>`;
   }).join('') : `<tr><td colspan="15" class="empty"><div class="empty-icon">🔍</div><div class="empty-title">ไม่พบรายการที่ค้นหา</div><div class="empty-sub">ลองเปลี่ยนตัวกรองหรือคำค้นหา</div></td></tr>`;
 
