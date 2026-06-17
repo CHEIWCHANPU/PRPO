@@ -266,6 +266,12 @@
   }
   .filter-select:focus { border-color: var(--accent); }
   .filter-select option { background: var(--surface2); }
+  .form-input.error { border-color: var(--danger) !important; box-shadow: 0 0 0 3px var(--glow-danger) !important; }
+  .form-error-msg { font-size: 0.65rem; color: var(--danger); margin-top: 0.2rem; display: none; }
+  .form-error-msg.show { display: block; }
+  .perpage-select { background: var(--surface); border: 1px solid var(--border); border-radius: 9px; padding: 0.5rem 0.7rem; color: var(--muted); font-family: var(--mono); font-size: 0.75rem; cursor: pointer; outline: none; transition: border-color 0.2s; }
+  .perpage-select:focus { border-color: var(--accent); }
+  .perpage-select option { background: var(--surface2); }
 
   /* BUTTONS */
   .btn { padding: 0.5rem 1rem; border-radius: 9px; font-family: var(--font); font-size: 0.79rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.18s; display: flex; align-items: center; gap: 0.38rem; }
@@ -763,7 +769,7 @@
       <div class="toolbar">
         <div class="search-box">
           <span class="search-icon">🔍</span>
-          <input type="text" id="searchInput" placeholder="ค้นหา Part No., Part Name, Maker, PO..." oninput="currentPage=1;renderTable()">
+          <input type="text" id="searchInput" placeholder="ค้นหา Part No., Part Name, Maker, PO..." oninput="onSearchInput()">
         </div>
         <select class="filter-select" id="filterStatus" onchange="currentPage=1;renderTable()">
           <option value="">สถานะทั้งหมด</option>
@@ -799,7 +805,17 @@
         </table>
         <div class="table-footer">
           <span id="tableInfo">—</span>
-          <div class="pagination" id="pagination"></div>
+          <div style="display:flex;align-items:center;gap:0.75rem">
+            <label style="font-size:0.69rem;color:var(--muted)">แถวต่อหน้า:
+              <select class="perpage-select" id="perPageSelect" onchange="changePerPage(this.value)">
+                <option value="20">20</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="999">ทั้งหมด</option>
+              </select>
+            </label>
+            <div class="pagination" id="pagination"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -1360,13 +1376,13 @@ function renumberSupply(sheet) {
     <div class="modal-body">
       <input type="hidden" id="editRowIndex">
       <div class="form-grid">
-        <div class="form-group"><label class="form-label">PART NO. *</label><input type="text" class="form-input" id="f-partNo" placeholder="เช่น 11057-1778B"></div>
-        <div class="form-group"><label class="form-label">PART NAME *</label><input type="text" class="form-input" id="f-partName" placeholder="เช่น BRACKET"></div>
+        <div class="form-group"><label class="form-label">PART NO. *</label><input type="text" class="form-input" id="f-partNo" placeholder="เช่น 11057-1778B"><span class="form-error-msg" id="err-partNo"></span></div>
+        <div class="form-group"><label class="form-label">PART NAME *</label><input type="text" class="form-input" id="f-partName" placeholder="เช่น BRACKET"><span class="form-error-msg" id="err-partName"></span></div>
         <div class="form-group"><label class="form-label">MODEL</label><input type="text" class="form-input" id="f-model" placeholder="เช่น VD00"></div>
         <div class="form-group"><label class="form-label">VOLUME</label><input type="number" class="form-input" id="f-volume" placeholder="250" min="0"></div>
-        <div class="form-group"><label class="form-label">เปิด P/R</label><input type="text" class="form-input" id="f-prDate" placeholder="7/6/2026"></div>
-        <div class="form-group"><label class="form-label">วันนัดส่ง</label><input type="text" class="form-input" id="f-dueDate" placeholder="13/6/2026"></div>
-        <div class="form-group"><label class="form-label">วันเข้าส่งจริง</label><input type="text" class="form-input" id="f-actualDate" placeholder="13/6/2026"></div>
+        <div class="form-group"><label class="form-label">เปิด P/R</label><input type="text" class="form-input" id="f-prDate" placeholder="7/6/2026"><span class="form-error-msg" id="err-prDate"></span></div>
+        <div class="form-group"><label class="form-label">วันนัดส่ง</label><input type="text" class="form-input" id="f-dueDate" placeholder="13/6/2026"><span class="form-error-msg" id="err-dueDate"></span></div>
+        <div class="form-group"><label class="form-label">วันเข้าส่งจริง</label><input type="text" class="form-input" id="f-actualDate" placeholder="13/6/2026"><span class="form-error-msg" id="err-actualDate"></span></div>
         <div class="form-group"><label class="form-label">สถานที่ส่ง</label>
           <select class="form-input" id="f-location">
             <option>CCIR</option><option>CCIS</option><option>CCI</option>
@@ -1420,7 +1436,8 @@ let filteredData = [];
 let sortCol = 'no';
 let sortDir = 'asc';
 let currentPage = 1;
-const perPage = 20;
+let perPage = parseInt(localStorage.getItem('prpo_perpage') || '20');
+let autoSyncInterval = null;
 let charts = {};
 let editingItem = null;
 let sidebarCollapsed = false;
@@ -1460,6 +1477,9 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('currentDateChip').textContent = now.toLocaleDateString('th-TH', {day:'numeric',month:'short',year:'numeric'});
   initTheme();
   initToastMuteBtn();
+  initPerPage();
+  initAutoSync();
+  initKeyboardShortcuts();
   document.addEventListener('click', (e) => {
     if (notifOpen && !e.target.closest('#notifPanel') && !e.target.closest('#notifBell')) closeNotif();
   });
@@ -2135,6 +2155,7 @@ function openAddModal() {
   document.getElementById('f-location').value = 'CCIS';
   document.getElementById('f-maker').value = '';
   document.getElementById('modalOverlay').classList.add('open');
+  clearFormErrors();
   setTimeout(() => document.getElementById('f-partNo').focus(), 150);
 }
 function openEditModal(item) {
@@ -2143,6 +2164,7 @@ function openEditModal(item) {
   document.getElementById('editRowIndex').value = item.rowIndex;
   ['partNo','partName','model','volume','prDate','dueDate','actualDate','location','status','maker','poNo','note','prLink'].forEach(f => { document.getElementById('f-' + f).value = item[f] || ''; });
   document.getElementById('modalOverlay').classList.add('open');
+  clearFormErrors();
 }
 function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
 
@@ -2150,7 +2172,8 @@ async function saveItem() {
   const rowIndex = document.getElementById('editRowIndex').value;
   const params = {};
   ['partNo','partName','model','volume','prDate','dueDate','actualDate','location','status','maker','poNo','note','prLink'].forEach(f => { params[f] = document.getElementById('f-' + f).value; });
-  if (!params.partNo || !params.partName) { showToast('❌ กรุณากรอก Part No. และ Part Name', 'error'); return; }
+  const isEdit = !!(rowIndex && editingItem);
+  if (!validateForm(params, isEdit)) return;
   if (rowIndex && editingItem) {
     const idx = allData.findIndex(r => r.rowIndex === parseInt(rowIndex));
     if (idx >= 0) allData[idx] = { ...allData[idx], ...params };
@@ -2409,6 +2432,140 @@ function exportCSV() {
 }
 
 
+
+/* ══════════════════════════════════════════════════════
+   #1 VALIDATE DATE FORMAT
+══════════════════════════════════════════════════════ */
+function isValidDateStr(s) {
+  if (!s) return true; // optional fields ok
+  return /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s.trim()) && parseThaiDate(s.trim()) !== null;
+}
+function setFieldError(fieldId, errId, msg) {
+  const el = document.getElementById(fieldId);
+  const err = document.getElementById(errId);
+  if (!el || !err) return;
+  if (msg) { el.classList.add('error'); err.textContent = msg; err.classList.add('show'); }
+  else      { el.classList.remove('error'); err.textContent = ''; err.classList.remove('show'); }
+}
+function clearFormErrors() {
+  ['partNo','partName','prDate','dueDate','actualDate'].forEach(f => {
+    const el = document.getElementById('f-' + f);
+    const err = document.getElementById('err-' + f);
+    if (el) el.classList.remove('error');
+    if (err) { err.textContent = ''; err.classList.remove('show'); }
+  });
+}
+function validateForm(params, isEdit) {
+  clearFormErrors();
+  let ok = true;
+  if (!params.partNo.trim()) { setFieldError('f-partNo','err-partNo','กรุณากรอก Part No.'); ok = false; }
+  else if (!isEdit) {
+    // #2 ตรวจ Part No. ซ้ำ (เฉพาะ add ใหม่)
+    const dup = allData.find(r => r.partNo && r.partNo.trim().toLowerCase() === params.partNo.trim().toLowerCase());
+    if (dup) { setFieldError('f-partNo','err-partNo',`Part No. นี้มีอยู่แล้ว (แถว ${dup.no})`); ok = false; }
+  }
+  if (!params.partName.trim()) { setFieldError('f-partName','err-partName','กรุณากรอก Part Name'); ok = false; }
+  if (params.prDate && !isValidDateStr(params.prDate))
+    { setFieldError('f-prDate','err-prDate','รูปแบบ: d/M/yyyy เช่น 7/6/2026'); ok = false; }
+  if (params.dueDate && !isValidDateStr(params.dueDate))
+    { setFieldError('f-dueDate','err-dueDate','รูปแบบ: d/M/yyyy เช่น 13/6/2026'); ok = false; }
+  if (params.actualDate && !isValidDateStr(params.actualDate))
+    { setFieldError('f-actualDate','err-actualDate','รูปแบบ: d/M/yyyy เช่น 13/6/2026'); ok = false; }
+  // dueDate ต้อง >= prDate
+  if (ok && params.prDate && params.dueDate) {
+    const pr  = parseThaiDate(params.prDate);
+    const due = parseThaiDate(params.dueDate);
+    if (pr && due && due < pr) { setFieldError('f-dueDate','err-dueDate','วันนัดส่งต้องไม่อยู่ก่อนวัน P/R'); ok = false; }
+  }
+  return ok;
+}
+
+/* ══════════════════════════════════════════════════════
+   #3 AUTO-SYNC (ทุก 5 นาที เงียบๆ)
+══════════════════════════════════════════════════════ */
+const AUTO_SYNC_MS = 5 * 60 * 1000; // 5 minutes
+function initAutoSync() {
+  if (autoSyncInterval) clearInterval(autoSyncInterval);
+  autoSyncInterval = setInterval(async () => {
+    if (!WEB_APP_URL) return; // ไม่มี URL → ข้ามไป
+    try {
+      const res  = await fetch(WEB_APP_URL + '?action=getData');
+      const json = await res.json();
+      if (json.success) {
+        allData = json.data;
+        document.getElementById('lastSync').textContent = 'ซิงค์ล่าสุด: ' + new Date().toLocaleTimeString('th-TH') + ' (auto)';
+        processData();
+        // ไม่ showToast เพราะเป็น background sync
+      }
+    } catch(e) { /* เงียบ — ไม่รบกวน user */ }
+  }, AUTO_SYNC_MS);
+}
+
+/* ══════════════════════════════════════════════════════
+   #4 KEYBOARD SHORTCUTS
+══════════════════════════════════════════════════════ */
+function initKeyboardShortcuts() {
+  document.addEventListener('keydown', e => {
+    const tag = document.activeElement?.tagName?.toLowerCase();
+    const isTyping = ['input','textarea','select'].includes(tag);
+    const modalOpen = document.getElementById('modalOverlay')?.classList.contains('open');
+    const detailOpen = document.getElementById('detailOverlay')?.classList.contains('open');
+
+    // Esc — ปิด modal / panel / notif
+    if (e.key === 'Escape') {
+      if (modalOpen)  { closeModal(); return; }
+      if (detailOpen) { document.getElementById('detailOverlay').classList.remove('open'); return; }
+      if (notifOpen)  { closeNotif(); return; }
+    }
+
+    if (isTyping || modalOpen || detailOpen) return; // ไม่ขัดขณะพิมพ์
+
+    // / — focus search
+    if (e.key === '/') {
+      e.preventDefault();
+      const s = document.getElementById('searchInput');
+      if (s) { showPage('list', document.getElementById('nav-list')); s.focus(); s.select(); }
+    }
+    // N — เพิ่มรายการใหม่
+    if (e.key === 'n' || e.key === 'N') {
+      e.preventDefault();
+      showPage('list', document.getElementById('nav-list'));
+      openAddModal();
+    }
+    // S — manual sync
+    if (e.key === 's' || e.key === 'S') { e.preventDefault(); syncData(); }
+    // ? — hint toast
+    if (e.key === '?') {
+      showToast({ icon:'⌨️', title:'Keyboard Shortcuts', sub:'/ = ค้นหา  ·  N = เพิ่มรายการ  ·  S = Sync  ·  Esc = ปิด' }, 'info', 5000);
+    }
+  });
+}
+
+/* ══════════════════════════════════════════════════════
+   #5 perPage — ปรับแถวต่อหน้าได้
+══════════════════════════════════════════════════════ */
+function initPerPage() {
+  const sel = document.getElementById('perPageSelect');
+  if (!sel) return;
+  sel.value = String(perPage);
+  // ถ้าค่าที่บันทึกไม่อยู่ใน option ให้ fallback 20
+  if (!sel.value) { sel.value = '20'; perPage = 20; }
+}
+function changePerPage(val) {
+  perPage = parseInt(val);
+  localStorage.setItem('prpo_perpage', perPage);
+  currentPage = 1;
+  renderTable();
+}
+
+/* ══════════════════════════════════════════════════════
+   #6 SEARCH DEBOUNCE
+══════════════════════════════════════════════════════ */
+let _searchTimer = null;
+function onSearchInput() {
+  clearTimeout(_searchTimer);
+  _searchTimer = setTimeout(() => { currentPage = 1; renderTable(); }, 220);
+}
 
 /* ── TOAST MUTE ── */
 let toastMuted = localStorage.getItem('toastMuted') === 'true';
