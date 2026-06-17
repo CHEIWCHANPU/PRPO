@@ -182,6 +182,11 @@
   .notif-chip.red { background: var(--glow-danger); color: var(--danger); border: 1px solid rgba(239,68,68,0.2); }
   .notif-chip.yellow { background: var(--glow-warn); color: var(--warn); border: 1px solid rgba(245,158,11,0.2); }
   .notif-empty { padding: 2.2rem 1rem; text-align: center; color: var(--muted); font-size: 0.8rem; }
+  .notif-dismiss { width: 22px; height: 22px; border: none; background: none; color: var(--muted); font-size: 0.8rem; cursor: pointer; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; opacity: 0; transition: all 0.12s; }
+  .notif-item:hover .notif-dismiss { opacity: 1; }
+  .notif-dismiss:hover { background: var(--surface2); color: var(--danger); }
+  .notif-clear-btn { width: 100%; padding: 0.6rem; background: none; border: none; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.7rem; cursor: pointer; font-family: var(--font); transition: background 0.12s; }
+  .notif-clear-btn:hover { background: var(--surface2); color: var(--text); }
 
   /* MAIN CONTENT */
   main { padding: 1.4rem; flex: 1; overflow-y: auto; height: calc(100vh - 60px); }
@@ -1505,6 +1510,32 @@ function closeNotif() {
   notifOpen = false;
   document.getElementById('notifPanel').classList.remove('show');
 }
+let dismissedNotifs = new Set(JSON.parse(localStorage.getItem('dismissedNotifs') || '[]'));
+
+function notifKey(r) { return r.partNo + '|' + r.daysLeft; }
+
+function dismissNotif(key, e) {
+  e.stopPropagation();
+  dismissedNotifs.add(key);
+  localStorage.setItem('dismissedNotifs', JSON.stringify([...dismissedNotifs]));
+  buildNotifications();
+}
+
+function clearAllNotifs() {
+  const urgent = [], warn = [];
+  allData.forEach(r => {
+    if (r.status && r.status.includes('เสร็จแล้ว')) return;
+    const d = Number(r.daysLeft);
+    if (!isNaN(d)) {
+      if (d <= 3) urgent.push(r);
+      else if (d <= 7) warn.push(r);
+    }
+  });
+  [...urgent, ...warn].forEach(r => dismissedNotifs.add(notifKey(r)));
+  localStorage.setItem('dismissedNotifs', JSON.stringify([...dismissedNotifs]));
+  buildNotifications();
+}
+
 function buildNotifications() {
   const urgent = [], warn = [];
   allData.forEach(r => {
@@ -1515,33 +1546,42 @@ function buildNotifications() {
       else if (d <= 7) warn.push(r);
     }
   });
-  const total = urgent.length + warn.length;
-  document.getElementById('notifCount').textContent = total;
-  document.getElementById('notifDot').classList.toggle('show', total > 0);
+  const allNotifs = urgent.length + warn.length;
+  const visibleUrgent = urgent.filter(r => !dismissedNotifs.has(notifKey(r)));
+  const visibleWarn   = warn.filter(r => !dismissedNotifs.has(notifKey(r)));
+  const visible = visibleUrgent.length + visibleWarn.length;
+
+  document.getElementById('notifCount').textContent = visible;
+  document.getElementById('notifDot').classList.toggle('show', visible > 0);
   const navList = document.getElementById('nav-list');
   let badge = navList.querySelector('.nav-badge');
-  if (total > 0) {
+  if (visible > 0) {
     if (!badge) { badge = document.createElement('span'); badge.className = 'nav-badge'; navList.appendChild(badge); }
-    badge.textContent = total;
+    badge.textContent = visible;
   } else { if (badge) badge.remove(); }
+
   const list = document.getElementById('notifList');
-  if (total === 0) { list.innerHTML = '<div class="notif-empty">✅ ทุกรายการอยู่ในกำหนด</div>'; return; }
+  if (visible === 0) {
+    list.innerHTML = '<div class="notif-empty">✅ ทุกรายการอยู่ในกำหนด</div>';
+    return;
+  }
+  const makeItem = (r, iconClass, icon, chipClass, chipText) => {
+    const key = notifKey(r);
+    return `<div class="notif-item" onclick="openDetail(${JSON.stringify(r).replace(/"/g,'&quot;')});closeNotif()">
+      <div class="notif-icon ${iconClass}">${icon}</div>
+      <div class="notif-body">
+        <div class="notif-name">${r.partName}</div>
+        <div class="notif-sub">${r.partNo} · ${r.maker}</div>
+        <span class="notif-chip ${chipClass}">${chipText}</span>
+      </div>
+      <button class="notif-dismiss" onclick="dismissNotif('${key}',event)" title="ปิดการแจ้งเตือนนี้">✕</button>
+    </div>`;
+  };
   list.innerHTML = [
-    ...urgent.map(r => `<div class="notif-item" onclick="openDetail(${JSON.stringify(r).replace(/"/g,'&quot;')});closeNotif()">
-      <div class="notif-icon red">🚨</div>
-      <div class="notif-body">
-        <div class="notif-name">${r.partName}</div>
-        <div class="notif-sub">${r.partNo} · ${r.maker}</div>
-        <span class="notif-chip red">${Number(r.daysLeft) <= 0 ? '⚠️ ครบกำหนดแล้ว!' : `⚠️ เหลือ ${r.daysLeft} วัน`}</span>
-      </div></div>`),
-    ...warn.map(r => `<div class="notif-item" onclick="openDetail(${JSON.stringify(r).replace(/"/g,'&quot;')});closeNotif()">
-      <div class="notif-icon yellow">⏰</div>
-      <div class="notif-body">
-        <div class="notif-name">${r.partName}</div>
-        <div class="notif-sub">${r.partNo} · ${r.maker}</div>
-        <span class="notif-chip yellow">⏳ เหลือ ${r.daysLeft} วัน</span>
-      </div></div>`)
-  ].join('');
+    ...visibleUrgent.map(r => makeItem(r, 'red', '🚨', 'red', Number(r.daysLeft) <= 0 ? '⚠️ ครบกำหนดแล้ว!' : `⚠️ เหลือ ${r.daysLeft} วัน`)),
+    ...visibleWarn.map(r   => makeItem(r, 'yellow', '⏰', 'yellow', `⏳ เหลือ ${r.daysLeft} วัน`))
+  ].join('') + (allNotifs > visible ? `<button class="notif-clear-btn" onclick="dismissedNotifs=new Set();localStorage.removeItem('dismissedNotifs');buildNotifications()">🔄 แสดงที่ปิดไปแล้วทั้งหมด (${allNotifs - visible} รายการ)</button>` : '')
+    + (visible > 1 ? `<button class="notif-clear-btn" onclick="clearAllNotifs()">✕ ปิดทั้งหมด</button>` : '');
 }
 
 /* ── DATA LOAD ── */
