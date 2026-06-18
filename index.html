@@ -916,7 +916,7 @@
     </div>
 
     <div class="wl-card wl-entering" style="animation-delay:.15s">
-      <div class="wl-welcome">PURCHASE Management system</div>
+      <div class="wl-welcome">ยินดีต้อนรับกลับ 👋</div>
       <div class="wl-welcome-sub">กดปุ่มด้านล่างเพื่อเข้าใช้งานระบบ</div>
 
       <button class="wl-btn" id="wlLoginBtn" onclick="wlLogin()">เข้าสู่ระบบ →</button>
@@ -1134,7 +1134,7 @@
           <div class="chart-wrap"><canvas id="chartStatus"></canvas></div>
         </div>
         <div class="chart-card">
-          <div class="chart-header"><div class="chart-title">Volume ตาม Maker (Top 6)</div></div>
+          <div class="chart-header"><div class="chart-title">จำนวนรายการส่ง ตาม Maker (Top 6)</div></div>
           <div class="chart-wrap"><canvas id="chartMaker"></canvas></div>
         </div>
         <div class="chart-card">
@@ -1241,7 +1241,7 @@
           <div id="statusBars" style="margin-top:0.9rem;display:flex;flex-direction:column;gap:0.9rem"></div>
         </div>
         <div class="chart-card" style="grid-column:1/-1">
-          <div class="chart-title" id="s-maker-chart-title">Volume ตาม Maker</div>
+          <div class="chart-title" id="s-maker-chart-title">จำนวนรายการส่ง ตาม Maker</div>
           <div class="chart-wrap" style="height:200px"><canvas id="chartMaker2"></canvas></div>
         </div>
         <div class="chart-card">
@@ -2186,14 +2186,14 @@ function renderCharts() {
   }
 
   const makerMap = {};
-  allData.forEach(r => { if (r.maker) makerMap[r.maker] = (makerMap[r.maker]||0) + Number(r.volume||0); });
+  allData.forEach(r => { if (r.maker) makerMap[r.maker] = (makerMap[r.maker]||0) + 1; });
   const makersSorted = Object.entries(makerMap).sort((a,b) => b[1]-a[1]).slice(0,6);
   destroyChart('maker');
   if (document.getElementById('chartMaker')) {
     charts.maker = new Chart(document.getElementById('chartMaker'), {
       type:'bar',
       data:{ labels:makersSorted.map(m=>m[0]), datasets:[{ data:makersSorted.map(m=>m[1]), backgroundColor:PALETTE.slice(0,6), borderRadius:5, borderSkipped:false }] },
-      options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y', plugins:{ legend:{display:false} }, scales:{ x:{ ticks:{color:chartText,font:{size:9}}, grid:{color:gridColor} }, y:{ ticks:{color:chartText,font:{size:9}}, grid:{display:false} } } }
+      options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y', plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx => ` ${ctx.raw} รายการ` } } }, scales:{ x:{ ticks:{color:chartText,font:{size:9}}, grid:{color:gridColor} }, y:{ ticks:{color:chartText,font:{size:9}}, grid:{display:false} } } }
     });
   }
 
@@ -2296,7 +2296,7 @@ function renderSummaryCards(mData, mLabel) {
 
   // Maker chart
   const makerMap = {};
-  mData.forEach(r => { if (r.maker) makerMap[r.maker] = (makerMap[r.maker]||0) + (Number(r.volume)||0); });
+  mData.forEach(r => { if (r.maker) makerMap[r.maker] = (makerMap[r.maker]||0) + 1; });
   const makers = Object.entries(makerMap).sort((a,b) => b[1]-a[1]);
   destroyChart('maker2');
   if (document.getElementById('chartMaker2')) {
@@ -2315,7 +2315,7 @@ function renderSummaryCards(mData, mLabel) {
       <span style="font-size:0.68rem;color:var(--muted);font-family:var(--mono);width:16px">${i+1}</span>
       <span class="maker-row-name">${m[0]}</span>
       <div class="maker-bar"><div class="maker-fill" style="width:${Math.round(m[1]/maxVol*100)}%"></div></div>
-      <span class="maker-count">${Number(m[1]).toLocaleString()}</span>
+      <span class="maker-count">${m[1]} รายการ</span>
     </div>`).join('') : '<div style="color:var(--muted);font-size:0.78rem;padding:1rem 0">ไม่มีข้อมูล</div>';
 
   // Location chart
