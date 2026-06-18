@@ -50,6 +50,14 @@
     --glow-warn: rgba(217,119,6,0.08);
   }
 
+  /* ── CUSTOM SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--sidebar); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; transition: background 0.2s; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+  ::-webkit-scrollbar-corner { background: var(--sidebar); }
+  * { scrollbar-width: thin; scrollbar-color: var(--border) var(--sidebar); }
+
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { scroll-behavior: smooth; }
   body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; display: flex; overflow: auto; }
@@ -908,7 +916,7 @@
     </div>
 
     <div class="wl-card wl-entering" style="animation-delay:.15s">
-      <div class="wl-welcome">ยินดีต้อนรับกลับ 👋</div>
+      <div class="wl-welcome">PURCHASE/EN Management system</div>
       <div class="wl-welcome-sub">กดปุ่มด้านล่างเพื่อเข้าใช้งานระบบ</div>
 
       <button class="wl-btn" id="wlLoginBtn" onclick="wlLogin()">เข้าสู่ระบบ →</button>
