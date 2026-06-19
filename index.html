@@ -415,6 +415,35 @@
   .page-btn.active { background: var(--glow-accent); }
   .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
+  /* CER PAGE */
+  .cer-stat-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: 0.85rem; margin-bottom: 1.1rem; }
+  .cer-stat-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 0.95rem 1.05rem; position: relative; overflow: hidden;
+    transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+  }
+  .cer-stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 14px 14px 0 0; background: linear-gradient(90deg, var(--muted), var(--border)); }
+  .cer-stat-card.accent::before { background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+  .cer-stat-card.warn::before { background: linear-gradient(90deg, var(--warn), #fcd34d); }
+  .cer-stat-card.danger::before { background: linear-gradient(90deg, var(--danger), #f87171); }
+  .cer-stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 24px rgba(0,0,0,0.25); }
+  .cer-stat-card.accent:hover { border-color: var(--accent); }
+  .cer-stat-card.warn:hover { border-color: var(--warn); }
+  .cer-stat-card.danger:hover { border-color: var(--danger); }
+  .cer-stat-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 0.4rem; white-space: nowrap; }
+  .cer-stat-value { font-family: var(--mono); font-size: 1.7rem; font-weight: 500; line-height: 1; margin-bottom: 0.2rem; color: var(--text); letter-spacing: -0.02em; }
+  .cer-stat-card.accent .cer-stat-value { color: var(--accent); }
+  .cer-stat-card.warn .cer-stat-value { color: var(--warn); }
+  .cer-stat-card.danger .cer-stat-value { color: var(--danger); }
+  .cer-stat-meta { font-size: 0.65rem; color: var(--muted); }
+  @media (max-width: 1100px) { .cer-stat-grid { grid-template-columns: repeat(3,1fr); } }
+  @media (max-width: 640px) { .cer-stat-grid { grid-template-columns: repeat(2,1fr); } }
+
+  .cer-fetch-error {
+    background: var(--glow-danger); border: 1px solid rgba(239,68,68,0.3); color: var(--danger);
+    border-radius: 10px; padding: 0.65rem 1rem; font-size: 0.78rem; margin-bottom: 1rem;
+  }
+
   /* MODAL */
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
   .modal-overlay.open { opacity: 1; pointer-events: all; }
@@ -982,6 +1011,17 @@
       </div>
     </div>
 
+    <div class="nav-group" id="navGroup-cer">
+      <div class="nav-label" onclick="toggleNavGroup('cer')">
+        <span>ติดตามใบ CER</span><span class="nav-label-chevron">▾</span>
+      </div>
+      <div class="nav-group-items">
+        <button class="nav-item" id="nav-cer" onclick="showPage('cer',this)">
+          <span class="nav-icon">📄</span><span class="nav-text">ติดตามใบ CER</span>
+        </button>
+      </div>
+    </div>
+
     <div class="nav-group" id="navGroup-other">
       <div class="nav-label" onclick="toggleNavGroup('other')">
         <span>ข้อมูล MAKER</span><span class="nav-label-chevron">▾</span>
@@ -1379,7 +1419,7 @@
         <div style="display:flex;gap:0.6rem;align-items:center">
           <input type="text" class="form-input" id="googleSheetUrl" placeholder="https://docs.google.com/spreadsheets/d/..." style="flex:1">
           <button class="btn btn-primary" onclick="saveSheetUrl()" style="white-space:nowrap">💾 บันทึก</button>
-          <button class="btn btn-secondary" id="openSheetBtn" onclick="openGoogleSheet()" style="white-space:nowrap;display:none">📊 เปิด Sheet</button>
+
         </div>
         <div id="sheetUrlDisplay" style="display:none;margin-top:0.55rem;font-size:0.72rem;color:var(--muted);font-family:var(--mono);word-break:break-all"></div>
       </div>
@@ -1490,6 +1530,107 @@
         </table>
       </div>
     </div>
+
+    <!-- CER PAGE -->
+    <div class="page" id="page-cer">
+      <div class="page-header">
+        <div class="page-header-left">
+          <h1>📄 ติดตามใบ CER</h1>
+          <p>จัดการและตรวจสอบสถานะใบรับรอง ISO 9001 · ISO 14001 · IATF 16949 ของผู้ผลิตชิ้นส่วน</p>
+        </div>
+        <button class="btn btn-primary" onclick="openCerModal()">+ เพิ่มบริษัท</button>
+      </div>
+
+      <div class="cer-stat-grid">
+        <div class="cer-stat-card" id="cer-stat-total">
+          <div class="cer-stat-label">บริษัทรวม</div>
+          <div class="cer-stat-value" id="cer-cnt-total">—</div>
+          <div class="cer-stat-meta">รายการทั้งหมด</div>
+        </div>
+        <div class="cer-stat-card accent" id="cer-stat-iso9001">
+          <div class="cer-stat-label">ISO 9001</div>
+          <div class="cer-stat-value" id="cer-cnt-iso9001">—</div>
+          <div class="cer-stat-meta">มีใบรับรอง</div>
+        </div>
+        <div class="cer-stat-card accent" id="cer-stat-iso14001">
+          <div class="cer-stat-label">ISO 14001</div>
+          <div class="cer-stat-value" id="cer-cnt-iso14001">—</div>
+          <div class="cer-stat-meta">มีใบรับรอง</div>
+        </div>
+        <div class="cer-stat-card accent" id="cer-stat-iatf">
+          <div class="cer-stat-label">IATF 16949</div>
+          <div class="cer-stat-value" id="cer-cnt-iatf">—</div>
+          <div class="cer-stat-meta">มีใบรับรอง</div>
+        </div>
+        <div class="cer-stat-card warn" id="cer-stat-expiring">
+          <div class="cer-stat-label">⚠️ ใกล้หมดอายุ</div>
+          <div class="cer-stat-value" id="cer-cnt-expiring">—</div>
+          <div class="cer-stat-meta">ภายใน 90 วัน</div>
+        </div>
+        <div class="cer-stat-card danger" id="cer-stat-expired">
+          <div class="cer-stat-label">🔴 หมดอายุแล้ว</div>
+          <div class="cer-stat-value" id="cer-cnt-expired">—</div>
+          <div class="cer-stat-meta">ต้องดำเนินการ</div>
+        </div>
+      </div>
+
+      <div class="cer-fetch-error" id="cerFetchError" style="display:none">
+        ⚠️ <span id="cerFetchErrorText">ดึงข้อมูลไม่สำเร็จ</span>
+      </div>
+
+      <div class="toolbar">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="cerSearchInput" placeholder="ค้นหาชื่อบริษัท หรือ ID..." oninput="renderCerTable()">
+        </div>
+        <select class="filter-select" id="cerFilterIso9001" onchange="renderCerTable()">
+          <option value="">ISO 9001: ทั้งหมด</option>
+          <option value="valid">✅ มีใบรับรอง</option>
+          <option value="expiring">⚠️ ใกล้หมดอายุ</option>
+          <option value="expired">🔴 หมดอายุแล้ว</option>
+          <option value="none">— ไม่มี</option>
+        </select>
+        <select class="filter-select" id="cerFilterIso14001" onchange="renderCerTable()">
+          <option value="">ISO 14001: ทั้งหมด</option>
+          <option value="valid">✅ มีใบรับรอง</option>
+          <option value="expiring">⚠️ ใกล้หมดอายุ</option>
+          <option value="expired">🔴 หมดอายุแล้ว</option>
+          <option value="none">— ไม่มี</option>
+        </select>
+        <select class="filter-select" id="cerFilterIatf" onchange="renderCerTable()">
+          <option value="">IATF 16949: ทั้งหมด</option>
+          <option value="valid">✅ มีใบรับรอง</option>
+          <option value="expiring">⚠️ ใกล้หมดอายุ</option>
+          <option value="expired">🔴 หมดอายุแล้ว</option>
+          <option value="none">— ไม่มี</option>
+        </select>
+        <select class="filter-select" id="cerFilterStatus" onchange="renderCerTable()">
+          <option value="">สถานะ: ทั้งหมด</option>
+          <option value="ok">✅ ปกติ</option>
+          <option value="warn">⚠️ ใกล้หมดอายุ</option>
+          <option value="danger">🔴 หมดอายุแล้ว</option>
+        </select>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th onclick="sortCerTable('id')">ID</th>
+            <th onclick="sortCerTable('name')">ชื่อบริษัท</th>
+            <th onclick="sortCerTable('iso9001')">ISO 9001</th>
+            <th onclick="sortCerTable('iso9001Date')">วันหมดอายุ</th>
+            <th onclick="sortCerTable('iso14001')">ISO 14001</th>
+            <th onclick="sortCerTable('iso14001Date')">วันหมดอายุ</th>
+            <th onclick="sortCerTable('iatf')">IATF 16949</th>
+            <th onclick="sortCerTable('iatfDate')">วันหมดอายุ</th>
+            <th>สถานะ</th>
+            <th>แก้ไข</th>
+          </tr></thead>
+          <tbody id="cerTableBody"><tr><td colspan="10" class="empty"><div class="spinner" style="margin:0 auto"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -1581,6 +1722,9 @@ let editingItem = null;
 let sidebarCollapsed = false;
 let notifOpen = false;
 let activeMonthTab = null;
+let cerData = [];
+let cerSortCol = 'name';
+let cerSortDir = 'asc';
 
 const DEMO = [
   { no:1,  partNo:'11057-1778B',        partName:'BRACKET',       model:'8901/8951', volume:250,  prDate:'7/6/2026',  dueDate:'13/6/2026', actualDate:'13/6/2026', location:'CCIR', status:'เสร็จแล้ว ✅',       maker:'เจริญลาภ',    daysLeft:'Done', poNo:'', note:'', prLink:'', rowIndex:6 },
@@ -1609,7 +1753,6 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('googleSheetUrl').value = savedSheet;
     document.getElementById('sheetUrlDisplay').textContent = savedSheet;
     document.getElementById('sheetUrlDisplay').style.display = 'block';
-    document.getElementById('openSheetBtn').style.display = '';
     if (!localStorage.getItem('prpo_sheet_url')) localStorage.setItem('prpo_sheet_url', savedSheet);
   }
   // Date chip (real-time clock)
@@ -1721,13 +1864,14 @@ function showPage(name, btn) {
   document.getElementById('page-' + name).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  const titles = { dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', summary:'📈 สรุปภาพรวม', gantt:'📅 Timeline / Gantt', setup:'⚙️ ตั้งค่าระบบ', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis' };
+  const titles = { dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', summary:'📈 สรุปภาพรวม', gantt:'📅 Timeline / Gantt', setup:'⚙️ ตั้งค่าระบบ', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis', cer:'📄 ติดตามใบ CER' };
   document.getElementById('topbarTitle').textContent = titles[name] || name;
   if (name === 'summary') renderSummary();
   if (name === 'supplier') loadSuppliers();
   if (name === 'leadtime') renderLeadTime();
   if (name === 'history') loadHistoryFromSheet();
   if (name === 'gantt') renderGantt();
+  if (name === 'cer') loadCerPage();
 }
 
 /* ── NOTIFICATIONS ── */
@@ -2160,6 +2304,254 @@ function sortTable(col) {
   else { sortCol = col; sortDir = 'asc'; }
   currentPage = 1;
   renderTable();
+}
+
+/* ── CER (ใบรับรอง ISO) ── */
+const CER_DEMO = [
+  { id:'CC-001', name:'เจริญลาภ อินดัสทรี',  iso9001Date:'15/9/2026', iso14001Date:'02/3/2027', iatfDate:'',          rowIndex:2 },
+  { id:'CC-002', name:'KOBAYU (THAILAND)',    iso9001Date:'28/7/2026', iso14001Date:'',          iatfDate:'10/8/2026', rowIndex:3 },
+  { id:'CC-003', name:'ยูเนี่ยน เมททอล',       iso9001Date:'01/1/2027', iso14001Date:'20/11/2026',iatfDate:'20/11/2026',rowIndex:4 },
+  { id:'CC-004', name:'สยามพาร์ท แมนูแฟคเจอริ่ง', iso9001Date:'12/6/2026', iso14001Date:'12/6/2026', iatfDate:'',     rowIndex:5 },
+  { id:'CC-005', name:'ไทยเทค คอมโพเนนท์',     iso9001Date:'',         iso14001Date:'05/4/2027', iatfDate:'05/4/2027',rowIndex:6 },
+];
+
+function cerCertStatus(dateStr) {
+  // returns { state: 'none'|'ok'|'warn'|'danger', label }
+  if (!dateStr) return { state: 'none', label: '—' };
+  const [d,m,y] = dateStr.split('/').map(Number);
+  if (!d || !m || !y) return { state: 'none', label: '—' };
+  const exp = new Date(y, m-1, d);
+  const today = new Date();
+  const diffDays = Math.ceil((exp - today) / 86400000);
+  if (diffDays < 0) return { state: 'danger', label: 'หมดอายุแล้ว' };
+  if (diffDays <= 90) return { state: 'warn', label: `เหลือ ${diffDays} วัน` };
+  return { state: 'ok', label: 'ปกติ' };
+}
+
+function cerBadge(dateStr) {
+  if (!dateStr) return `<span class="badge" style="background:rgba(100,116,139,0.1);color:var(--muted);border:1px solid rgba(100,116,139,0.15)">— ไม่มี</span>`;
+  const st = cerCertStatus(dateStr);
+  if (st.state === 'danger') return `<span class="badge badge-incomplete">🔴 หมดอายุ</span>`;
+  if (st.state === 'warn')   return `<span class="badge badge-progress">⚠️ ใกล้หมดอายุ</span>`;
+  return `<span class="badge badge-done">✅ ปกติ</span>`;
+}
+
+function cerOverallStatus(r) {
+  const states = [r.iso9001Date, r.iso14001Date, r.iatfDate].map(cerCertStatus).map(s => s.state);
+  if (states.includes('danger')) return 'danger';
+  if (states.includes('warn')) return 'warn';
+  return 'ok';
+}
+
+async function loadCerData() {
+  if (!WEB_APP_URL) {
+    const local = JSON.parse(localStorage.getItem('cer_data') || 'null');
+    cerData = local || CER_DEMO;
+    return;
+  }
+  try {
+    const res  = await fetch(WEB_APP_URL + '?action=getCer');
+    const json = await res.json();
+    if (json.success) {
+      cerData = json.data;
+      document.getElementById('cerFetchError').style.display = 'none';
+    } else {
+      throw new Error(json.error || 'unknown error');
+    }
+  } catch (e) {
+    const local = JSON.parse(localStorage.getItem('cer_data') || 'null');
+    cerData = local || CER_DEMO;
+    document.getElementById('cerFetchErrorText').textContent = 'ดึงข้อมูลจาก Sheet ไม่สำเร็จ — แสดงข้อมูลสำรอง';
+    document.getElementById('cerFetchError').style.display = 'block';
+  }
+}
+
+async function loadCerPage() {
+  document.getElementById('cerTableBody').innerHTML = '<tr><td colspan="10" class="empty"><div class="spinner" style="margin:0 auto"></div></td></tr>';
+  await loadCerData();
+  renderCerTable();
+}
+
+function getCerFiltered() {
+  const q = (document.getElementById('cerSearchInput')?.value || '').trim().toLowerCase();
+  const f9001 = document.getElementById('cerFilterIso9001')?.value || '';
+  const f14001 = document.getElementById('cerFilterIso14001')?.value || '';
+  const fIatf = document.getElementById('cerFilterIatf')?.value || '';
+  const fStatus = document.getElementById('cerFilterStatus')?.value || '';
+
+  return cerData.filter(r => {
+    if (q && !(r.name.toLowerCase().includes(q) || r.id.toLowerCase().includes(q))) return false;
+    const checkCol = (filterVal, dateStr) => {
+      if (!filterVal) return true;
+      const st = cerCertStatus(dateStr).state;
+      if (filterVal === 'valid') return st === 'ok' || st === 'warn';
+      if (filterVal === 'expiring') return st === 'warn';
+      if (filterVal === 'expired') return st === 'danger';
+      if (filterVal === 'none') return st === 'none';
+      return true;
+    };
+    if (!checkCol(f9001, r.iso9001Date)) return false;
+    if (!checkCol(f14001, r.iso14001Date)) return false;
+    if (!checkCol(fIatf, r.iatfDate)) return false;
+    if (fStatus && cerOverallStatus(r) !== fStatus) return false;
+    return true;
+  });
+}
+
+function renderCerStats() {
+  const total = cerData.length;
+  const has9001 = cerData.filter(r => r.iso9001Date).length;
+  const has14001 = cerData.filter(r => r.iso14001Date).length;
+  const hasIatf = cerData.filter(r => r.iatfDate).length;
+  const expiring = cerData.filter(r => cerOverallStatus(r) === 'warn').length;
+  const expired = cerData.filter(r => cerOverallStatus(r) === 'danger').length;
+  document.getElementById('cer-cnt-total').textContent = total;
+  document.getElementById('cer-cnt-iso9001').textContent = has9001;
+  document.getElementById('cer-cnt-iso14001').textContent = has14001;
+  document.getElementById('cer-cnt-iatf').textContent = hasIatf;
+  document.getElementById('cer-cnt-expiring').textContent = expiring;
+  document.getElementById('cer-cnt-expired').textContent = expired;
+}
+
+function renderCerTable() {
+  renderCerStats();
+  let rows = getCerFiltered();
+  rows.sort((a,b) => {
+    let va, vb;
+    if (cerSortCol.endsWith('Date')) {
+      const toTime = s => { if (!s) return Infinity; const [d,m,y]=s.split('/').map(Number); return new Date(y,m-1,d).getTime(); };
+      va = toTime(a[cerSortCol]); vb = toTime(b[cerSortCol]);
+    } else {
+      va = String(a[cerSortCol]||'').toLowerCase(); vb = String(b[cerSortCol]||'').toLowerCase();
+    }
+    if (va === vb) return 0;
+    return cerSortDir === 'asc' ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
+  });
+
+  const tbody = document.getElementById('cerTableBody');
+  tbody.innerHTML = rows.length ? rows.map(r => {
+    const overall = cerOverallStatus(r);
+    const overallBadge = overall === 'danger' ? `<span class="badge badge-incomplete">🔴 หมดอายุแล้ว</span>`
+                        : overall === 'warn'   ? `<span class="badge badge-progress">⚠️ ใกล้หมดอายุ</span>`
+                        : `<span class="badge badge-done">✅ ปกติ</span>`;
+    return `<tr>
+      <td class="no-num">${r.id}</td>
+      <td class="part-name">${r.name}</td>
+      <td>${cerBadge(r.iso9001Date)}</td>
+      <td class="date-cell">${r.iso9001Date || '—'}</td>
+      <td>${cerBadge(r.iso14001Date)}</td>
+      <td class="date-cell">${r.iso14001Date || '—'}</td>
+      <td>${cerBadge(r.iatfDate)}</td>
+      <td class="date-cell">${r.iatfDate || '—'}</td>
+      <td>${overallBadge}</td>
+      <td><div class="row-actions" style="opacity:1">
+        <button class="icon-btn" title="แก้ไข" onclick="openCerModal('${r.rowIndex}')">✏️</button>
+        <button class="icon-btn del" title="ลบ" onclick="deleteCerItem('${r.rowIndex}')">🗑️</button>
+      </div></td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="10" class="empty"><div class="empty-icon">🔍</div><div class="empty-title">ไม่พบรายการที่ค้นหา</div><div class="empty-sub">ลองเปลี่ยนตัวกรองหรือคำค้นหา</div></td></tr>`;
+}
+
+function sortCerTable(col) {
+  if (cerSortCol === col) cerSortDir = cerSortDir === 'asc' ? 'desc' : 'asc';
+  else { cerSortCol = col; cerSortDir = 'asc'; }
+  renderCerTable();
+}
+
+/* ── CER MODAL (Add/Edit) ── */
+function openCerModal(rowIndex) {
+  document.getElementById('cer-rowIndex').value = rowIndex || '';
+  if (rowIndex) {
+    const r = cerData.find(x => String(x.rowIndex) === String(rowIndex));
+    if (!r) return;
+    document.getElementById('cerModalTitle').textContent = '✏️ แก้ไขบริษัท';
+    document.getElementById('cer-id').value = r.id || '';
+    document.getElementById('cer-name').value = r.name || '';
+    document.getElementById('cer-iso9001Date').value = r.iso9001Date || '';
+    document.getElementById('cer-iso14001Date').value = r.iso14001Date || '';
+    document.getElementById('cer-iatfDate').value = r.iatfDate || '';
+  } else {
+    document.getElementById('cerModalTitle').textContent = '📄 เพิ่มบริษัท';
+    ['id','name','iso9001Date','iso14001Date','iatfDate'].forEach(f => {
+      document.getElementById('cer-'+f).value = '';
+    });
+  }
+  document.getElementById('cerModalOverlay').classList.add('open');
+}
+
+function closeCerModal() {
+  document.getElementById('cerModalOverlay').classList.remove('open');
+}
+
+async function saveCer() {
+  const name = document.getElementById('cer-name').value.trim();
+  if (!name) { showToast('❌ กรุณากรอกชื่อบริษัท', 'error'); return; }
+  const rowIndex = document.getElementById('cer-rowIndex').value;
+  const payload = {
+    id:           document.getElementById('cer-id').value.trim(),
+    name,
+    iso9001Date:  document.getElementById('cer-iso9001Date').value.trim(),
+    iso14001Date: document.getElementById('cer-iso14001Date').value.trim(),
+    iatfDate:     document.getElementById('cer-iatfDate').value.trim()
+  };
+
+  if (!WEB_APP_URL) {
+    const local = JSON.parse(localStorage.getItem('cer_data') || 'null') || cerData.slice();
+    if (rowIndex) {
+      const idx = local.findIndex(x => String(x.rowIndex) === String(rowIndex));
+      if (idx >= 0) local[idx] = { ...local[idx], ...payload };
+    } else {
+      const newId = payload.id || ('CC-' + String(local.length + 1).padStart(3, '0'));
+      local.push({ ...payload, id: newId, rowIndex: 'local-' + Date.now() });
+    }
+    localStorage.setItem('cer_data', JSON.stringify(local));
+    cerData = local;
+    closeCerModal(); renderCerTable();
+    showToast('✅ บันทึกสำเร็จ (local)', 'success');
+    return;
+  }
+
+  try {
+    const action = rowIndex ? 'editCer' : 'addCer';
+    const params = new URLSearchParams({ action, ...payload });
+    if (rowIndex) params.set('rowIndex', rowIndex);
+    const res  = await fetch(WEB_APP_URL + '?' + params.toString());
+    const json = await res.json();
+    if (json.success) {
+      closeCerModal();
+      await loadCerPage();
+      showToast('✅ บันทึกสำเร็จ', 'success');
+    } else {
+      showToast('❌ บันทึกไม่สำเร็จ: ' + json.error, 'error');
+    }
+  } catch (e) {
+    showToast('❌ เกิดข้อผิดพลาด: ' + e.message, 'error');
+  }
+}
+
+async function deleteCerItem(rowIndex) {
+  if (!confirm('ต้องการลบบริษัทนี้?')) return;
+  if (!WEB_APP_URL) {
+    const local = (JSON.parse(localStorage.getItem('cer_data') || 'null') || cerData.slice())
+      .filter(x => String(x.rowIndex) !== String(rowIndex));
+    localStorage.setItem('cer_data', JSON.stringify(local));
+    cerData = local;
+    renderCerTable();
+    showToast('🗑️ ลบแล้ว', 'success');
+    return;
+  }
+  try {
+    const res  = await fetch(WEB_APP_URL + '?action=delCer&rowIndex=' + rowIndex);
+    const json = await res.json();
+    if (json.success) {
+      await loadCerPage();
+      showToast('🗑️ ลบแล้ว', 'success');
+    } else {
+      showToast('❌ ลบไม่สำเร็จ: ' + json.error, 'error');
+    }
+  } catch (e) {
+    showToast('❌ เกิดข้อผิดพลาด: ' + e.message, 'error');
+  }
 }
 
 function renderPagination(pages) {
@@ -2705,7 +3097,6 @@ function saveSheetUrl() {
   localStorage.setItem('prpo_sheet_url', url);
   document.getElementById('sheetUrlDisplay').textContent = url;
   document.getElementById('sheetUrlDisplay').style.display = 'block';
-  document.getElementById('openSheetBtn').style.display = '';
   showToast('✅ บันทึก Google Sheet URL แล้ว', 'success');
 }
 function openGoogleSheet() {
@@ -3515,6 +3906,30 @@ function renderLeadTime() {
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeSupplierModal()">ยกเลิก</button>
       <button class="btn btn-primary" onclick="saveSupplier()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- CER MODAL -->
+<div class="modal-overlay" id="cerModalOverlay" onclick="if(event.target===this)closeCerModal()">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <div class="modal-title" id="cerModalTitle">📄 เพิ่มบริษัท</div>
+      <button class="modal-close" onclick="closeCerModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="cer-rowIndex">
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">ID</label><input type="text" class="form-input" id="cer-id" placeholder="เช่น CC-006"></div>
+        <div class="form-group full"><label class="form-label">ชื่อบริษัท *</label><input type="text" class="form-input" id="cer-name" placeholder="เช่น KOBAYU (THAILAND)"></div>
+        <div class="form-group"><label class="form-label">ISO 9001 วันหมดอายุ</label><input type="text" class="form-input" id="cer-iso9001Date" placeholder="วว/ดด/ปปปป เช่น 28/7/2026"></div>
+        <div class="form-group"><label class="form-label">ISO 14001 วันหมดอายุ</label><input type="text" class="form-input" id="cer-iso14001Date" placeholder="วว/ดด/ปปปป"></div>
+        <div class="form-group"><label class="form-label">IATF 16949 วันหมดอายุ</label><input type="text" class="form-input" id="cer-iatfDate" placeholder="วว/ดด/ปปปป"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeCerModal()">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveCer()">💾 บันทึก</button>
     </div>
   </div>
 </div>
