@@ -932,7 +932,7 @@
     </div>
 
     <div class="wl-card wl-entering" style="animation-delay:.15s">
-      <div class="wl-welcome">Management Purchase ccip</div>
+      <div class="wl-welcome">Management System Purchase </div>
       <div class="wl-welcome-sub">กดปุ่มด้านล่างเพื่อเข้าใช้งานระบบ</div>
 
       <button class="wl-btn" id="wlLoginBtn" onclick="wlLogin()">เข้าสู่ระบบ →</button>
@@ -1729,7 +1729,7 @@ function showPage(name, btn) {
   if (name === 'summary') renderSummary();
   if (name === 'supplier') loadSuppliers();
   if (name === 'leadtime') renderLeadTime();
-  if (name === 'history') renderHistory();
+  if (name === 'history') loadHistoryFromSheet();
   if (name === 'gantt') renderGantt();
 }
 
@@ -2955,7 +2955,7 @@ function showDueAlerts() {
 }
 
 /* ══════════════════════════════════════════════════════
-   HISTORY LOG
+   HISTORY LOG — synced with Google Sheet "log"
 ══════════════════════════════════════════════════════ */
 function addHistoryLog(action, partNo, partName, detail) {
   const entry = {
@@ -2969,6 +2969,34 @@ function addHistoryLog(action, partNo, partName, detail) {
   historyLog.unshift(entry);
   if (historyLog.length > 200) historyLog = historyLog.slice(0, 200);
   localStorage.setItem('prpo_history', JSON.stringify(historyLog));
+  // sync ไปยัง Sheet "log" ผ่าน Apps Script
+  if (WEB_APP_URL) {
+    const p = new URLSearchParams({ action: 'addLog', logAction: action, partNo: entry.partNo, partName: entry.partName, detail: entry.detail });
+    fetch(WEB_APP_URL + '?' + p.toString()).catch(() => {});
+  }
+}
+async function loadHistoryFromSheet() {
+  if (!WEB_APP_URL) { renderHistory(); return; }
+  const tbody = document.getElementById('historyBody');
+  if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="empty"><div class="spinner"></div></td></tr>';
+  try {
+    const res = await fetch(WEB_APP_URL + '?action=getLogs');
+    const json = await res.json();
+    if (json.success) {
+      historyLog = json.data.map(e => ({
+        id: e.no,
+        time: e.time,
+        action: e.action,
+        partNo: e.partNo,
+        partName: e.partName,
+        detail: e.detail
+      }));
+      localStorage.setItem('prpo_history', JSON.stringify(historyLog));
+    }
+  } catch (e) {
+    showToast('⚠️ โหลด Log จาก Sheet ไม่สำเร็จ ใช้ข้อมูลที่บันทึกไว้ในเครื่องแทน', 'error');
+  }
+  renderHistory();
 }
 function renderHistory() {
   const tbody = document.getElementById('historyBody');
@@ -2987,11 +3015,14 @@ function renderHistory() {
       <td style="font-size:0.76rem;color:var(--muted)">${e.detail}</td>
     </tr>`).join('');
 }
-function clearHistory() {
+async function clearHistory() {
   if (!confirm('ต้องการล้างประวัติทั้งหมด?')) return;
   historyLog = [];
   localStorage.removeItem('prpo_history');
   renderHistory();
+  if (WEB_APP_URL) {
+    try { await fetch(WEB_APP_URL + '?action=clearLogs'); } catch(e) { showToast('⚠️ ล้าง Log ใน Sheet ไม่สำเร็จ', 'error'); }
+  }
   showToast('🗑️ ล้างประวัติแล้ว', 'success');
 }
 
