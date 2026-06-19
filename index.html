@@ -870,6 +870,12 @@
      WELCOME SCREEN  (ซ่อนตัวเองหลังกด "เข้าสู่ระบบ")
 ══════════════════════════════════════════════ -->
 <div id="welcomeScreen">
+<script>
+  // ตรวจสอบสถานะ login ทันที — ถ้าเคย login ไว้แล้ว ซ่อนหน้านี้โดยไม่มีการกระพริบ
+  if (localStorage.getItem('prpo_logged_in') === 'true') {
+    document.currentScript.parentElement.style.display = 'none';
+  }
+</script>
 
   <!-- LEFT: preview dashboard -->
   <div class="wl-left">
@@ -3426,7 +3432,10 @@ function renderLeadTime() {
 
 <script>
 /* ── WELCOME SCREEN ── */
+const LOGIN_KEY = 'prpo_logged_in';
+
 function doLogout() {
+  localStorage.removeItem(LOGIN_KEY);
   const ws = document.getElementById('welcomeScreen');
   // reset button
   const btn = document.getElementById('wlLoginBtn');
@@ -3442,6 +3451,7 @@ function wlLogin() {
   btn.disabled = true;
   btn.style.opacity = '0.7';
   setTimeout(() => {
+    localStorage.setItem(LOGIN_KEY, 'true');
     const ws = document.getElementById('welcomeScreen');
     ws.classList.add('hide');
     setTimeout(() => { ws.style.display = 'none'; }, 520);
