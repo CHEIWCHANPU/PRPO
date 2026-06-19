@@ -147,7 +147,7 @@
   .topbar-chip {
     padding: 0.28rem 0.7rem; background: var(--surface2); border: 1px solid var(--border);
     border-radius: 20px; font-size: 0.69rem; font-family: var(--mono); color: var(--muted);
-    letter-spacing: 0.04em;
+    letter-spacing: 0.04em; white-space: nowrap;
   }
 
   .icon-action {
@@ -1584,9 +1584,15 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('openSheetBtn').style.display = '';
     if (!localStorage.getItem('prpo_sheet_url')) localStorage.setItem('prpo_sheet_url', savedSheet);
   }
-  // Date chip
-  const now = new Date();
-  document.getElementById('currentDateChip').textContent = now.toLocaleDateString('th-TH', {day:'numeric',month:'short',year:'numeric'});
+  // Date chip (real-time clock)
+  function updateDateChip() {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('th-TH', {day:'numeric',month:'short',year:'numeric'});
+    const timeStr = now.toLocaleTimeString('th-TH', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    document.getElementById('currentDateChip').textContent = dateStr + ' · ' + timeStr;
+  }
+  updateDateChip();
+  setInterval(updateDateChip, 1000);
   initTheme();
   initToastMuteBtn();
   initPerPage();
