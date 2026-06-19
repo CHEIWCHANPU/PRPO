@@ -85,12 +85,23 @@
   .logo-sub { font-size: 0.62rem; color: var(--muted); font-family: var(--mono); white-space: nowrap; margin-top: 1px; }
 
   .nav-section { flex: 1; padding: 0.7rem 0.5rem; overflow-y: auto; overflow-x: hidden; }
+  .nav-group {
+    border: 1px solid var(--border); border-radius: 10px; margin-bottom: 0.6rem; overflow: hidden;
+    background: var(--surface2);
+  }
+  .sidebar.collapsed .nav-group { border: none; background: transparent; margin-bottom: 0.2rem; }
   .nav-label {
     font-size: 0.59rem; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase;
-    color: var(--muted); padding: 0.45rem 0.6rem 0.2rem; white-space: nowrap; overflow: hidden;
-    transition: opacity 0.2s; opacity: 0.7;
+    color: var(--muted); padding: 0.5rem 0.65rem; white-space: nowrap; overflow: hidden;
+    transition: opacity 0.2s, background 0.15s; opacity: 0.85; display: flex; align-items: center;
+    justify-content: space-between; cursor: pointer; user-select: none; gap: 0.4rem;
   }
-  .sidebar.collapsed .nav-label { opacity: 0; }
+  .nav-label:hover { background: rgba(255,255,255,0.03); color: var(--text); }
+  .sidebar.collapsed .nav-label { opacity: 0; pointer-events: none; }
+  .nav-label-chevron { transition: transform 0.18s; font-size: 0.6rem; flex-shrink: 0; }
+  .nav-group.collapsed .nav-label-chevron { transform: rotate(-90deg); }
+  .nav-group-items { padding: 0.25rem 0.4rem 0.4rem; }
+  .nav-group.collapsed .nav-group-items { display: none; }
   .nav-item {
     display: flex; align-items: center; gap: 0.7rem; padding: 0.58rem 0.72rem; border-radius: 9px;
     cursor: pointer; transition: all 0.15s; color: var(--muted); font-size: 0.85rem; font-weight: 500;
@@ -347,7 +358,6 @@
   thead th.sort-asc::after { content: ' ↑'; color: var(--accent); }
   thead th.sort-desc::after { content: ' ↓'; color: var(--accent); }
   tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; cursor: pointer; }
-  tbody tr:last-child { border-bottom: none; }
   tbody tr:hover { background: var(--surface2); }
   tbody td { padding: 0.65rem 0.9rem; vertical-align: middle; }
   .no-num { font-family: var(--mono); font-size: 0.68rem; color: var(--muted); }
@@ -949,38 +959,59 @@
     </div>
   </div>
   <nav class="nav-section">
-    <div class="nav-label">เมนูหลัก</div>
-    <button class="nav-item active" id="nav-dashboard" onclick="showPage('dashboard',this)">
-      <span class="nav-icon">📊</span><span class="nav-text">Dashboard</span>
-    </button>
-    <button class="nav-item" id="nav-list" onclick="showPage('list',this)">
-      <span class="nav-icon">📋</span><span class="nav-text">รายการทั้งหมด</span>
-    </button>
-    <button class="nav-item" id="nav-summary" onclick="showPage('summary',this)">
-      <span class="nav-icon">📈</span><span class="nav-text">สรุปภาพรวม</span>
-    </button>
-    <button class="nav-item" id="nav-gantt" onclick="showPage('gantt',this)">
-      <span class="nav-icon">📅</span><span class="nav-text">Timeline / Gantt</span>
-    </button>
-    <button class="nav-item" id="nav-supplier" onclick="showPage('supplier',this)">
-      <span class="nav-icon">🏭</span><span class="nav-text">Supplier</span>
-    </button>
-    <button class="nav-item" id="nav-leadtime" onclick="showPage('leadtime',this)">
-      <span class="nav-icon">⏱️</span><span class="nav-text">Lead Time</span>
-    </button>
-    <div class="nav-label" style="margin-top:0.7rem">จัดการ</div>
-    <button class="nav-item" onclick="openAddModal()">
-      <span class="nav-icon">➕</span><span class="nav-text">เพิ่มรายการ</span>
-    </button>
-    <button class="nav-item" onclick="syncData()">
-      <span class="nav-icon" id="sidebarSyncIcon">⟳</span><span class="nav-text">Sync Sheet</span>
-    </button>
-    <button class="nav-item" id="nav-history" onclick="showPage('history',this)">
-      <span class="nav-icon">📝</span><span class="nav-text">History Log</span>
-    </button>
-    <button class="nav-item" id="nav-setup" onclick="showPage('setup',this)">
-      <span class="nav-icon">⚙️</span><span class="nav-text">ตั้งค่า</span>
-    </button>
+    <div class="nav-group" id="navGroup-track">
+      <div class="nav-label" onclick="toggleNavGroup('track')">
+        <span>ติดตาม PART PR</span><span class="nav-label-chevron">▾</span>
+      </div>
+      <div class="nav-group-items">
+        <button class="nav-item active" id="nav-dashboard" onclick="showPage('dashboard',this)">
+          <span class="nav-icon">📊</span><span class="nav-text">Dashboard</span>
+        </button>
+        <button class="nav-item" id="nav-list" onclick="showPage('list',this)">
+          <span class="nav-icon">📋</span><span class="nav-text">รายการทั้งหมด</span>
+        </button>
+        <button class="nav-item" id="nav-summary" onclick="showPage('summary',this)">
+          <span class="nav-icon">📈</span><span class="nav-text">สรุปภาพรวม</span>
+        </button>
+        <button class="nav-item" id="nav-gantt" onclick="showPage('gantt',this)">
+          <span class="nav-icon">📅</span><span class="nav-text">Timeline / Gantt</span>
+        </button>
+        <button class="nav-item" id="nav-leadtime" onclick="showPage('leadtime',this)">
+          <span class="nav-icon">⏱️</span><span class="nav-text">Lead Time</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="nav-group" id="navGroup-other">
+      <div class="nav-label" onclick="toggleNavGroup('other')">
+        <span>ข้อมูล MAKER</span><span class="nav-label-chevron">▾</span>
+      </div>
+      <div class="nav-group-items">
+        <button class="nav-item" id="nav-supplier" onclick="showPage('supplier',this)">
+          <span class="nav-icon">🏭</span><span class="nav-text">Supplier</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="nav-group" id="navGroup-manage">
+      <div class="nav-label" onclick="toggleNavGroup('manage')">
+        <span>จัดการ</span><span class="nav-label-chevron">▾</span>
+      </div>
+      <div class="nav-group-items">
+        <button class="nav-item" onclick="openAddModal()">
+          <span class="nav-icon">➕</span><span class="nav-text">เพิ่มรายการ</span>
+        </button>
+        <button class="nav-item" onclick="syncData()">
+          <span class="nav-icon" id="sidebarSyncIcon">⟳</span><span class="nav-text">Sync Sheet</span>
+        </button>
+        <button class="nav-item" id="nav-history" onclick="showPage('history',this)">
+          <span class="nav-icon">📝</span><span class="nav-text">History Log</span>
+        </button>
+        <button class="nav-item" id="nav-setup" onclick="showPage('setup',this)">
+          <span class="nav-icon">⚙️</span><span class="nav-text">ตั้งค่า</span>
+        </button>
+      </div>
+    </div>
   </nav>
   <div class="sidebar-footer">
     <button class="logout-btn" onclick="doLogout()">
@@ -1598,12 +1629,37 @@ window.addEventListener('DOMContentLoaded', () => {
   initPerPage();
   initAutoSync();
   initKeyboardShortcuts();
+  initNavGroups();
   document.addEventListener('click', (e) => {
     if (notifOpen && !e.target.closest('#notifPanel') && !e.target.closest('#notifBell')) closeNotif();
   });
   loadData();
   loadSuppliers();
 });
+
+/* ── NAV GROUPS (collapsible) ── */
+function getCollapsedNavGroups() {
+  try { return JSON.parse(localStorage.getItem('prpo_nav_collapsed') || '[]'); }
+  catch(e) { return []; }
+}
+function toggleNavGroup(key) {
+  const el = document.getElementById('navGroup-' + key);
+  if (!el) return;
+  el.classList.toggle('collapsed');
+  let collapsed = getCollapsedNavGroups();
+  if (el.classList.contains('collapsed')) {
+    if (!collapsed.includes(key)) collapsed.push(key);
+  } else {
+    collapsed = collapsed.filter(k => k !== key);
+  }
+  localStorage.setItem('prpo_nav_collapsed', JSON.stringify(collapsed));
+}
+function initNavGroups() {
+  getCollapsedNavGroups().forEach(key => {
+    const el = document.getElementById('navGroup-' + key);
+    if (el) el.classList.add('collapsed');
+  });
+}
 
 /* ── THEME ── */
 function initTheme() {
