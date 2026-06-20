@@ -418,6 +418,7 @@
   /* CER PAGE */
   .cer-stat-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: 0.85rem; margin-bottom: 1.1rem; }
   .cer-stat-card {
+    cursor: pointer;
     background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
     padding: 0.95rem 1.05rem; position: relative; overflow: hidden;
     transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
@@ -429,6 +430,7 @@
   .cer-stat-card.progress::before { background: linear-gradient(90deg, #818cf8, var(--accent2)); }
   .cer-stat-card.progress:hover { border-color: #818cf8; }
   .cer-stat-card.progress .cer-stat-value { color: #818cf8; }
+  .cer-stat-card.active-filter { border-color: var(--text); box-shadow: 0 0 0 1px var(--text) inset; }
   .cer-stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 24px rgba(0,0,0,0.25); }
   .cer-stat-card.accent:hover { border-color: var(--accent); }
   .cer-stat-card.warn:hover { border-color: var(--warn); }
@@ -1545,37 +1547,37 @@
       </div>
 
       <div class="cer-stat-grid">
-        <div class="cer-stat-card" id="cer-stat-total">
+        <div class="cer-stat-card" id="cer-stat-total" onclick="filterCerByStat('total')">
           <div class="cer-stat-label">บริษัทรวม</div>
           <div class="cer-stat-value" id="cer-cnt-total">—</div>
           <div class="cer-stat-meta">รายการทั้งหมด</div>
         </div>
-        <div class="cer-stat-card accent" id="cer-stat-iso9001">
+        <div class="cer-stat-card accent" id="cer-stat-iso9001" onclick="filterCerByStat('iso9001')">
           <div class="cer-stat-label">ISO 9001</div>
           <div class="cer-stat-value" id="cer-cnt-iso9001">—</div>
           <div class="cer-stat-meta">มีใบรับรอง</div>
         </div>
-        <div class="cer-stat-card accent" id="cer-stat-iso14001">
+        <div class="cer-stat-card accent" id="cer-stat-iso14001" onclick="filterCerByStat('iso14001')">
           <div class="cer-stat-label">ISO 14001</div>
           <div class="cer-stat-value" id="cer-cnt-iso14001">—</div>
           <div class="cer-stat-meta">มีใบรับรอง</div>
         </div>
-        <div class="cer-stat-card accent" id="cer-stat-iatf">
+        <div class="cer-stat-card accent" id="cer-stat-iatf" onclick="filterCerByStat('iatf')">
           <div class="cer-stat-label">IATF 16949</div>
           <div class="cer-stat-value" id="cer-cnt-iatf">—</div>
           <div class="cer-stat-meta">มีใบรับรอง</div>
         </div>
-        <div class="cer-stat-card warn" id="cer-stat-expiring">
+        <div class="cer-stat-card warn" id="cer-stat-expiring" onclick="filterCerByStat('expiring')">
           <div class="cer-stat-label">⚠️ ใกล้หมดอายุ</div>
           <div class="cer-stat-value" id="cer-cnt-expiring">—</div>
           <div class="cer-stat-meta">ภายใน 90 วัน</div>
         </div>
-        <div class="cer-stat-card progress" id="cer-stat-progress">
+        <div class="cer-stat-card progress" id="cer-stat-progress" onclick="filterCerByStat('progress')">
           <div class="cer-stat-label">🔄 กำลังดำเนินการ</div>
           <div class="cer-stat-value" id="cer-cnt-progress">—</div>
           <div class="cer-stat-meta">อยู่ระหว่างขอ/ต่ออายุ</div>
         </div>
-        <div class="cer-stat-card danger" id="cer-stat-expired">
+        <div class="cer-stat-card danger" id="cer-stat-expired" onclick="filterCerByStat('expired')">
           <div class="cer-stat-label">🔴 หมดอายุแล้ว</div>
           <div class="cer-stat-value" id="cer-cnt-expired">—</div>
           <div class="cer-stat-meta">ต้องดำเนินการ</div>
@@ -2472,6 +2474,30 @@ function getCerFiltered() {
     if (fStatus && cerOverallStatus(r) !== fStatus) return false;
     return true;
   });
+}
+
+function filterCerByStat(type) {
+  document.getElementById('cerSearchInput').value = '';
+  document.getElementById('cerFilterIso9001').value = '';
+  document.getElementById('cerFilterIso14001').value = '';
+  document.getElementById('cerFilterIatf').value = '';
+  document.getElementById('cerFilterStatus').value = '';
+
+  if (type === 'iso9001')       document.getElementById('cerFilterIso9001').value = 'valid';
+  else if (type === 'iso14001') document.getElementById('cerFilterIso14001').value = 'valid';
+  else if (type === 'iatf')     document.getElementById('cerFilterIatf').value = 'valid';
+  else if (type === 'expiring') document.getElementById('cerFilterStatus').value = 'warn';
+  else if (type === 'progress') document.getElementById('cerFilterStatus').value = 'progress';
+  else if (type === 'expired')  document.getElementById('cerFilterStatus').value = 'danger';
+  // type === 'total' → เคลียร์ตัวกรองทั้งหมด แสดงทุกรายการ
+
+  document.querySelectorAll('.cer-stat-card').forEach(el => el.classList.remove('active-filter'));
+  const activeId = { total:'cer-stat-total', iso9001:'cer-stat-iso9001', iso14001:'cer-stat-iso14001',
+                      iatf:'cer-stat-iatf', expiring:'cer-stat-expiring', progress:'cer-stat-progress',
+                      expired:'cer-stat-expired' }[type];
+  if (activeId) document.getElementById(activeId).classList.add('active-filter');
+
+  renderCerTable();
 }
 
 function renderCerStats() {
