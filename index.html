@@ -123,6 +123,12 @@
     text-align: center; flex-shrink: 0;
   }
   .sidebar.collapsed .nav-badge { display: none; }
+  .nav-label-badge {
+    background: var(--danger); color: #fff; font-size: 0.59rem;
+    font-weight: 700; padding: 0.1rem 0.42rem; border-radius: 10px; min-width: 18px;
+    text-align: center; flex-shrink: 0; margin-left: 0.35rem;
+  }
+  .sidebar.collapsed .nav-label-badge { display: none; }
   .sidebar-footer { padding: 0.65rem 0.5rem; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 0; }
   .logout-btn {
     width: 100%; display: flex; align-items: center; gap: 0.7rem; padding: 0.55rem 0.72rem;
@@ -995,7 +1001,7 @@
   <nav class="nav-section">
     <div class="nav-group" id="navGroup-track">
       <div class="nav-label" onclick="toggleNavGroup('track')">
-        <span>ติดตาม PART PR</span><span class="nav-label-chevron">▾</span>
+        <span style="display:flex;align-items:center">ติดตาม PART PR<span class="nav-label-badge" id="navGroupBadge-track" style="display:none">0</span></span><span class="nav-label-chevron">▾</span>
       </div>
       <div class="nav-group-items">
         <button class="nav-item active" id="nav-dashboard" onclick="showPage('dashboard',this)">
@@ -1018,7 +1024,7 @@
 
     <div class="nav-group" id="navGroup-cer">
       <div class="nav-label" onclick="toggleNavGroup('cer')">
-        <span>ติดตามใบ CER</span><span class="nav-label-chevron">▾</span>
+        <span style="display:flex;align-items:center">ติดตามใบ CER<span class="nav-label-badge" id="navGroupBadge-cer" style="display:none">0</span></span><span class="nav-label-chevron">▾</span>
       </div>
       <div class="nav-group-items">
         <button class="nav-item" id="nav-cer" onclick="showPage('cer',this)">
@@ -1570,7 +1576,7 @@
         <div class="cer-stat-card warn" id="cer-stat-expiring" onclick="filterCerByStat('expiring')">
           <div class="cer-stat-label">⚠️ ใกล้หมดอายุ</div>
           <div class="cer-stat-value" id="cer-cnt-expiring">—</div>
-          <div class="cer-stat-meta">ภายใน 90 วัน</div>
+          <div class="cer-stat-meta">ภายใน 30 วัน</div>
         </div>
         <div class="cer-stat-card progress" id="cer-stat-progress" onclick="filterCerByStat('progress')">
           <div class="cer-stat-label">🔄 กำลังดำเนินการ</div>
@@ -1996,6 +2002,28 @@ function buildNotifications() {
     badge.textContent = visible;
   } else { if (badge) badge.remove(); }
 
+  const trackVisibleCount = visibleUrgent.length + visibleWarn.length;
+  const trackGroupBadge = document.getElementById('navGroupBadge-track');
+  if (trackGroupBadge) {
+    if (trackVisibleCount > 0) {
+      trackGroupBadge.textContent = trackVisibleCount;
+      trackGroupBadge.style.display = 'inline-flex';
+    } else {
+      trackGroupBadge.style.display = 'none';
+    }
+  }
+
+  const cerVisibleCount = visibleCerUrgent.length + visibleCerWarn.length;
+  const cerGroupBadge = document.getElementById('navGroupBadge-cer');
+  if (cerGroupBadge) {
+    if (cerVisibleCount > 0) {
+      cerGroupBadge.textContent = cerVisibleCount;
+      cerGroupBadge.style.display = 'inline-flex';
+    } else {
+      cerGroupBadge.style.display = 'none';
+    }
+  }
+
   const list = document.getElementById('notifList');
   if (visible === 0) {
     list.innerHTML = '<div class="notif-empty">✅ ทุกรายการอยู่ในกำหนด</div>';
@@ -2399,7 +2427,7 @@ function cerCertStatus(dateStr, hasStr) {
   const today = new Date();
   const diffDays = Math.ceil((exp - today) / 86400000);
   if (diffDays < 0) return { state: 'danger', label: 'หมดอายุแล้ว' };
-  if (diffDays <= 90) return { state: 'warn', label: `เหลือ ${diffDays} วัน` };
+  if (diffDays <= 30) return { state: 'warn', label: `เหลือ ${diffDays} วัน` };
   return { state: 'ok', label: 'ปกติ' };
 }
 
