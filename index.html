@@ -426,6 +426,9 @@
   .cer-stat-card.accent::before { background: linear-gradient(90deg, var(--accent), var(--accent2)); }
   .cer-stat-card.warn::before { background: linear-gradient(90deg, var(--warn), #fcd34d); }
   .cer-stat-card.danger::before { background: linear-gradient(90deg, var(--danger), #f87171); }
+  .cer-stat-card.progress::before { background: linear-gradient(90deg, #818cf8, var(--accent2)); }
+  .cer-stat-card.progress:hover { border-color: #818cf8; }
+  .cer-stat-card.progress .cer-stat-value { color: #818cf8; }
   .cer-stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 24px rgba(0,0,0,0.25); }
   .cer-stat-card.accent:hover { border-color: var(--accent); }
   .cer-stat-card.warn:hover { border-color: var(--warn); }
@@ -1567,6 +1570,11 @@
           <div class="cer-stat-value" id="cer-cnt-expiring">—</div>
           <div class="cer-stat-meta">ภายใน 90 วัน</div>
         </div>
+        <div class="cer-stat-card progress" id="cer-stat-progress">
+          <div class="cer-stat-label">🔄 กำลังดำเนินการ</div>
+          <div class="cer-stat-value" id="cer-cnt-progress">—</div>
+          <div class="cer-stat-meta">อยู่ระหว่างขอ/ต่ออายุ</div>
+        </div>
         <div class="cer-stat-card danger" id="cer-stat-expired">
           <div class="cer-stat-label">🔴 หมดอายุแล้ว</div>
           <div class="cer-stat-value" id="cer-cnt-expired">—</div>
@@ -1587,6 +1595,7 @@
           <option value="">ISO 9001: ทั้งหมด</option>
           <option value="valid">✅ มีใบรับรอง</option>
           <option value="expiring">⚠️ ใกล้หมดอายุ</option>
+          <option value="progress">🔄 กำลังดำเนินการ</option>
           <option value="expired">🔴 หมดอายุแล้ว</option>
           <option value="none">— ไม่มี</option>
         </select>
@@ -1594,6 +1603,7 @@
           <option value="">ISO 14001: ทั้งหมด</option>
           <option value="valid">✅ มีใบรับรอง</option>
           <option value="expiring">⚠️ ใกล้หมดอายุ</option>
+          <option value="progress">🔄 กำลังดำเนินการ</option>
           <option value="expired">🔴 หมดอายุแล้ว</option>
           <option value="none">— ไม่มี</option>
         </select>
@@ -1601,6 +1611,7 @@
           <option value="">IATF 16949: ทั้งหมด</option>
           <option value="valid">✅ มีใบรับรอง</option>
           <option value="expiring">⚠️ ใกล้หมดอายุ</option>
+          <option value="progress">🔄 กำลังดำเนินการ</option>
           <option value="expired">🔴 หมดอายุแล้ว</option>
           <option value="none">— ไม่มี</option>
         </select>
@@ -1608,6 +1619,7 @@
           <option value="">สถานะ: ทั้งหมด</option>
           <option value="ok">✅ ปกติ</option>
           <option value="warn">⚠️ ใกล้หมดอายุ</option>
+          <option value="progress">🔄 กำลังดำเนินการ</option>
           <option value="danger">🔴 หมดอายุแล้ว</option>
         </select>
       </div>
@@ -1775,6 +1787,7 @@ window.addEventListener('DOMContentLoaded', () => {
   });
   loadData();
   loadSuppliers();
+  loadCerData();
 });
 
 /* ── NAV GROUPS (collapsible) ── */
@@ -1889,6 +1902,9 @@ function notifKey(r) {
   // ไม่ใช้ daysLeft เพราะเปลี่ยนทุกวัน → key จะไม่ตรงกับที่ dismiss ไว้
   return (r.rowIndex || r.partNo) + '';
 }
+function cerNotifKey(r) {
+  return 'cer-' + (r.rowIndex || r.id) + '';
+}
 
 function dismissNotif(key, e) {
   e.stopPropagation();
@@ -1908,8 +1924,35 @@ function clearAllNotifs() {
     }
   });
   [...urgent, ...warn].forEach(r => dismissedNotifs.add(notifKey(r)));
+  cerData.forEach(r => {
+    const st = cerOverallStatus(r);
+    if (st === 'danger' || st === 'warn') dismissedNotifs.add(cerNotifKey(r));
+  });
   localStorage.setItem('dismissedNotifs', JSON.stringify([...dismissedNotifs]));
   buildNotifications();
+}
+
+function cerExpiryLabel(r) {
+  // คืนชื่อใบรับรองและจำนวนวันที่เหลือ/เกิน ของรายการที่หมดอายุ/ใกล้หมดอายุที่สุด
+  const certs = [
+    { label: 'ISO 9001',   date: r.iso9001Date,  has: r.iso9001Has },
+    { label: 'ISO 14001',  date: r.iso14001Date, has: r.iso14001Has },
+    { label: 'IATF 16949', date: r.iatfDate,     has: r.iatfHas }
+  ];
+  let worst = null;
+  certs.forEach(c => {
+    const st = cerCertStatus(c.date, c.has);
+    if (st.state !== 'danger' && st.state !== 'warn') return;
+    if (!worst || (st.state === 'danger' && worst.state !== 'danger')) worst = { ...c, state: st.state };
+  });
+  if (!worst) return { name: '—', sub: '' };
+  const [d,m,y] = worst.date.split('/').map(Number);
+  const diffDays = Math.ceil((new Date(y, m-1, d) - new Date()) / 86400000);
+  return {
+    name: worst.label,
+    state: worst.state,
+    days: diffDays
+  };
 }
 
 function buildNotifications() {
@@ -1922,10 +1965,19 @@ function buildNotifications() {
       else if (d <= 7) warn.push(r);
     }
   });
-  const allNotifs = urgent.length + warn.length;
-  const visibleUrgent = urgent.filter(r => !dismissedNotifs.has(notifKey(r)));
-  const visibleWarn   = warn.filter(r => !dismissedNotifs.has(notifKey(r)));
-  const visible = visibleUrgent.length + visibleWarn.length;
+  const cerUrgent = [], cerWarn = [];
+  cerData.forEach(r => {
+    const st = cerOverallStatus(r);
+    if (st === 'danger') cerUrgent.push(r);
+    else if (st === 'warn') cerWarn.push(r);
+  });
+
+  const allNotifs = urgent.length + warn.length + cerUrgent.length + cerWarn.length;
+  const visibleUrgent    = urgent.filter(r => !dismissedNotifs.has(notifKey(r)));
+  const visibleWarn      = warn.filter(r => !dismissedNotifs.has(notifKey(r)));
+  const visibleCerUrgent = cerUrgent.filter(r => !dismissedNotifs.has(cerNotifKey(r)));
+  const visibleCerWarn   = cerWarn.filter(r => !dismissedNotifs.has(cerNotifKey(r)));
+  const visible = visibleUrgent.length + visibleWarn.length + visibleCerUrgent.length + visibleCerWarn.length;
 
   document.getElementById('notifCount').textContent = visible;
   document.getElementById('notifDot').classList.toggle('show', visible > 0);
@@ -1953,9 +2005,23 @@ function buildNotifications() {
       <button class="notif-dismiss" onclick="dismissNotif('${key}',event)" title="ปิดการแจ้งเตือนนี้">✕</button>
     </div>`;
   };
+  const makeCerItem = (r, iconClass, icon, chipClass, chipText, sub) => {
+    const key = cerNotifKey(r);
+    return `<div class="notif-item" onclick="closeNotif();showPage('cer');setTimeout(()=>openCerModal('${r.rowIndex}'),150)">
+      <div class="notif-icon ${iconClass}">${icon}</div>
+      <div class="notif-body">
+        <div class="notif-name">${r.name}</div>
+        <div class="notif-sub">${r.id} · ${sub}</div>
+        <span class="notif-chip ${chipClass}">${chipText}</span>
+      </div>
+      <button class="notif-dismiss" onclick="dismissNotif('${key}',event)" title="ปิดการแจ้งเตือนนี้">✕</button>
+    </div>`;
+  };
   list.innerHTML = [
     ...visibleUrgent.map(r => makeItem(r, 'red', '🚨', 'red', Number(r.daysLeft) <= 0 ? '⚠️ ครบกำหนดแล้ว!' : `⚠️ เหลือ ${r.daysLeft} วัน`)),
-    ...visibleWarn.map(r   => makeItem(r, 'yellow', '⏰', 'yellow', `⏳ เหลือ ${r.daysLeft} วัน`))
+    ...visibleCerUrgent.map(r => { const ex = cerExpiryLabel(r); return makeCerItem(r, 'red', '📄', 'red', '🔴 หมดอายุแล้ว', `${ex.name} หมดอายุแล้ว ${Math.abs(ex.days)} วัน`); }),
+    ...visibleWarn.map(r   => makeItem(r, 'yellow', '⏰', 'yellow', `⏳ เหลือ ${r.daysLeft} วัน`)),
+    ...visibleCerWarn.map(r => { const ex = cerExpiryLabel(r); return makeCerItem(r, 'yellow', '📄', 'yellow', `⏳ เหลือ ${ex.days} วัน`, `${ex.name} ใกล้หมดอายุ`); })
   ].join('') + (allNotifs > visible ? `<button class="notif-clear-btn" onclick="dismissedNotifs=new Set();localStorage.removeItem('dismissedNotifs');buildNotifications()">🔄 แสดงที่ปิดไปแล้วทั้งหมด (${allNotifs - visible} รายการ)</button>` : '')
     + (visible > 1 ? `<button class="notif-clear-btn" onclick="clearAllNotifs()">✕ ปิดทั้งหมด</button>` : '');
 }
@@ -2308,15 +2374,16 @@ function sortTable(col) {
 
 /* ── CER (ใบรับรอง ISO) ── */
 const CER_DEMO = [
-  { id:'CC-001', name:'เจริญลาภ อินดัสทรี',  iso9001Date:'15/9/2026', iso14001Date:'02/3/2027', iatfDate:'',          rowIndex:2 },
-  { id:'CC-002', name:'KOBAYU (THAILAND)',    iso9001Date:'28/7/2026', iso14001Date:'',          iatfDate:'10/8/2026', rowIndex:3 },
-  { id:'CC-003', name:'ยูเนี่ยน เมททอล',       iso9001Date:'01/1/2027', iso14001Date:'20/11/2026',iatfDate:'20/11/2026',rowIndex:4 },
-  { id:'CC-004', name:'สยามพาร์ท แมนูแฟคเจอริ่ง', iso9001Date:'12/6/2026', iso14001Date:'12/6/2026', iatfDate:'',     rowIndex:5 },
-  { id:'CC-005', name:'ไทยเทค คอมโพเนนท์',     iso9001Date:'',         iso14001Date:'05/4/2027', iatfDate:'05/4/2027',rowIndex:6 },
+  { id:'CC-001', name:'เจริญลาภ อินดัสทรี',  iso9001Date:'15/9/2026', iso9001Has:'มี', iso14001Date:'02/3/2027', iso14001Has:'มี', iatfDate:'',          iatfHas:'ไม่มี', rowIndex:2 },
+  { id:'CC-002', name:'KOBAYU (THAILAND)',    iso9001Date:'28/7/2026', iso9001Has:'มี', iso14001Date:'',          iso14001Has:'ไม่มี', iatfDate:'10/8/2026', iatfHas:'มี', rowIndex:3 },
+  { id:'CC-003', name:'ยูเนี่ยน เมททอล',       iso9001Date:'01/1/2027', iso9001Has:'มี', iso14001Date:'20/11/2026',iso14001Has:'มี',iatfDate:'20/11/2026',iatfHas:'มี',rowIndex:4 },
+  { id:'CC-004', name:'สยามพาร์ท แมนูแฟคเจอริ่ง', iso9001Date:'12/6/2026', iso9001Has:'มี', iso14001Date:'12/6/2026', iso14001Has:'กำลังติดตาม', iatfDate:'',     iatfHas:'ไม่มี', rowIndex:5 },
+  { id:'CC-005', name:'ไทยเทค คอมโพเนนท์',     iso9001Date:'',         iso9001Has:'ไม่มี', iso14001Date:'05/4/2027', iso14001Has:'มี', iatfDate:'05/4/2027',iatfHas:'มี',rowIndex:6 },
 ];
 
-function cerCertStatus(dateStr) {
-  // returns { state: 'none'|'ok'|'warn'|'danger', label }
+function cerCertStatus(dateStr, hasStr) {
+  // returns { state: 'none'|'ok'|'warn'|'danger'|'progress', label }
+  if (hasStr && String(hasStr).includes('กำลัง')) return { state: 'progress', label: 'กำลังดำเนินการ' };
   if (!dateStr) return { state: 'none', label: '—' };
   const [d,m,y] = dateStr.split('/').map(Number);
   if (!d || !m || !y) return { state: 'none', label: '—' };
@@ -2328,18 +2395,24 @@ function cerCertStatus(dateStr) {
   return { state: 'ok', label: 'ปกติ' };
 }
 
-function cerBadge(dateStr) {
-  if (!dateStr) return `<span class="badge" style="background:rgba(100,116,139,0.1);color:var(--muted);border:1px solid rgba(100,116,139,0.15)">— ไม่มี</span>`;
-  const st = cerCertStatus(dateStr);
-  if (st.state === 'danger') return `<span class="badge badge-incomplete">🔴 หมดอายุ</span>`;
-  if (st.state === 'warn')   return `<span class="badge badge-progress">⚠️ ใกล้หมดอายุ</span>`;
+function cerBadge(dateStr, hasStr) {
+  const st = cerCertStatus(dateStr, hasStr);
+  if (st.state === 'progress') return `<span class="badge" style="background:rgba(129,140,248,0.12);color:#818cf8;border:1px solid rgba(129,140,248,0.25)">🔄 กำลังดำเนินการ</span>`;
+  if (st.state === 'none')     return `<span class="badge" style="background:rgba(100,116,139,0.1);color:var(--muted);border:1px solid rgba(100,116,139,0.15)">— ไม่มี</span>`;
+  if (st.state === 'danger')   return `<span class="badge badge-incomplete">🔴 หมดอายุ</span>`;
+  if (st.state === 'warn')     return `<span class="badge badge-progress">⚠️ ใกล้หมดอายุ</span>`;
   return `<span class="badge badge-done">✅ ปกติ</span>`;
 }
 
 function cerOverallStatus(r) {
-  const states = [r.iso9001Date, r.iso14001Date, r.iatfDate].map(cerCertStatus).map(s => s.state);
-  if (states.includes('danger')) return 'danger';
-  if (states.includes('warn')) return 'warn';
+  const states = [
+    cerCertStatus(r.iso9001Date,  r.iso9001Has).state,
+    cerCertStatus(r.iso14001Date, r.iso14001Has).state,
+    cerCertStatus(r.iatfDate,     r.iatfHas).state
+  ];
+  if (states.includes('danger'))   return 'danger';
+  if (states.includes('warn'))     return 'warn';
+  if (states.includes('progress')) return 'progress';
   return 'ok';
 }
 
@@ -2347,6 +2420,7 @@ async function loadCerData() {
   if (!WEB_APP_URL) {
     const local = JSON.parse(localStorage.getItem('cer_data') || 'null');
     cerData = local || CER_DEMO;
+    buildNotifications();
     return;
   }
   try {
@@ -2364,6 +2438,7 @@ async function loadCerData() {
     document.getElementById('cerFetchErrorText').textContent = 'ดึงข้อมูลจาก Sheet ไม่สำเร็จ — แสดงข้อมูลสำรอง';
     document.getElementById('cerFetchError').style.display = 'block';
   }
+  buildNotifications();
 }
 
 async function loadCerPage() {
@@ -2381,18 +2456,19 @@ function getCerFiltered() {
 
   return cerData.filter(r => {
     if (q && !(r.name.toLowerCase().includes(q) || r.id.toLowerCase().includes(q))) return false;
-    const checkCol = (filterVal, dateStr) => {
+    const checkCol = (filterVal, dateStr, hasStr) => {
       if (!filterVal) return true;
-      const st = cerCertStatus(dateStr).state;
+      const st = cerCertStatus(dateStr, hasStr).state;
       if (filterVal === 'valid') return st === 'ok' || st === 'warn';
       if (filterVal === 'expiring') return st === 'warn';
+      if (filterVal === 'progress') return st === 'progress';
       if (filterVal === 'expired') return st === 'danger';
       if (filterVal === 'none') return st === 'none';
       return true;
     };
-    if (!checkCol(f9001, r.iso9001Date)) return false;
-    if (!checkCol(f14001, r.iso14001Date)) return false;
-    if (!checkCol(fIatf, r.iatfDate)) return false;
+    if (!checkCol(f9001, r.iso9001Date, r.iso9001Has)) return false;
+    if (!checkCol(f14001, r.iso14001Date, r.iso14001Has)) return false;
+    if (!checkCol(fIatf, r.iatfDate, r.iatfHas)) return false;
     if (fStatus && cerOverallStatus(r) !== fStatus) return false;
     return true;
   });
@@ -2404,12 +2480,14 @@ function renderCerStats() {
   const has14001 = cerData.filter(r => r.iso14001Date).length;
   const hasIatf = cerData.filter(r => r.iatfDate).length;
   const expiring = cerData.filter(r => cerOverallStatus(r) === 'warn').length;
+  const inProgress = cerData.filter(r => cerOverallStatus(r) === 'progress').length;
   const expired = cerData.filter(r => cerOverallStatus(r) === 'danger').length;
   document.getElementById('cer-cnt-total').textContent = total;
   document.getElementById('cer-cnt-iso9001').textContent = has9001;
   document.getElementById('cer-cnt-iso14001').textContent = has14001;
   document.getElementById('cer-cnt-iatf').textContent = hasIatf;
   document.getElementById('cer-cnt-expiring').textContent = expiring;
+  document.getElementById('cer-cnt-progress').textContent = inProgress;
   document.getElementById('cer-cnt-expired').textContent = expired;
 }
 
@@ -2431,17 +2509,18 @@ function renderCerTable() {
   const tbody = document.getElementById('cerTableBody');
   tbody.innerHTML = rows.length ? rows.map(r => {
     const overall = cerOverallStatus(r);
-    const overallBadge = overall === 'danger' ? `<span class="badge badge-incomplete">🔴 หมดอายุแล้ว</span>`
-                        : overall === 'warn'   ? `<span class="badge badge-progress">⚠️ ใกล้หมดอายุ</span>`
+    const overallBadge = overall === 'danger'   ? `<span class="badge badge-incomplete">🔴 หมดอายุแล้ว</span>`
+                        : overall === 'warn'     ? `<span class="badge badge-progress">⚠️ ใกล้หมดอายุ</span>`
+                        : overall === 'progress' ? `<span class="badge" style="background:rgba(129,140,248,0.12);color:#818cf8;border:1px solid rgba(129,140,248,0.25)">🔄 กำลังดำเนินการ</span>`
                         : `<span class="badge badge-done">✅ ปกติ</span>`;
     return `<tr>
       <td class="no-num">${r.id}</td>
       <td class="part-name">${r.name}</td>
-      <td>${cerBadge(r.iso9001Date)}</td>
+      <td>${cerBadge(r.iso9001Date, r.iso9001Has)}</td>
       <td class="date-cell">${r.iso9001Date || '—'}</td>
-      <td>${cerBadge(r.iso14001Date)}</td>
+      <td>${cerBadge(r.iso14001Date, r.iso14001Has)}</td>
       <td class="date-cell">${r.iso14001Date || '—'}</td>
-      <td>${cerBadge(r.iatfDate)}</td>
+      <td>${cerBadge(r.iatfDate, r.iatfHas)}</td>
       <td class="date-cell">${r.iatfDate || '—'}</td>
       <td>${overallBadge}</td>
       <td><div class="row-actions" style="opacity:1">
