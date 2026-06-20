@@ -2419,15 +2419,22 @@ const CER_DEMO = [
 
 function cerCertStatus(dateStr, hasStr) {
   // returns { state: 'none'|'ok'|'warn'|'danger'|'progress', label }
-  if (hasStr && String(hasStr).includes('กำลัง')) return { state: 'progress', label: 'กำลังดำเนินการ' };
-  if (!dateStr) return { state: 'none', label: '—' };
+  const isProgress = hasStr && String(hasStr).includes('กำลัง');
+  if (!dateStr) {
+    if (isProgress) return { state: 'progress', label: 'กำลังดำเนินการ' };
+    return { state: 'none', label: '—' };
+  }
   const [d,m,y] = dateStr.split('/').map(Number);
-  if (!d || !m || !y) return { state: 'none', label: '—' };
+  if (!d || !m || !y) {
+    if (isProgress) return { state: 'progress', label: 'กำลังดำเนินการ' };
+    return { state: 'none', label: '—' };
+  }
   const exp = new Date(y, m-1, d);
   const today = new Date();
   const diffDays = Math.ceil((exp - today) / 86400000);
   if (diffDays < 0) return { state: 'danger', label: 'หมดอายุแล้ว' };
   if (diffDays <= 30) return { state: 'warn', label: `เหลือ ${diffDays} วัน` };
+  if (isProgress) return { state: 'progress', label: 'กำลังดำเนินการ' };
   return { state: 'ok', label: 'ปกติ' };
 }
 
