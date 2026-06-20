@@ -1627,7 +1627,7 @@
           <option value="">สถานะ: ทั้งหมด</option>
           <option value="ok">✅ ปกติ</option>
           <option value="warn">⚠️ ใกล้หมดอายุ</option>
-          <option value="progress">🔄 กำลังติดตาม</option>
+          <option value="tracking">🔄 กำลังติดตาม</option>
           <option value="danger">🔴 หมดอายุแล้ว</option>
         </select>
       </div>
@@ -2455,6 +2455,11 @@ function cerBadge(dateStr, hasStr) {
   return `<span class="badge badge-done">✅ ปกติ</span>`;
 }
 
+function cerHasTrackingStatus(r) {
+  // เช็คตรงๆว่าบริษัทนี้มีใบรับรองใบใดถูกตั้งสถานะ "กำลังติดตาม" หรือไม่ ไม่สนวันหมดอายุ
+  return [r.iso9001Has, r.iso14001Has, r.iatfHas].some(h => h && String(h).includes('กำลัง'));
+}
+
 function cerOverallStatus(r) {
   // สถานะรวม (คอลัมน์ "สถานะ" + การ์ดสรุป/แจ้งเตือน) — เช็คจากวันหมดอายุจริงของทุกใบ ไม่ให้สถานะ "กำลังติดตาม" บังวันที่หมดอายุแล้ว
   const states = [
@@ -2526,7 +2531,9 @@ function getCerFiltered() {
     if (!checkCol(f9001, r.iso9001Date, r.iso9001Has)) return false;
     if (!checkCol(f14001, r.iso14001Date, r.iso14001Has)) return false;
     if (!checkCol(fIatf, r.iatfDate, r.iatfHas)) return false;
-    if (fStatus && cerOverallStatus(r) !== fStatus) return false;
+    if (fStatus === 'tracking') {
+      if (!cerHasTrackingStatus(r)) return false;
+    } else if (fStatus && cerOverallStatus(r) !== fStatus) return false;
     return true;
   });
 }
@@ -2542,7 +2549,7 @@ function filterCerByStat(type) {
   else if (type === 'iso14001') document.getElementById('cerFilterIso14001').value = 'valid';
   else if (type === 'iatf')     document.getElementById('cerFilterIatf').value = 'valid';
   else if (type === 'expiring') document.getElementById('cerFilterStatus').value = 'warn';
-  else if (type === 'progress') document.getElementById('cerFilterStatus').value = 'progress';
+  else if (type === 'progress') document.getElementById('cerFilterStatus').value = 'tracking';
   else if (type === 'expired')  document.getElementById('cerFilterStatus').value = 'danger';
   // type === 'total' → เคลียร์ตัวกรองทั้งหมด แสดงทุกรายการ
 
@@ -2562,7 +2569,7 @@ function renderCerStats() {
   const has14001 = cerData.filter(r => r.iso14001Date).length;
   const hasIatf = cerData.filter(r => r.iatfDate).length;
   const expiring = cerData.filter(r => cerOverallStatus(r) === 'warn').length;
-  const inProgress = cerData.filter(r => cerOverallStatus(r) === 'progress').length;
+  const inProgress = cerData.filter(r => cerHasTrackingStatus(r)).length;
   const expired = cerData.filter(r => cerOverallStatus(r) === 'danger').length;
   document.getElementById('cer-cnt-total').textContent = total;
   document.getElementById('cer-cnt-iso9001').textContent = has9001;
