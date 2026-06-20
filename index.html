@@ -2397,7 +2397,7 @@ function cerCertStatus(dateStr, hasStr) {
 
 function cerBadge(dateStr, hasStr) {
   const st = cerCertStatus(dateStr, hasStr);
-  if (st.state === 'progress') return `<span class="badge" style="background:rgba(129,140,248,0.12);color:#818cf8;border:1px solid rgba(129,140,248,0.25)">🔄 กำลังดำเนินการ</span>`;
+  if (st.state === 'progress') return `<span class="badge" style="background:rgba(129,140,248,0.12);color:#818cf8;border:1px solid rgba(129,140,248,0.25)">🔄 กำลังติดตาม</span>`;
   if (st.state === 'none')     return `<span class="badge" style="background:rgba(100,116,139,0.1);color:var(--muted);border:1px solid rgba(100,116,139,0.15)">— ไม่มี</span>`;
   if (st.state === 'danger')   return `<span class="badge badge-incomplete">🔴 หมดอายุ</span>`;
   if (st.state === 'warn')     return `<span class="badge badge-progress">⚠️ ใกล้หมดอายุ</span>`;
@@ -2549,10 +2549,16 @@ function openCerModal(rowIndex) {
     document.getElementById('cer-iso9001Date').value = r.iso9001Date || '';
     document.getElementById('cer-iso14001Date').value = r.iso14001Date || '';
     document.getElementById('cer-iatfDate').value = r.iatfDate || '';
+    document.getElementById('cer-iso9001Has').value  = r.iso9001Has  || (r.iso9001Date ? 'มี' : 'ไม่มี');
+    document.getElementById('cer-iso14001Has').value = r.iso14001Has || (r.iso14001Date ? 'มี' : 'ไม่มี');
+    document.getElementById('cer-iatfHas').value     = r.iatfHas     || (r.iatfDate ? 'มี' : 'ไม่มี');
   } else {
     document.getElementById('cerModalTitle').textContent = '📄 เพิ่มบริษัท';
     ['id','name','iso9001Date','iso14001Date','iatfDate'].forEach(f => {
       document.getElementById('cer-'+f).value = '';
+    });
+    ['cer-iso9001Has','cer-iso14001Has','cer-iatfHas'].forEach(id => {
+      document.getElementById(id).value = 'ไม่มี';
     });
   }
   document.getElementById('cerModalOverlay').classList.add('open');
@@ -2571,7 +2577,10 @@ async function saveCer() {
     name,
     iso9001Date:  document.getElementById('cer-iso9001Date').value.trim(),
     iso14001Date: document.getElementById('cer-iso14001Date').value.trim(),
-    iatfDate:     document.getElementById('cer-iatfDate').value.trim()
+    iatfDate:     document.getElementById('cer-iatfDate').value.trim(),
+    iso9001Has:   document.getElementById('cer-iso9001Has').value,
+    iso14001Has:  document.getElementById('cer-iso14001Has').value,
+    iatfHas:      document.getElementById('cer-iatfHas').value
   };
 
   if (!WEB_APP_URL) {
@@ -4001,8 +4010,32 @@ function renderLeadTime() {
       <div class="form-grid">
         <div class="form-group"><label class="form-label">ID</label><input type="text" class="form-input" id="cer-id" placeholder="เช่น CC-006"></div>
         <div class="form-group full"><label class="form-label">ชื่อบริษัท *</label><input type="text" class="form-input" id="cer-name" placeholder="เช่น KOBAYU (THAILAND)"></div>
+
+        <div class="form-group"><label class="form-label">ISO 9001 สถานะ</label>
+          <select class="form-input" id="cer-iso9001Has">
+            <option value="มี">✅ มี</option>
+            <option value="ไม่มี">— ไม่มี</option>
+            <option value="กำลังติดตาม">🔄 กำลังติดตาม</option>
+          </select>
+        </div>
         <div class="form-group"><label class="form-label">ISO 9001 วันหมดอายุ</label><input type="text" class="form-input" id="cer-iso9001Date" placeholder="วว/ดด/ปปปป เช่น 28/7/2026"></div>
+
+        <div class="form-group"><label class="form-label">ISO 14001 สถานะ</label>
+          <select class="form-input" id="cer-iso14001Has">
+            <option value="มี">✅ มี</option>
+            <option value="ไม่มี">— ไม่มี</option>
+            <option value="กำลังติดตาม">🔄 กำลังติดตาม</option>
+          </select>
+        </div>
         <div class="form-group"><label class="form-label">ISO 14001 วันหมดอายุ</label><input type="text" class="form-input" id="cer-iso14001Date" placeholder="วว/ดด/ปปปป"></div>
+
+        <div class="form-group"><label class="form-label">IATF 16949 สถานะ</label>
+          <select class="form-input" id="cer-iatfHas">
+            <option value="มี">✅ มี</option>
+            <option value="ไม่มี">— ไม่มี</option>
+            <option value="กำลังติดตาม">🔄 กำลังติดตาม</option>
+          </select>
+        </div>
         <div class="form-group"><label class="form-label">IATF 16949 วันหมดอายุ</label><input type="text" class="form-input" id="cer-iatfDate" placeholder="วว/ดด/ปปปป"></div>
       </div>
     </div>
