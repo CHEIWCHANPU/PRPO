@@ -1591,9 +1591,9 @@
       <div class="toolbar">
         <div class="search-box">
           <span class="search-icon">🔍</span>
-          <input type="text" id="cerSearchInput" placeholder="ค้นหาชื่อบริษัท หรือ ID..." oninput="renderCerTable()">
+          <input type="text" id="cerSearchInput" placeholder="ค้นหาชื่อบริษัท หรือ ID..." oninput="cerCurrentPage=1;renderCerTable()">
         </div>
-        <select class="filter-select" id="cerFilterIso9001" onchange="renderCerTable()">
+        <select class="filter-select" id="cerFilterIso9001" onchange="cerCurrentPage=1;renderCerTable()">
           <option value="">ISO 9001: ทั้งหมด</option>
           <option value="valid">✅ มีใบรับรอง</option>
           <option value="expiring">⚠️ ใกล้หมดอายุ</option>
@@ -1601,7 +1601,7 @@
           <option value="expired">🔴 หมดอายุแล้ว</option>
           <option value="none">— ไม่มี</option>
         </select>
-        <select class="filter-select" id="cerFilterIso14001" onchange="renderCerTable()">
+        <select class="filter-select" id="cerFilterIso14001" onchange="cerCurrentPage=1;renderCerTable()">
           <option value="">ISO 14001: ทั้งหมด</option>
           <option value="valid">✅ มีใบรับรอง</option>
           <option value="expiring">⚠️ ใกล้หมดอายุ</option>
@@ -1609,7 +1609,7 @@
           <option value="expired">🔴 หมดอายุแล้ว</option>
           <option value="none">— ไม่มี</option>
         </select>
-        <select class="filter-select" id="cerFilterIatf" onchange="renderCerTable()">
+        <select class="filter-select" id="cerFilterIatf" onchange="cerCurrentPage=1;renderCerTable()">
           <option value="">IATF 16949: ทั้งหมด</option>
           <option value="valid">✅ มีใบรับรอง</option>
           <option value="expiring">⚠️ ใกล้หมดอายุ</option>
@@ -1617,7 +1617,7 @@
           <option value="expired">🔴 หมดอายุแล้ว</option>
           <option value="none">— ไม่มี</option>
         </select>
-        <select class="filter-select" id="cerFilterStatus" onchange="renderCerTable()">
+        <select class="filter-select" id="cerFilterStatus" onchange="cerCurrentPage=1;renderCerTable()">
           <option value="">สถานะ: ทั้งหมด</option>
           <option value="ok">✅ ปกติ</option>
           <option value="warn">⚠️ ใกล้หมดอายุ</option>
@@ -1642,6 +1642,10 @@
           </tr></thead>
           <tbody id="cerTableBody"><tr><td colspan="10" class="empty"><div class="spinner" style="margin:0 auto"></div></td></tr></tbody>
         </table>
+        <div class="table-footer">
+          <span id="cerTableInfo">—</span>
+          <div class="pagination" id="cerPagination"></div>
+        </div>
       </div>
     </div>
 
@@ -1739,6 +1743,8 @@ let activeMonthTab = null;
 let cerData = [];
 let cerSortCol = 'name';
 let cerSortDir = 'asc';
+let cerCurrentPage = 1;
+const cerPerPage = 15;
 
 const DEMO = [
   { no:1,  partNo:'11057-1778B',        partName:'BRACKET',       model:'8901/8951', volume:250,  prDate:'7/6/2026',  dueDate:'13/6/2026', actualDate:'13/6/2026', location:'CCIR', status:'เสร็จแล้ว ✅',       maker:'เจริญลาภ',    daysLeft:'Done', poNo:'', note:'', prLink:'', rowIndex:6 },
@@ -2497,6 +2503,7 @@ function filterCerByStat(type) {
                       expired:'cer-stat-expired' }[type];
   if (activeId) document.getElementById(activeId).classList.add('active-filter');
 
+  cerCurrentPage = 1;
   renderCerTable();
 }
 
@@ -2522,7 +2529,11 @@ function renderCerTable() {
   let rows = getCerFiltered();
   rows.sort((a,b) => {
     let va, vb;
-    if (cerSortCol.endsWith('Date')) {
+    if (cerSortCol === 'id') {
+      const na = parseFloat(a.id), nb = parseFloat(b.id);
+      if (!isNaN(na) && !isNaN(nb)) { va = na; vb = nb; }
+      else { va = String(a.id||'').toLowerCase(); vb = String(b.id||'').toLowerCase(); }
+    } else if (cerSortCol.endsWith('Date')) {
       const toTime = s => { if (!s) return Infinity; const [d,m,y]=s.split('/').map(Number); return new Date(y,m-1,d).getTime(); };
       va = toTime(a[cerSortCol]); vb = toTime(b[cerSortCol]);
     } else {
@@ -2532,8 +2543,14 @@ function renderCerTable() {
     return cerSortDir === 'asc' ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
   });
 
+  const total = rows.length;
+  const pages = Math.ceil(total / cerPerPage) || 1;
+  cerCurrentPage = Math.min(cerCurrentPage, pages);
+  const start = (cerCurrentPage - 1) * cerPerPage;
+  const pageRows = rows.slice(start, start + cerPerPage);
+
   const tbody = document.getElementById('cerTableBody');
-  tbody.innerHTML = rows.length ? rows.map(r => {
+  tbody.innerHTML = pageRows.length ? pageRows.map(r => {
     const overall = cerOverallStatus(r);
     const overallBadge = overall === 'danger'   ? `<span class="badge badge-incomplete">🔴 หมดอายุแล้ว</span>`
                         : overall === 'warn'     ? `<span class="badge badge-progress">⚠️ ใกล้หมดอายุ</span>`
@@ -2555,11 +2572,34 @@ function renderCerTable() {
       </div></td>
     </tr>`;
   }).join('') : `<tr><td colspan="10" class="empty"><div class="empty-icon">🔍</div><div class="empty-title">ไม่พบรายการที่ค้นหา</div><div class="empty-sub">ลองเปลี่ยนตัวกรองหรือคำค้นหา</div></td></tr>`;
+
+  document.getElementById('cerTableInfo').textContent = total > 0 ? `แสดง ${start+1}–${Math.min(start+cerPerPage,total)} จาก ${total} รายการ` : 'ไม่พบรายการ';
+  renderCerPagination(pages);
+}
+
+function renderCerPagination(pages) {
+  const el = document.getElementById('cerPagination'); el.innerHTML = '';
+  if (pages <= 1) return;
+  const addBtn = (label, page, disabled, active) => {
+    const btn = document.createElement('button');
+    btn.className = 'page-btn' + (active ? ' active' : '');
+    btn.textContent = label; btn.disabled = disabled;
+    if (!disabled) btn.onclick = () => { cerCurrentPage = page; renderCerTable(); };
+    el.appendChild(btn);
+  };
+  addBtn('«', 1, cerCurrentPage === 1, false);
+  addBtn('‹', cerCurrentPage - 1, cerCurrentPage === 1, false);
+  for (let i = Math.max(1, cerCurrentPage-2); i <= Math.min(pages, cerCurrentPage+2); i++) {
+    addBtn(i, i, false, i === cerCurrentPage);
+  }
+  addBtn('›', cerCurrentPage + 1, cerCurrentPage === pages, false);
+  addBtn('»', pages, cerCurrentPage === pages, false);
 }
 
 function sortCerTable(col) {
   if (cerSortCol === col) cerSortDir = cerSortDir === 'asc' ? 'desc' : 'asc';
   else { cerSortCol = col; cerSortDir = 'asc'; }
+  cerCurrentPage = 1;
   renderCerTable();
 }
 
