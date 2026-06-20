@@ -1579,9 +1579,9 @@
           <div class="cer-stat-meta">ภายใน 30 วัน</div>
         </div>
         <div class="cer-stat-card progress" id="cer-stat-progress" onclick="filterCerByStat('progress')">
-          <div class="cer-stat-label">🔄 กำลังดำเนินการ</div>
+          <div class="cer-stat-label">🔄 กำลังติดตาม</div>
           <div class="cer-stat-value" id="cer-cnt-progress">—</div>
-          <div class="cer-stat-meta">อยู่ระหว่างขอ/ต่ออายุ</div>
+          <div class="cer-stat-meta">กำลังติดตามกี่รายการ</div>
         </div>
         <div class="cer-stat-card danger" id="cer-stat-expired" onclick="filterCerByStat('expired')">
           <div class="cer-stat-label">🔴 หมดอายุแล้ว</div>
@@ -1603,7 +1603,7 @@
           <option value="">ISO 9001: ทั้งหมด</option>
           <option value="valid">✅ มีใบรับรอง</option>
           <option value="expiring">⚠️ ใกล้หมดอายุ</option>
-          <option value="progress">🔄 กำลังดำเนินการ</option>
+          <option value="progress">🔄 กำลังติดตาม</option>
           <option value="expired">🔴 หมดอายุแล้ว</option>
           <option value="none">— ไม่มี</option>
         </select>
@@ -1611,7 +1611,7 @@
           <option value="">ISO 14001: ทั้งหมด</option>
           <option value="valid">✅ มีใบรับรอง</option>
           <option value="expiring">⚠️ ใกล้หมดอายุ</option>
-          <option value="progress">🔄 กำลังดำเนินการ</option>
+          <option value="progress">🔄 กำลังติดตาม</option>
           <option value="expired">🔴 หมดอายุแล้ว</option>
           <option value="none">— ไม่มี</option>
         </select>
@@ -1619,7 +1619,7 @@
           <option value="">IATF 16949: ทั้งหมด</option>
           <option value="valid">✅ มีใบรับรอง</option>
           <option value="expiring">⚠️ ใกล้หมดอายุ</option>
-          <option value="progress">🔄 กำลังดำเนินการ</option>
+          <option value="progress">🔄 กำลังติดตาม</option>
           <option value="expired">🔴 หมดอายุแล้ว</option>
           <option value="none">— ไม่มี</option>
         </select>
@@ -1627,7 +1627,7 @@
           <option value="">สถานะ: ทั้งหมด</option>
           <option value="ok">✅ ปกติ</option>
           <option value="warn">⚠️ ใกล้หมดอายุ</option>
-          <option value="progress">🔄 กำลังดำเนินการ</option>
+          <option value="progress">🔄 กำลังติดตาม</option>
           <option value="danger">🔴 หมดอายุแล้ว</option>
         </select>
       </div>
@@ -1995,14 +1995,15 @@ function buildNotifications() {
 
   document.getElementById('notifCount').textContent = visible;
   document.getElementById('notifDot').classList.toggle('show', visible > 0);
-  const navList = document.getElementById('nav-list');
-  let badge = navList.querySelector('.nav-badge');
-  if (visible > 0) {
-    if (!badge) { badge = document.createElement('span'); badge.className = 'nav-badge'; navList.appendChild(badge); }
-    badge.textContent = visible;
-  } else { if (badge) badge.remove(); }
 
   const trackVisibleCount = visibleUrgent.length + visibleWarn.length;
+  const navList = document.getElementById('nav-list');
+  let badge = navList.querySelector('.nav-badge');
+  if (trackVisibleCount > 0) {
+    if (!badge) { badge = document.createElement('span'); badge.className = 'nav-badge'; navList.appendChild(badge); }
+    badge.textContent = trackVisibleCount;
+  } else { if (badge) badge.remove(); }
+
   const trackGroupBadge = document.getElementById('navGroupBadge-track');
   if (trackGroupBadge) {
     if (trackVisibleCount > 0) {
@@ -2420,7 +2421,7 @@ const CER_DEMO = [
 function cerCertStatus(dateStr, hasStr) {
   // returns { state: 'none'|'ok'|'warn'|'danger'|'progress', label }
   // ใช้สำหรับ badge ของแต่ละใบรับรอง (ISO 9001 / ISO 14001 / IATF) — ยึดตามสถานะที่กรอกไว้
-  if (hasStr && String(hasStr).includes('กำลัง')) return { state: 'progress', label: 'กำลังดำเนินการ' };
+  if (hasStr && String(hasStr).includes('กำลัง')) return { state: 'progress', label: 'กำลังติดตาม' };
   if (!dateStr) return { state: 'none', label: '—' };
   const [d,m,y] = dateStr.split('/').map(Number);
   if (!d || !m || !y) return { state: 'none', label: '—' };
@@ -2602,7 +2603,7 @@ function renderCerTable() {
     const overall = cerOverallStatus(r);
     const overallBadge = overall === 'danger'   ? `<span class="badge badge-incomplete">🔴 หมดอายุแล้ว</span>`
                         : overall === 'warn'     ? `<span class="badge badge-progress">⚠️ ใกล้หมดอายุ</span>`
-                        : overall === 'progress' ? `<span class="badge" style="background:rgba(129,140,248,0.12);color:#818cf8;border:1px solid rgba(129,140,248,0.25)">🔄 กำลังดำเนินการ</span>`
+                        : overall === 'progress' ? `<span class="badge" style="background:rgba(129,140,248,0.12);color:#818cf8;border:1px solid rgba(129,140,248,0.25)">🔄 กำลังติดตาม</span>`
                         : `<span class="badge badge-done">✅ ปกติ</span>`;
     return `<tr>
       <td class="no-num">${r.id}</td>
