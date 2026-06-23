@@ -1695,6 +1695,7 @@
         <div class="form-group full">
           <label class="form-label">📎 เอกสาร PR / ใบเสนอราคา</label>
           <input type="hidden" id="f-prLink">
+          <input type="hidden" id="f-prFileName">
           <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap">
             <input type="file" id="f-prFile" class="form-input" style="flex:1;min-width:200px;padding:0.5rem" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx" onchange="handlePrFileUpload(event)">
             <button type="button" class="btn btn-ghost" id="f-prFile-clearBtn" style="display:none;padding:0.4rem 0.8rem;font-size:0.78rem" onclick="clearPrFile()">ลบไฟล์</button>
@@ -2391,6 +2392,7 @@ function renderTable() {
       <td>${daysTag(r.daysLeft, r.status)}</td>
       <td style="font-family:var(--mono);font-size:0.69rem;color:var(--muted)">${r.poNo||'—'}</td>
       <td><div class="row-actions" onclick="event.stopPropagation()">
+        ${r.prLink ? `<button class="icon-btn" onclick="window.open('${r.prLink}','_blank')" title="${r.prFileName ? 'เปิดไฟล์: ' + r.prFileName : 'เปิดเอกสาร PR'}" style="color:#e53e3e">📄</button>` : ''}
         <button class="icon-btn" onclick="openEditModal(${JSON.stringify(r).replace(/"/g,'&quot;')})" title="แก้ไข">✏️</button>
         <button class="icon-btn del" onclick="deleteItem(${r.rowIndex})" title="ลบ">🗑️</button>
       </div></td>
@@ -3067,7 +3069,7 @@ function openAddModal() {
   editingItem = null;
   document.getElementById('modalTitle').textContent = '➕ เพิ่มรายการใหม่';
   document.getElementById('editRowIndex').value = '';
-  ['partNo','partName','model','volume','receivedQty','prDate','dueDate','actualDate','poNo','note','prLink'].forEach(f => { document.getElementById('f-' + f).value = ''; });
+  ['partNo','partName','model','volume','receivedQty','prDate','dueDate','actualDate','poNo','note','prLink','prFileName'].forEach(f => { document.getElementById('f-' + f).value = ''; });
   document.getElementById('f-status').value = 'กำลังดำเนินการ ♻';
   document.getElementById('f-location').value = 'CCIS';
   document.getElementById('f-maker').value = '';
@@ -3080,8 +3082,8 @@ function openEditModal(item) {
   editingItem = item;
   document.getElementById('modalTitle').textContent = '✏️ แก้ไขรายการ';
   document.getElementById('editRowIndex').value = item.rowIndex;
-  ['partNo','partName','model','volume','receivedQty','prDate','dueDate','actualDate','location','status','maker','poNo','note','prLink'].forEach(f => { document.getElementById('f-' + f).value = item[f] || ''; });
-  resetPrFileField(item.prLink);
+  ['partNo','partName','model','volume','receivedQty','prDate','dueDate','actualDate','location','status','maker','poNo','note','prLink','prFileName'].forEach(f => { document.getElementById('f-' + f).value = item[f] || ''; });
+  resetPrFileField(item.prLink, item.prFileName);
   document.getElementById('modalOverlay').classList.add('open');
   clearFormErrors();
 }
@@ -3091,17 +3093,20 @@ function closeModal() { document.getElementById('modalOverlay').classList.remove
 const PR_FILE_ALLOWED_EXT = ['pdf','jpg','jpeg','png','webp','doc','docx','xls','xlsx'];
 const PR_FILE_MAX_BYTES   = 5 * 1024 * 1024; // 5MB — ต้องตรงกับ PR_FILE_MAX_BYTES ฝั่ง Apps Script
 
-function resetPrFileField(existingLink) {
+function resetPrFileField(existingLink, existingFileName) {
   document.getElementById('f-prFile').value = '';
+  document.getElementById('f-prFileName').value = existingFileName || '';
   document.getElementById('f-prFile-clearBtn').style.display = existingLink ? '' : 'none';
   const status = document.getElementById('f-prFile-status');
+  const labelName = existingFileName ? `"${existingFileName}"` : 'ไฟล์';
   status.innerHTML = existingLink
-    ? `📎 มีไฟล์เดิมอยู่แล้ว — <a href="${existingLink}" target="_blank" style="color:var(--accent);text-decoration:none">เปิดดู →</a> (เลือกไฟล์ใหม่เพื่อแทนที่)`
+    ? `📄 มีไฟล์เดิมอยู่แล้ว — ${labelName} <a href="${existingLink}" target="_blank" style="color:var(--accent);text-decoration:none">เปิดดู →</a> (เลือกไฟล์ใหม่เพื่อแทนที่)`
     : 'ยังไม่มีไฟล์ — เลือกไฟล์เพื่ออัปโหลดขึ้น Google Drive อัตโนมัติ (PDF/JPG/PNG/DOC/DOCX/XLS/XLSX ไม่เกิน 5MB)';
 }
 
 function clearPrFile() {
   document.getElementById('f-prLink').value = '';
+  document.getElementById('f-prFileName').value = '';
   document.getElementById('f-prFile').value = '';
   document.getElementById('f-prFile-clearBtn').style.display = 'none';
   document.getElementById('f-prFile-status').textContent = 'ยังไม่มีไฟล์ — เลือกไฟล์เพื่ออัปโหลดขึ้น Google Drive อัตโนมัติ (PDF/JPG/PNG/DOC/DOCX/XLS/XLSX ไม่เกิน 5MB)';
@@ -3151,8 +3156,9 @@ async function handlePrFileUpload(event) {
     const json = await res.json();
     if (!json.success) throw new Error(json.error || 'อัปโหลดไม่สำเร็จ');
     document.getElementById('f-prLink').value = json.url;
+    document.getElementById('f-prFileName').value = json.fileName || file.name;
     document.getElementById('f-prFile-clearBtn').style.display = '';
-    statusEl.innerHTML = `✅ อัปโหลดสำเร็จ — <a href="${json.url}" target="_blank" style="color:var(--accent);text-decoration:none">เปิดดูไฟล์ →</a>`;
+    statusEl.innerHTML = `✅ อัปโหลดสำเร็จ — "${json.fileName || file.name}" <a href="${json.url}" target="_blank" style="color:var(--accent);text-decoration:none">เปิดดูไฟล์ →</a>`;
     showToast('✅ อัปโหลดไฟล์ขึ้น Drive สำเร็จ', 'success');
   } catch (err) {
     statusEl.textContent = '❌ อัปโหลดไม่สำเร็จ: ' + err.message + ' — ลองใหม่อีกครั้ง';
@@ -3164,7 +3170,7 @@ async function handlePrFileUpload(event) {
 async function saveItem() {
   const rowIndex = document.getElementById('editRowIndex').value;
   const params = {};
-  ['partNo','partName','model','volume','receivedQty','prDate','dueDate','actualDate','location','status','maker','poNo','note','prLink'].forEach(f => { params[f] = document.getElementById('f-' + f).value; });
+  ['partNo','partName','model','volume','receivedQty','prDate','dueDate','actualDate','location','status','maker','poNo','note','prLink','prFileName'].forEach(f => { params[f] = document.getElementById('f-' + f).value; });
   const isEdit = !!(rowIndex && editingItem);
   if (!validateForm(params, isEdit)) return;
   if (rowIndex && editingItem) {
@@ -3233,7 +3239,7 @@ function openDetail(item) {
   // PR Link
   const prLinkHtml = item.prLink ? `<div class="detail-field" style="grid-column:1/-1">
     <div class="detail-field-label">🔗 เอกสาร PR / ใบเสนอราคา</div>
-    <div class="detail-field-value"><a href="${item.prLink}" target="_blank" style="color:var(--accent);text-decoration:none">📎 เปิดเอกสาร →</a></div>
+    <div class="detail-field-value"><a href="${item.prLink}" target="_blank" style="color:var(--accent);text-decoration:none">📄 ${item.prFileName || 'เปิดเอกสาร'} →</a></div>
   </div>` : '';
 
   // Partial delivery progress
