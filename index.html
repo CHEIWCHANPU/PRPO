@@ -951,13 +951,24 @@
     max-height:calc(100vh - 300px);
   }
   .mt-side {
-    width:320px; flex-shrink:0; background:var(--surface);
-    border:1px solid var(--border); border-radius:12px;
-    padding:1.1rem; overflow-y:auto; max-height:calc(100vh - 300px);
+    width:0; flex-shrink:0; background:var(--surface);
+    border:1px solid transparent; border-radius:12px;
+    padding:0; overflow:hidden; max-height:calc(100vh - 300px);
+    transition: width 0.28s cubic-bezier(0.4,0,0.2,1),
+                padding 0.28s ease,
+                border-color 0.28s ease,
+                opacity 0.25s ease;
+    opacity:0;
+  }
+  .mt-side.mt-side-open {
+    width:320px; padding:1.1rem;
+    border-color:var(--border);
+    opacity:1;
   }
   @media (max-width:900px) {
     .mt-layout { flex-direction:column; }
     .mt-side { width:100%; max-height:none; }
+    .mt-side.mt-side-open { width:100%; }
   }
 
   /* Legend */
@@ -1896,12 +1907,7 @@
         <div class="mt-gantt-wrap" id="mt-ganttWrap">
           <!-- injected by JS -->
         </div>
-        <div class="mt-side" id="mt-sidePanel">
-          <div class="mt-placeholder-side">
-            <span class="mt-e-icon">👈</span>
-            คลิกที่ชื่อ Model<br>เพื่อดูรายละเอียด
-          </div>
-        </div>
+        <div class="mt-side" id="mt-sidePanel"></div>
       </div>
     </div>
     <!-- /MODEL TRACKER PAGE -->
@@ -4968,9 +4974,11 @@ function mtRenderSide(){
   const panel=document.getElementById('mt-sidePanel');
   if(!panel) return;
   if(!mtSelectedId){
-    panel.innerHTML='<div class="mt-placeholder-side"><span class="mt-e-icon">👈</span>คลิกที่ชื่อ Model<br>เพื่อดูรายละเอียด</div>';
+    panel.classList.remove('mt-side-open');
+    panel.innerHTML='';
     return;
   }
+  panel.classList.add('mt-side-open');
   const m=MT_DATA.find(x=>x.id===mtSelectedId);
   if(!m){ mtSelectedId=null; mtRenderSide(); return; }
   const mp=mtGetMpMs(m);
