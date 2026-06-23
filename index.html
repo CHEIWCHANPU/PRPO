@@ -59,7 +59,17 @@
   * { scrollbar-width: thin; scrollbar-color: var(--border) var(--sidebar); }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
+  html {
+    scroll-behavior: smooth;
+    /* ── ปรับสเกล UI อัตโนมัติตามความกว้างจอ (ทุกอย่างเป็น rem จึงย่อ/ขยายพร้อมกันทั้งหน้า) ── */
+    font-size: clamp(13px, 0.78vw + 7px, 16px);
+  }
+  @media (max-width: 1024px) {
+    html { font-size: clamp(12.5px, 1.1vw + 4px, 15px); }
+  }
+  @media (max-width: 480px) {
+    html { font-size: 13px; }
+  }
   body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; display: flex; overflow: auto; }
 
   /* ── SIDEBAR ── */
@@ -352,6 +362,10 @@
 
   /* TABLE */
   .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  @media (max-width: 900px) {
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .table-wrap table { min-width: 640px; }
+  }
   .table-title-bar { padding: 0.85rem 1.1rem 0.5rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
   .table-title-label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
   table { width: 100%; border-collapse: collapse; font-size: 0.79rem; }
@@ -608,9 +622,18 @@
   .kpi-label { font-size: 0.68rem; color: var(--muted); margin-bottom: 0.15rem; }
   .kpi-value { font-family: var(--mono); font-size: 1.05rem; font-weight: 600; }
 
+  @media (max-width: 1280px) {
+    .stat-grid { grid-template-columns: repeat(2,1fr); }
+  }
   @media (max-width: 1100px) {
     .chart-row { grid-template-columns: 1fr 1fr; }
     .kpi-row { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 1024px) {
+    :root { --sw: 190px; }
+    .sidebar { width: 190px; }
+    .main-wrap { margin-left: 190px; }
+    main { padding: 1rem; }
   }
   @media (max-width: 900px) {
     :root { --sw: 62px; }
@@ -624,6 +647,10 @@
     .kpi-row { grid-template-columns: 1fr; }
     .summary-grid { grid-template-columns: 1fr; }
     .setup-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    .stat-grid { grid-template-columns: 1fr; }
+    .page-header { flex-direction: column; align-items: flex-start; gap: 0.6rem; }
   }
 
   /* ── SUPPLIER CARDS ── */
