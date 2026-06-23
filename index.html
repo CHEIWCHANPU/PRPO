@@ -940,6 +940,158 @@
   /* Enter animation */
   .wl-entering { animation: wlEnter 0.55s cubic-bezier(0.22,1,0.36,1) both; }
   @keyframes wlEnter { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:none} }
+
+  /* ══════════════════════════════════════════════
+     MODEL TRACKER — styles
+  ══════════════════════════════════════════════ */
+  .mt-layout { display:flex; gap:1rem; min-height:60vh; }
+  .mt-gantt-wrap {
+    flex:1; min-width:0; overflow:auto;
+    background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    max-height:calc(100vh - 300px);
+  }
+  .mt-side {
+    width:320px; flex-shrink:0; background:var(--surface);
+    border:1px solid var(--border); border-radius:12px;
+    padding:1.1rem; overflow-y:auto; max-height:calc(100vh - 300px);
+  }
+  @media (max-width:900px) {
+    .mt-layout { flex-direction:column; }
+    .mt-side { width:100%; max-height:none; }
+  }
+
+  /* Legend */
+  .mt-legend {
+    display:flex; gap:1rem; flex-wrap:wrap; padding:0.6rem 0.9rem;
+    background:var(--surface); border:1px solid var(--border); border-radius:9px;
+    margin-bottom:0.8rem; font-size:0.73rem; color:var(--muted);
+  }
+  .mt-legend-item { display:flex; align-items:center; gap:0.35rem; }
+  .mt-legend-dot { width:10px; height:10px; border-radius:3px; flex-shrink:0; display:inline-block; }
+
+  /* Gantt table */
+  .mt-gantt { display:table; width:100%; border-collapse:collapse; }
+  .mt-gantt-row { display:table-row; cursor:pointer; }
+  .mt-gantt-row:hover .mt-gtd { background:var(--surface2); }
+  .mt-gantt-row.mt-selected .mt-gtd { background:rgba(0,229,160,0.06); }
+  .mt-gtd { display:table-cell; vertical-align:middle; border-bottom:1px solid var(--border); }
+
+  .mt-col-model {
+    position:sticky; left:0; z-index:20; background:var(--surface);
+    padding:0.6rem 0.85rem; min-width:140px; max-width:160px;
+    border-right:1px solid var(--border2);
+  }
+  .mt-gantt-row.mt-selected .mt-col-model { background:rgba(0,229,160,0.09); border-right-color:var(--accent); }
+  .mt-gantt-row:hover .mt-col-model { background:var(--surface2); }
+  .mt-model-name { font-weight:700; font-size:0.84rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .mt-model-meta { font-size:0.65rem; color:var(--muted); margin-top:1px; font-family:var(--mono); }
+
+  .mt-col-status {
+    position:sticky; left:140px; z-index:20; background:var(--surface);
+    padding:0.6rem 0.6rem; min-width:120px; border-right:1px solid var(--border2); font-size:0.7rem;
+  }
+  .mt-gantt-row.mt-selected .mt-col-status { background:rgba(0,229,160,0.09); }
+  .mt-gantt-row:hover .mt-col-status { background:var(--surface2); }
+
+  .mt-status-pill {
+    display:inline-flex; align-items:center; gap:0.3rem;
+    padding:0.18rem 0.5rem; border-radius:20px; font-size:0.62rem; font-weight:700; white-space:nowrap;
+  }
+  .mt-status-pill.mt-mass      { background:rgba(16,185,129,0.14); color:#10b981; }
+  .mt-status-pill.mt-inprogress{ background:rgba(245,158,11,0.14);  color:#f59e0b; }
+  .mt-status-pill.mt-upcoming  { background:rgba(99,102,241,0.14);   color:#818cf8; }
+  .mt-status-pill.mt-nodate    { background:var(--surface2); color:var(--muted); }
+
+  .mt-gantt-header { display:table-row; }
+  .mt-gantt-header .mt-gtd {
+    background:var(--surface2); padding:0.45rem 0.3rem; text-align:center;
+    font-size:0.63rem; font-weight:700; color:var(--muted);
+    text-transform:uppercase; letter-spacing:0.04em; border-bottom:1px solid var(--border2);
+    white-space:nowrap;
+  }
+  .mt-gantt-header .mt-col-model, .mt-gantt-header .mt-col-status { background:var(--surface2); z-index:25; }
+  .mt-year-band { color:var(--accent); font-size:0.65rem; font-family:var(--mono); }
+
+  .mt-timeline-cell { padding:0; position:relative; height:52px; }
+  .mt-timeline-track { position:relative; width:100%; height:100%; }
+
+  /* Markers */
+  .mt-marker {
+    position:absolute; top:50%; transform:translate(-50%,-50%);
+    display:flex; align-items:center; justify-content:center;
+    width:22px; height:22px; border-radius:6px; font-size:0.6rem; font-weight:700;
+    cursor:pointer; z-index:5; box-shadow:0 2px 6px rgba(0,0,0,0.35);
+    border:1.5px solid rgba(255,255,255,0.15); transition:transform 0.12s;
+  }
+  .mt-marker:hover { transform:translate(-50%,-50%) scale(1.2); z-index:6; }
+  .mt-marker.mt-forecast { background:#5b7fd1; color:#0d1830; }
+  .mt-marker.mt-pp1 {
+    background:transparent; color:#e0a72e; border:2px solid #e0a72e;
+    width:16px; height:16px; border-radius:3px;
+    transform:translate(-50%,-50%) rotate(45deg);
+  }
+  .mt-marker.mt-pp1:hover { transform:translate(-50%,-50%) rotate(45deg) scale(1.25); }
+  .mt-marker.mt-order { background:#e0a72e; color:#2b1c00; border-radius:50%; }
+  .mt-marker.mt-cci   { background:#a06bf2; color:#1d0c33; }
+  .mt-marker.mt-mp    { background:#ef5b5b; color:#2b0a0a; clip-path:polygon(0 0,100% 50%,0 100%); border-radius:0; width:16px; }
+
+  .mt-connector { position:absolute; top:50%; height:0; border-top:1.5px dashed rgba(255,255,255,0.12); z-index:1; }
+  .mt-today-line { position:absolute; top:0; bottom:0; width:2px; background:#ffd166; z-index:8; pointer-events:none; }
+  .mt-today-line::before {
+    content:'วันนี้'; position:absolute; top:-1.3rem; left:50%; transform:translateX(-50%);
+    font-size:0.58rem; color:#ffd166; white-space:nowrap; font-weight:700; font-family:var(--mono);
+  }
+
+  /* Side panel */
+  .mt-placeholder-side { color:var(--muted); font-size:0.8rem; text-align:center; padding:2.5rem 0.5rem; }
+  .mt-e-icon { font-size:2rem; display:block; margin-bottom:0.6rem; opacity:0.55; }
+  .mt-detail-card {
+    background:var(--surface2); border:1px solid var(--border); border-radius:10px;
+    padding:0.9rem 1rem; margin-bottom:0.9rem;
+  }
+  .mt-detail-title { font-size:1rem; font-weight:800; margin-bottom:0.12rem; }
+  .mt-detail-customer { font-size:0.75rem; color:var(--muted); margin-bottom:0.6rem; }
+  .mt-answer-box {
+    background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3);
+    border-radius:10px; padding:0.8rem 0.9rem; margin-bottom:0.9rem;
+  }
+  .mt-answer-box.mt-notyet { background:rgba(91,127,209,0.1); border-color:rgba(91,127,209,0.3); }
+  .mt-a-label { font-size:0.62rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.25rem; }
+  .mt-a-value { font-size:1.1rem; font-weight:800; }
+  .mt-a-sub   { font-size:0.7rem; color:var(--muted); margin-top:0.15rem; }
+  .mt-two-col { display:grid; grid-template-columns:1fr 1fr; gap:0.6rem; margin-bottom:0.9rem; }
+  .mt-ms-list { display:flex; flex-direction:column; gap:0.45rem; margin-bottom:0.9rem; }
+  .mt-ms-row {
+    display:flex; align-items:center; gap:0.55rem; padding:0.5rem 0.65rem;
+    background:var(--surface2); border:1px solid var(--border); border-radius:8px; font-size:0.76rem;
+  }
+  .mt-ms-icon { width:24px; height:24px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:0.68rem; font-weight:700; flex-shrink:0; }
+  .mt-ms-icon.mt-forecast { background:rgba(91,127,209,0.18); color:#5b7fd1; }
+  .mt-ms-icon.mt-pp1, .mt-ms-icon.mt-order { background:rgba(224,167,46,0.18); color:#e0a72e; }
+  .mt-ms-icon.mt-cci  { background:rgba(160,107,242,0.18); color:#a06bf2; }
+  .mt-ms-icon.mt-mp   { background:rgba(239,91,91,0.18);   color:#ef5b5b; }
+  .mt-ms-body { flex:1; min-width:0; }
+  .mt-ms-name { font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .mt-ms-date { font-family:var(--mono); font-size:0.67rem; color:var(--muted); }
+  .mt-ms-edit-btn { background:none; border:none; color:var(--muted); font-size:0.78rem; padding:0.18rem; flex-shrink:0; border-radius:5px; cursor:pointer; }
+  .mt-ms-edit-btn:hover { color:var(--accent); background:var(--glow-accent); }
+  .mt-side-actions { display:flex; gap:0.45rem; margin-top:0.5rem; }
+  .mt-side-actions .btn { flex:1; justify-content:center; }
+  .mt-empty-state { text-align:center; padding:3rem 1rem; color:var(--muted); }
+
+  /* MT Modals */
+  .mt-field-row { margin-bottom:0.75rem; }
+  .mt-field-row label { font-size:0.66rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; display:block; margin-bottom:0.28rem; }
+  .mt-field-row input, .mt-field-row select {
+    width:100%; background:var(--surface2); border:1px solid var(--border2); border-radius:7px;
+    padding:0.48rem 0.65rem; color:var(--text); font-family:var(--font); font-size:0.82rem; outline:none;
+    transition:border-color 0.15s;
+  }
+  .mt-field-row input:focus, .mt-field-row select:focus { border-color:var(--accent); }
+  .mt-two-col-fields { display:grid; grid-template-columns:1fr 1fr; gap:0.65rem; }
+  .mt-delete-btn { background:none; border:none; color:var(--danger); font-size:0.72rem; margin-top:0.25rem; cursor:pointer; }
+  .mt-delete-btn:hover { text-decoration:underline; }
+
 </style>
 </head>
 <body>
@@ -1057,6 +1209,17 @@
       <div class="nav-group-items">
         <button class="nav-item" id="nav-cer" onclick="showPage('cer',this)">
           <span class="nav-icon">📄</span><span class="nav-text">ติดตามใบ CER</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="nav-group" id="navGroup-modeltracker">
+      <div class="nav-label" onclick="toggleNavGroup('modeltracker')">
+        <span>แผนการผลิต MODEL</span><span class="nav-label-chevron">▾</span>
+      </div>
+      <div class="nav-group-items">
+        <button class="nav-item" id="nav-modeltracker" onclick="showPage('modeltracker',this)">
+          <span class="nav-icon">🗂️</span><span class="nav-text">Model Tracker</span>
         </button>
       </div>
     </div>
@@ -1683,6 +1846,66 @@
       </div>
     </div>
 
+
+    <!-- ═══════════════════════════════════════════════════
+         MODEL TRACKER PAGE
+    ═══════════════════════════════════════════════════ -->
+    <div class="page" id="page-modeltracker">
+      <div class="page-header">
+        <div class="page-header-left">
+          <h1>🗂️ Model Tracker</h1>
+          <p>แผนการผลิต Pre-Production → Mass Production Timeline</p>
+        </div>
+        <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
+          <div class="topbar-chip" id="mt-todayLabel" style="font-size:0.74rem"></div>
+          <button class="btn btn-sm" id="mt-btnExport">⬇ Export JSON</button>
+          <button class="btn btn-sm" id="mt-btnImportTrigger">⬆ Import JSON</button>
+          <input type="file" id="mt-btnImport" accept="application/json" style="display:none">
+          <button class="btn btn-primary btn-sm" id="mt-btnAddModel">+ เพิ่ม Model</button>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div class="mt-legend">
+        <div class="mt-legend-item"><span class="mt-legend-dot" style="background:#5b7fd1"></span> Forecast</div>
+        <div class="mt-legend-item"><span class="mt-legend-dot" style="background:#e0a72e;border-radius:0;transform:rotate(45deg)"></span> PP1</div>
+        <div class="mt-legend-item"><span class="mt-legend-dot" style="background:#e0a72e;border-radius:50%"></span> CCI Order</div>
+        <div class="mt-legend-item"><span class="mt-legend-dot" style="background:#a06bf2"></span> CCI Issued</div>
+        <div class="mt-legend-item"><span class="mt-legend-dot" style="background:#ef5b5b;clip-path:polygon(0 0,100% 50%,0 100%)"></span> Mass Production</div>
+        <div class="mt-legend-item"><span class="mt-legend-dot" style="background:#ffd166;border-radius:2px"></span> วันนี้</div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar" style="margin-bottom:0.8rem">
+        <div class="search-box">
+          <span>🔍</span>
+          <input type="text" id="mt-searchInput" placeholder="ค้นหา Model, Customer...">
+        </div>
+        <select class="filter-select" id="mt-filterCustomer"><option value="">ลูกค้าทั้งหมด</option></select>
+        <select class="filter-select" id="mt-filterStatus">
+          <option value="">สถานะทั้งหมด</option>
+          <option value="upcoming">รอ REF.NM</option>
+          <option value="inprogress">กำลังดำเนินการ</option>
+          <option value="mass">Mass Production แล้ว</option>
+        </select>
+        <span style="font-size:0.72rem;color:var(--muted);margin-left:auto" id="mt-modelCount">0 models</span>
+      </div>
+
+      <!-- Gantt + Side panel layout -->
+      <div class="mt-layout">
+        <div class="mt-gantt-wrap" id="mt-ganttWrap">
+          <!-- injected by JS -->
+        </div>
+        <div class="mt-side" id="mt-sidePanel">
+          <div class="mt-placeholder-side">
+            <span class="mt-e-icon">👈</span>
+            คลิกที่ชื่อ Model<br>เพื่อดูรายละเอียด
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- /MODEL TRACKER PAGE -->
+
   </main>
 </div>
 
@@ -1928,7 +2151,7 @@ function showPage(name, btn) {
   document.getElementById('page-' + name).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  const titles = { dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', summary:'📈 สรุปภาพรวม', gantt:'📅 Timeline / Gantt', setup:'⚙️ ตั้งค่าระบบ', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis', cer:'📄 ติดตามใบ CER' };
+  const titles = { dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', summary:'📈 สรุปภาพรวม', gantt:'📅 Timeline / Gantt', setup:'⚙️ ตั้งค่าระบบ', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis', cer:'📄 ติดตามใบ CER', modeltracker:'🗂️ Model Tracker' };
   document.getElementById('topbarTitle').textContent = titles[name] || name;
   if (name === 'summary') renderSummary();
   if (name === 'supplier') loadSuppliers();
@@ -1936,6 +2159,7 @@ function showPage(name, btn) {
   if (name === 'history') loadHistoryFromSheet();
   if (name === 'gantt') renderGantt();
   if (name === 'cer') loadCerPage();
+  if (name === 'modeltracker') renderModelTracker();
 }
 
 /* ── NOTIFICATIONS ── */
@@ -4450,4 +4674,504 @@ document.addEventListener('keydown', function(e) {
   }
 });
 </script>
+
+<!-- ════════════════════════════════════════════
+     MODEL TRACKER MODALS
+════════════════════════════════════════════ -->
+<div class="modal-overlay" id="mt-modelModal">
+  <div class="modal" style="width:460px">
+    <div class="modal-head">
+      <h3 id="mt-modelModalTitle">เพิ่ม Model ใหม่</h3>
+      <button class="modal-close" onclick="mtCloseModal('mt-modelModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="mt-field-row">
+        <label>Model</label>
+        <input type="text" id="mt-f-model" placeholder="เช่น P700">
+      </div>
+      <div class="mt-two-col-fields">
+        <div class="mt-field-row">
+          <label>Customer</label>
+          <input type="text" id="mt-f-customer" placeholder="เช่น ISUZU">
+        </div>
+        <div class="mt-field-row">
+          <label>Volume</label>
+          <input type="text" id="mt-f-volume" placeholder="เช่น 12,000">
+        </div>
+      </div>
+      <div class="mt-field-row">
+        <label>หมายเหตุสถานะ</label>
+        <input type="text" id="mt-f-statusnote" placeholder="เช่น รอ REF.NM / กำลังดำเนินการ">
+      </div>
+      <button class="mt-delete-btn" id="mt-btnDeleteModel" style="display:none">🗑 ลบ Model นี้</button>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="mtCloseModal('mt-modelModal')">ยกเลิก</button>
+      <button class="btn btn-primary" id="mt-btnSaveModel">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="mt-msModal">
+  <div class="modal" style="width:420px">
+    <div class="modal-head">
+      <h3 id="mt-msModalTitle">เพิ่ม Milestone</h3>
+      <button class="modal-close" onclick="mtCloseModal('mt-msModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="mt-field-row">
+        <label>ประเภท</label>
+        <select id="mt-f-mstype">
+          <option value="forecast">Forecast</option>
+          <option value="pp1">PP1 (Pre-Production)</option>
+          <option value="order">CCI Order</option>
+          <option value="cci">CCI Issued</option>
+          <option value="mp">Mass Production (M/P)</option>
+        </select>
+      </div>
+      <div class="mt-field-row">
+        <label>วันที่</label>
+        <input type="date" id="mt-f-msdate">
+      </div>
+      <div class="mt-field-row">
+        <label>โน้ตเพิ่มเติม</label>
+        <input type="text" id="mt-f-msnote" placeholder="เช่น Lot 1, รอ confirm กับลูกค้า">
+      </div>
+      <button class="mt-delete-btn" id="mt-btnDeleteMs" style="display:none">🗑 ลบ Milestone นี้</button>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="mtCloseModal('mt-msModal')">ยกเลิก</button>
+      <button class="btn btn-primary" id="mt-btnSaveMs">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════
+//  MODEL TRACKER — data & logic (embedded in index.html)
+// ════════════════════════════════════════════════════════
+
+const MT_TYPES = {
+  forecast: { label:'Forecast',              short:'FC',  icon:'◆', cls:'mt-forecast' },
+  pp1:      { label:'PP1 (Pre-Production)',  short:'PP1', icon:'◇', cls:'mt-pp1'      },
+  order:    { label:'CCI Order',             short:'ORD', icon:'●', cls:'mt-order'    },
+  cci:      { label:'CCI Issued',            short:'CCI', icon:'★', cls:'mt-cci'      },
+  mp:       { label:'Mass Production (M/P)', short:'M/P', icon:'▶', cls:'mt-mp'       },
+};
+
+const MT_YEAR_START = 2026, MT_YEAR_END = 2027;
+const MT_MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+let MT_DATA = [];
+let mtSelectedId = null, mtEditingModelId = null, mtEditingMs = null, mtCurrentMsModelId = null;
+let mtInited = false;
+
+function mtUid(){ return Math.random().toString(36).slice(2,10); }
+function mtMs(type,date,note){ return { id:mtUid(), type, date, note:note||'' }; }
+function mtMkModel(model,customer,volume,statusNote,milestones){
+  return { id:mtUid(), model, customer, volume:volume||'', statusNote:statusNote||'', milestones:milestones||[] };
+}
+function mtTodayISO(){ return new Date().toISOString().slice(0,10); }
+
+function mtSeedData(){
+  MT_DATA = [
+    mtMkModel('P700','ISUZU','','รอ REF.NM',[]),
+    mtMkModel('9751','KMT','','กำลังดำเนินการ',[
+      mtMs('forecast','2026-06-01'), mtMs('pp1','2026-07-15'),
+      mtMs('order','2026-09-10','Lot 1'), mtMs('cci','2026-09-25'), mtMs('mp','2026-11-05'),
+    ]),
+    mtMkModel('MMAA','THM','','กำลังดำเนินการ',[
+      mtMs('pp1','2026-06-20'), mtMs('order','2026-08-05','Lot 1'), mtMs('cci','2026-08-20'), mtMs('mp','2026-10-01'),
+    ]),
+    mtMkModel('DB4','TYM','','กำลังดำเนินการ',[
+      mtMs('pp1','2026-07-01'), mtMs('order','2026-08-25','Lot 1'), mtMs('cci','2026-09-05'), mtMs('mp','2026-10-15'),
+    ]),
+    mtMkModel('K1BT','THM','','กำลังดำเนินการ',[
+      mtMs('pp1','2026-06-25'), mtMs('order','2026-08-15','Lot 1'), mtMs('cci','2026-08-28'), mtMs('mp','2026-10-10'),
+    ]),
+    mtMkModel('MG85','TECHNOGYM','','รอ REF.NM',[]),
+    mtMkModel('VD00','TADA','','รอ REF.NM',[]),
+    mtMkModel('EK01/VC62','ISUZU','','รอ REF.NM',[mtMs('pp1','2026-08-10')]),
+    mtMkModel('8901&8951','KMT','','กำลังดำเนินการ',[mtMs('pp1','2026-06-15')]),
+  ];
+}
+
+// ── status ─────────────────────────────────────────
+function mtGetMpMs(m){
+  const mps = m.milestones.filter(x=>x.type==='mp'&&x.date);
+  if(!mps.length) return null;
+  return [...mps].sort((a,b)=>b.date.localeCompare(a.date))[0];
+}
+function mtModelStatus(m){
+  const mp = mtGetMpMs(m);
+  if(mp) return mtTodayISO()>=mp.date ? 'mass' : 'inprogress_mp_set';
+  if(m.milestones.length===0) return 'nodate';
+  return 'inprogress';
+}
+function mtStatusBadge(m){
+  const s = mtModelStatus(m);
+  if(s==='mass')            return {cls:'mt-mass',       text:'✅ Mass Production'};
+  if(s==='inprogress_mp_set') return {cls:'mt-inprogress', text:'♻ กำลังดำเนินการ'};
+  if(s==='inprogress')      return {cls:'mt-upcoming',   text:'🔸 มีแผนแล้ว'};
+  return {cls:'mt-nodate', text:'— รอ REF.NM'};
+}
+
+// ── date helpers ────────────────────────────────────
+function mtDateToCol(dateStr){
+  const d = new Date(dateStr+'T00:00:00');
+  const y=d.getFullYear(), mo=d.getMonth(), day=d.getDate();
+  const idx=(y-MT_YEAR_START)*12+mo;
+  const dim=new Date(y,mo+1,0).getDate();
+  return idx+(day-1)/dim;
+}
+function mtTotalMonths(){ return (MT_YEAR_END-MT_YEAR_START+1)*12; }
+function mtFmtDateTH(dateStr){
+  if(!dateStr) return '—';
+  const d=new Date(dateStr+'T00:00:00');
+  return `${d.getDate()} ${MT_MONTHS_TH[d.getMonth()]} ${d.getFullYear()+543}`;
+}
+function mtFmtMonthYearTH(dateStr){
+  if(!dateStr) return '—';
+  const d=new Date(dateStr+'T00:00:00');
+  return `${MT_MONTHS_TH[d.getMonth()]} ${d.getFullYear()+543}`;
+}
+
+// ── html escape ─────────────────────────────────────
+function mtEsc(s){ return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c])); }
+
+// ── filtering ───────────────────────────────────────
+function mtGetFiltered(){
+  const q=(document.getElementById('mt-searchInput').value||'').trim().toLowerCase();
+  const cust=document.getElementById('mt-filterCustomer').value;
+  const stat=document.getElementById('mt-filterStatus').value;
+  return MT_DATA.filter(m=>{
+    if(q&&!(m.model.toLowerCase().includes(q)||(m.customer||'').toLowerCase().includes(q))) return false;
+    if(cust&&m.customer!==cust) return false;
+    if(stat){
+      const s=mtModelStatus(m);
+      if(stat==='mass'&&s!=='mass') return false;
+      if(stat==='inprogress'&&!(s==='inprogress'||s==='inprogress_mp_set')) return false;
+      if(stat==='upcoming'&&s!=='nodate') return false;
+    }
+    return true;
+  });
+}
+function mtRefreshCustomerFilter(){
+  const sel=document.getElementById('mt-filterCustomer');
+  const cur=sel.value;
+  const custs=[...new Set(MT_DATA.map(m=>m.customer).filter(Boolean))].sort();
+  sel.innerHTML='<option value="">ลูกค้าทั้งหมด</option>'+custs.map(c=>`<option value="${mtEsc(c)}">${mtEsc(c)}</option>`).join('');
+  sel.value=cur;
+}
+
+// ── render gantt ────────────────────────────────────
+function renderModelTracker(){
+  if(!mtInited){ mtSeedData(); mtInited=true; }
+  const label=document.getElementById('mt-todayLabel');
+  if(label) label.textContent='📅 '+mtFmtDateTH(mtTodayISO());
+  mtRefreshCustomerFilter();
+  mtRenderGantt();
+  mtRenderSide();
+}
+
+function mtRenderGantt(){
+  const wrap=document.getElementById('mt-ganttWrap');
+  if(!wrap) return;
+  const list=mtGetFiltered();
+  document.getElementById('mt-modelCount').textContent=list.length+' models';
+
+  if(!list.length){
+    wrap.innerHTML='<div class="mt-empty-state"><div style="font-size:2rem;margin-bottom:0.5rem;opacity:0.45">🔍</div>ไม่พบ Model ที่ตรงกับเงื่อนไข</div>';
+    return;
+  }
+
+  const months=mtTotalMonths();
+  const todayCol=mtDateToCol(mtTodayISO());
+  const todayPct=(todayCol/months)*100;
+  const cellW=46;
+
+  let html='<div class="mt-gantt">';
+
+  // header
+  html+='<div class="mt-gantt-header">';
+  html+='<div class="mt-gtd mt-col-model" style="position:sticky;top:0">MODEL</div>';
+  html+='<div class="mt-gtd mt-col-status" style="position:sticky;top:0">สถานะ</div>';
+  html+=`<div class="mt-gtd" style="position:sticky;top:0;padding:0;min-width:${months*cellW}px">`;
+  html+=`<div style="position:relative;width:100%;height:100%">`;
+  for(let i=0;i<months;i++){
+    const y=MT_YEAR_START+Math.floor(i/12), mo=i%12;
+    html+=`<div style="position:absolute;left:${i*cellW}px;top:0;width:${cellW}px;height:100%;text-align:center;${i>0?'border-left:1px solid var(--border2)':''}">`;
+    if(mo===0) html+=`<span class="mt-year-band">${y+543}</span><br>`;
+    html+=MT_MONTHS_TH[mo]+'</div>';
+  }
+  html+='</div></div></div>';
+
+  // rows
+  list.forEach(m=>{
+    const badge=mtStatusBadge(m);
+    const isSel=m.id===mtSelectedId;
+    html+=`<div class="mt-gantt-row${isSel?' mt-selected':''}" data-mtid="${m.id}">`;
+    html+=`<div class="mt-gtd mt-col-model" data-mt-action="select" data-mtid="${m.id}">
+              <div class="mt-model-name">${mtEsc(m.model)}</div>
+              <div class="mt-model-meta">${mtEsc(m.customer||'—')}</div>
+            </div>`;
+    html+=`<div class="mt-gtd mt-col-status"><span class="mt-status-pill ${badge.cls}">${badge.text}</span></div>`;
+    html+=`<div class="mt-gtd mt-timeline-cell" style="min-width:${months*cellW}px" data-mt-action="timeline" data-mtid="${m.id}">`;
+    html+=`<div class="mt-timeline-track">`;
+
+    // grid lines
+    for(let i=0;i<=months;i++){
+      html+=`<div style="position:absolute;left:${(i/months)*100}%;top:0;bottom:0;width:1px;background:rgba(255,255,255,0.03)"></div>`;
+    }
+    // today line
+    if(todayCol>=0&&todayCol<=months){
+      html+=`<div class="mt-today-line" style="left:${todayPct}%"></div>`;
+    }
+    // connector
+    const sorted=[...m.milestones].filter(x=>x.date).sort((a,b)=>a.date.localeCompare(b.date));
+    if(sorted.length>=2){
+      const x1=(mtDateToCol(sorted[0].date)/months)*100;
+      const x2=(mtDateToCol(sorted[sorted.length-1].date)/months)*100;
+      html+=`<div class="mt-connector" style="left:${x1}%;width:${x2-x1}%"></div>`;
+    }
+    // markers
+    sorted.forEach(item=>{
+      const col=mtDateToCol(item.date);
+      const pct=(col/months)*100;
+      const t=MT_TYPES[item.type];
+      html+=`<div class="mt-marker ${t.cls}" style="left:${pct}%" data-mt-action="editms" data-mt-model="${m.id}" data-mt-ms="${item.id}" title="${t.label} — ${mtFmtDateTH(item.date)}${item.note?' ('+mtEsc(item.note)+')':''}">${item.type==='pp1'?'':t.icon}</div>`;
+    });
+
+    html+='</div></div></div>';
+  });
+
+  html+='</div>';
+  wrap.innerHTML=html;
+
+  wrap.querySelectorAll('[data-mt-action="select"]').forEach(el=>{
+    el.addEventListener('click',()=>mtSelectModel(el.dataset.mtid));
+  });
+  wrap.querySelectorAll('[data-mt-action="timeline"]').forEach(el=>{
+    el.addEventListener('dblclick',(e)=>{ if(e.target.closest('.mt-marker')) return; mtOpenMsModal(el.dataset.mtid,null); });
+  });
+  wrap.querySelectorAll('[data-mt-action="editms"]').forEach(el=>{
+    el.addEventListener('click',(e)=>{ e.stopPropagation(); mtOpenMsModal(el.dataset.mtModel,el.dataset.mtMs); });
+  });
+}
+
+// ── side panel ──────────────────────────────────────
+function mtSelectModel(id){
+  mtSelectedId=(mtSelectedId===id)?null:id;
+  mtRenderGantt(); mtRenderSide();
+}
+function mtRenderSide(){
+  const panel=document.getElementById('mt-sidePanel');
+  if(!panel) return;
+  if(!mtSelectedId){
+    panel.innerHTML='<div class="mt-placeholder-side"><span class="mt-e-icon">👈</span>คลิกที่ชื่อ Model<br>เพื่อดูรายละเอียด</div>';
+    return;
+  }
+  const m=MT_DATA.find(x=>x.id===mtSelectedId);
+  if(!m){ mtSelectedId=null; mtRenderSide(); return; }
+  const mp=mtGetMpMs(m);
+  const fc=[...m.milestones].filter(x=>x.type==='forecast'&&x.date).sort((a,b)=>b.date.localeCompare(a.date))[0];
+  const lot1=m.milestones.find(x=>x.note&&x.note.toLowerCase().includes('lot 1'));
+  const ord=m.milestones.find(x=>x.type==='order');
+  const badge=mtStatusBadge(m);
+
+  let answerHtml='';
+  if(mp){
+    const isPast=mtTodayISO()>=mp.date;
+    answerHtml=`<div class="mt-answer-box${isPast?'':' mt-notyet'}">
+      <div class="mt-a-label">${isPast?'Mass Production เริ่มแล้วเมื่อ':'มีแผน Mass Production'}</div>
+      <div class="mt-a-value">${mtFmtMonthYearTH(mp.date)}</div>
+      <div class="mt-a-sub">${mtFmtDateTH(mp.date)} ${isPast?'(ผ่านมาแล้ว)':'(ยังไม่ถึงกำหนด)'}</div>
+    </div>`;
+  } else {
+    answerHtml=`<div class="mt-answer-box mt-notyet">
+      <div class="mt-a-label">Mass Production</div>
+      <div class="mt-a-value" style="color:var(--muted)">ยังไม่กำหนดวันที่</div>
+      <div class="mt-a-sub">ดับเบิลคลิกบน Gantt เพื่อเพิ่ม M/P</div>
+    </div>`;
+  }
+
+  const msRows=[...m.milestones].sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(item=>{
+    const t=MT_TYPES[item.type];
+    return `<div class="mt-ms-row">
+      <div class="mt-ms-icon ${t.cls}">${item.type==='pp1'?'◇':t.icon}</div>
+      <div class="mt-ms-body">
+        <div class="mt-ms-name">${t.label}${item.note?' · '+mtEsc(item.note):''}</div>
+        <div class="mt-ms-date">${mtFmtDateTH(item.date)}</div>
+      </div>
+      <button class="mt-ms-edit-btn" data-mt-action2="editms2" data-mt-model="${m.id}" data-mt-ms="${item.id}">✎</button>
+    </div>`;
+  }).join('');
+
+  panel.innerHTML=`
+    <div class="mt-detail-card">
+      <div class="mt-detail-title">${mtEsc(m.model)}</div>
+      <div class="mt-detail-customer">${mtEsc(m.customer||'ไม่ระบุลูกค้า')}${m.volume?' · Vol: '+mtEsc(m.volume):''}</div>
+      <span class="mt-status-pill ${badge.cls}">${badge.text}</span>
+    </div>
+    ${answerHtml}
+    <div class="mt-two-col" style="margin-bottom:0.9rem">
+      <div class="mt-detail-card" style="margin-bottom:0;padding:0.75rem">
+        <div class="mt-a-label">Forecast</div>
+        <div style="font-weight:700;font-size:0.85rem">${fc?mtFmtMonthYearTH(fc.date):'—'}</div>
+      </div>
+      <div class="mt-detail-card" style="margin-bottom:0;padding:0.75rem">
+        <div class="mt-a-label">Lot 1</div>
+        <div style="font-weight:700;font-size:0.85rem">${lot1?mtFmtDateTH(lot1.date):(ord?mtFmtDateTH(ord.date)+' *':'—')}</div>
+      </div>
+    </div>
+    <div style="font-size:0.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem">Milestone ทั้งหมด</div>
+    <div class="mt-ms-list">${m.milestones.length===0?'<div style="font-size:0.76rem;color:var(--muted)">ยังไม่มี — กดปุ่มด้านล่างเพื่อเพิ่ม</div>':msRows}</div>
+    <div class="mt-side-actions">
+      <button class="btn btn-sm" id="mt-btnAddMsFromSide">+ Milestone</button>
+      <button class="btn btn-sm" id="mt-btnEditModel">✎ แก้ไข</button>
+    </div>
+  `;
+  panel.querySelectorAll('[data-mt-action2="editms2"]').forEach(el=>{
+    el.addEventListener('click',()=>mtOpenMsModal(el.dataset.mtModel,el.dataset.mtMs));
+  });
+  document.getElementById('mt-btnAddMsFromSide').addEventListener('click',()=>mtOpenMsModal(m.id,null));
+  document.getElementById('mt-btnEditModel').addEventListener('click',()=>mtOpenModelModal(m.id));
+}
+
+// ── modals ──────────────────────────────────────────
+function mtOpenModal(id){ document.getElementById(id).classList.add('open'); }
+function mtCloseModal(id){ document.getElementById(id).classList.remove('open'); }
+
+function mtOpenModelModal(id){
+  mtEditingModelId=id;
+  const titleEl=document.getElementById('mt-modelModalTitle');
+  const delBtn=document.getElementById('mt-btnDeleteModel');
+  if(id){
+    const m=MT_DATA.find(x=>x.id===id);
+    titleEl.textContent='แก้ไข Model';
+    document.getElementById('mt-f-model').value=m.model;
+    document.getElementById('mt-f-customer').value=m.customer;
+    document.getElementById('mt-f-volume').value=m.volume;
+    document.getElementById('mt-f-statusnote').value=m.statusNote;
+    delBtn.style.display='block';
+  } else {
+    titleEl.textContent='เพิ่ม Model ใหม่';
+    document.getElementById('mt-f-model').value='';
+    document.getElementById('mt-f-customer').value='';
+    document.getElementById('mt-f-volume').value='';
+    document.getElementById('mt-f-statusnote').value='';
+    delBtn.style.display='none';
+  }
+  mtOpenModal('mt-modelModal');
+}
+function mtSaveModel(){
+  const model=document.getElementById('mt-f-model').value.trim();
+  if(!model){ alert('กรุณาใส่ชื่อ Model'); return; }
+  const customer=document.getElementById('mt-f-customer').value.trim();
+  const volume=document.getElementById('mt-f-volume').value.trim();
+  const statusNote=document.getElementById('mt-f-statusnote').value.trim();
+  if(mtEditingModelId){
+    const m=MT_DATA.find(x=>x.id===mtEditingModelId);
+    m.model=model; m.customer=customer; m.volume=volume; m.statusNote=statusNote;
+  } else {
+    MT_DATA.push(mtMkModel(model,customer,volume,statusNote,[]));
+  }
+  mtCloseModal('mt-modelModal');
+  mtRefreshCustomerFilter(); mtRenderGantt(); mtRenderSide();
+}
+function mtDeleteModel(){
+  if(!mtEditingModelId) return;
+  if(!confirm('ลบ Model นี้ทั้งหมด (รวม milestone) ใช่หรือไม่?')) return;
+  MT_DATA=MT_DATA.filter(x=>x.id!==mtEditingModelId);
+  if(mtSelectedId===mtEditingModelId) mtSelectedId=null;
+  mtCloseModal('mt-modelModal');
+  mtRefreshCustomerFilter(); mtRenderGantt(); mtRenderSide();
+}
+
+function mtOpenMsModal(modelId, msId){
+  mtCurrentMsModelId=modelId; mtEditingMs=msId;
+  const titleEl=document.getElementById('mt-msModalTitle');
+  const delBtn=document.getElementById('mt-btnDeleteMs');
+  const m=MT_DATA.find(x=>x.id===modelId);
+  if(msId){
+    const item=m.milestones.find(x=>x.id===msId);
+    titleEl.textContent=`แก้ไข Milestone — ${m.model}`;
+    document.getElementById('mt-f-mstype').value=item.type;
+    document.getElementById('mt-f-msdate').value=item.date;
+    document.getElementById('mt-f-msnote').value=item.note;
+    delBtn.style.display='block';
+  } else {
+    titleEl.textContent=`เพิ่ม Milestone — ${m.model}`;
+    document.getElementById('mt-f-mstype').value='forecast';
+    document.getElementById('mt-f-msdate').value=mtTodayISO();
+    document.getElementById('mt-f-msnote').value='';
+    delBtn.style.display='none';
+  }
+  mtOpenModal('mt-msModal');
+}
+function mtSaveMs(){
+  const type=document.getElementById('mt-f-mstype').value;
+  const date=document.getElementById('mt-f-msdate').value;
+  const note=document.getElementById('mt-f-msnote').value.trim();
+  if(!date){ alert('กรุณาเลือกวันที่'); return; }
+  const m=MT_DATA.find(x=>x.id===mtCurrentMsModelId);
+  if(mtEditingMs){
+    const item=m.milestones.find(x=>x.id===mtEditingMs);
+    item.type=type; item.date=date; item.note=note;
+  } else {
+    m.milestones.push(mtMs(type,date,note));
+  }
+  mtCloseModal('mt-msModal');
+  mtRenderGantt(); mtRenderSide();
+}
+function mtDeleteMs(){
+  if(!mtEditingMs) return;
+  const m=MT_DATA.find(x=>x.id===mtCurrentMsModelId);
+  m.milestones=m.milestones.filter(x=>x.id!==mtEditingMs);
+  mtCloseModal('mt-msModal');
+  mtRenderGantt(); mtRenderSide();
+}
+
+// ── export / import ─────────────────────────────────
+function mtExportJson(){
+  const blob=new Blob([JSON.stringify(MT_DATA,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url;
+  a.download=`model-tracker-${mtTodayISO()}.json`; a.click();
+  URL.revokeObjectURL(url);
+}
+function mtImportJson(file){
+  const reader=new FileReader();
+  reader.onload=(e)=>{
+    try{
+      const parsed=JSON.parse(e.target.result);
+      if(!Array.isArray(parsed)) throw new Error();
+      MT_DATA=parsed; mtSelectedId=null;
+      mtRefreshCustomerFilter(); mtRenderGantt(); mtRenderSide();
+    } catch(err){ alert('ไฟล์ไม่ถูกต้อง'); }
+  };
+  reader.readAsText(file);
+}
+
+// ── wire up buttons on DOMContentLoaded ─────────────
+document.addEventListener('DOMContentLoaded', ()=>{
+  document.getElementById('mt-btnAddModel').addEventListener('click',()=>mtOpenModelModal(null));
+  document.getElementById('mt-btnSaveModel').addEventListener('click', mtSaveModel);
+  document.getElementById('mt-btnDeleteModel').addEventListener('click', mtDeleteModel);
+  document.getElementById('mt-btnSaveMs').addEventListener('click', mtSaveMs);
+  document.getElementById('mt-btnDeleteMs').addEventListener('click', mtDeleteMs);
+  document.getElementById('mt-btnExport').addEventListener('click', mtExportJson);
+  document.getElementById('mt-btnImportTrigger').addEventListener('click',()=>document.getElementById('mt-btnImport').click());
+  document.getElementById('mt-btnImport').addEventListener('change',(e)=>{ if(e.target.files[0]) mtImportJson(e.target.files[0]); e.target.value=''; });
+  document.getElementById('mt-searchInput').addEventListener('input', mtRenderGantt);
+  document.getElementById('mt-filterCustomer').addEventListener('change', mtRenderGantt);
+  document.getElementById('mt-filterStatus').addEventListener('change', mtRenderGantt);
+
+  // close modals on overlay click
+  ['mt-modelModal','mt-msModal'].forEach(id=>{
+    document.getElementById(id).addEventListener('click',(e)=>{ if(e.target===document.getElementById(id)) mtCloseModal(id); });
+  });
+});
+</script>
+
 </html>
