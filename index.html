@@ -3104,12 +3104,40 @@ function resetPrFileField(existingLink, existingFileName) {
     : 'ยังไม่มีไฟล์ — เลือกไฟล์เพื่ออัปโหลดขึ้น Google Drive อัตโนมัติ (PDF/JPG/PNG/DOC/DOCX/XLS/XLSX ไม่เกิน 5MB)';
 }
 
-function clearPrFile() {
-  document.getElementById('f-prLink').value = '';
+async function clearPrFile() {
+  const currentUrl = document.getElementById('f-prLink').value || '';
+  const statusEl   = document.getElementById('f-prFile-status');
+  const clearBtn   = document.getElementById('f-prFile-clearBtn');
+
+  // ถ้ามี URL อยู่ → ลบไฟล์จาก Drive ก่อน
+  if (currentUrl && WEB_APP_URL) {
+    clearBtn.disabled = true;
+    clearBtn.textContent = 'กำลังลบ...';
+    statusEl.innerHTML = `<span class=\"spinner\" style=\"width:12px;height:12px;border-width:2px\"></span> กำลังลบไฟล์จาก Google Drive...`;
+    try {
+      const res  = await fetch(WEB_APP_URL, {
+        method : 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body   : JSON.stringify({ action: 'deleteFile', fileUrl: currentUrl })
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || 'ลบไม่สำเร็จ');
+      showToast('🗑️ ลบไฟล์จาก Drive สำเร็จ', 'success');
+    } catch (err) {
+      showToast('⚠️ ลบไฟล์จาก Drive ไม่สำเร็จ: ' + err.message, 'error');
+      // แม้ลบ Drive ไม่ได้ ก็ยังล้าง UI ให้
+    } finally {
+      clearBtn.disabled = false;
+      clearBtn.textContent = 'ลบไฟล์';
+    }
+  }
+
+  // ล้าง UI
+  document.getElementById('f-prLink').value    = '';
   document.getElementById('f-prFileName').value = '';
-  document.getElementById('f-prFile').value = '';
-  document.getElementById('f-prFile-clearBtn').style.display = 'none';
-  document.getElementById('f-prFile-status').textContent = 'ยังไม่มีไฟล์ — เลือกไฟล์เพื่ออัปโหลดขึ้น Google Drive อัตโนมัติ (PDF/JPG/PNG/DOC/DOCX/XLS/XLSX ไม่เกิน 5MB)';
+  document.getElementById('f-prFile').value    = '';
+  clearBtn.style.display = 'none';
+  statusEl.textContent   = 'ยังไม่มีไฟล์ — เลือกไฟล์เพื่ออัปโหลดขึ้น Google Drive อัตโนมัติ (PDF/JPG/PNG/DOC/DOCX/XLS/XLSX ไม่เกิน 5MB)';
 }
 
 function fileToBase64(file) {
