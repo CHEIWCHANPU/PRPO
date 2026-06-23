@@ -30,13 +30,19 @@
     --glow-accent: rgba(0,229,160,0.12);
     --glow-danger: rgba(239,68,68,0.12);
     --glow-warn: rgba(245,158,11,0.1);
+    --border2: rgba(255,255,255,0.07);
+    --mt-stripe-even: rgba(255,255,255,0.018);
+    --mt-stripe-odd: transparent;
+    --mt-month-border: rgba(255,255,255,0.10);
+    --mt-year-border: rgba(0,229,160,0.45);
+    --mt-connector-color: rgba(255,255,255,0.18);
   }
   .light-theme {
     --bg: #f0f4f8;
     --sidebar: #ffffff;
     --surface: #ffffff;
     --surface2: #eef2f7;
-    --border: #d8e2ec;
+    --border: #d0dae8;
     --accent: #0a8c68;
     --accent2: #4338ca;
     --warn: #d97706;
@@ -48,6 +54,65 @@
     --glow-accent: rgba(10,140,104,0.08);
     --glow-danger: rgba(220,38,38,0.08);
     --glow-warn: rgba(217,119,6,0.08);
+    --border2: #d0dae8;
+    --mt-stripe-even: rgba(0,0,0,0.025);
+    --mt-stripe-odd: transparent;
+    --mt-month-border: #c4d0e0;
+    --mt-year-border: rgba(10,140,104,0.55);
+    --mt-connector-color: rgba(0,0,0,0.2);
+  }
+
+  /* ── OS-level auto light mode (no saved preference) ── */
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f0f4f8;
+      --sidebar: #ffffff;
+      --surface: #ffffff;
+      --surface2: #eef2f7;
+      --border: #d0dae8;
+      --accent: #0a8c68;
+      --accent2: #4338ca;
+      --warn: #d97706;
+      --danger: #dc2626;
+      --success: #059669;
+      --text: #0f172a;
+      --muted: #475569;
+      --chart-text: #475569;
+      --glow-accent: rgba(10,140,104,0.08);
+      --glow-danger: rgba(220,38,38,0.08);
+      --glow-warn: rgba(217,119,6,0.08);
+      --border2: #d0dae8;
+      --mt-stripe-even: rgba(0,0,0,0.025);
+      --mt-stripe-odd: transparent;
+      --mt-month-border: #c4d0e0;
+      --mt-year-border: rgba(10,140,104,0.55);
+      --mt-connector-color: rgba(0,0,0,0.2);
+    }
+  }
+  /* override OS when user picks dark explicitly */
+  body.dark-theme {
+    --bg: #080b10;
+    --sidebar: #0d1117;
+    --surface: #111620;
+    --surface2: #182030;
+    --border: #1e2a3a;
+    --accent: #00e5a0;
+    --accent2: #6366f1;
+    --warn: #f59e0b;
+    --danger: #ef4444;
+    --success: #10b981;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --chart-text: #64748b;
+    --glow-accent: rgba(0,229,160,0.12);
+    --glow-danger: rgba(239,68,68,0.12);
+    --glow-warn: rgba(245,158,11,0.1);
+    --border2: rgba(255,255,255,0.07);
+    --mt-stripe-even: rgba(255,255,255,0.018);
+    --mt-stripe-odd: transparent;
+    --mt-month-border: rgba(255,255,255,0.10);
+    --mt-year-border: rgba(0,229,160,0.45);
+    --mt-connector-color: rgba(255,255,255,0.18);
   }
 
   /* ── CUSTOM SCROLLBAR ── */
@@ -1017,13 +1082,41 @@
   .mt-gantt-header .mt-gtd {
     background:var(--surface2); padding:0.45rem 0.3rem; text-align:center;
     font-size:0.63rem; font-weight:700; color:var(--muted);
-    text-transform:uppercase; letter-spacing:0.04em; border-bottom:1px solid var(--border2);
+    text-transform:uppercase; letter-spacing:0.04em;
+    border-bottom:2px solid var(--mt-month-border);
     white-space:nowrap;
   }
   .mt-gantt-header .mt-col-model, .mt-gantt-header .mt-col-status { background:var(--surface2); z-index:25; }
-  .mt-year-band { color:var(--accent); font-size:0.65rem; font-family:var(--mono); }
 
-  .mt-timeline-cell { padding:0; position:relative; height:52px; }
+  /* Month cell in header */
+  .mt-month-cell {
+    position:absolute; top:0; height:100%; text-align:center;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:1px; font-size:0.6rem; font-weight:700; color:var(--muted);
+    border-left:1px solid var(--mt-month-border);
+    box-sizing:border-box; overflow:hidden;
+  }
+  .mt-month-cell.mt-new-year {
+    border-left:2px solid var(--mt-year-border);
+  }
+  .mt-month-cell.mt-month-even { background: var(--mt-stripe-even); }
+  .mt-year-band {
+    color:var(--accent); font-size:0.62rem; font-family:var(--mono);
+    font-weight:800; letter-spacing:0.04em; line-height:1;
+    background: rgba(0,229,160,0.09); border-radius:3px; padding:0.5px 3px;
+  }
+  .light-theme .mt-year-band, body.light-theme .mt-year-band {
+    background: rgba(10,140,104,0.10);
+  }
+  .mt-month-label { font-size:0.6rem; font-weight:700; color:var(--muted); line-height:1; }
+
+  /* Row zebra from month alternation */
+  .mt-gantt-row .mt-month-stripe {
+    position:absolute; top:0; bottom:0; pointer-events:none;
+  }
+  .mt-gantt-row .mt-month-stripe.even { background:var(--mt-stripe-even); }
+  .mt-gantt-row .mt-month-stripe.new-year { border-left:2px solid var(--mt-year-border); }
+
   .mt-timeline-track { position:relative; width:100%; height:100%; }
 
   /* Markers */
@@ -1031,8 +1124,8 @@
     position:absolute; top:50%; transform:translate(-50%,-50%);
     display:flex; align-items:center; justify-content:center;
     width:22px; height:22px; border-radius:6px; font-size:0.6rem; font-weight:700;
-    cursor:pointer; z-index:5; box-shadow:0 2px 6px rgba(0,0,0,0.35);
-    border:1.5px solid rgba(255,255,255,0.15); transition:transform 0.12s;
+    cursor:pointer; z-index:5; box-shadow:0 2px 6px rgba(0,0,0,0.22);
+    border:1.5px solid rgba(255,255,255,0.18); transition:transform 0.12s;
   }
   .mt-marker:hover { transform:translate(-50%,-50%) scale(1.2); z-index:6; }
   .mt-marker.mt-forecast { background:#5b7fd1; color:#0d1830; }
@@ -1046,7 +1139,26 @@
   .mt-marker.mt-cci   { background:#a06bf2; color:#1d0c33; }
   .mt-marker.mt-mp    { background:#ef5b5b; color:#2b0a0a; clip-path:polygon(0 0,100% 50%,0 100%); border-radius:0; width:16px; }
 
-  .mt-connector { position:absolute; top:50%; height:0; border-top:1.5px dashed rgba(255,255,255,0.12); z-index:1; }
+  /* Date labels under markers */
+  .mt-date-label {
+    font-size:0.5rem; font-family:var(--mono); font-weight:700;
+    color:var(--muted); white-space:nowrap; line-height:1;
+    background:var(--surface); border-radius:3px;
+    padding:1px 3px; border:1px solid var(--border);
+    pointer-events:none; opacity:0.8;
+    box-shadow:0 1px 3px rgba(0,0,0,0.15);
+  }
+  .mt-marker-wrap:hover .mt-date-label { opacity:1; color:var(--text); }
+  .mt-marker-wrap .mt-marker {
+    position:static !important; transform:none !important;
+    cursor:pointer; transition:transform 0.12s;
+  }
+  .mt-marker-wrap .mt-marker.mt-pp1 { transform:rotate(45deg) !important; }
+  .mt-marker-wrap:hover .mt-marker { transform:scale(1.2) !important; }
+  .mt-marker-wrap:hover .mt-marker.mt-pp1 { transform:rotate(45deg) scale(1.2) !important; }
+  .mt-timeline-cell { padding:0; position:relative; height:62px; }
+
+  .mt-connector { position:absolute; top:50%; height:0; border-top:1.5px dashed var(--mt-connector-color); z-index:1; }
   .mt-today-line { position:absolute; top:0; bottom:0; width:2px; background:#ffd166; z-index:8; pointer-events:none; }
   .mt-today-line::before {
     content:'วันนี้'; position:absolute; top:-1.3rem; left:50%; transform:translateX(-50%);
@@ -2103,6 +2215,7 @@ function initTheme() {
 function applyTheme(theme) {
   const isLight = theme === 'light';
   document.body.classList.toggle('light-theme', isLight);
+  document.body.classList.toggle('dark-theme', !isLight);
   const btn = document.getElementById('themeToggle');
   if (btn) btn.innerHTML = isLight ? '☀️ Light' : '🌙 Dark';
   localStorage.setItem('prpo_theme', theme);
@@ -4902,13 +5015,17 @@ function mtRenderGantt(){
   html+='<div class="mt-gantt-header">';
   html+='<div class="mt-gtd mt-col-model" style="position:sticky;top:0">MODEL</div>';
   html+='<div class="mt-gtd mt-col-status" style="position:sticky;top:0">สถานะ</div>';
-  html+=`<div class="mt-gtd" style="position:sticky;top:0;padding:0;min-width:${months*cellW}px">`;
-  html+=`<div style="position:relative;width:100%;height:100%">`;
+  html+=`<div class="mt-gtd" style="position:sticky;top:0;padding:0;min-width:${months*cellW}px;height:42px;">`;
+  html+=`<div style="position:relative;width:${months*cellW}px;height:100%;">`;
   for(let i=0;i<months;i++){
     const y=MT_YEAR_START+Math.floor(i/12), mo=i%12;
-    html+=`<div style="position:absolute;left:${i*cellW}px;top:0;width:${cellW}px;height:100%;text-align:center;${i>0?'border-left:1px solid var(--border2)':''}">`;
-    if(mo===0) html+=`<span class="mt-year-band">${y+543}</span><br>`;
-    html+=MT_MONTHS_TH[mo]+'</div>';
+    const isNewYear=(mo===0)&&(i>0);
+    const isFirst=(i===0);
+    const isEven=(i%2===0);
+    html+=`<div class="mt-month-cell${isNewYear?' mt-new-year':''}${isFirst?' mt-first-month':''}${isEven?' mt-month-even':''}" style="left:${i*cellW}px;width:${cellW}px;">`;
+    if(mo===0) html+=`<span class="mt-year-band">${y+543}</span>`;
+    html+=`<span class="mt-month-label">${MT_MONTHS_TH[mo]}</span>`;
+    html+='</div>';
   }
   html+='</div></div></div>';
 
@@ -4925,9 +5042,14 @@ function mtRenderGantt(){
     html+=`<div class="mt-gtd mt-timeline-cell" style="min-width:${months*cellW}px" data-mt-action="timeline" data-mtid="${m.id}">`;
     html+=`<div class="mt-timeline-track">`;
 
-    // grid lines
-    for(let i=0;i<=months;i++){
-      html+=`<div style="position:absolute;left:${(i/months)*100}%;top:0;bottom:0;width:1px;background:rgba(255,255,255,0.03)"></div>`;
+    // month stripes + year dividers
+    for(let i=0;i<months;i++){
+      const mo2=(MT_YEAR_START*12+i)%12; // month index 0-11
+      const isNewYear2=(mo2===0)&&(i>0);
+      const isEven2=(i%2===0);
+      if(isEven2||isNewYear2){
+        html+=`<div class="mt-month-stripe${isEven2?' even':''}${isNewYear2?' new-year':''}" style="left:${i*cellW}px;width:${cellW}px;"></div>`;
+      }
     }
     // today line
     if(todayCol>=0&&todayCol<=months){
@@ -4945,7 +5067,13 @@ function mtRenderGantt(){
       const col=mtDateToCol(item.date);
       const pct=(col/months)*100;
       const t=MT_TYPES[item.type];
-      html+=`<div class="mt-marker ${t.cls}" style="left:${pct}%" data-mt-action="editms" data-mt-model="${m.id}" data-mt-ms="${item.id}" title="${t.label} — ${mtFmtDateTH(item.date)}${item.note?' ('+mtEsc(item.note)+')':''}">${item.type==='pp1'?'':t.icon}</div>`;
+      // show month/year label below marker for readability
+      const d=new Date(item.date+'T00:00:00');
+      const dLabel=`${MT_MONTHS_TH[d.getMonth()]}${d.getFullYear()+543}`.replace('.','\u200b');
+      html+=`<div class="mt-marker-wrap" style="position:absolute;left:${pct}%;top:50%;transform:translate(-50%,-50%);z-index:5;display:flex;flex-direction:column;align-items:center;gap:2px;">`;
+      html+=`<div class="mt-marker ${t.cls}" style="position:static;transform:none${item.type==='pp1'?';transform:rotate(45deg)':''};" data-mt-action="editms" data-mt-model="${m.id}" data-mt-ms="${item.id}" title="${t.label} — ${mtFmtDateTH(item.date)}${item.note?' ('+mtEsc(item.note)+')':''}">${item.type==='pp1'?'':t.icon}</div>`;
+      html+=`<div class="mt-date-label">${dLabel}</div>`;
+      html+=`</div>`;
     });
 
     html+='</div></div></div>';
