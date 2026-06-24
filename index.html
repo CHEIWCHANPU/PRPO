@@ -2295,15 +2295,15 @@
           <div class="mt-kpi-val" id="kpi-prog">—</div>
           <div class="mt-kpi-sub">มีแผน milestone แล้ว</div>
         </div>
-        <div class="mt-kpi-card kpi-soon" data-kpi-filter="soon" onclick="mtKpiClick(this,'soon')">
-          <div class="mt-kpi-label">M/P ใน 90 วัน</div>
+        <div class="mt-kpi-card kpi-soon" data-kpi-filter="forecast60" onclick="mtKpiClick(this,'forecast60')">
+          <div class="mt-kpi-label">FORECAST ใน 60 วัน</div>
           <div class="mt-kpi-val" id="kpi-soon">—</div>
           <div class="mt-kpi-sub">ใกล้ถึงแล้ว</div>
         </div>
-        <div class="mt-kpi-card kpi-mass" data-kpi-filter="mass" onclick="mtKpiClick(this,'mass')">
-          <div class="mt-kpi-label">Mass Production</div>
+        <div class="mt-kpi-card kpi-mass" data-kpi-filter="order60" onclick="mtKpiClick(this,'order60')">
+          <div class="mt-kpi-label">CCI ORDER ใน 60 วัน</div>
           <div class="mt-kpi-val" id="kpi-mass">—</div>
-          <div class="mt-kpi-sub">เสร็จแล้ว</div>
+          <div class="mt-kpi-sub">ใกล้ถึงแล้ว</div>
         </div>
       </div>
 
@@ -5339,25 +5339,32 @@ function mtKpiClick(card, filter){
   // sync status dropdown if applicable
   const sel = document.getElementById('mt-filterStatus');
   if(mtKpiActiveFilter === 'inprogress') sel.value = 'inprogress';
-  else if(mtKpiActiveFilter === 'mass')  sel.value = 'mass';
   else sel.value = '';
   mtRenderGantt();
 }
 function mtUpdateKpi(){
   const today = mtTodayISO();
-  const ninetyDays = new Date(); ninetyDays.setDate(ninetyDays.getDate()+90);
-  const ninetyISO = ninetyDays.toISOString().slice(0,10);
+  const sixtyDays = new Date(); sixtyDays.setDate(sixtyDays.getDate()+60);
+  const sixtyISO = sixtyDays.toISOString().slice(0,10);
   const total = MT_DATA.length;
-  const mass  = MT_DATA.filter(m=>{ const mp=mtGetMpMs(m); return mp&&mp.date<=today; }).length;
   const prog  = MT_DATA.filter(m=>{ const s=mtModelStatus(m); return s==='inprogress'||s==='inprogress_mp_set'; }).length;
-  const soon  = MT_DATA.filter(m=>{ const mp=mtGetMpMs(m); return mp&&mp.date>today&&mp.date<=ninetyISO; }).length;
+  const forecastSoon = MT_DATA.filter(m=>{
+    const fc=m.milestones.find(x=>x.type==='forecast'&&x.date);
+    return fc&&fc.date>today&&fc.date<=sixtyISO;
+  }).length;
+  const orderSoon = MT_DATA.filter(m=>{
+    const ord=m.milestones.find(x=>x.type==='order'&&x.date);
+    return ord&&ord.date>today&&ord.date<=sixtyISO;
+  }).length;
   document.getElementById('kpi-total').textContent = total;
   document.getElementById('kpi-prog').textContent  = prog;
-  document.getElementById('kpi-soon').textContent  = soon;
-  document.getElementById('kpi-mass').textContent  = mass;
-  // update soon card sub
+  document.getElementById('kpi-soon').textContent  = forecastSoon;
+  document.getElementById('kpi-mass').textContent  = orderSoon;
+  // update sub text on each card
   document.querySelector('.mt-kpi-card.kpi-soon .mt-kpi-sub').textContent =
-    soon > 0 ? `ภายใน 90 วัน` : 'ยังไม่มี';
+    forecastSoon > 0 ? `ภายใน 60 วัน` : 'ยังไม่มี';
+  document.querySelector('.mt-kpi-card.kpi-mass .mt-kpi-sub').textContent =
+    orderSoon > 0 ? `ภายใน 60 วัน` : 'ยังไม่มี';
 }
 
 // ── collapse state ───────────────────────────────────
@@ -5391,15 +5398,19 @@ function mtGetFiltered(){
   const cust=document.getElementById('mt-filterCustomer').value;
   const stat=document.getElementById('mt-filterStatus').value;
   const today = mtTodayISO();
-  const ninetyDays = new Date(); ninetyDays.setDate(ninetyDays.getDate()+90);
-  const ninetyISO = ninetyDays.toISOString().slice(0,10);
+  const sixtyDays = new Date(); sixtyDays.setDate(sixtyDays.getDate()+60);
+  const sixtyISO = sixtyDays.toISOString().slice(0,10);
   return MT_DATA.filter(m=>{
     if(q&&!(m.model.toLowerCase().includes(q)||(m.customer||'').toLowerCase().includes(q))) return false;
     if(cust&&m.customer!==cust) return false;
-    // KPI "soon" override
-    if(mtKpiActiveFilter==='soon'){
-      const mp=mtGetMpMs(m);
-      return mp&&mp.date>today&&mp.date<=ninetyISO;
+    // KPI "forecast60" / "order60" override
+    if(mtKpiActiveFilter==='forecast60'){
+      const fc=m.milestones.find(x=>x.type==='forecast'&&x.date);
+      return fc&&fc.date>today&&fc.date<=sixtyISO;
+    }
+    if(mtKpiActiveFilter==='order60'){
+      const ord=m.milestones.find(x=>x.type==='order'&&x.date);
+      return ord&&ord.date>today&&ord.date<=sixtyISO;
     }
     if(stat){
       const s=mtModelStatus(m);
@@ -5437,6 +5448,44 @@ function mtUpdateYearLabel(){
   if(el) el.textContent = (MT_YEAR_START+543) + ' – ' + (MT_YEAR_END+543);
 }
 
+// ── upcoming alert (toast on load) ──────────────────
+function mtNotifyUpcoming(){
+  const today = mtTodayISO();
+  const sixtyDays = new Date(); sixtyDays.setDate(sixtyDays.getDate()+60);
+  const sixtyISO = sixtyDays.toISOString().slice(0,10);
+  const thirtyDays = new Date(); thirtyDays.setDate(thirtyDays.getDate()+30);
+  const thirtyISO = thirtyDays.toISOString().slice(0,10);
+
+  let forecastTotal=0, forecastUrgent=0, orderTotal=0, orderUrgent=0;
+  MT_DATA.forEach(m=>{
+    const fc=m.milestones.find(x=>x.type==='forecast'&&x.date);
+    if(fc&&fc.date>today&&fc.date<=sixtyISO){
+      forecastTotal++;
+      if(fc.date<=thirtyISO) forecastUrgent++;
+    }
+    const ord=m.milestones.find(x=>x.type==='order'&&x.date);
+    if(ord&&ord.date>today&&ord.date<=sixtyISO){
+      orderTotal++;
+      if(ord.date<=thirtyISO) orderUrgent++;
+    }
+  });
+
+  if(forecastTotal===0 && orderTotal===0) return;
+
+  const parts=[];
+  if(forecastTotal>0) parts.push(`FORECAST ${forecastTotal} รายการ${forecastUrgent>0?` (ใกล้ถึง ${forecastUrgent})`:''}`);
+  if(orderTotal>0)    parts.push(`CCI ORDER ${orderTotal} รายการ${orderUrgent>0?` (ใกล้ถึง ${orderUrgent})`:''}`);
+
+  const hasUrgent = forecastUrgent>0 || orderUrgent>0;
+  showToast({
+    icon: hasUrgent ? '🔴' : '🔔',
+    title: 'มีรายการใกล้ถึงกำหนดใน 60 วัน',
+    sub: parts.join(' · '),
+    chip: hasUrgent ? `ใกล้ถึงภายใน 30 วัน` : null,
+    chipCls: hasUrgent ? 'urgent' : ''
+  }, hasUrgent ? 'error' : 'info', 6000);
+}
+
 // ── render ────────────────────────────────────────────
 async function renderModelTracker(){
   const label=document.getElementById('mt-todayLabel');
@@ -5450,6 +5499,7 @@ async function renderModelTracker(){
     const wrap=document.getElementById('mt-ganttWrap');
     if(wrap) wrap.innerHTML='<div class="mt-empty-state">⏳ กำลังโหลดข้อมูล...</div>';
     await mtLoadData();
+    mtNotifyUpcoming();
   }
   mtRefreshCustomerFilter();
   mtUpdateKpi();
