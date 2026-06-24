@@ -2318,7 +2318,7 @@
       <!-- Toolbar -->
       <div class="toolbar" style="margin-bottom:0.8rem">
         <div class="search-box">
-          <span>🔍</span>
+          <span class="search-icon">🔍</span>
           <input type="text" id="mt-searchInput" placeholder="ค้นหา Model, Customer...">
         </div>
         <select class="filter-select" id="mt-filterCustomer"><option value="">ลูกค้าทั้งหมด</option></select>
@@ -5145,8 +5145,11 @@ document.addEventListener('keydown', function(e) {
       <div class="mt-modal-section">
         <div class="mt-modal-section-label">📋 สถานะ</div>
         <div class="mt-field-row" style="margin-bottom:0">
-          <label>หมายเหตุสถานะ</label>
-          <input type="text" id="mt-f-statusnote" placeholder="เช่น รอ REF.NM / กำลังดำเนินการ">
+          <label>สถานะ</label>
+          <select id="mt-f-statusnote">
+            <option value="รอ REF.NM">รอ REF.NM</option>
+            <option value="กำลังดำเนินการ">กำลังดำเนินการ</option>
+          </select>
         </div>
       </div>
     </div>
@@ -5739,20 +5742,23 @@ function mtOpenModelModal(id){
   mtEditingModelId=id;
   const titleEl=document.getElementById('mt-modelModalTitle');
   const delBtn=document.getElementById('mt-btnDeleteModel');
+  const statusSel=document.getElementById('mt-f-statusnote');
   if(id){
     const m=MT_DATA.find(x=>x.id===id);
     titleEl.textContent='แก้ไข Model';
     document.getElementById('mt-f-model').value=m.model;
     document.getElementById('mt-f-customer').value=m.customer;
     document.getElementById('mt-f-volume').value=m.volume;
-    document.getElementById('mt-f-statusnote').value=m.statusNote;
+    // ค่าเก่าบางตัวอาจเป็น free text ที่ไม่ตรงกับ 2 ตัวเลือกใหม่ — ถ้าไม่ตรง
+    // ให้ fallback เป็น "รอ REF.NM" กันค่า select ว่างเปล่า
+    statusSel.value = (m.statusNote==='กำลังดำเนินการ') ? 'กำลังดำเนินการ' : 'รอ REF.NM';
     delBtn.style.display='block';
   } else {
     titleEl.textContent='เพิ่ม Model ใหม่';
     document.getElementById('mt-f-model').value='';
     document.getElementById('mt-f-customer').value='';
     document.getElementById('mt-f-volume').value='';
-    document.getElementById('mt-f-statusnote').value='';
+    statusSel.value='รอ REF.NM';
     delBtn.style.display='none';
   }
   mtOpenModal('mt-modelModal');
