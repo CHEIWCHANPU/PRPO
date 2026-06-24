@@ -1056,19 +1056,6 @@
   }
 
   /* ── TODAY BADGE ── */
-  .mt-today-badge {
-    display:inline-flex; align-items:center; gap:0.4rem;
-    padding:0.3rem 0.8rem; background:var(--surface2);
-    border:1px solid var(--border); border-radius:20px;
-    font-size:0.72rem; color:var(--muted); font-family:var(--mono);
-  }
-  .mt-today-badge::before {
-    content:''; display:inline-block; width:6px; height:6px;
-    border-radius:50%; background:var(--accent);
-    box-shadow:0 0 5px rgba(0,229,160,0.5);
-    animation:wlPulse 2s infinite;
-  }
-
   /* ── LEGEND — NEW STYLE ── */
   .mt-legend {
     display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; padding:0.7rem 1rem;
@@ -1309,6 +1296,12 @@
     padding:0.7rem 0.9rem; cursor:pointer; transition:border-color 0.15s, background 0.15s;
     display:flex; flex-direction:column; gap:0.18rem;
   }
+  /* ── MODEL TRACKER — COMPACT SPACING (move sections closer together) ── */
+  #page-modeltracker .page-header { margin-bottom: 0.7rem; }
+  #page-modeltracker .mt-legend { margin-bottom: 0.5rem; padding: 0.5rem 0.9rem; }
+  #page-modeltracker .mt-kpi-bar { margin-bottom: 0.5rem; }
+  #page-modeltracker .mt-kpi-card { padding: 0.55rem 0.85rem; }
+  #page-modeltracker .toolbar { margin-bottom: 0.5rem !important; }
   .mt-kpi-card:hover { border-color:var(--accent2); background:var(--surface2); }
   .mt-kpi-card.active { border-color:var(--accent); background:rgba(0,229,160,0.06); }
   .mt-kpi-label { font-size:0.6rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); }
@@ -2227,7 +2220,6 @@
           <p>แผนการผลิต Pre-Production → Mass Production Timeline</p>
         </div>
         <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
-          <div class="mt-today-badge" id="mt-todayLabel"></div>
           <!-- Year Navigator -->
           <div class="mt-year-nav">
             <button class="mt-year-nav-btn" onclick="mtYearPrev()">◀</button>
