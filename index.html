@@ -1464,9 +1464,12 @@
 ══════════════════════════════════════════════ -->
 <div id="welcomeScreen">
 <script>
-  // ตรวจสอบสถานะ login ทันที — ถ้าเคย login ไว้แล้ว ซ่อนหน้านี้โดยไม่มีการกระพริบ
-  if (localStorage.getItem('prpo_logged_in') === 'true') {
+  // ตรวจสอบสถานะ login ทันที — ซ่อนหน้านี้เฉพาะถ้า login ไว้แล้ว "และ" แท็บนี้ยังไม่ถูกปิดไปก่อนหน้า
+  // (localStorage = เคย login, sessionStorage = แท็บยังเปิดต่อเนื่อง — ถูกล้างอัตโนมัติเมื่อปิดแท็บ/ปิดเบราว์เซอร์)
+  if (localStorage.getItem('prpo_logged_in') === 'true' && sessionStorage.getItem('prpo_session_active') === 'true') {
     document.currentScript.parentElement.style.display = 'none';
+  } else {
+    localStorage.removeItem('prpo_logged_in');
   }
 </script>
 
@@ -5073,6 +5076,7 @@ const LOGIN_KEY = 'prpo_logged_in';
 
 function doLogout() {
   localStorage.removeItem(LOGIN_KEY);
+  sessionStorage.removeItem('prpo_session_active');
   const ws = document.getElementById('welcomeScreen');
   // reset button
   const btn = document.getElementById('wlLoginBtn');
@@ -5089,6 +5093,7 @@ function wlLogin() {
   btn.style.opacity = '0.7';
   setTimeout(() => {
     localStorage.setItem(LOGIN_KEY, 'true');
+    sessionStorage.setItem('prpo_session_active', 'true');
     const ws = document.getElementById('welcomeScreen');
     ws.classList.add('hide');
     setTimeout(() => { ws.style.display = 'none'; }, 520);
