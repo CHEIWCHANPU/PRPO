@@ -5149,10 +5149,9 @@ function mtStatusBadge(m){
 // ── date helpers ────────────────────────────────────
 function mtDateToCol(dateStr){
   const d = new Date(dateStr+'T00:00:00');
-  const y=d.getFullYear(), mo=d.getMonth(), day=d.getDate();
+  const y=d.getFullYear(), mo=d.getMonth();
   const idx=(y-MT_YEAR_START)*12+mo;
-  const dim=new Date(y,mo+1,0).getDate();
-  return idx+(day-1)/dim;
+  return idx+0.5; // center marker in its month column
 }
 function mtTotalMonths(){ return (MT_YEAR_END-MT_YEAR_START+1)*12; }
 function mtFmtDateTH(dateStr){
