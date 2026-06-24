@@ -1036,25 +1036,58 @@
     .mt-side.mt-side-open { width:100%; }
   }
 
-  /* Legend */
-  .mt-legend {
-    display:flex; gap:1rem; flex-wrap:wrap; padding:0.6rem 0.9rem;
-    background:var(--surface); border:1px solid var(--border); border-radius:9px;
-    margin-bottom:0.8rem; font-size:0.73rem; color:var(--muted);
+  /* ── TODAY BADGE ── */
+  .mt-today-badge {
+    display:inline-flex; align-items:center; gap:0.4rem;
+    padding:0.3rem 0.8rem; background:var(--surface2);
+    border:1px solid var(--border); border-radius:20px;
+    font-size:0.72rem; color:var(--muted); font-family:var(--mono);
   }
-  .mt-legend-item { display:flex; align-items:center; gap:0.35rem; }
-  .mt-legend-dot { width:10px; height:10px; border-radius:3px; flex-shrink:0; display:inline-block; }
+  .mt-today-badge::before {
+    content:''; display:inline-block; width:6px; height:6px;
+    border-radius:50%; background:var(--accent);
+    box-shadow:0 0 5px rgba(0,229,160,0.5);
+    animation:wlPulse 2s infinite;
+  }
 
-  /* Gantt table */
-  .mt-gantt { display:table; width:100%; border-collapse:collapse; }
-  .mt-gantt-row { display:table-row; cursor:pointer; }
+  /* ── LEGEND — NEW STYLE ── */
+  .mt-legend {
+    display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; padding:0.7rem 1rem;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    margin-bottom:0.8rem; font-size:0.73rem; color:var(--text);
+  }
+  .mt-legend-group { display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap; }
+  .mt-legend-item { display:flex; align-items:center; gap:0.4rem; white-space:nowrap; }
+  .mt-legend-sub { color:var(--muted); font-size:0.62rem; }
+  .mt-legend-arrow { color:var(--border2); font-size:0.9rem; font-weight:300; flex-shrink:0; }
+  .mt-legend-divider { width:1px; align-self:stretch; background:var(--border2); flex-shrink:0; min-height:1.1rem; }
+  /* Legend icons — pill badges */
+  .mt-legend-icon {
+    display:inline-flex; align-items:center; justify-content:center;
+    width:24px; height:18px; border-radius:5px;
+    font-size:0.52rem; font-weight:800; letter-spacing:0.02em;
+    font-family:var(--mono); flex-shrink:0;
+  }
+  .mt-legend-forecast { background:rgba(91,127,209,0.2); color:#7ba0e4; border:1px solid rgba(91,127,209,0.35); }
+  .mt-legend-pp1      { background:rgba(224,167,46,0.18); color:#e0a72e; border:1px solid rgba(224,167,46,0.32); }
+  .mt-legend-order    { background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid rgba(245,158,11,0.3); border-radius:9px; }
+  .mt-legend-cci      { background:rgba(160,107,242,0.18); color:#b388ff; border:1px solid rgba(160,107,242,0.32); }
+  .mt-legend-mp       { background:rgba(239,91,91,0.15); color:#f87171; border:1px solid rgba(239,91,91,0.3); border-radius:3px; }
+  @media (max-width:760px) {
+    .mt-legend-arrow { display:none; }
+    .mt-legend-divider { width:100%; height:1px; align-self:auto; min-height:0; margin:0.1rem 0; }
+  }
+
+  /* ── GANTT FLEX-BASED ── */
+  .mt-gantt { display:flex; flex-direction:column; width:100%; }
+  .mt-gantt-row { display:flex; align-items:stretch; cursor:pointer; position:relative; }
   .mt-gantt-row:hover .mt-gtd { background:var(--surface2); }
   .mt-gantt-row.mt-selected .mt-gtd { background:rgba(0,229,160,0.06); }
-  .mt-gtd { display:table-cell; vertical-align:middle; border-bottom:1px solid var(--border); }
+  .mt-gtd { display:flex; align-items:center; flex-shrink:0; border-bottom:1px solid var(--border); }
 
   .mt-col-model {
     position:sticky; left:0; z-index:20; background:var(--surface);
-    padding:0.6rem 0.85rem; min-width:140px; max-width:160px;
+    padding:0.6rem 0.85rem; min-width:140px; max-width:160px; width:140px;
     border-right:1px solid var(--border2);
   }
   .mt-gantt-row.mt-selected .mt-col-model { background:rgba(0,229,160,0.09); border-right-color:var(--accent); }
@@ -1064,7 +1097,7 @@
 
   .mt-col-status {
     position:sticky; left:140px; z-index:20; background:var(--surface);
-    padding:0.6rem 0.6rem; min-width:120px; border-right:1px solid var(--border2); font-size:0.7rem;
+    padding:0.6rem 0.6rem; min-width:120px; width:120px; border-right:1px solid var(--border2); font-size:0.7rem;
   }
   .mt-gantt-row.mt-selected .mt-col-status { background:rgba(0,229,160,0.09); }
   .mt-gantt-row:hover .mt-col-status { background:var(--surface2); }
@@ -1078,7 +1111,7 @@
   .mt-status-pill.mt-upcoming  { background:rgba(99,102,241,0.14);   color:#818cf8; }
   .mt-status-pill.mt-nodate    { background:var(--surface2); color:var(--muted); }
 
-  .mt-gantt-header { display:table-row; }
+  .mt-gantt-header { display:flex; position:sticky; top:0; z-index:24; }
   .mt-gantt-header .mt-gtd {
     background:var(--surface2); padding:0.45rem 0.3rem; text-align:center;
     font-size:0.63rem; font-weight:700; color:var(--muted);
@@ -1086,7 +1119,21 @@
     border-bottom:2px solid var(--mt-month-border);
     white-space:nowrap;
   }
-  .mt-gantt-header .mt-col-model, .mt-gantt-header .mt-col-status { background:var(--surface2); z-index:25; }
+  .mt-gantt-header .mt-col-model, .mt-gantt-header .mt-col-status { background:var(--surface2); z-index:25; position:sticky; top:0; }
+
+  /* ── CSS VARS FOR GANTT COLORS ── */
+  .dark-theme {
+    --mt-month-border: rgba(255,255,255,0.06);
+    --mt-year-border:  rgba(0,229,160,0.25);
+    --mt-stripe-even:  rgba(255,255,255,0.018);
+    --mt-connector-color: rgba(255,255,255,0.12);
+  }
+  .light-theme {
+    --mt-month-border: rgba(0,0,0,0.07);
+    --mt-year-border:  rgba(10,140,104,0.28);
+    --mt-stripe-even:  rgba(0,0,0,0.018);
+    --mt-connector-color: rgba(0,0,0,0.1);
+  }
 
   /* Month cell in header */
   .mt-month-cell {
@@ -1119,50 +1166,45 @@
 
   .mt-timeline-track { position:relative; width:100%; height:100%; }
 
-  /* Markers */
+  /* ── MARKERS — REDESIGNED ── */
   .mt-marker {
     position:absolute; top:50%; transform:translate(-50%,-50%);
     display:flex; align-items:center; justify-content:center;
-    width:22px; height:22px; border-radius:6px; font-size:0.6rem; font-weight:700;
-    cursor:pointer; z-index:5; box-shadow:0 2px 6px rgba(0,0,0,0.22);
-    border:1.5px solid rgba(255,255,255,0.18); transition:transform 0.12s;
+    width:26px; height:20px; border-radius:6px; font-size:0.48rem; font-weight:800;
+    cursor:pointer; z-index:5; box-shadow:0 2px 8px rgba(0,0,0,0.28);
+    border:1.5px solid rgba(255,255,255,0.15); transition:transform 0.13s, box-shadow 0.13s;
+    letter-spacing:0.02em; font-family:var(--mono);
   }
-  .mt-marker:hover { transform:translate(-50%,-50%) scale(1.2); z-index:6; }
-  .mt-marker.mt-forecast { background:#5b7fd1; color:#0d1830; }
-  .mt-marker.mt-pp1 {
-    background:transparent; color:#e0a72e; border:2px solid #e0a72e;
-    width:16px; height:16px; border-radius:3px;
-    transform:translate(-50%,-50%) rotate(45deg);
-  }
-  .mt-marker.mt-pp1:hover { transform:translate(-50%,-50%) rotate(45deg) scale(1.25); }
-  .mt-marker.mt-order { background:#e0a72e; color:#2b1c00; border-radius:50%; }
-  .mt-marker.mt-cci   { background:#a06bf2; color:#1d0c33; }
-  .mt-marker.mt-mp    { background:#ef5b5b; color:#2b0a0a; clip-path:polygon(0 0,100% 50%,0 100%); border-radius:0; width:16px; }
+  .mt-marker:hover { transform:translate(-50%,-50%) scale(1.18); z-index:6; box-shadow:0 4px 14px rgba(0,0,0,0.4); }
+  .mt-marker.mt-forecast { background:#3d5ea8; color:#c5d5ff; border-color:rgba(91,127,209,0.5); }
+  .mt-marker.mt-pp1      { background:#b8820a; color:#fff8c5; border-color:rgba(224,167,46,0.5); }
+  .mt-marker.mt-order    { background:#c47a00; color:#fff3c4; border-color:rgba(245,158,11,0.45); border-radius:10px; }
+  .mt-marker.mt-cci      { background:#7340d8; color:#e8d9ff; border-color:rgba(160,107,242,0.5); }
+  .mt-marker.mt-mp       { background:#c23333; color:#ffd5d5; border-color:rgba(239,91,91,0.45); border-radius:3px; }
 
-  /* Date labels under markers */
+  /* Month label under marker */
   .mt-date-label {
     font-size:0.5rem; font-family:var(--mono); font-weight:700;
     color:var(--muted); white-space:nowrap; line-height:1;
     background:var(--surface); border-radius:3px;
     padding:1px 3px; border:1px solid var(--border);
-    pointer-events:none; opacity:0.8;
-    box-shadow:0 1px 3px rgba(0,0,0,0.15);
+    pointer-events:none; opacity:0.75;
+    box-shadow:0 1px 3px rgba(0,0,0,0.12);
   }
   .mt-marker-wrap:hover .mt-date-label { opacity:1; color:var(--text); }
   .mt-marker-wrap .mt-marker {
     position:static !important; transform:none !important;
     cursor:pointer; transition:transform 0.12s;
   }
-  .mt-marker-wrap .mt-marker.mt-pp1 { transform:rotate(45deg) !important; }
-  .mt-marker-wrap:hover .mt-marker { transform:scale(1.2) !important; }
-  .mt-marker-wrap:hover .mt-marker.mt-pp1 { transform:rotate(45deg) scale(1.2) !important; }
+  .mt-marker-wrap:hover .mt-marker { transform:scale(1.18) !important; }
   .mt-timeline-cell { padding:0; position:relative; height:62px; }
 
   .mt-connector { position:absolute; top:50%; height:0; border-top:1.5px dashed var(--mt-connector-color); z-index:1; }
-  .mt-today-line { position:absolute; top:0; bottom:0; width:2px; background:#ffd166; z-index:8; pointer-events:none; }
+  .mt-today-line { position:absolute; top:0; bottom:0; width:2px; background:#ffd166; z-index:8; pointer-events:none; border-radius:1px; }
   .mt-today-line::before {
     content:'วันนี้'; position:absolute; top:-1.3rem; left:50%; transform:translateX(-50%);
-    font-size:0.58rem; color:#ffd166; white-space:nowrap; font-weight:700; font-family:var(--mono);
+    font-size:0.55rem; color:#ffd166; white-space:nowrap; font-weight:700; font-family:var(--mono);
+    background:rgba(255,209,102,0.12); padding:1px 4px; border-radius:3px;
   }
 
   /* Side panel */
@@ -1188,11 +1230,12 @@
     display:flex; align-items:center; gap:0.55rem; padding:0.5rem 0.65rem;
     background:var(--surface2); border:1px solid var(--border); border-radius:8px; font-size:0.76rem;
   }
-  .mt-ms-icon { width:24px; height:24px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:0.68rem; font-weight:700; flex-shrink:0; }
-  .mt-ms-icon.mt-forecast { background:rgba(91,127,209,0.18); color:#5b7fd1; }
-  .mt-ms-icon.mt-pp1, .mt-ms-icon.mt-order { background:rgba(224,167,46,0.18); color:#e0a72e; }
-  .mt-ms-icon.mt-cci  { background:rgba(160,107,242,0.18); color:#a06bf2; }
-  .mt-ms-icon.mt-mp   { background:rgba(239,91,91,0.18);   color:#ef5b5b; }
+  .mt-ms-icon { width:32px; height:24px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:0.5rem; font-weight:800; flex-shrink:0; letter-spacing:0.02em; font-family:var(--mono); }
+  .mt-ms-icon.mt-forecast { background:rgba(91,127,209,0.18); color:#7ba0e4; border:1px solid rgba(91,127,209,0.3); }
+  .mt-ms-icon.mt-pp1      { background:rgba(224,167,46,0.18);  color:#e0a72e; border:1px solid rgba(224,167,46,0.3); }
+  .mt-ms-icon.mt-order    { background:rgba(245,158,11,0.15);  color:#f59e0b; border:1px solid rgba(245,158,11,0.28); border-radius:10px; }
+  .mt-ms-icon.mt-cci      { background:rgba(160,107,242,0.18); color:#b388ff; border:1px solid rgba(160,107,242,0.3); }
+  .mt-ms-icon.mt-mp       { background:rgba(239,91,91,0.15);   color:#f87171; border:1px solid rgba(239,91,91,0.28); border-radius:3px; }
   .mt-ms-body { flex:1; min-width:0; }
   .mt-ms-name { font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .mt-ms-date { font-family:var(--mono); font-size:0.67rem; color:var(--muted); }
@@ -1980,22 +2023,54 @@
           <p>แผนการผลิต Pre-Production → Mass Production Timeline</p>
         </div>
         <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
-          <div class="topbar-chip" id="mt-todayLabel" style="font-size:0.74rem"></div>
-          <button class="btn btn-sm" id="mt-btnExport">⬇ Export JSON</button>
-          <button class="btn btn-sm" id="mt-btnImportTrigger">⬆ Import JSON</button>
-          <input type="file" id="mt-btnImport" accept="application/json" style="display:none">
+          <div class="mt-today-badge" id="mt-todayLabel"></div>
           <button class="btn btn-primary btn-sm" id="mt-btnAddModel">+ เพิ่ม Model</button>
         </div>
       </div>
 
-      <!-- Legend -->
+      <!-- Legend — ปรับปรุงใหม่ -->
       <div class="mt-legend">
-        <div class="mt-legend-item"><span class="mt-legend-dot" style="background:#5b7fd1"></span> Forecast</div>
-        <div class="mt-legend-item"><span class="mt-legend-dot" style="background:#e0a72e;border-radius:0;transform:rotate(45deg)"></span> PP1</div>
-        <div class="mt-legend-item"><span class="mt-legend-dot" style="background:#e0a72e;border-radius:50%"></span> CCI Order</div>
-        <div class="mt-legend-item"><span class="mt-legend-dot" style="background:#a06bf2"></span> CCI Issued</div>
-        <div class="mt-legend-item"><span class="mt-legend-dot" style="background:#ef5b5b;clip-path:polygon(0 0,100% 50%,0 100%)"></span> Mass Production</div>
-        <div class="mt-legend-item"><span class="mt-legend-dot" style="background:#ffd166;border-radius:2px"></span> วันนี้</div>
+        <div class="mt-legend-group">
+          <!-- Forecast -->
+          <div class="mt-legend-item">
+            <span class="mt-legend-icon mt-legend-forecast">FC</span>
+            <span>Forecast</span>
+            <span class="mt-legend-sub">คาดการณ์</span>
+          </div>
+          <span class="mt-legend-arrow">›</span>
+          <!-- PP1 -->
+          <div class="mt-legend-item">
+            <span class="mt-legend-icon mt-legend-pp1">PP</span>
+            <span>PP1</span>
+            <span class="mt-legend-sub">Pre-Production</span>
+          </div>
+          <span class="mt-legend-arrow">›</span>
+          <!-- CCI Order -->
+          <div class="mt-legend-item">
+            <span class="mt-legend-icon mt-legend-order">OR</span>
+            <span>CCI Order</span>
+            <span class="mt-legend-sub">สั่งซื้อ</span>
+          </div>
+          <span class="mt-legend-arrow">›</span>
+          <!-- CCI Issued -->
+          <div class="mt-legend-item">
+            <span class="mt-legend-icon mt-legend-cci">CI</span>
+            <span>CCI Issued</span>
+            <span class="mt-legend-sub">ออกเลขแล้ว</span>
+          </div>
+          <span class="mt-legend-arrow">›</span>
+          <!-- Mass Production -->
+          <div class="mt-legend-item">
+            <span class="mt-legend-icon mt-legend-mp">MP</span>
+            <span>Mass Production</span>
+            <span class="mt-legend-sub">ผลิตจริง</span>
+          </div>
+        </div>
+        <div class="mt-legend-divider"></div>
+        <div class="mt-legend-item">
+          <span style="display:inline-block;width:3px;height:16px;background:#ffd166;border-radius:2px;flex-shrink:0"></span>
+          <span style="font-size:0.69rem;color:var(--muted)">วันนี้</span>
+        </div>
       </div>
 
       <!-- Toolbar -->
@@ -4871,11 +4946,11 @@ document.addEventListener('keydown', function(e) {
 // ════════════════════════════════════════════════════════
 
 const MT_TYPES = {
-  forecast: { label:'Forecast',              short:'FC',  icon:'◆', cls:'mt-forecast' },
-  pp1:      { label:'PP1 (Pre-Production)',  short:'PP1', icon:'◇', cls:'mt-pp1'      },
-  order:    { label:'CCI Order',             short:'ORD', icon:'●', cls:'mt-order'    },
-  cci:      { label:'CCI Issued',            short:'CCI', icon:'★', cls:'mt-cci'      },
-  mp:       { label:'Mass Production (M/P)', short:'M/P', icon:'▶', cls:'mt-mp'       },
+  forecast: { label:'Forecast',              short:'FC',  icon:'FC', cls:'mt-forecast' },
+  pp1:      { label:'PP1 (Pre-Production)',  short:'PP1', icon:'PP', cls:'mt-pp1'      },
+  order:    { label:'CCI Order',             short:'ORD', icon:'OR', cls:'mt-order'    },
+  cci:      { label:'CCI Issued',            short:'CCI', icon:'CI', cls:'mt-cci'      },
+  mp:       { label:'Mass Production (M/P)', short:'M/P', icon:'MP', cls:'mt-mp'       },
 };
 
 const MT_YEAR_START = 2026, MT_YEAR_END = 2027;
@@ -4987,7 +5062,13 @@ function mtRefreshCustomerFilter(){
 function renderModelTracker(){
   if(!mtInited){ mtSeedData(); mtInited=true; }
   const label=document.getElementById('mt-todayLabel');
-  if(label) label.textContent='📅 '+mtFmtDateTH(mtTodayISO());
+  if(label){
+    const now=new Date();
+    const d=now.getDate();
+    const mo=MT_MONTHS_TH[now.getMonth()];
+    const y=now.getFullYear()+543;
+    label.textContent=d+' '+mo+' '+y;
+  }
   mtRefreshCustomerFilter();
   mtRenderGantt();
   mtRenderSide();
@@ -5013,9 +5094,9 @@ function mtRenderGantt(){
 
   // header
   html+='<div class="mt-gantt-header">';
-  html+='<div class="mt-gtd mt-col-model" style="position:sticky;top:0">MODEL</div>';
-  html+='<div class="mt-gtd mt-col-status" style="position:sticky;top:0">สถานะ</div>';
-  html+=`<div class="mt-gtd" style="position:sticky;top:0;padding:0;min-width:${months*cellW}px;height:42px;">`;
+  html+='<div class="mt-gtd mt-col-model">MODEL</div>';
+  html+='<div class="mt-gtd mt-col-status">สถานะ</div>';
+  html+=`<div class="mt-gtd" style="padding:0;min-width:${months*cellW}px;height:42px;">`;
   html+=`<div style="position:relative;width:${months*cellW}px;height:100%;">`;
   for(let i=0;i<months;i++){
     const y=MT_YEAR_START+Math.floor(i/12), mo=i%12;
@@ -5062,17 +5143,29 @@ function mtRenderGantt(){
       const x2=(mtDateToCol(sorted[sorted.length-1].date)/months)*100;
       html+=`<div class="mt-connector" style="left:${x1}%;width:${x2-x1}%"></div>`;
     }
-    // markers
+    // markers — collision-aware spacing (avoid icons & date labels overlapping when close together)
+    const pxPerPct=(months*cellW)/100;
+    const MIN_ICON_GAP_PX=24, MIN_LABEL_GAP_PX=34;
+    let lastIconPx=null, lastLabelPx=null;
     sorted.forEach(item=>{
       const col=mtDateToCol(item.date);
-      const pct=(col/months)*100;
+      let pct=(col/months)*100;
+      let px=pct*pxPerPct;
+      // nudge right if this marker's icon would overlap the previous one
+      if(lastIconPx!==null && (px-lastIconPx)<MIN_ICON_GAP_PX){
+        px=lastIconPx+MIN_ICON_GAP_PX;
+        pct=px/pxPerPct;
+      }
+      lastIconPx=px;
       const t=MT_TYPES[item.type];
-      // show month/year label below marker for readability
+      // show month/year label below marker — skip if it would collide with the previous visible label
       const d=new Date(item.date+'T00:00:00');
-      const dLabel=`${MT_MONTHS_TH[d.getMonth()]}${d.getFullYear()+543}`.replace('.','\u200b');
+      const dLabel=`${MT_MONTHS_TH[d.getMonth()]} ${d.getFullYear()+543}`;
+      const showLabel=(lastLabelPx===null)||((px-lastLabelPx)>=MIN_LABEL_GAP_PX);
+      if(showLabel) lastLabelPx=px;
       html+=`<div class="mt-marker-wrap" style="position:absolute;left:${pct}%;top:50%;transform:translate(-50%,-50%);z-index:5;display:flex;flex-direction:column;align-items:center;gap:2px;">`;
-      html+=`<div class="mt-marker ${t.cls}" style="position:static;transform:none${item.type==='pp1'?';transform:rotate(45deg)':''};" data-mt-action="editms" data-mt-model="${m.id}" data-mt-ms="${item.id}" title="${t.label} — ${mtFmtDateTH(item.date)}${item.note?' ('+mtEsc(item.note)+')':''}">${item.type==='pp1'?'':t.icon}</div>`;
-      html+=`<div class="mt-date-label">${dLabel}</div>`;
+      html+=`<div class="mt-marker ${t.cls}" data-mt-action="editms" data-mt-model="${m.id}" data-mt-ms="${item.id}" title="${t.label} — ${mtFmtMonthYearTH(item.date)}${item.note?' ('+mtEsc(item.note)+')':''}">${t.icon}</div>`;
+      html+=`<div class="mt-date-label"${showLabel?'':' style="visibility:hidden"'}>${dLabel}</div>`;
       html+=`</div>`;
     });
 
@@ -5134,10 +5227,10 @@ function mtRenderSide(){
   const msRows=[...m.milestones].sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(item=>{
     const t=MT_TYPES[item.type];
     return `<div class="mt-ms-row">
-      <div class="mt-ms-icon ${t.cls}">${item.type==='pp1'?'◇':t.icon}</div>
+      <div class="mt-ms-icon ${t.cls}">${t.icon}</div>
       <div class="mt-ms-body">
         <div class="mt-ms-name">${t.label}${item.note?' · '+mtEsc(item.note):''}</div>
-        <div class="mt-ms-date">${mtFmtDateTH(item.date)}</div>
+        <div class="mt-ms-date">${mtFmtMonthYearTH(item.date)}</div>
       </div>
       <button class="mt-ms-edit-btn" data-mt-action2="editms2" data-mt-model="${m.id}" data-mt-ms="${item.id}">✎</button>
     </div>`;
@@ -5157,7 +5250,7 @@ function mtRenderSide(){
       </div>
       <div class="mt-detail-card" style="margin-bottom:0;padding:0.75rem">
         <div class="mt-a-label">Lot 1</div>
-        <div style="font-weight:700;font-size:0.85rem">${lot1?mtFmtDateTH(lot1.date):(ord?mtFmtDateTH(ord.date)+' *':'—')}</div>
+        <div style="font-weight:700;font-size:0.85rem">${lot1?mtFmtMonthYearTH(lot1.date):(ord?mtFmtMonthYearTH(ord.date)+' *':'—')}</div>
       </div>
     </div>
     <div style="font-size:0.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem">Milestone ทั้งหมด</div>
@@ -5296,9 +5389,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
   document.getElementById('mt-btnDeleteModel').addEventListener('click', mtDeleteModel);
   document.getElementById('mt-btnSaveMs').addEventListener('click', mtSaveMs);
   document.getElementById('mt-btnDeleteMs').addEventListener('click', mtDeleteMs);
-  document.getElementById('mt-btnExport').addEventListener('click', mtExportJson);
-  document.getElementById('mt-btnImportTrigger').addEventListener('click',()=>document.getElementById('mt-btnImport').click());
-  document.getElementById('mt-btnImport').addEventListener('change',(e)=>{ if(e.target.files[0]) mtImportJson(e.target.files[0]); e.target.value=''; });
   document.getElementById('mt-searchInput').addEventListener('input', mtRenderGantt);
   document.getElementById('mt-filterCustomer').addEventListener('change', mtRenderGantt);
   document.getElementById('mt-filterStatus').addEventListener('change', mtRenderGantt);
