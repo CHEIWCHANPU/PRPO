@@ -1013,7 +1013,7 @@
   .mt-gantt-wrap {
     flex:1; min-width:0; overflow:auto;
     background:var(--surface); border:1px solid var(--border); border-radius:12px;
-    max-height:calc(100vh - 300px);
+    height:calc(100vh - 300px); min-height:420px;
   }
   .mt-side {
     width:0; flex-shrink:0; background:var(--surface);
@@ -1284,7 +1284,7 @@
   }
   .mt-year-nav-today:hover { background:rgba(0,229,160,0.1); }
 
-  .mt-empty-state { text-align:center; padding:3rem 1rem; color:var(--muted); }
+  .mt-empty-state { text-align:center; padding:3rem 1rem; color:var(--muted); width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; box-sizing:border-box; }
 
   /* ── KPI SUMMARY BAR ── */
   .mt-kpi-bar {
@@ -5482,7 +5482,7 @@ function mtRenderGantt(){
   const months=mtTotalMonths();
   const todayCol=mtDateToCol(mtTodayISO());
   const todayPct=(todayCol/months)*100;
-  const cellW=46;
+  const cellW=64;
 
   let html='<div class="mt-gantt">';
 
