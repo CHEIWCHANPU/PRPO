@@ -5520,7 +5520,7 @@ function mtRenderGantt(){
     else if(mpDates.length>1) mpRangeText = 'M/P: '+mtFmtMonthYearTH(mpDates[0])+' – '+mtFmtMonthYearTH(mpDates[mpDates.length-1]);
 
     // group header row
-    html+=`<div class="mt-group-header" data-mt-group="${mtEsc(cust)}">`;
+    html+=`<div class="mt-group-header" data-mt-group="${mtEsc(cust)}" style="min-width:${260+months*cellW}px">`;
     html+=`<div class="mt-group-label">
       <span class="mt-group-chevron${isCollapsed?' collapsed':''}">▾</span>
       <span>${mtEsc(cust)}</span>
