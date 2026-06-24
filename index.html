@@ -1024,11 +1024,30 @@
                 border-color 0.28s ease,
                 opacity 0.25s ease;
     opacity:0;
+    display:flex; flex-direction:column;
   }
   .mt-side.mt-side-open {
-    width:320px; padding:1.1rem;
+    width:320px;
     border-color:var(--border);
     opacity:1;
+  }
+  /* sticky header inside side panel */
+  .mt-side-head {
+    flex-shrink:0; padding:1.1rem 1.1rem 0;
+  }
+  /* scrollable body */
+  .mt-side-body {
+    flex:1; overflow-y:auto; padding:0.75rem 1.1rem 1.1rem;
+    scrollbar-width:thin; scrollbar-color:var(--border) transparent;
+  }
+  .mt-side-body::-webkit-scrollbar { width:4px; }
+  .mt-side-body::-webkit-scrollbar-track { background:transparent; }
+  .mt-side-body::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+  /* sticky actions at bottom */
+  .mt-side-foot {
+    flex-shrink:0; padding:0.75rem 1.1rem 1.1rem;
+    border-top:1px solid var(--border);
+    background:var(--surface);
   }
   @media (max-width:900px) {
     .mt-layout { flex-direction:column; }
@@ -1253,7 +1272,7 @@
   .mt-ms-date { font-family:var(--mono); font-size:0.67rem; color:var(--muted); }
   .mt-ms-edit-btn { background:none; border:none; color:var(--muted); font-size:0.78rem; padding:0.18rem; flex-shrink:0; border-radius:5px; cursor:pointer; }
   .mt-ms-edit-btn:hover { color:var(--accent); background:var(--glow-accent); }
-  .mt-side-actions { display:flex; gap:0.45rem; margin-top:0.5rem; }
+  .mt-side-actions { display:flex; gap:0.45rem; }
   .mt-side-actions .btn { flex:1; justify-content:center; }
   .mt-empty-state { text-align:center; padding:3rem 1rem; color:var(--muted); }
 
@@ -5374,27 +5393,33 @@ function mtRenderSide(){
   }).join('');
 
   panel.innerHTML=`
-    <div class="mt-detail-card">
-      <div class="mt-detail-title">${mtEsc(m.model)}</div>
-      <div class="mt-detail-customer">${mtEsc(m.customer||'ไม่ระบุลูกค้า')}${m.volume?' · Vol: '+mtEsc(m.volume):''}</div>
-      <span class="mt-status-pill ${badge.cls}">${badge.text}</span>
-    </div>
-    ${answerHtml}
-    <div class="mt-two-col" style="margin-bottom:0.9rem">
-      <div class="mt-detail-card" style="margin-bottom:0;padding:0.75rem">
-        <div class="mt-a-label">Forecast</div>
-        <div style="font-weight:700;font-size:0.85rem">${fc?mtFmtMonthYearTH(fc.date):'—'}</div>
-      </div>
-      <div class="mt-detail-card" style="margin-bottom:0;padding:0.75rem">
-        <div class="mt-a-label">Lot 1</div>
-        <div style="font-weight:700;font-size:0.85rem">${lot1?mtFmtMonthYearTH(lot1.date):(ord?mtFmtMonthYearTH(ord.date)+' *':'—')}</div>
+    <div class="mt-side-head">
+      <div class="mt-detail-card">
+        <div class="mt-detail-title">${mtEsc(m.model)}</div>
+        <div class="mt-detail-customer">${mtEsc(m.customer||'ไม่ระบุลูกค้า')}${m.volume?' · Vol: '+mtEsc(m.volume):''}</div>
+        <span class="mt-status-pill ${badge.cls}">${badge.text}</span>
       </div>
     </div>
-    <div style="font-size:0.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem">Milestone ทั้งหมด</div>
-    <div class="mt-ms-list">${m.milestones.length===0?'<div style="font-size:0.76rem;color:var(--muted)">ยังไม่มี — กดปุ่มด้านล่างเพื่อเพิ่ม</div>':msRows}</div>
-    <div class="mt-side-actions">
-      <button class="btn btn-sm" id="mt-btnAddMsFromSide">+ Milestone</button>
-      <button class="btn btn-sm" id="mt-btnEditModel">✎ แก้ไข</button>
+    <div class="mt-side-body">
+      ${answerHtml}
+      <div class="mt-two-col" style="margin-bottom:0.9rem">
+        <div class="mt-detail-card" style="margin-bottom:0;padding:0.75rem">
+          <div class="mt-a-label">Forecast</div>
+          <div style="font-weight:700;font-size:0.85rem">${fc?mtFmtMonthYearTH(fc.date):'—'}</div>
+        </div>
+        <div class="mt-detail-card" style="margin-bottom:0;padding:0.75rem">
+          <div class="mt-a-label">Lot 1</div>
+          <div style="font-weight:700;font-size:0.85rem">${lot1?mtFmtMonthYearTH(lot1.date):(ord?mtFmtMonthYearTH(ord.date)+' *':'—')}</div>
+        </div>
+      </div>
+      <div style="font-size:0.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem">Milestone ทั้งหมด</div>
+      <div class="mt-ms-list">${m.milestones.length===0?'<div style="font-size:0.76rem;color:var(--muted)">ยังไม่มี — กดปุ่มด้านล่างเพื่อเพิ่ม</div>':msRows}</div>
+    </div>
+    <div class="mt-side-foot">
+      <div class="mt-side-actions">
+        <button class="btn btn-sm" id="mt-btnAddMsFromSide">+ Milestone</button>
+        <button class="btn btn-sm" id="mt-btnEditModel">✎ แก้ไข</button>
+      </div>
     </div>
   `;
   panel.querySelectorAll('[data-mt-action2="editms2"]').forEach(el=>{
