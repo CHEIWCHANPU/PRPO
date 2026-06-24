@@ -1024,16 +1024,19 @@
                 border-color 0.28s ease,
                 opacity 0.25s ease;
     opacity:0;
+    position:sticky; top:0;
   }
   .mt-side.mt-side-open {
     width:320px; padding:1.1rem;
     border-color:var(--border);
     opacity:1;
+    overflow-y:auto; overflow-x:hidden;
+    scrollbar-gutter:stable;
   }
   @media (max-width:900px) {
     .mt-layout { flex-direction:column; }
-    .mt-side { width:100%; max-height:none; }
-    .mt-side.mt-side-open { width:100%; }
+    .mt-side { width:100%; max-height:none; position:static; }
+    .mt-side.mt-side-open { width:100%; max-height:70vh; }
   }
 
   /* ── TODAY BADGE ── */
@@ -1073,6 +1076,11 @@
   .mt-legend-order    { background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid rgba(245,158,11,0.3); border-radius:9px; }
   .mt-legend-cci      { background:rgba(160,107,242,0.18); color:#b388ff; border:1px solid rgba(160,107,242,0.32); }
   .mt-legend-mp       { background:rgba(239,91,91,0.15); color:#f87171; border:1px solid rgba(239,91,91,0.3); border-radius:3px; }
+  .light-theme .mt-legend-forecast { background:rgba(74,111,196,0.13); color:#33548f; border-color:rgba(74,111,196,0.32); }
+  .light-theme .mt-legend-pp1      { background:rgba(201,148,26,0.14); color:#92660f; border-color:rgba(201,148,26,0.32); }
+  .light-theme .mt-legend-order    { background:rgba(214,134,42,0.13); color:#985f12; border-color:rgba(214,134,42,0.32); }
+  .light-theme .mt-legend-cci      { background:rgba(132,83,224,0.14); color:#5d34a8; border-color:rgba(132,83,224,0.32); }
+  .light-theme .mt-legend-mp       { background:rgba(211,70,70,0.13); color:#a52f2f; border-color:rgba(211,70,70,0.32); }
   @media (max-width:760px) {
     .mt-legend-arrow { display:none; }
     .mt-legend-divider { width:100%; height:1px; align-self:auto; min-height:0; margin:0.1rem 0; }
@@ -1081,6 +1089,7 @@
   /* ── GANTT FLEX-BASED ── */
   .mt-gantt { display:flex; flex-direction:column; width:100%; }
   .mt-gantt-row { display:flex; align-items:stretch; cursor:pointer; position:relative; }
+  .mt-gantt-row .mt-gtd { transition:background-color 0.12s ease; }
   .mt-gantt-row:hover .mt-gtd { background:var(--surface2); }
   .mt-gantt-row.mt-selected .mt-gtd { background:rgba(0,229,160,0.06); }
   .mt-gtd { display:flex; align-items:center; flex-shrink:0; border-bottom:1px solid var(--border); }
@@ -1088,9 +1097,9 @@
   .mt-col-model {
     position:sticky; left:0; z-index:20; background:var(--surface);
     padding:0.6rem 0.85rem; min-width:140px; max-width:160px; width:140px;
-    border-right:1px solid var(--border2);
+    border-right:1px solid var(--border2); border-left:2px solid transparent;
   }
-  .mt-gantt-row.mt-selected .mt-col-model { background:rgba(0,229,160,0.09); border-right-color:var(--accent); }
+  .mt-gantt-row.mt-selected .mt-col-model { background:rgba(0,229,160,0.09); border-right-color:var(--accent); border-left-color:var(--accent); }
   .mt-gantt-row:hover .mt-col-model { background:var(--surface2); }
   .mt-model-name { font-weight:700; font-size:0.84rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .mt-model-meta { font-size:0.65rem; color:var(--muted); margin-top:1px; font-family:var(--mono); }
@@ -1110,8 +1119,11 @@
   .mt-status-pill.mt-inprogress{ background:rgba(245,158,11,0.14);  color:#f59e0b; }
   .mt-status-pill.mt-upcoming  { background:rgba(99,102,241,0.14);   color:#818cf8; }
   .mt-status-pill.mt-nodate    { background:var(--surface2); color:var(--muted); }
+  .light-theme .mt-status-pill.mt-mass       { background:rgba(5,150,105,0.12); color:#057a52; }
+  .light-theme .mt-status-pill.mt-inprogress { background:rgba(217,119,6,0.13);  color:#9a5b04; }
+  .light-theme .mt-status-pill.mt-upcoming   { background:rgba(67,56,202,0.12);  color:#4338ca; }
 
-  .mt-gantt-header { display:flex; position:sticky; top:0; z-index:24; }
+  .mt-gantt-header { display:flex; position:sticky; top:0; z-index:24; box-shadow:0 2px 6px rgba(0,0,0,0.18); }
   .mt-gantt-header .mt-gtd {
     background:var(--surface2); padding:0.45rem 0.3rem; text-align:center;
     font-size:0.63rem; font-weight:700; color:var(--muted);
@@ -1120,6 +1132,13 @@
     white-space:nowrap;
   }
   .mt-gantt-header .mt-col-model, .mt-gantt-header .mt-col-status { background:var(--surface2); z-index:25; position:sticky; top:0; }
+  .light-theme .mt-gantt-header { box-shadow:0 2px 6px rgba(15,23,42,0.08); }
+  .mt-col-status::after {
+    content:''; position:absolute; top:0; right:-6px; bottom:0; width:6px;
+    background:linear-gradient(to right, rgba(0,0,0,0.10), transparent);
+    pointer-events:none;
+  }
+  .light-theme .mt-col-status::after { background:linear-gradient(to right, rgba(15,23,42,0.06), transparent); }
 
   /* ── CSS VARS FOR GANTT COLORS ── */
   .dark-theme {
@@ -1182,6 +1201,15 @@
   .mt-marker.mt-cci      { background:#7340d8; color:#e8d9ff; border-color:rgba(160,107,242,0.5); }
   .mt-marker.mt-mp       { background:#c23333; color:#ffd5d5; border-color:rgba(239,91,91,0.45); border-radius:3px; }
 
+  /* Light theme: deeper borders + soft shadow read better on white */
+  .light-theme .mt-marker { border-color:rgba(0,0,0,0.12); box-shadow:0 1px 4px rgba(15,23,42,0.18); }
+  .light-theme .mt-marker:hover { box-shadow:0 3px 10px rgba(15,23,42,0.28); }
+  .light-theme .mt-marker.mt-forecast { background:#4a6fc4; color:#fff; }
+  .light-theme .mt-marker.mt-pp1      { background:#c9941a; color:#fff; }
+  .light-theme .mt-marker.mt-order    { background:#d6862a; color:#fff; }
+  .light-theme .mt-marker.mt-cci      { background:#8453e0; color:#fff; }
+  .light-theme .mt-marker.mt-mp       { background:#d34646; color:#fff; }
+
   /* Month label under marker */
   .mt-date-label {
     font-size:0.5rem; font-family:var(--mono); font-weight:700;
@@ -1197,7 +1225,7 @@
     cursor:pointer; transition:transform 0.12s;
   }
   .mt-marker-wrap:hover .mt-marker { transform:scale(1.18) !important; }
-  .mt-timeline-cell { padding:0; position:relative; height:62px; }
+  .mt-timeline-cell { padding:0; position:relative; height:68px; }
 
   .mt-connector { position:absolute; top:50%; height:0; border-top:1.5px dashed var(--mt-connector-color); z-index:1; }
   .mt-today-line { position:absolute; top:0; bottom:0; width:2px; background:#ffd166; z-index:8; pointer-events:none; border-radius:1px; }
@@ -1206,6 +1234,8 @@
     font-size:0.55rem; color:#ffd166; white-space:nowrap; font-weight:700; font-family:var(--mono);
     background:rgba(255,209,102,0.12); padding:1px 4px; border-radius:3px;
   }
+  .light-theme .mt-today-line { background:#d97706; }
+  .light-theme .mt-today-line::before { color:#92400e; background:rgba(217,119,6,0.13); }
 
   /* Side panel */
   .mt-placeholder-side { color:var(--muted); font-size:0.8rem; text-align:center; padding:2.5rem 0.5rem; }
@@ -1236,6 +1266,11 @@
   .mt-ms-icon.mt-order    { background:rgba(245,158,11,0.15);  color:#f59e0b; border:1px solid rgba(245,158,11,0.28); border-radius:10px; }
   .mt-ms-icon.mt-cci      { background:rgba(160,107,242,0.18); color:#b388ff; border:1px solid rgba(160,107,242,0.3); }
   .mt-ms-icon.mt-mp       { background:rgba(239,91,91,0.15);   color:#f87171; border:1px solid rgba(239,91,91,0.28); border-radius:3px; }
+  .light-theme .mt-ms-icon.mt-forecast { background:rgba(74,111,196,0.13); color:#33548f; border-color:rgba(74,111,196,0.3); }
+  .light-theme .mt-ms-icon.mt-pp1      { background:rgba(201,148,26,0.14); color:#92660f; border-color:rgba(201,148,26,0.3); }
+  .light-theme .mt-ms-icon.mt-order    { background:rgba(214,134,42,0.13); color:#985f12; border-color:rgba(214,134,42,0.3); }
+  .light-theme .mt-ms-icon.mt-cci      { background:rgba(132,83,224,0.14); color:#5d34a8; border-color:rgba(132,83,224,0.3); }
+  .light-theme .mt-ms-icon.mt-mp       { background:rgba(211,70,70,0.13); color:#a52f2f; border-color:rgba(211,70,70,0.3); }
   .mt-ms-body { flex:1; min-width:0; }
   .mt-ms-name { font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .mt-ms-date { font-family:var(--mono); font-size:0.67rem; color:var(--muted); }
@@ -2086,6 +2121,7 @@
           <option value="inprogress">กำลังดำเนินการ</option>
           <option value="mass">Mass Production แล้ว</option>
         </select>
+        <button class="btn btn-ghost btn-sm" id="mt-btnGotoToday" style="font-size:0.72rem">📍 ไปวันนี้</button>
         <span style="font-size:0.72rem;color:var(--muted);margin-left:auto" id="mt-modelCount">0 models</span>
       </div>
 
@@ -5059,6 +5095,7 @@ function mtRefreshCustomerFilter(){
 }
 
 // ── render gantt ────────────────────────────────────
+let mtFirstRender=true;
 function renderModelTracker(){
   if(!mtInited){ mtSeedData(); mtInited=true; }
   const label=document.getElementById('mt-todayLabel');
@@ -5072,6 +5109,7 @@ function renderModelTracker(){
   mtRefreshCustomerFilter();
   mtRenderGantt();
   mtRenderSide();
+  if(mtFirstRender){ mtFirstRender=false; setTimeout(mtScrollToToday, 60); }
 }
 
 function mtRenderGantt(){
@@ -5143,32 +5181,30 @@ function mtRenderGantt(){
       const x2=(mtDateToCol(sorted[sorted.length-1].date)/months)*100;
       html+=`<div class="mt-connector" style="left:${x1}%;width:${x2-x1}%"></div>`;
     }
-    // markers — collision-aware spacing (avoid icons & date labels overlapping when close together)
+    // markers — anchored EXACTLY at their true date position (never shifted).
+    // When markers/date-labels are too close together we stagger the LABEL
+    // row (alternate up/down) instead of moving the icon off its real date.
     const pxPerPct=(months*cellW)/100;
-    const MIN_ICON_GAP_PX=28, MIN_LABEL_GAP_PX=38;
-    let lastIconPx=null, lastLabelPx=null;
+    const MIN_LABEL_GAP_PX=42;
+    let lastLabelPx=null, labelRow=0;
     sorted.forEach(item=>{
       const col=mtDateToCol(item.date);
-      let pct=(col/months)*100;
-      let px=pct*pxPerPct;
-      // nudge right if this marker's icon would overlap the previous one
-      if(lastIconPx!==null && (px-lastIconPx)<MIN_ICON_GAP_PX){
-        px=lastIconPx+MIN_ICON_GAP_PX;
-        pct=px/pxPerPct;
-      }
-      lastIconPx=px;
+      const pct=(col/months)*100;
+      const px=pct*pxPerPct;
       const t=MT_TYPES[item.type];
-      // show month/year label below marker — skip if it would collide with the previous visible label
       const d=new Date(item.date+'T00:00:00');
       const dLabel=`${MT_MONTHS_TH[d.getMonth()]} ${d.getFullYear()+543}`;
-      const showLabel=(lastLabelPx===null)||((px-lastLabelPx)>=MIN_LABEL_GAP_PX);
-      if(showLabel) lastLabelPx=px;
-      // badge centered vertically in the row (position:absolute, top/transform handles centering)
-      // date label positioned at bottom of the row with no-overflow
-      html+=`<div class="mt-marker ${t.cls}" style="position:absolute;left:${pct}%;top:50%;transform:translate(-50%,-50%);" data-mt-action="editms" data-mt-model="${m.id}" data-mt-ms="${item.id}" title="${t.label} — ${mtFmtMonthYearTH(item.date)}${item.note?' ('+mtEsc(item.note)+')':''}">${t.icon}</div>`;
-      if(showLabel){
-        html+=`<div class="mt-date-label" style="position:absolute;left:${pct}%;bottom:2px;transform:translateX(-50%);">${dLabel}</div>`;
+      // alternate label row when labels would collide, so dates stay readable
+      // without ever moving the marker icon away from its true date column
+      if(lastLabelPx!==null && (px-lastLabelPx)<MIN_LABEL_GAP_PX){
+        labelRow=(labelRow+1)%2;
+      } else {
+        labelRow=0;
       }
+      lastLabelPx=px;
+      const labelBottom = labelRow===0 ? 2 : 15;
+      html+=`<div class="mt-marker ${t.cls}" style="position:absolute;left:${pct}%;top:50%;transform:translate(-50%,-50%);" data-mt-action="editms" data-mt-model="${m.id}" data-mt-ms="${item.id}" title="${t.label} — ${mtFmtMonthYearTH(item.date)}${item.note?' ('+mtEsc(item.note)+')':''}">${t.icon}</div>`;
+      html+=`<div class="mt-date-label" style="position:absolute;left:${pct}%;bottom:${labelBottom}px;transform:translateX(-50%);">${dLabel}</div>`;
     });
 
     html+='</div></div></div>';
@@ -5384,6 +5420,18 @@ function mtImportJson(file){
   reader.readAsText(file);
 }
 
+function mtScrollToToday(){
+  const wrap=document.getElementById('mt-ganttWrap');
+  if(!wrap) return;
+  const months=mtTotalMonths();
+  const todayCol=mtDateToCol(mtTodayISO());
+  const cellW=46;
+  const todayPx=(todayCol/months)*months*cellW; // = todayCol*cellW
+  const stickyW=260; // mt-col-model(140) + mt-col-status(120)
+  const target=Math.max(0, todayPx - (wrap.clientWidth-stickyW)/2);
+  wrap.scrollTo({left:target, behavior:'smooth'});
+}
+
 // ── wire up buttons on DOMContentLoaded ─────────────
 document.addEventListener('DOMContentLoaded', ()=>{
   document.getElementById('mt-btnAddModel').addEventListener('click',()=>mtOpenModelModal(null));
@@ -5394,6 +5442,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   document.getElementById('mt-searchInput').addEventListener('input', mtRenderGantt);
   document.getElementById('mt-filterCustomer').addEventListener('change', mtRenderGantt);
   document.getElementById('mt-filterStatus').addEventListener('change', mtRenderGantt);
+  document.getElementById('mt-btnGotoToday').addEventListener('click', mtScrollToToday);
 
   // close modals on overlay click
   ['mt-modelModal','mt-msModal'].forEach(id=>{
