@@ -31,11 +31,6 @@
     --glow-danger: rgba(239,68,68,0.12);
     --glow-warn: rgba(245,158,11,0.1);
     --border2: rgba(255,255,255,0.07);
-    --mt-stripe-even: rgba(255,255,255,0.018);
-    --mt-stripe-odd: transparent;
-    --mt-month-border: rgba(255,255,255,0.10);
-    --mt-year-border: rgba(0,229,160,0.45);
-    --mt-connector-color: rgba(255,255,255,0.18);
   }
   .light-theme {
     --bg: #f0f4f8;
@@ -55,11 +50,6 @@
     --glow-danger: rgba(220,38,38,0.08);
     --glow-warn: rgba(217,119,6,0.08);
     --border2: #d0dae8;
-    --mt-stripe-even: rgba(0,0,0,0.025);
-    --mt-stripe-odd: transparent;
-    --mt-month-border: #c4d0e0;
-    --mt-year-border: rgba(10,140,104,0.55);
-    --mt-connector-color: rgba(0,0,0,0.2);
   }
 
   /* ── OS-level auto light mode (no saved preference) ── */
@@ -82,11 +72,6 @@
       --glow-danger: rgba(220,38,38,0.08);
       --glow-warn: rgba(217,119,6,0.08);
       --border2: #d0dae8;
-      --mt-stripe-even: rgba(0,0,0,0.025);
-      --mt-stripe-odd: transparent;
-      --mt-month-border: #c4d0e0;
-      --mt-year-border: rgba(10,140,104,0.55);
-      --mt-connector-color: rgba(0,0,0,0.2);
     }
   }
   /* override OS when user picks dark explicitly */
@@ -108,11 +93,6 @@
     --glow-danger: rgba(239,68,68,0.12);
     --glow-warn: rgba(245,158,11,0.1);
     --border2: rgba(255,255,255,0.07);
-    --mt-stripe-even: rgba(255,255,255,0.018);
-    --mt-stripe-odd: transparent;
-    --mt-month-border: rgba(255,255,255,0.10);
-    --mt-year-border: rgba(0,229,160,0.45);
-    --mt-connector-color: rgba(255,255,255,0.18);
   }
 
   /* ── CUSTOM SCROLLBAR ── */
@@ -1007,7 +987,7 @@
   @keyframes wlEnter { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:none} }
 
   /* ══════════════════════════════════════════════
-     MODEL TRACKER — styles
+     MODEL TRACKER — styles (step-tracker, no dates)
   ══════════════════════════════════════════════ */
   .mt-layout { display:flex; gap:1rem; min-height:60vh; }
   .mt-gantt-wrap {
@@ -1039,23 +1019,9 @@
     .mt-side.mt-side-open { width:100%; max-height:70vh; }
   }
 
-  /* ── TODAY BADGE ── */
-  .mt-today-badge {
-    display:inline-flex; align-items:center; gap:0.4rem;
-    padding:0.3rem 0.8rem; background:var(--surface2);
-    border:1px solid var(--border); border-radius:20px;
-    font-size:0.72rem; color:var(--muted); font-family:var(--mono);
-  }
-  .mt-today-badge::before {
-    content:''; display:inline-block; width:6px; height:6px;
-    border-radius:50%; background:var(--accent);
-    box-shadow:0 0 5px rgba(0,229,160,0.5);
-    animation:wlPulse 2s infinite;
-  }
-
-  /* ── LEGEND — NEW STYLE ── */
+  /* ── LEGEND ── */
   .mt-legend {
-    display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; padding:0.7rem 1rem;
+    display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap; padding:0.7rem 1rem;
     background:var(--surface); border:1px solid var(--border); border-radius:10px;
     margin-bottom:0.8rem; font-size:0.73rem; color:var(--text);
   }
@@ -1063,7 +1029,6 @@
   .mt-legend-item { display:flex; align-items:center; gap:0.4rem; white-space:nowrap; }
   .mt-legend-sub { color:var(--muted); font-size:0.62rem; }
   .mt-legend-arrow { color:var(--border2); font-size:0.9rem; font-weight:300; flex-shrink:0; }
-  .mt-legend-divider { width:1px; align-self:stretch; background:var(--border2); flex-shrink:0; min-height:1.1rem; }
   /* Legend icons — pill badges */
   .mt-legend-icon {
     display:inline-flex; align-items:center; justify-content:center;
@@ -1083,11 +1048,10 @@
   .light-theme .mt-legend-mp       { background:rgba(211,70,70,0.13); color:#a52f2f; border-color:rgba(211,70,70,0.32); }
   @media (max-width:760px) {
     .mt-legend-arrow { display:none; }
-    .mt-legend-divider { width:100%; height:1px; align-self:auto; min-height:0; margin:0.1rem 0; }
   }
 
-  /* ── GANTT FLEX-BASED ── */
-  .mt-gantt { display:flex; flex-direction:column; width:100%; }
+  /* ── STEP-TRACKER TABLE ── */
+  .mt-gantt { display:flex; flex-direction:column; width:100%; min-width:fit-content; }
   .mt-gantt-row { display:flex; align-items:stretch; cursor:pointer; position:relative; }
   .mt-gantt-row .mt-gtd { transition:background-color 0.12s ease; }
   .mt-gantt-row:hover .mt-gtd { background:var(--surface2); }
@@ -1096,7 +1060,7 @@
 
   .mt-col-model {
     position:sticky; left:0; z-index:20; background:var(--surface);
-    padding:0.6rem 0.85rem; min-width:140px; max-width:160px; width:140px;
+    padding:0.6rem 0.85rem; min-width:160px; max-width:190px; width:160px;
     border-right:1px solid var(--border2); border-left:2px solid transparent;
   }
   .mt-gantt-row.mt-selected .mt-col-model { background:rgba(0,229,160,0.09); border-right-color:var(--accent); border-left-color:var(--accent); }
@@ -1105,8 +1069,8 @@
   .mt-model-meta { font-size:0.65rem; color:var(--muted); margin-top:1px; font-family:var(--mono); }
 
   .mt-col-status {
-    position:sticky; left:140px; z-index:20; background:var(--surface);
-    padding:0.6rem 0.6rem; min-width:120px; width:120px; border-right:1px solid var(--border2); font-size:0.7rem;
+    position:sticky; left:160px; z-index:20; background:var(--surface);
+    padding:0.6rem 0.6rem; min-width:140px; width:140px; border-right:1px solid var(--border2); font-size:0.7rem;
   }
   .mt-gantt-row.mt-selected .mt-col-status { background:rgba(0,229,160,0.09); }
   .mt-gantt-row:hover .mt-col-status { background:var(--surface2); }
@@ -1125,10 +1089,10 @@
 
   .mt-gantt-header { display:flex; position:sticky; top:0; z-index:24; box-shadow:0 2px 6px rgba(0,0,0,0.18); }
   .mt-gantt-header .mt-gtd {
-    background:var(--surface2); padding:0.45rem 0.3rem; text-align:center;
+    background:var(--surface2); padding:0.55rem 0.3rem; text-align:center;
     font-size:0.63rem; font-weight:700; color:var(--muted);
     text-transform:uppercase; letter-spacing:0.04em;
-    border-bottom:2px solid var(--mt-month-border);
+    border-bottom:2px solid var(--border2);
     white-space:nowrap;
   }
   .mt-gantt-header .mt-col-model, .mt-gantt-header .mt-col-status { background:var(--surface2); z-index:25; position:sticky; top:0; }
@@ -1140,102 +1104,66 @@
   }
   .light-theme .mt-col-status::after { background:linear-gradient(to right, rgba(15,23,42,0.06), transparent); }
 
-  /* ── CSS VARS FOR GANTT COLORS ── */
-  .dark-theme {
-    --mt-month-border: rgba(255,255,255,0.06);
-    --mt-year-border:  rgba(0,229,160,0.25);
-    --mt-stripe-even:  rgba(255,255,255,0.018);
-    --mt-connector-color: rgba(255,255,255,0.12);
+  /* step columns — fixed width, one per stage (FC / PP / OR / CI / MP) */
+  .mt-step-col {
+    width:108px; min-width:108px; flex-shrink:0;
+    justify-content:center; position:relative;
+    border-right:1px dashed var(--border2);
   }
-  .light-theme {
-    --mt-month-border: rgba(0,0,0,0.07);
-    --mt-year-border:  rgba(10,140,104,0.28);
-    --mt-stripe-even:  rgba(0,0,0,0.018);
-    --mt-connector-color: rgba(0,0,0,0.1);
-  }
+  .mt-gantt-header .mt-step-col:last-child,
+  .mt-step-col:last-child { border-right:none; }
+  .mt-step-track { position:relative; width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
 
-  /* Month cell in header */
-  .mt-month-cell {
-    position:absolute; top:0; height:100%; text-align:center;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:1px; font-size:0.6rem; font-weight:700; color:var(--muted);
-    border-left:1px solid var(--mt-month-border);
-    box-sizing:border-box; overflow:hidden;
+  /* connecting line between step columns, drawn behind the badges */
+  .mt-step-connector {
+    position:absolute; top:50%; left:0; right:0; height:2px;
+    background:var(--border2); z-index:0; transform:translateY(-50%);
   }
-  .mt-month-cell.mt-new-year {
-    border-left:2px solid var(--mt-year-border);
-  }
-  .mt-month-cell.mt-month-even { background: var(--mt-stripe-even); }
-  .mt-year-band {
-    color:var(--accent); font-size:0.62rem; font-family:var(--mono);
-    font-weight:800; letter-spacing:0.04em; line-height:1;
-    background: rgba(0,229,160,0.09); border-radius:3px; padding:0.5px 3px;
-  }
-  .light-theme .mt-year-band, body.light-theme .mt-year-band {
-    background: rgba(10,140,104,0.10);
-  }
-  .mt-month-label { font-size:0.6rem; font-weight:700; color:var(--muted); line-height:1; }
+  .mt-step-connector.mt-done { background:var(--accent); opacity:0.55; }
 
-  /* Row zebra from month alternation */
-  .mt-gantt-row .mt-month-stripe {
-    position:absolute; top:0; bottom:0; pointer-events:none;
-  }
-  .mt-gantt-row .mt-month-stripe.even { background:var(--mt-stripe-even); }
-  .mt-gantt-row .mt-month-stripe.new-year { border-left:2px solid var(--mt-year-border); }
-
-  .mt-timeline-track { position:relative; width:100%; height:100%; }
-
-  /* ── MARKERS — REDESIGNED ── */
-  .mt-marker {
-    position:absolute; top:50%; transform:translate(-50%,-50%);
+  /* ── STEP BADGE — replaces old date marker ── */
+  .mt-step-badge {
+    position:relative; z-index:2;
     display:flex; align-items:center; justify-content:center;
-    width:26px; height:20px; border-radius:6px; font-size:0.48rem; font-weight:800;
-    cursor:pointer; z-index:5; box-shadow:0 2px 8px rgba(0,0,0,0.28);
+    width:34px; height:26px; border-radius:7px; font-size:0.56rem; font-weight:800;
+    cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.28);
     border:1.5px solid rgba(255,255,255,0.15); transition:transform 0.13s, box-shadow 0.13s;
     letter-spacing:0.02em; font-family:var(--mono);
   }
-  .mt-marker:hover { transform:translate(-50%,-50%) scale(1.18); z-index:6; box-shadow:0 4px 14px rgba(0,0,0,0.4); }
-  .mt-marker.mt-forecast { background:#3d5ea8; color:#c5d5ff; border-color:rgba(91,127,209,0.5); }
-  .mt-marker.mt-pp1      { background:#b8820a; color:#fff8c5; border-color:rgba(224,167,46,0.5); }
-  .mt-marker.mt-order    { background:#c47a00; color:#fff3c4; border-color:rgba(245,158,11,0.45); border-radius:10px; }
-  .mt-marker.mt-cci      { background:#7340d8; color:#e8d9ff; border-color:rgba(160,107,242,0.5); }
-  .mt-marker.mt-mp       { background:#c23333; color:#ffd5d5; border-color:rgba(239,91,91,0.45); border-radius:3px; }
+  .mt-step-badge:hover { transform:scale(1.14); box-shadow:0 4px 14px rgba(0,0,0,0.4); }
+  .mt-step-badge.mt-forecast { background:#3d5ea8; color:#c5d5ff; border-color:rgba(91,127,209,0.5); }
+  .mt-step-badge.mt-pp1      { background:#b8820a; color:#fff8c5; border-color:rgba(224,167,46,0.5); }
+  .mt-step-badge.mt-order    { background:#c47a00; color:#fff3c4; border-color:rgba(245,158,11,0.45); border-radius:13px; }
+  .mt-step-badge.mt-cci      { background:#7340d8; color:#e8d9ff; border-color:rgba(160,107,242,0.5); }
+  .mt-step-badge.mt-mp       { background:#c23333; color:#ffd5d5; border-color:rgba(239,91,91,0.45); border-radius:5px; }
+  .light-theme .mt-step-badge { border-color:rgba(0,0,0,0.12); box-shadow:0 1px 4px rgba(15,23,42,0.18); }
+  .light-theme .mt-step-badge:hover { box-shadow:0 3px 10px rgba(15,23,42,0.28); }
+  .light-theme .mt-step-badge.mt-forecast { background:#4a6fc4; color:#fff; }
+  .light-theme .mt-step-badge.mt-pp1      { background:#c9941a; color:#fff; }
+  .light-theme .mt-step-badge.mt-order    { background:#d6862a; color:#fff; }
+  .light-theme .mt-step-badge.mt-cci      { background:#8453e0; color:#fff; }
+  .light-theme .mt-step-badge.mt-mp       { background:#d34646; color:#fff; }
 
-  /* Light theme: deeper borders + soft shadow read better on white */
-  .light-theme .mt-marker { border-color:rgba(0,0,0,0.12); box-shadow:0 1px 4px rgba(15,23,42,0.18); }
-  .light-theme .mt-marker:hover { box-shadow:0 3px 10px rgba(15,23,42,0.28); }
-  .light-theme .mt-marker.mt-forecast { background:#4a6fc4; color:#fff; }
-  .light-theme .mt-marker.mt-pp1      { background:#c9941a; color:#fff; }
-  .light-theme .mt-marker.mt-order    { background:#d6862a; color:#fff; }
-  .light-theme .mt-marker.mt-cci      { background:#8453e0; color:#fff; }
-  .light-theme .mt-marker.mt-mp       { background:#d34646; color:#fff; }
+  /* pending (not-yet-reached) step — faint outline placeholder, click to add */
+  .mt-step-empty {
+    position:relative; z-index:2;
+    width:34px; height:26px; border-radius:7px;
+    border:1.5px dashed var(--border2); background:var(--surface);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; color:var(--muted); font-size:0.62rem; opacity:0.55;
+    transition:opacity 0.15s, border-color 0.15s;
+  }
+  .mt-step-empty:hover { opacity:1; border-color:var(--accent); color:var(--accent); }
 
-  /* Month label under marker */
-  .mt-date-label {
-    font-size:0.5rem; font-family:var(--mono); font-weight:700;
-    color:var(--muted); white-space:nowrap; line-height:1;
-    background:var(--surface); border-radius:3px;
-    padding:1px 3px; border:1px solid var(--border);
-    pointer-events:none; opacity:0.75;
-    box-shadow:0 1px 3px rgba(0,0,0,0.12);
+  /* small note label under a completed step badge */
+  .mt-step-note {
+    position:absolute; top:calc(50% + 19px); left:50%; transform:translateX(-50%);
+    font-size:0.5rem; font-family:var(--mono); font-weight:600;
+    color:var(--muted); white-space:nowrap; max-width:100px; overflow:hidden; text-overflow:ellipsis;
+    pointer-events:none;
   }
-  .mt-marker-wrap:hover .mt-date-label { opacity:1; color:var(--text); }
-  .mt-marker-wrap .mt-marker {
-    position:static !important; transform:none !important;
-    cursor:pointer; transition:transform 0.12s;
-  }
-  .mt-marker-wrap:hover .mt-marker { transform:scale(1.18) !important; }
-  .mt-timeline-cell { padding:0; position:relative; height:68px; }
 
-  .mt-connector { position:absolute; top:50%; height:0; border-top:1.5px dashed var(--mt-connector-color); z-index:1; }
-  .mt-today-line { position:absolute; top:0; bottom:0; width:2px; background:#ffd166; z-index:8; pointer-events:none; border-radius:1px; }
-  .mt-today-line::before {
-    content:'วันนี้'; position:absolute; top:-1.3rem; left:50%; transform:translateX(-50%);
-    font-size:0.55rem; color:#ffd166; white-space:nowrap; font-weight:700; font-family:var(--mono);
-    background:rgba(255,209,102,0.12); padding:1px 4px; border-radius:3px;
-  }
-  .light-theme .mt-today-line { background:#d97706; }
-  .light-theme .mt-today-line::before { color:#92400e; background:rgba(217,119,6,0.13); }
+  .mt-step-row-cell { height:64px; padding:0; }
 
   /* Side panel */
   .mt-placeholder-side { color:var(--muted); font-size:0.8rem; text-align:center; padding:2.5rem 0.5rem; }
@@ -2055,15 +1983,14 @@
       <div class="page-header">
         <div class="page-header-left">
           <h1>🗂️ Model Tracker</h1>
-          <p>แผนการผลิต Pre-Production → Mass Production Timeline</p>
+          <p>แผนการผลิต Pre-Production → Mass Production — ติดตามตามลำดับขั้นตอน</p>
         </div>
         <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
-          <div class="mt-today-badge" id="mt-todayLabel"></div>
           <button class="btn btn-primary btn-sm" id="mt-btnAddModel">+ เพิ่ม Model</button>
         </div>
       </div>
 
-      <!-- Legend — ปรับปรุงใหม่ -->
+      <!-- Legend -->
       <div class="mt-legend">
         <div class="mt-legend-group">
           <!-- Forecast -->
@@ -2101,11 +2028,6 @@
             <span class="mt-legend-sub">ผลิตจริง</span>
           </div>
         </div>
-        <div class="mt-legend-divider"></div>
-        <div class="mt-legend-item">
-          <span style="display:inline-block;width:3px;height:16px;background:#ffd166;border-radius:2px;flex-shrink:0"></span>
-          <span style="font-size:0.69rem;color:var(--muted)">วันนี้</span>
-        </div>
       </div>
 
       <!-- Toolbar -->
@@ -2121,11 +2043,10 @@
           <option value="inprogress">กำลังดำเนินการ</option>
           <option value="mass">Mass Production แล้ว</option>
         </select>
-        <button class="btn btn-ghost btn-sm" id="mt-btnGotoToday" style="font-size:0.72rem">📍 ไปวันนี้</button>
         <span style="font-size:0.72rem;color:var(--muted);margin-left:auto" id="mt-modelCount">0 models</span>
       </div>
 
-      <!-- Gantt + Side panel layout -->
+      <!-- Step-tracker + Side panel layout -->
       <div class="mt-layout">
         <div class="mt-gantt-wrap" id="mt-ganttWrap">
           <!-- injected by JS -->
@@ -4960,10 +4881,6 @@ document.addEventListener('keydown', function(e) {
         </select>
       </div>
       <div class="mt-field-row">
-        <label>วันที่</label>
-        <input type="date" id="mt-f-msdate">
-      </div>
-      <div class="mt-field-row">
         <label>โน้ตเพิ่มเติม</label>
         <input type="text" id="mt-f-msnote" placeholder="เช่น Lot 1, รอ confirm กับลูกค้า">
       </div>
@@ -4978,9 +4895,10 @@ document.addEventListener('keydown', function(e) {
 
 <script>
 // ════════════════════════════════════════════════════════
-//  MODEL TRACKER — data & logic (embedded in index.html)
+//  MODEL TRACKER — data & logic (step-tracker, no dates)
 // ════════════════════════════════════════════════════════
 
+const MT_STEP_ORDER = ['forecast','pp1','order','cci','mp'];
 const MT_TYPES = {
   forecast: { label:'Forecast',              short:'FC',  icon:'FC', cls:'mt-forecast' },
   pp1:      { label:'PP1 (Pre-Production)',  short:'PP1', icon:'PP', cls:'mt-pp1'      },
@@ -4989,81 +4907,57 @@ const MT_TYPES = {
   mp:       { label:'Mass Production (M/P)', short:'M/P', icon:'MP', cls:'mt-mp'       },
 };
 
-const MT_YEAR_START = 2026, MT_YEAR_END = 2027;
-const MT_MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-
 let MT_DATA = [];
 let mtSelectedId = null, mtEditingModelId = null, mtEditingMs = null, mtCurrentMsModelId = null;
 let mtInited = false;
 
 function mtUid(){ return Math.random().toString(36).slice(2,10); }
-function mtMs(type,date,note){ return { id:mtUid(), type, date, note:note||'' }; }
+function mtMs(type,note){ return { id:mtUid(), type, note:note||'' }; }
 function mtMkModel(model,customer,volume,statusNote,milestones){
   return { id:mtUid(), model, customer, volume:volume||'', statusNote:statusNote||'', milestones:milestones||[] };
 }
-function mtTodayISO(){ return new Date().toISOString().slice(0,10); }
 
 function mtSeedData(){
   MT_DATA = [
     mtMkModel('P700','ISUZU','','รอ REF.NM',[]),
     mtMkModel('9751','KMT','','กำลังดำเนินการ',[
-      mtMs('forecast','2026-06-01'), mtMs('pp1','2026-07-15'),
-      mtMs('order','2026-09-10','Lot 1'), mtMs('cci','2026-09-25'), mtMs('mp','2026-11-05'),
+      mtMs('forecast'), mtMs('pp1'), mtMs('order','Lot 1'), mtMs('cci'), mtMs('mp'),
     ]),
     mtMkModel('MMAA','THM','','กำลังดำเนินการ',[
-      mtMs('pp1','2026-06-20'), mtMs('order','2026-08-05','Lot 1'), mtMs('cci','2026-08-20'), mtMs('mp','2026-10-01'),
+      mtMs('pp1'), mtMs('order','Lot 1'), mtMs('cci'), mtMs('mp'),
     ]),
     mtMkModel('DB4','TYM','','กำลังดำเนินการ',[
-      mtMs('pp1','2026-07-01'), mtMs('order','2026-08-25','Lot 1'), mtMs('cci','2026-09-05'), mtMs('mp','2026-10-15'),
+      mtMs('pp1'), mtMs('order','Lot 1'), mtMs('cci'),
     ]),
     mtMkModel('K1BT','THM','','กำลังดำเนินการ',[
-      mtMs('pp1','2026-06-25'), mtMs('order','2026-08-15','Lot 1'), mtMs('cci','2026-08-28'), mtMs('mp','2026-10-10'),
+      mtMs('pp1'), mtMs('order','Lot 1'),
     ]),
     mtMkModel('MG85','TECHNOGYM','','รอ REF.NM',[]),
     mtMkModel('VD00','TADA','','รอ REF.NM',[]),
-    mtMkModel('EK01/VC62','ISUZU','','รอ REF.NM',[mtMs('pp1','2026-08-10')]),
-    mtMkModel('8901&8951','KMT','','กำลังดำเนินการ',[mtMs('pp1','2026-06-15')]),
+    mtMkModel('EK01/VC62','ISUZU','','รอ REF.NM',[mtMs('pp1')]),
+    mtMkModel('8901&8951','KMT','','กำลังดำเนินการ',[mtMs('pp1')]),
   ];
 }
 
 // ── status ─────────────────────────────────────────
-function mtGetMpMs(m){
-  const mps = m.milestones.filter(x=>x.type==='mp'&&x.date);
-  if(!mps.length) return null;
-  return [...mps].sort((a,b)=>b.date.localeCompare(a.date))[0];
+function mtGetStep(m,type){ return m.milestones.find(x=>x.type===type) || null; }
+function mtHighestStepIdx(m){
+  // index (0-4) of the furthest step reached, or -1 if none
+  let idx=-1;
+  MT_STEP_ORDER.forEach((t,i)=>{ if(mtGetStep(m,t)) idx=i; });
+  return idx;
 }
 function mtModelStatus(m){
-  const mp = mtGetMpMs(m);
-  if(mp) return mtTodayISO()>=mp.date ? 'mass' : 'inprogress_mp_set';
-  if(m.milestones.length===0) return 'nodate';
+  const idx=mtHighestStepIdx(m);
+  if(idx<0) return 'nodate';
+  if(MT_STEP_ORDER[idx]==='mp') return 'mass';
   return 'inprogress';
 }
 function mtStatusBadge(m){
   const s = mtModelStatus(m);
-  if(s==='mass')            return {cls:'mt-mass',       text:'✅ Mass Production'};
-  if(s==='inprogress_mp_set') return {cls:'mt-inprogress', text:'♻ กำลังดำเนินการ'};
-  if(s==='inprogress')      return {cls:'mt-upcoming',   text:'🔸 มีแผนแล้ว'};
+  if(s==='mass')       return {cls:'mt-mass',       text:'✅ Mass Production'};
+  if(s==='inprogress') return {cls:'mt-inprogress', text:'♻ '+MT_TYPES[MT_STEP_ORDER[mtHighestStepIdx(m)]].label};
   return {cls:'mt-nodate', text:'— รอ REF.NM'};
-}
-
-// ── date helpers ────────────────────────────────────
-function mtDateToCol(dateStr){
-  const d = new Date(dateStr+'T00:00:00');
-  const y=d.getFullYear(), mo=d.getMonth(), day=d.getDate();
-  const idx=(y-MT_YEAR_START)*12+mo;
-  const dim=new Date(y,mo+1,0).getDate();
-  return idx+(day-1)/dim;
-}
-function mtTotalMonths(){ return (MT_YEAR_END-MT_YEAR_START+1)*12; }
-function mtFmtDateTH(dateStr){
-  if(!dateStr) return '—';
-  const d=new Date(dateStr+'T00:00:00');
-  return `${d.getDate()} ${MT_MONTHS_TH[d.getMonth()]} ${d.getFullYear()+543}`;
-}
-function mtFmtMonthYearTH(dateStr){
-  if(!dateStr) return '—';
-  const d=new Date(dateStr+'T00:00:00');
-  return `${MT_MONTHS_TH[d.getMonth()]} ${d.getFullYear()+543}`;
 }
 
 // ── html escape ─────────────────────────────────────
@@ -5080,7 +4974,7 @@ function mtGetFiltered(){
     if(stat){
       const s=mtModelStatus(m);
       if(stat==='mass'&&s!=='mass') return false;
-      if(stat==='inprogress'&&!(s==='inprogress'||s==='inprogress_mp_set')) return false;
+      if(stat==='inprogress'&&s!=='inprogress') return false;
       if(stat==='upcoming'&&s!=='nodate') return false;
     }
     return true;
@@ -5094,22 +4988,12 @@ function mtRefreshCustomerFilter(){
   sel.value=cur;
 }
 
-// ── render gantt ────────────────────────────────────
-let mtFirstRender=true;
+// ── render step-tracker ──────────────────────────────
 function renderModelTracker(){
   if(!mtInited){ mtSeedData(); mtInited=true; }
-  const label=document.getElementById('mt-todayLabel');
-  if(label){
-    const now=new Date();
-    const d=now.getDate();
-    const mo=MT_MONTHS_TH[now.getMonth()];
-    const y=now.getFullYear()+543;
-    label.textContent=d+' '+mo+' '+y;
-  }
   mtRefreshCustomerFilter();
   mtRenderGantt();
   mtRenderSide();
-  if(mtFirstRender){ mtFirstRender=false; setTimeout(mtScrollToToday, 60); }
 }
 
 function mtRenderGantt(){
@@ -5123,91 +5007,53 @@ function mtRenderGantt(){
     return;
   }
 
-  const months=mtTotalMonths();
-  const todayCol=mtDateToCol(mtTodayISO());
-  const todayPct=(todayCol/months)*100;
-  const cellW=46;
-
   let html='<div class="mt-gantt">';
 
-  // header
+  // header — one fixed column per step, no dates
   html+='<div class="mt-gantt-header">';
   html+='<div class="mt-gtd mt-col-model">MODEL</div>';
   html+='<div class="mt-gtd mt-col-status">สถานะ</div>';
-  html+=`<div class="mt-gtd" style="padding:0;min-width:${months*cellW}px;height:42px;">`;
-  html+=`<div style="position:relative;width:${months*cellW}px;height:100%;">`;
-  for(let i=0;i<months;i++){
-    const y=MT_YEAR_START+Math.floor(i/12), mo=i%12;
-    const isNewYear=(mo===0)&&(i>0);
-    const isFirst=(i===0);
-    const isEven=(i%2===0);
-    html+=`<div class="mt-month-cell${isNewYear?' mt-new-year':''}${isFirst?' mt-first-month':''}${isEven?' mt-month-even':''}" style="left:${i*cellW}px;width:${cellW}px;">`;
-    if(mo===0) html+=`<span class="mt-year-band">${y+543}</span>`;
-    html+=`<span class="mt-month-label">${MT_MONTHS_TH[mo]}</span>`;
-    html+='</div>';
-  }
-  html+='</div></div></div>';
+  MT_STEP_ORDER.forEach(type=>{
+    const t=MT_TYPES[type];
+    html+=`<div class="mt-gtd mt-step-col">${t.short}</div>`;
+  });
+  html+='</div>';
 
   // rows
   list.forEach(m=>{
     const badge=mtStatusBadge(m);
     const isSel=m.id===mtSelectedId;
+    const highestIdx=mtHighestStepIdx(m);
     html+=`<div class="mt-gantt-row${isSel?' mt-selected':''}" data-mtid="${m.id}">`;
     html+=`<div class="mt-gtd mt-col-model" data-mt-action="select" data-mtid="${m.id}">
               <div class="mt-model-name">${mtEsc(m.model)}</div>
               <div class="mt-model-meta">${mtEsc(m.customer||'—')}</div>
             </div>`;
     html+=`<div class="mt-gtd mt-col-status"><span class="mt-status-pill ${badge.cls}">${badge.text}</span></div>`;
-    html+=`<div class="mt-gtd mt-timeline-cell" style="min-width:${months*cellW}px" data-mt-action="timeline" data-mtid="${m.id}">`;
-    html+=`<div class="mt-timeline-track">`;
 
-    // month stripes + year dividers
-    for(let i=0;i<months;i++){
-      const mo2=(MT_YEAR_START*12+i)%12; // month index 0-11
-      const isNewYear2=(mo2===0)&&(i>0);
-      const isEven2=(i%2===0);
-      if(isEven2||isNewYear2){
-        html+=`<div class="mt-month-stripe${isEven2?' even':''}${isNewYear2?' new-year':''}" style="left:${i*cellW}px;width:${cellW}px;"></div>`;
+    MT_STEP_ORDER.forEach((type,i)=>{
+      const t=MT_TYPES[type];
+      const item=mtGetStep(m,type);
+      html+=`<div class="mt-gtd mt-step-col mt-step-row-cell" data-mt-action="${item?'editms':'addms'}" data-mt-model="${m.id}"${item?` data-mt-ms="${item.id}"`:` data-mt-type="${type}"`}>`;
+      html+=`<div class="mt-step-track">`;
+      if(i>0){
+        const leftDone = highestIdx>=i;
+        html+=`<div class="mt-step-connector${leftDone?' mt-done':''}" style="left:-1px;right:50%;"></div>`;
       }
-    }
-    // today line
-    if(todayCol>=0&&todayCol<=months){
-      html+=`<div class="mt-today-line" style="left:${todayPct}%"></div>`;
-    }
-    // connector
-    const sorted=[...m.milestones].filter(x=>x.date).sort((a,b)=>a.date.localeCompare(b.date));
-    if(sorted.length>=2){
-      const x1=(mtDateToCol(sorted[0].date)/months)*100;
-      const x2=(mtDateToCol(sorted[sorted.length-1].date)/months)*100;
-      html+=`<div class="mt-connector" style="left:${x1}%;width:${x2-x1}%"></div>`;
-    }
-    // markers — anchored EXACTLY at their true date position (never shifted).
-    // When markers/date-labels are too close together we stagger the LABEL
-    // row (alternate up/down) instead of moving the icon off its real date.
-    const pxPerPct=(months*cellW)/100;
-    const MIN_LABEL_GAP_PX=42;
-    let lastLabelPx=null, labelRow=0;
-    sorted.forEach(item=>{
-      const col=mtDateToCol(item.date);
-      const pct=(col/months)*100;
-      const px=pct*pxPerPct;
-      const t=MT_TYPES[item.type];
-      const d=new Date(item.date+'T00:00:00');
-      const dLabel=`${MT_MONTHS_TH[d.getMonth()]} ${d.getFullYear()+543}`;
-      // alternate label row when labels would collide, so dates stay readable
-      // without ever moving the marker icon away from its true date column
-      if(lastLabelPx!==null && (px-lastLabelPx)<MIN_LABEL_GAP_PX){
-        labelRow=(labelRow+1)%2;
+      if(i<MT_STEP_ORDER.length-1){
+        const rightDone = highestIdx>=i+1;
+        html+=`<div class="mt-step-connector${rightDone?' mt-done':''}" style="left:50%;right:-1px;"></div>`;
+      }
+      if(item){
+        html+=`<div class="mt-step-badge ${t.cls}" title="${t.label}${item.note?' — '+mtEsc(item.note):''}">${t.icon}</div>`;
+        if(item.note){ html+=`<div class="mt-step-note">${mtEsc(item.note)}</div>`; }
       } else {
-        labelRow=0;
+        html+=`<div class="mt-step-empty" title="เพิ่ม ${t.label}">+</div>`;
       }
-      lastLabelPx=px;
-      const labelBottom = labelRow===0 ? 2 : 15;
-      html+=`<div class="mt-marker ${t.cls}" style="position:absolute;left:${pct}%;top:50%;transform:translate(-50%,-50%);" data-mt-action="editms" data-mt-model="${m.id}" data-mt-ms="${item.id}" title="${t.label} — ${mtFmtMonthYearTH(item.date)}${item.note?' ('+mtEsc(item.note)+')':''}">${t.icon}</div>`;
-      html+=`<div class="mt-date-label" style="position:absolute;left:${pct}%;bottom:${labelBottom}px;transform:translateX(-50%);">${dLabel}</div>`;
+      html+='</div></div>';
     });
 
-    html+='</div></div></div>';
+    html+='</div>';
   });
 
   html+='</div>';
@@ -5216,11 +5062,11 @@ function mtRenderGantt(){
   wrap.querySelectorAll('[data-mt-action="select"]').forEach(el=>{
     el.addEventListener('click',()=>mtSelectModel(el.dataset.mtid));
   });
-  wrap.querySelectorAll('[data-mt-action="timeline"]').forEach(el=>{
-    el.addEventListener('dblclick',(e)=>{ if(e.target.closest('.mt-marker')) return; mtOpenMsModal(el.dataset.mtid,null); });
-  });
   wrap.querySelectorAll('[data-mt-action="editms"]').forEach(el=>{
     el.addEventListener('click',(e)=>{ e.stopPropagation(); mtOpenMsModal(el.dataset.mtModel,el.dataset.mtMs); });
+  });
+  wrap.querySelectorAll('[data-mt-action="addms"]').forEach(el=>{
+    el.addEventListener('click',(e)=>{ e.stopPropagation(); mtOpenMsModal(el.dataset.mtModel,null,el.dataset.mtType); });
   });
 }
 
@@ -5240,35 +5086,34 @@ function mtRenderSide(){
   panel.classList.add('mt-side-open');
   const m=MT_DATA.find(x=>x.id===mtSelectedId);
   if(!m){ mtSelectedId=null; mtRenderSide(); return; }
-  const mp=mtGetMpMs(m);
-  const fc=[...m.milestones].filter(x=>x.type==='forecast'&&x.date).sort((a,b)=>b.date.localeCompare(a.date))[0];
+  const mp=mtGetStep(m,'mp');
+  const fc=mtGetStep(m,'forecast');
   const lot1=m.milestones.find(x=>x.note&&x.note.toLowerCase().includes('lot 1'));
-  const ord=m.milestones.find(x=>x.type==='order');
+  const ord=mtGetStep(m,'order');
   const badge=mtStatusBadge(m);
 
   let answerHtml='';
   if(mp){
-    const isPast=mtTodayISO()>=mp.date;
-    answerHtml=`<div class="mt-answer-box${isPast?'':' mt-notyet'}">
-      <div class="mt-a-label">${isPast?'Mass Production เริ่มแล้วเมื่อ':'มีแผน Mass Production'}</div>
-      <div class="mt-a-value">${mtFmtMonthYearTH(mp.date)}</div>
-      <div class="mt-a-sub">${mtFmtDateTH(mp.date)} ${isPast?'(ผ่านมาแล้ว)':'(ยังไม่ถึงกำหนด)'}</div>
+    answerHtml=`<div class="mt-answer-box">
+      <div class="mt-a-label">Mass Production</div>
+      <div class="mt-a-value">เริ่มผลิตจริงแล้ว</div>
+      ${mp.note?`<div class="mt-a-sub">${mtEsc(mp.note)}</div>`:''}
     </div>`;
   } else {
     answerHtml=`<div class="mt-answer-box mt-notyet">
       <div class="mt-a-label">Mass Production</div>
-      <div class="mt-a-value" style="color:var(--muted)">ยังไม่กำหนดวันที่</div>
-      <div class="mt-a-sub">ดับเบิลคลิกบน Gantt เพื่อเพิ่ม M/P</div>
+      <div class="mt-a-value" style="color:var(--muted)">ยังไม่ถึงขั้นนี้</div>
+      <div class="mt-a-sub">กดช่อง MP บนตารางเพื่อทำเครื่องหมายว่าเข้าสู่ Mass Production</div>
     </div>`;
   }
 
-  const msRows=[...m.milestones].sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(item=>{
-    const t=MT_TYPES[item.type];
+  const msRows=MT_STEP_ORDER.filter(type=>mtGetStep(m,type)).map(type=>{
+    const item=mtGetStep(m,type);
+    const t=MT_TYPES[type];
     return `<div class="mt-ms-row">
       <div class="mt-ms-icon ${t.cls}">${t.icon}</div>
       <div class="mt-ms-body">
         <div class="mt-ms-name">${t.label}${item.note?' · '+mtEsc(item.note):''}</div>
-        <div class="mt-ms-date">${mtFmtMonthYearTH(item.date)}</div>
       </div>
       <button class="mt-ms-edit-btn" data-mt-action2="editms2" data-mt-model="${m.id}" data-mt-ms="${item.id}">✎</button>
     </div>`;
@@ -5284,14 +5129,14 @@ function mtRenderSide(){
     <div class="mt-two-col" style="margin-bottom:0.9rem">
       <div class="mt-detail-card" style="margin-bottom:0;padding:0.75rem">
         <div class="mt-a-label">Forecast</div>
-        <div style="font-weight:700;font-size:0.85rem">${fc?mtFmtMonthYearTH(fc.date):'—'}</div>
+        <div style="font-weight:700;font-size:0.85rem">${fc?'มีแผนแล้ว':'—'}</div>
       </div>
       <div class="mt-detail-card" style="margin-bottom:0;padding:0.75rem">
         <div class="mt-a-label">Lot 1</div>
-        <div style="font-weight:700;font-size:0.85rem">${lot1?mtFmtMonthYearTH(lot1.date):(ord?mtFmtMonthYearTH(ord.date)+' *':'—')}</div>
+        <div style="font-weight:700;font-size:0.85rem">${lot1?mtEsc(lot1.note):(ord?'CCI Order *':'—')}</div>
       </div>
     </div>
-    <div style="font-size:0.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem">Milestone ทั้งหมด</div>
+    <div style="font-size:0.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem">Milestone ที่ผ่านมาแล้ว</div>
     <div class="mt-ms-list">${m.milestones.length===0?'<div style="font-size:0.76rem;color:var(--muted)">ยังไม่มี — กดปุ่มด้านล่างเพื่อเพิ่ม</div>':msRows}</div>
     <div class="mt-side-actions">
       <button class="btn btn-sm" id="mt-btnAddMsFromSide">+ Milestone</button>
@@ -5355,7 +5200,7 @@ function mtDeleteModel(){
   mtRefreshCustomerFilter(); mtRenderGantt(); mtRenderSide();
 }
 
-function mtOpenMsModal(modelId, msId){
+function mtOpenMsModal(modelId, msId, presetType){
   mtCurrentMsModelId=modelId; mtEditingMs=msId;
   const titleEl=document.getElementById('mt-msModalTitle');
   const delBtn=document.getElementById('mt-btnDeleteMs');
@@ -5364,13 +5209,11 @@ function mtOpenMsModal(modelId, msId){
     const item=m.milestones.find(x=>x.id===msId);
     titleEl.textContent=`แก้ไข Milestone — ${m.model}`;
     document.getElementById('mt-f-mstype').value=item.type;
-    document.getElementById('mt-f-msdate').value=item.date;
     document.getElementById('mt-f-msnote').value=item.note;
     delBtn.style.display='block';
   } else {
     titleEl.textContent=`เพิ่ม Milestone — ${m.model}`;
-    document.getElementById('mt-f-mstype').value='forecast';
-    document.getElementById('mt-f-msdate').value=mtTodayISO();
+    document.getElementById('mt-f-mstype').value=presetType||'forecast';
     document.getElementById('mt-f-msnote').value='';
     delBtn.style.display='none';
   }
@@ -5378,15 +5221,19 @@ function mtOpenMsModal(modelId, msId){
 }
 function mtSaveMs(){
   const type=document.getElementById('mt-f-mstype').value;
-  const date=document.getElementById('mt-f-msdate').value;
   const note=document.getElementById('mt-f-msnote').value.trim();
-  if(!date){ alert('กรุณาเลือกวันที่'); return; }
   const m=MT_DATA.find(x=>x.id===mtCurrentMsModelId);
   if(mtEditingMs){
     const item=m.milestones.find(x=>x.id===mtEditingMs);
-    item.type=type; item.date=date; item.note=note;
+    // if user changed the type, make sure we don't end up with 2 entries of the new type
+    if(item.type!==type){
+      m.milestones=m.milestones.filter(x=>x.id===mtEditingMs || x.type!==type);
+    }
+    item.type=type; item.note=note;
   } else {
-    m.milestones.push(mtMs(type,date,note));
+    // one milestone per step type — replace if it already exists
+    m.milestones=m.milestones.filter(x=>x.type!==type);
+    m.milestones.push(mtMs(type,note));
   }
   mtCloseModal('mt-msModal');
   mtRenderGantt(); mtRenderSide();
@@ -5404,7 +5251,7 @@ function mtExportJson(){
   const blob=new Blob([JSON.stringify(MT_DATA,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a'); a.href=url;
-  a.download=`model-tracker-${mtTodayISO()}.json`; a.click();
+  a.download=`model-tracker-${new Date().toISOString().slice(0,10)}.json`; a.click();
   URL.revokeObjectURL(url);
 }
 function mtImportJson(file){
@@ -5420,18 +5267,6 @@ function mtImportJson(file){
   reader.readAsText(file);
 }
 
-function mtScrollToToday(){
-  const wrap=document.getElementById('mt-ganttWrap');
-  if(!wrap) return;
-  const months=mtTotalMonths();
-  const todayCol=mtDateToCol(mtTodayISO());
-  const cellW=46;
-  const todayPx=(todayCol/months)*months*cellW; // = todayCol*cellW
-  const stickyW=260; // mt-col-model(140) + mt-col-status(120)
-  const target=Math.max(0, todayPx - (wrap.clientWidth-stickyW)/2);
-  wrap.scrollTo({left:target, behavior:'smooth'});
-}
-
 // ── wire up buttons on DOMContentLoaded ─────────────
 document.addEventListener('DOMContentLoaded', ()=>{
   document.getElementById('mt-btnAddModel').addEventListener('click',()=>mtOpenModelModal(null));
@@ -5442,7 +5277,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
   document.getElementById('mt-searchInput').addEventListener('input', mtRenderGantt);
   document.getElementById('mt-filterCustomer').addEventListener('change', mtRenderGantt);
   document.getElementById('mt-filterStatus').addEventListener('change', mtRenderGantt);
-  document.getElementById('mt-btnGotoToday').addEventListener('click', mtScrollToToday);
 
   // close modals on overlay click
   ['mt-modelModal','mt-msModal'].forEach(id=>{
