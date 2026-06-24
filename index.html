@@ -5145,7 +5145,7 @@ function mtRenderGantt(){
     }
     // markers — collision-aware spacing (avoid icons & date labels overlapping when close together)
     const pxPerPct=(months*cellW)/100;
-    const MIN_ICON_GAP_PX=24, MIN_LABEL_GAP_PX=34;
+    const MIN_ICON_GAP_PX=28, MIN_LABEL_GAP_PX=38;
     let lastIconPx=null, lastLabelPx=null;
     sorted.forEach(item=>{
       const col=mtDateToCol(item.date);
@@ -5163,10 +5163,12 @@ function mtRenderGantt(){
       const dLabel=`${MT_MONTHS_TH[d.getMonth()]} ${d.getFullYear()+543}`;
       const showLabel=(lastLabelPx===null)||((px-lastLabelPx)>=MIN_LABEL_GAP_PX);
       if(showLabel) lastLabelPx=px;
-      html+=`<div class="mt-marker-wrap" style="position:absolute;left:${pct}%;top:50%;transform:translate(-50%,-50%);z-index:5;display:flex;flex-direction:column;align-items:center;gap:2px;">`;
-      html+=`<div class="mt-marker ${t.cls}" data-mt-action="editms" data-mt-model="${m.id}" data-mt-ms="${item.id}" title="${t.label} — ${mtFmtMonthYearTH(item.date)}${item.note?' ('+mtEsc(item.note)+')':''}">${t.icon}</div>`;
-      html+=`<div class="mt-date-label"${showLabel?'':' style="visibility:hidden"'}>${dLabel}</div>`;
-      html+=`</div>`;
+      // badge centered vertically in the row (position:absolute, top/transform handles centering)
+      // date label positioned at bottom of the row with no-overflow
+      html+=`<div class="mt-marker ${t.cls}" style="position:absolute;left:${pct}%;top:50%;transform:translate(-50%,-50%);" data-mt-action="editms" data-mt-model="${m.id}" data-mt-ms="${item.id}" title="${t.label} — ${mtFmtMonthYearTH(item.date)}${item.note?' ('+mtEsc(item.note)+')':''}">${t.icon}</div>`;
+      if(showLabel){
+        html+=`<div class="mt-date-label" style="position:absolute;left:${pct}%;bottom:2px;transform:translateX(-50%);">${dLabel}</div>`;
+      }
     });
 
     html+='</div></div></div>';
