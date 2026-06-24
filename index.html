@@ -1274,6 +1274,32 @@
   .mt-ms-edit-btn:hover { color:var(--accent); background:var(--glow-accent); }
   .mt-side-actions { display:flex; gap:0.45rem; }
   .mt-side-actions .btn { flex:1; justify-content:center; }
+  /* ── YEAR NAVIGATOR ── */
+  .mt-year-nav {
+    display:inline-flex; align-items:center; gap:0; border-radius:8px;
+    border:1px solid var(--border); overflow:hidden; background:var(--surface2);
+  }
+  .mt-year-nav-btn {
+    background:none; border:none; color:var(--muted); cursor:pointer;
+    padding:0.28rem 0.65rem; font-size:0.78rem; line-height:1;
+    transition:background 0.13s, color 0.13s;
+    display:flex; align-items:center;
+  }
+  .mt-year-nav-btn:hover { background:var(--surface); color:var(--text); }
+  .mt-year-nav-label {
+    padding:0.28rem 0.7rem; font-size:0.8rem; font-weight:700;
+    color:var(--text); font-family:var(--mono); min-width:80px; text-align:center;
+    border-left:1px solid var(--border); border-right:1px solid var(--border);
+    white-space:nowrap;
+  }
+  .mt-year-nav-today {
+    background:none; border:none; border-left:1px solid var(--border);
+    color:var(--accent); cursor:pointer; padding:0.28rem 0.6rem;
+    font-size:0.68rem; font-weight:700; font-family:var(--mono);
+    transition:background 0.13s;
+  }
+  .mt-year-nav-today:hover { background:rgba(0,229,160,0.1); }
+
   .mt-empty-state { text-align:center; padding:3rem 1rem; color:var(--muted); }
 
   /* ── KPI SUMMARY BAR ── */
@@ -2205,6 +2231,13 @@
         </div>
         <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
           <div class="mt-today-badge" id="mt-todayLabel"></div>
+          <!-- Year Navigator -->
+          <div class="mt-year-nav">
+            <button class="mt-year-nav-btn" onclick="mtYearPrev()">◀</button>
+            <span class="mt-year-nav-label" id="mt-yearLabel">—</span>
+            <button class="mt-year-nav-btn" onclick="mtYearNext()">▶</button>
+            <button class="mt-year-nav-today" onclick="mtYearToday()" title="กลับปีปัจจุบัน">วันนี้</button>
+          </div>
           <button class="btn btn-primary btn-sm" id="mt-btnAddModel">+ เพิ่ม Model</button>
         </div>
       </div>
@@ -5187,8 +5220,11 @@ const MT_TYPES = {
   mp:       { label:'Mass Production (M/P)', short:'M/P', icon:'MP', cls:'mt-mp'       },
 };
 
-const MT_YEAR_START = 2026, MT_YEAR_END = 2027;
 const MT_MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+// Dynamic year window — user can navigate with ◀ ▶
+let MT_YEAR_START = new Date().getFullYear();
+let MT_YEAR_END   = MT_YEAR_START + 1;      // always show 2 years
 
 let MT_DATA = [];
 let mtSelectedId = null, mtEditingModelId = null, mtEditingMs = null, mtCurrentMsModelId = null;
@@ -5367,6 +5403,25 @@ function mtRefreshCustomerFilter(){
   sel.value=cur;
 }
 
+// ── year navigation ─────────────────────────────────
+function mtYearPrev(){
+  MT_YEAR_START--; MT_YEAR_END--;
+  mtRenderGantt(); mtUpdateYearLabel();
+}
+function mtYearNext(){
+  MT_YEAR_START++; MT_YEAR_END++;
+  mtRenderGantt(); mtUpdateYearLabel();
+}
+function mtYearToday(){
+  MT_YEAR_START = new Date().getFullYear();
+  MT_YEAR_END   = MT_YEAR_START + 1;
+  mtRenderGantt(); mtUpdateYearLabel();
+}
+function mtUpdateYearLabel(){
+  const el = document.getElementById('mt-yearLabel');
+  if(el) el.textContent = (MT_YEAR_START+543) + ' – ' + (MT_YEAR_END+543);
+}
+
 // ── render ────────────────────────────────────────────
 function renderModelTracker(){
   if(!mtInited){ mtSeedData(); mtInited=true; }
@@ -5375,6 +5430,7 @@ function renderModelTracker(){
     const now=new Date();
     label.textContent=now.getDate()+' '+MT_MONTHS_TH[now.getMonth()]+' '+(now.getFullYear()+543);
   }
+  mtUpdateYearLabel();
   mtRefreshCustomerFilter();
   mtUpdateKpi();
   mtRenderGantt();
@@ -5392,6 +5448,16 @@ function mtRenderGantt(){
     wrap.innerHTML='<div class="mt-empty-state"><div style="font-size:2rem;margin-bottom:0.5rem;opacity:0.45">🔍</div>ไม่พบ Model ที่ตรงกับเงื่อนไข</div>';
     return;
   }
+
+  // Warn if milestones exist outside the current year window
+  const allDates = list.flatMap(m=>m.milestones.map(x=>x.date)).filter(Boolean);
+  const minYear  = allDates.length ? Math.min(...allDates.map(d=>+d.slice(0,4))) : MT_YEAR_START;
+  const maxYear  = allDates.length ? Math.max(...allDates.map(d=>+d.slice(0,4))) : MT_YEAR_END;
+  let outOfRangeHtml = '';
+  if(minYear < MT_YEAR_START)
+    outOfRangeHtml += `<span style="font-size:0.65rem;color:var(--muted)">◀ มี milestone ก่อนปี ${MT_YEAR_START+543}</span>`;
+  if(maxYear > MT_YEAR_END)
+    outOfRangeHtml += `<span style="font-size:0.65rem;color:var(--muted);margin-left:0.6rem">มี milestone หลังปี ${MT_YEAR_END+543} ▶</span>`;
 
   const months=mtTotalMonths();
   const todayCol=mtDateToCol(mtTodayISO());
@@ -5506,6 +5572,8 @@ function mtRenderGantt(){
 
       const today = mtTodayISO();
       sorted.forEach(item=>{
+        const itemYear = +item.date.slice(0,4);
+        if(itemYear < MT_YEAR_START || itemYear > MT_YEAR_END) return; // outside window
         const col=mtDateToCol(item.date);
         const pct=(col/months)*100;
         const px=pct*pxPerPct;
@@ -5529,7 +5597,7 @@ function mtRenderGantt(){
   });
 
   html+='</div>';
-  wrap.innerHTML=html;
+  wrap.innerHTML = html + (outOfRangeHtml ? `<div style="padding:0.4rem 0.9rem;border-top:1px solid var(--border);display:flex;gap:0.5rem;flex-wrap:wrap;">${outOfRangeHtml}</div>` : '');
 
   // group collapse toggle
   wrap.querySelectorAll('.mt-group-header').forEach(el=>{
