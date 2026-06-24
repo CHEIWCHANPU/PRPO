@@ -1090,7 +1090,6 @@
   .mt-legend-forecast { background:rgba(91,127,209,0.2); color:#7ba0e4; border:1px solid rgba(91,127,209,0.35); }
   .mt-legend-pp1      { background:rgba(224,167,46,0.18); color:#e0a72e; border:1px solid rgba(224,167,46,0.32); }
   .mt-legend-order    { background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid rgba(245,158,11,0.3); border-radius:9px; }
-  .mt-legend-cci      { background:rgba(160,107,242,0.18); color:#b388ff; border:1px solid rgba(160,107,242,0.32); }
   .mt-legend-mp       { background:rgba(239,91,91,0.15); color:#f87171; border:1px solid rgba(239,91,91,0.3); border-radius:3px; }
   @media (max-width:760px) {
     .mt-legend-arrow { display:none; }
@@ -1210,7 +1209,6 @@
   .mt-marker.mt-forecast { background:#3d5ea8; color:#c5d5ff; border-color:rgba(91,127,209,0.5); }
   .mt-marker.mt-pp1      { background:#b8820a; color:#fff8c5; border-color:rgba(224,167,46,0.5); }
   .mt-marker.mt-order    { background:#c47a00; color:#fff3c4; border-color:rgba(245,158,11,0.45); border-radius:10px; }
-  .mt-marker.mt-cci      { background:#7340d8; color:#e8d9ff; border-color:rgba(160,107,242,0.5); }
   .mt-marker.mt-mp       { background:#c23333; color:#ffd5d5; border-color:rgba(239,91,91,0.45); border-radius:3px; }
 
   /* Month label under marker */
@@ -1265,7 +1263,6 @@
   .mt-ms-icon.mt-forecast { background:rgba(91,127,209,0.18); color:#7ba0e4; border:1px solid rgba(91,127,209,0.3); }
   .mt-ms-icon.mt-pp1      { background:rgba(224,167,46,0.18);  color:#e0a72e; border:1px solid rgba(224,167,46,0.3); }
   .mt-ms-icon.mt-order    { background:rgba(245,158,11,0.15);  color:#f59e0b; border:1px solid rgba(245,158,11,0.28); border-radius:10px; }
-  .mt-ms-icon.mt-cci      { background:rgba(160,107,242,0.18); color:#b388ff; border:1px solid rgba(160,107,242,0.3); }
   .mt-ms-icon.mt-mp       { background:rgba(239,91,91,0.15);   color:#f87171; border:1px solid rgba(239,91,91,0.28); border-radius:3px; }
   .mt-ms-body { flex:1; min-width:0; }
   .mt-ms-name { font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -2254,8 +2251,22 @@
           <span class="mt-legend-arrow">›</span>
           <!-- PP1 -->
           <div class="mt-legend-item">
-            <span class="mt-legend-icon mt-legend-pp1">PP</span>
+            <span class="mt-legend-icon mt-legend-pp1">PP1</span>
             <span>PP1</span>
+            <span class="mt-legend-sub">Pre-Production</span>
+          </div>
+          <span class="mt-legend-arrow">›</span>
+          <!-- PP2 -->
+          <div class="mt-legend-item">
+            <span class="mt-legend-icon mt-legend-pp1">PP2</span>
+            <span>PP2</span>
+            <span class="mt-legend-sub">Pre-Production</span>
+          </div>
+          <span class="mt-legend-arrow">›</span>
+          <!-- PP3 -->
+          <div class="mt-legend-item">
+            <span class="mt-legend-icon mt-legend-pp1">PP3</span>
+            <span>PP3</span>
             <span class="mt-legend-sub">Pre-Production</span>
           </div>
           <span class="mt-legend-arrow">›</span>
@@ -2264,13 +2275,6 @@
             <span class="mt-legend-icon mt-legend-order">OR</span>
             <span>CCI Order</span>
             <span class="mt-legend-sub">สั่งซื้อ</span>
-          </div>
-          <span class="mt-legend-arrow">›</span>
-          <!-- CCI Issued -->
-          <div class="mt-legend-item">
-            <span class="mt-legend-icon mt-legend-cci">CI</span>
-            <span>CCI Issued</span>
-            <span class="mt-legend-sub">ออกเลขแล้ว</span>
           </div>
           <span class="mt-legend-arrow">›</span>
           <!-- Mass Production -->
@@ -5175,8 +5179,9 @@ document.addEventListener('keydown', function(e) {
           <select id="mt-f-mstype">
             <option value="forecast">Forecast</option>
             <option value="pp1">PP1 (Pre-Production)</option>
+            <option value="pp2">PP2 (Pre-Production)</option>
+            <option value="pp3">PP3 (Pre-Production)</option>
             <option value="order">CCI Order</option>
-            <option value="cci">CCI Issued</option>
             <option value="mp">Mass Production (M/P)</option>
           </select>
         </div>
@@ -5188,8 +5193,8 @@ document.addEventListener('keydown', function(e) {
             <label>เดือน / ปี <span class="mt-field-required">*</span></label>
             <input type="month" id="mt-f-msdate" style="font-family:var(--mono);letter-spacing:0.04em;">
           </div>
-          <div class="mt-field-row" style="margin-bottom:0">
-            <label>โน้ต</label>
+          <div class="mt-field-row" style="margin-bottom:0" id="mt-f-msnote-row">
+            <label>โน้ต <span style="color:var(--muted);font-weight:400">(เฉพาะ CCI Order)</span></label>
             <input type="text" id="mt-f-msnote" placeholder="เช่น Lot 1">
           </div>
         </div>
@@ -5214,11 +5219,15 @@ document.addEventListener('keydown', function(e) {
 
 const MT_TYPES = {
   forecast: { label:'Forecast',              short:'FC',  icon:'FC', cls:'mt-forecast' },
-  pp1:      { label:'PP1 (Pre-Production)',  short:'PP1', icon:'PP', cls:'mt-pp1'      },
+  pp1:      { label:'PP1 (Pre-Production)',  short:'PP1', icon:'PP1', cls:'mt-pp1'      },
+  pp2:      { label:'PP2 (Pre-Production)',  short:'PP2', icon:'PP2', cls:'mt-pp1'      },
+  pp3:      { label:'PP3 (Pre-Production)',  short:'PP3', icon:'PP3', cls:'mt-pp1'      },
   order:    { label:'CCI Order',             short:'ORD', icon:'OR', cls:'mt-order'    },
-  cci:      { label:'CCI Issued',            short:'CCI', icon:'CI', cls:'mt-cci'      },
   mp:       { label:'Mass Production (M/P)', short:'M/P', icon:'MP', cls:'mt-mp'       },
 };
+// แปลง field ฝั่ง Sheet/JS (pp1/pp2/pp3/order/forecast/mp) ↔ ฟิลด์ใน object ของ Model Tracker
+const MT_FIELD_BY_TYPE = { forecast:'forecast', pp1:'pp1', pp2:'pp2', pp3:'pp3', order:'cciOrder', mp:'massProduction' };
+const MT_TYPE_BY_FIELD = { forecast:'forecast', pp1:'pp1', pp2:'pp2', pp3:'pp3', cciOrder:'order', massProduction:'mp' };
 
 const MT_MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 
@@ -5229,35 +5238,46 @@ let MT_YEAR_END   = MT_YEAR_START + 1;      // always show 2 years
 let MT_DATA = [];
 let mtSelectedId = null, mtEditingModelId = null, mtEditingMs = null, mtCurrentMsModelId = null;
 let mtInited = false;
+let mtLoading = false;
 
-function mtUid(){ return Math.random().toString(36).slice(2,10); }
-function mtMs(type,date,note){ return { id:mtUid(), type, date, note:note||'' }; }
-function mtMkModel(model,customer,volume,statusNote,milestones){
-  return { id:mtUid(), model, customer, volume:volume||'', statusNote:statusNote||'', milestones:milestones||[] };
-}
 function mtTodayISO(){ return new Date().toISOString().slice(0,10); }
 
-function mtSeedData(){
-  MT_DATA = [
-    mtMkModel('P700','ISUZU','','รอ REF.NM',[]),
-    mtMkModel('9751','KMT','','กำลังดำเนินการ',[
-      mtMs('forecast','2026-06-01'), mtMs('pp1','2026-07-15'),
-      mtMs('order','2026-09-10','Lot 1'), mtMs('cci','2026-09-25'), mtMs('mp','2026-11-05'),
-    ]),
-    mtMkModel('MMAA','THM','','กำลังดำเนินการ',[
-      mtMs('pp1','2026-06-20'), mtMs('order','2026-08-05','Lot 1'), mtMs('cci','2026-08-20'), mtMs('mp','2026-10-01'),
-    ]),
-    mtMkModel('DB4','TYM','','กำลังดำเนินการ',[
-      mtMs('pp1','2026-07-01'), mtMs('order','2026-08-25','Lot 1'), mtMs('cci','2026-09-05'), mtMs('mp','2026-10-15'),
-    ]),
-    mtMkModel('K1BT','THM','','กำลังดำเนินการ',[
-      mtMs('pp1','2026-06-25'), mtMs('order','2026-08-15','Lot 1'), mtMs('cci','2026-08-28'), mtMs('mp','2026-10-10'),
-    ]),
-    mtMkModel('MG85','TECHNOGYM','','รอ REF.NM',[]),
-    mtMkModel('VD00','TADA','','รอ REF.NM',[]),
-    mtMkModel('EK01/VC62','ISUZU','','รอ REF.NM',[mtMs('pp1','2026-08-10')]),
-    mtMkModel('8901&8951','KMT','','กำลังดำเนินการ',[mtMs('pp1','2026-06-15')]),
-  ];
+// แปลง record จาก Google Sheet (1 แถว/Model, milestone เป็นคอลัมน์ตรงๆ)
+// ให้กลายเป็นโครงสร้าง { id, model, customer, volume, statusNote, milestones:[...] }
+// ที่ส่วนอื่นของ Gantt/side panel ใช้งานอยู่เดิม — ใช้ rowIndex เป็น id ตรงๆ
+// (ไม่ต้องสุ่ม uid อีกเพราะ rowIndex จาก Sheet unique อยู่แล้ว)
+function mtRecordToModel(r){
+  const milestones = [];
+  ['forecast','pp1','pp2','pp3'].forEach(f=>{
+    if(r[f]) milestones.push({ id:f, type:f, date:r[f]+'-01', note:'' });
+  });
+  if(r.cciOrder) milestones.push({ id:'order', type:'order', date:r.cciOrder+'-01', note:r.note||'' });
+  if(r.massProduction) milestones.push({ id:'mp', type:'mp', date:r.massProduction+'-01', note:'' });
+  return {
+    id: String(r.rowIndex),
+    rowIndex: r.rowIndex,
+    model: r.model||'', customer: r.customer||'', volume: r.volume||'',
+    statusNote: r.statusNote||'', noteRaw: r.note||'',
+    milestones
+  };
+}
+
+async function mtLoadData(){
+  if(!WEB_APP_URL){ MT_DATA=[]; return; }
+  mtLoading = true;
+  try{
+    const res = await fetch(WEB_APP_URL + '?action=getModelTracker');
+    const json = await res.json();
+    if(json.success){
+      MT_DATA = (json.data||[]).map(mtRecordToModel);
+    } else {
+      showToast('⚠️ โหลด Model Tracker ไม่สำเร็จ: ' + (json.error||''), 'error');
+    }
+  } catch(e){
+    showToast('⚠️ เชื่อมต่อ Model Tracker ไม่สำเร็จ', 'error');
+  } finally {
+    mtLoading = false;
+  }
 }
 
 // ── status ─────────────────────────────────────────
@@ -5281,7 +5301,7 @@ function mtStatusBadge(m){
 }
 
 // ── progress helpers ────────────────────────────────
-const MT_TYPE_ORDER = ['forecast','pp1','order','cci','mp'];
+const MT_TYPE_ORDER = ['forecast','pp1','pp2','pp3','order','mp'];
 function mtRowProgress(m){
   if(!m.milestones.length) return {pct:0, done:0, total:MT_TYPE_ORDER.length};
   const today = mtTodayISO();
@@ -5423,14 +5443,19 @@ function mtUpdateYearLabel(){
 }
 
 // ── render ────────────────────────────────────────────
-function renderModelTracker(){
-  if(!mtInited){ mtSeedData(); mtInited=true; }
+async function renderModelTracker(){
   const label=document.getElementById('mt-todayLabel');
   if(label){
     const now=new Date();
     label.textContent=now.getDate()+' '+MT_MONTHS_TH[now.getMonth()]+' '+(now.getFullYear()+543);
   }
   mtUpdateYearLabel();
+  if(!mtInited){
+    mtInited=true;
+    const wrap=document.getElementById('mt-ganttWrap');
+    if(wrap) wrap.innerHTML='<div class="mt-empty-state">⏳ กำลังโหลดข้อมูล...</div>';
+    await mtLoadData();
+  }
   mtRefreshCustomerFilter();
   mtUpdateKpi();
   mtRenderGantt();
@@ -5732,28 +5757,69 @@ function mtOpenModelModal(id){
   }
   mtOpenModal('mt-modelModal');
 }
-function mtSaveModel(){
+
+// รวบรวมค่า milestone ปัจจุบันของ model ให้เป็น params ส่งไป Sheet
+// (ต้องส่งครบทุกคอลัมน์เสมอ เพราะ editModelTracker ฝั่ง Apps Script
+// เขียนทับทั้งแถว ไม่ใช่ patch เฉพาะฟิลด์ที่เปลี่ยน)
+function mtMilestoneParams(m){
+  const get = type => {
+    const item = m.milestones.find(x=>x.type===type);
+    return item && item.date ? item.date.slice(0,7) : '';
+  };
+  const orderItem = m.milestones.find(x=>x.type==='order');
+  return {
+    forecast: get('forecast'), pp1: get('pp1'), pp2: get('pp2'), pp3: get('pp3'),
+    cciOrder: get('order'), massProduction: get('mp'),
+    note: orderItem ? (orderItem.note||'') : (m.noteRaw||'')
+  };
+}
+
+async function mtSaveModel(){
   const model=document.getElementById('mt-f-model').value.trim();
   if(!model){ alert('กรุณาใส่ชื่อ Model'); return; }
   const customer=document.getElementById('mt-f-customer').value.trim();
   const volume=document.getElementById('mt-f-volume').value.trim();
   const statusNote=document.getElementById('mt-f-statusnote').value.trim();
-  if(mtEditingModelId){
-    const m=MT_DATA.find(x=>x.id===mtEditingModelId);
-    m.model=model; m.customer=customer; m.volume=volume; m.statusNote=statusNote;
-  } else {
-    MT_DATA.push(mtMkModel(model,customer,volume,statusNote,[]));
+  const saveBtn=document.getElementById('mt-btnSaveModel');
+  saveBtn.disabled=true; saveBtn.textContent='💾 กำลังบันทึก...';
+  try{
+    if(mtEditingModelId){
+      const m=MT_DATA.find(x=>x.id===mtEditingModelId);
+      const ms=mtMilestoneParams(m);
+      const params=new URLSearchParams({ action:'editModelTracker', rowIndex:m.rowIndex, model, customer, volume, statusNote, ...ms });
+      const res=await fetch(WEB_APP_URL+'?'+params.toString());
+      const json=await res.json();
+      if(!json.success){ showToast('⚠️ บันทึกไม่สำเร็จ: '+(json.error||''),'error'); return; }
+    } else {
+      const params=new URLSearchParams({ action:'addModelTracker', model, customer, volume, statusNote });
+      const res=await fetch(WEB_APP_URL+'?'+params.toString());
+      const json=await res.json();
+      if(!json.success){ showToast('⚠️ บันทึกไม่สำเร็จ: '+(json.error||''),'error'); return; }
+    }
+    await mtLoadData();
+    mtCloseModal('mt-modelModal');
+    mtRefreshCustomerFilter(); mtRenderGantt(); mtRenderSide();
+    showToast('✅ บันทึก Model แล้ว','success');
+  } catch(e){
+    showToast('⚠️ เชื่อมต่อ Sheet ไม่สำเร็จ','error');
+  } finally {
+    saveBtn.disabled=false; saveBtn.textContent='💾 บันทึก';
   }
-  mtCloseModal('mt-modelModal');
-  mtRefreshCustomerFilter(); mtRenderGantt(); mtRenderSide();
 }
-function mtDeleteModel(){
+async function mtDeleteModel(){
   if(!mtEditingModelId) return;
   if(!confirm('ลบ Model นี้ทั้งหมด (รวม milestone) ใช่หรือไม่?')) return;
-  MT_DATA=MT_DATA.filter(x=>x.id!==mtEditingModelId);
+  const m=MT_DATA.find(x=>x.id===mtEditingModelId);
+  try{
+    const res=await fetch(WEB_APP_URL+'?action=delModelTracker&rowIndex='+m.rowIndex);
+    const json=await res.json();
+    if(!json.success){ showToast('⚠️ ลบไม่สำเร็จ: '+(json.error||''),'error'); return; }
+  } catch(e){ showToast('⚠️ เชื่อมต่อ Sheet ไม่สำเร็จ','error'); return; }
+  await mtLoadData();
   if(mtSelectedId===mtEditingModelId) mtSelectedId=null;
   mtCloseModal('mt-modelModal');
   mtRefreshCustomerFilter(); mtRenderGantt(); mtRenderSide();
+  showToast('🗑️ ลบ Model แล้ว','success');
 }
 
 function mtOpenMsModal(modelId, msId){
@@ -5775,51 +5841,88 @@ function mtOpenMsModal(modelId, msId){
     document.getElementById('mt-f-msnote').value='';
     delBtn.style.display='none';
   }
+  mtUpdateMsNoteVisibility();
   mtOpenModal('mt-msModal');
 }
-function mtSaveMs(){
+// แสดงช่อง "โน้ต" เฉพาะตอนเลือกประเภท CCI Order เพราะ Sheet มีคอลัมน์
+// หมายเหตุ (L) คอลัมน์เดียวต่อ Model ไม่ใช่ต่อ milestone — ใส่โน้ตที่
+// ประเภทอื่นจะไม่ถูกบันทึกจริง (ดู mtMilestoneParams)
+function mtUpdateMsNoteVisibility(){
+  const type=document.getElementById('mt-f-mstype').value;
+  const row=document.getElementById('mt-f-msnote-row');
+  if(row) row.style.display = (type==='order') ? '' : 'none';
+}
+async function mtSaveMs(){
   const type=document.getElementById('mt-f-mstype').value;
   const monthVal=document.getElementById('mt-f-msdate').value;
   const date=monthVal?(monthVal+'-01'):'';
   const note=document.getElementById('mt-f-msnote').value.trim();
   if(!date){ alert('กรุณาเลือกเดือน/ปี'); return; }
   const m=MT_DATA.find(x=>x.id===mtCurrentMsModelId);
+
+  // ทำงานกับ copy ของ milestones ในหน่วยความจำก่อน แล้วค่อยสรุปเป็น params
+  // ส่งทั้งแถวไปที่ Sheet (ดู mtMilestoneParams) — ไม่กระทบ MT_DATA จริงจน
+  // กว่าจะโหลดข้อมูลใหม่จาก Sheet สำเร็จ
+  let milestones=[...m.milestones];
   if(mtEditingMs){
-    const item=m.milestones.find(x=>x.id===mtEditingMs);
-    item.type=type; item.date=date; item.note=note;
+    milestones = milestones.map(x=> x.id===mtEditingMs ? {...x, type, date, note} : x);
   } else {
-    m.milestones.push(mtMs(type,date,note));
+    // มีอยู่แล้วของ type นี้ -> เขียนทับ (1 model มีได้ 1 ค่าต่อประเภท ตามคอลัมน์ Sheet)
+    milestones = milestones.filter(x=>x.type!==type);
+    milestones.push({ id:type, type, date, note });
   }
-  mtCloseModal('mt-msModal');
-  mtRenderGantt(); mtRenderSide();
+  const tempModel = { ...m, milestones };
+  const ms = mtMilestoneParams(tempModel);
+
+  const saveBtn=document.getElementById('mt-btnSaveMs');
+  saveBtn.disabled=true; saveBtn.textContent='💾 กำลังบันทึก...';
+  try{
+    const params=new URLSearchParams({
+      action:'editModelTracker', rowIndex:m.rowIndex,
+      model:m.model, customer:m.customer, volume:m.volume, statusNote:m.statusNote,
+      ...ms
+    });
+    const res=await fetch(WEB_APP_URL+'?'+params.toString());
+    const json=await res.json();
+    if(!json.success){ showToast('⚠️ บันทึกไม่สำเร็จ: '+(json.error||''),'error'); return; }
+    await mtLoadData();
+    mtCloseModal('mt-msModal');
+    mtRenderGantt(); mtRenderSide();
+    showToast('✅ บันทึก Milestone แล้ว','success');
+  } catch(e){
+    showToast('⚠️ เชื่อมต่อ Sheet ไม่สำเร็จ','error');
+  } finally {
+    saveBtn.disabled=false; saveBtn.textContent='💾 บันทึก';
+  }
 }
-function mtDeleteMs(){
+async function mtDeleteMs(){
   if(!mtEditingMs) return;
   const m=MT_DATA.find(x=>x.id===mtCurrentMsModelId);
-  m.milestones=m.milestones.filter(x=>x.id!==mtEditingMs);
+  const tempModel = { ...m, milestones: m.milestones.filter(x=>x.id!==mtEditingMs) };
+  const ms = mtMilestoneParams(tempModel);
+  try{
+    const params=new URLSearchParams({
+      action:'editModelTracker', rowIndex:m.rowIndex,
+      model:m.model, customer:m.customer, volume:m.volume, statusNote:m.statusNote,
+      ...ms
+    });
+    const res=await fetch(WEB_APP_URL+'?'+params.toString());
+    const json=await res.json();
+    if(!json.success){ showToast('⚠️ ลบไม่สำเร็จ: '+(json.error||''),'error'); return; }
+  } catch(e){ showToast('⚠️ เชื่อมต่อ Sheet ไม่สำเร็จ','error'); return; }
+  await mtLoadData();
   mtCloseModal('mt-msModal');
   mtRenderGantt(); mtRenderSide();
+  showToast('🗑️ ลบ Milestone แล้ว','success');
 }
 
-// ── export / import ─────────────────────────────────
+// ── export ──────────────────────────────────────────
 function mtExportJson(){
   const blob=new Blob([JSON.stringify(MT_DATA,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a'); a.href=url;
   a.download=`model-tracker-${mtTodayISO()}.json`; a.click();
   URL.revokeObjectURL(url);
-}
-function mtImportJson(file){
-  const reader=new FileReader();
-  reader.onload=(e)=>{
-    try{
-      const parsed=JSON.parse(e.target.result);
-      if(!Array.isArray(parsed)) throw new Error();
-      MT_DATA=parsed; mtSelectedId=null;
-      mtRefreshCustomerFilter(); mtRenderGantt(); mtRenderSide();
-    } catch(err){ alert('ไฟล์ไม่ถูกต้อง'); }
-  };
-  reader.readAsText(file);
 }
 
 // ── wire up buttons on DOMContentLoaded ─────────────
@@ -5829,6 +5932,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   document.getElementById('mt-btnDeleteModel').addEventListener('click', mtDeleteModel);
   document.getElementById('mt-btnSaveMs').addEventListener('click', mtSaveMs);
   document.getElementById('mt-btnDeleteMs').addEventListener('click', mtDeleteMs);
+  document.getElementById('mt-f-mstype').addEventListener('change', mtUpdateMsNoteVisibility);
   document.getElementById('mt-searchInput').addEventListener('input', mtRenderGantt);
   document.getElementById('mt-filterCustomer').addEventListener('change', mtRenderGantt);
   document.getElementById('mt-filterStatus').addEventListener('change', mtRenderGantt);
