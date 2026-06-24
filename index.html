@@ -1276,6 +1276,80 @@
   .mt-side-actions .btn { flex:1; justify-content:center; }
   .mt-empty-state { text-align:center; padding:3rem 1rem; color:var(--muted); }
 
+  /* ── KPI SUMMARY BAR ── */
+  .mt-kpi-bar {
+    display:grid; grid-template-columns:repeat(4,1fr); gap:0.65rem;
+    margin-bottom:0.85rem;
+  }
+  .mt-kpi-card {
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    padding:0.7rem 0.9rem; cursor:pointer; transition:border-color 0.15s, background 0.15s;
+    display:flex; flex-direction:column; gap:0.18rem;
+  }
+  .mt-kpi-card:hover { border-color:var(--accent2); background:var(--surface2); }
+  .mt-kpi-card.active { border-color:var(--accent); background:rgba(0,229,160,0.06); }
+  .mt-kpi-label { font-size:0.6rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); }
+  .mt-kpi-val   { font-size:1.4rem; font-weight:800; line-height:1; }
+  .mt-kpi-sub   { font-size:0.58rem; color:var(--muted); }
+  .mt-kpi-card.kpi-total  .mt-kpi-val { color:var(--accent2); }
+  .mt-kpi-card.kpi-prog   .mt-kpi-val { color:#f59e0b; }
+  .mt-kpi-card.kpi-soon   .mt-kpi-val { color:#f87171; }
+  .mt-kpi-card.kpi-mass   .mt-kpi-val { color:#10b981; }
+  @media(max-width:640px){ .mt-kpi-bar{ grid-template-columns:repeat(2,1fr); } }
+
+  /* ── PROGRESS BAR ON ROW ── */
+  .mt-row-progress {
+    height:3px; border-radius:2px; background:var(--surface2);
+    margin-top:5px; overflow:hidden; width:100%;
+  }
+  .mt-row-progress-fill {
+    height:100%; border-radius:2px; transition:width 0.4s ease;
+  }
+  .mt-progress-label {
+    font-size:0.56rem; color:var(--muted); font-family:var(--mono);
+    margin-top:2px; line-height:1;
+  }
+
+  /* ── GROUP HEADER ROW ── */
+  .mt-group-header {
+    display:flex; align-items:center; cursor:pointer;
+    background:var(--surface2); border-bottom:1px solid var(--border);
+    user-select:none;
+  }
+  .mt-group-header:hover { background:rgba(0,229,160,0.06); }
+  .mt-group-label {
+    display:flex; align-items:center; gap:0.5rem;
+    padding:0.45rem 0.85rem; font-size:0.72rem; font-weight:800;
+    color:var(--accent); letter-spacing:0.04em; text-transform:uppercase;
+    min-width:260px; flex-shrink:0;
+  }
+  .mt-group-chevron { font-size:0.65rem; transition:transform 0.2s; display:inline-block; }
+  .mt-group-chevron.collapsed { transform:rotate(-90deg); }
+  .mt-group-count {
+    font-size:0.6rem; font-weight:700; padding:0.08rem 0.45rem;
+    border-radius:20px; background:rgba(0,229,160,0.12); color:var(--accent);
+    border:1px solid rgba(0,229,160,0.25); font-family:var(--mono);
+  }
+  .mt-group-mp-range {
+    font-size:0.6rem; color:var(--muted); font-family:var(--mono);
+    padding-right:0.75rem; white-space:nowrap; margin-left:auto;
+  }
+
+  /* ── COUNTDOWN in status col ── */
+  .mt-countdown {
+    font-size:0.6rem; font-family:var(--mono); margin-top:3px;
+    display:flex; align-items:center; gap:0.25rem;
+  }
+  .mt-countdown.urgent  { color:#f87171; }
+  .mt-countdown.warning { color:#f59e0b; }
+  .mt-countdown.ok      { color:var(--accent); }
+  .mt-countdown.done    { color:#10b981; }
+  .mt-countdown-dot { width:5px; height:5px; border-radius:50%; flex-shrink:0; }
+  .urgent  .mt-countdown-dot { background:#f87171; }
+  .warning .mt-countdown-dot { background:#f59e0b; }
+  .ok      .mt-countdown-dot { background:var(--accent); }
+  .done    .mt-countdown-dot { background:#10b981; }
+
   /* MT Modals */
   .mt-modal-inner { background:var(--surface); border:1px solid var(--border); border-radius:20px; width:480px; max-width:95vw; max-height:90vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 24px 64px rgba(0,0,0,0.55); transform:scale(0.96); transition:transform 0.2s; }
   .modal-overlay.open .mt-modal-inner { transform:scale(1); }
@@ -2177,6 +2251,30 @@
         <div class="mt-legend-item">
           <span style="display:inline-block;width:3px;height:16px;background:#ffd166;border-radius:2px;flex-shrink:0"></span>
           <span style="font-size:0.69rem;color:var(--muted)">วันนี้</span>
+        </div>
+      </div>
+
+      <!-- KPI Summary Bar -->
+      <div class="mt-kpi-bar" id="mt-kpiBar">
+        <div class="mt-kpi-card kpi-total" data-kpi-filter="" onclick="mtKpiClick(this,'')">
+          <div class="mt-kpi-label">Model ทั้งหมด</div>
+          <div class="mt-kpi-val" id="kpi-total">—</div>
+          <div class="mt-kpi-sub">ในระบบ</div>
+        </div>
+        <div class="mt-kpi-card kpi-prog" data-kpi-filter="inprogress" onclick="mtKpiClick(this,'inprogress')">
+          <div class="mt-kpi-label">กำลังดำเนินการ</div>
+          <div class="mt-kpi-val" id="kpi-prog">—</div>
+          <div class="mt-kpi-sub">มีแผน milestone แล้ว</div>
+        </div>
+        <div class="mt-kpi-card kpi-soon" data-kpi-filter="soon" onclick="mtKpiClick(this,'soon')">
+          <div class="mt-kpi-label">M/P ใน 90 วัน</div>
+          <div class="mt-kpi-val" id="kpi-soon">—</div>
+          <div class="mt-kpi-sub">ใกล้ถึงแล้ว</div>
+        </div>
+        <div class="mt-kpi-card kpi-mass" data-kpi-filter="mass" onclick="mtKpiClick(this,'mass')">
+          <div class="mt-kpi-label">Mass Production</div>
+          <div class="mt-kpi-val" id="kpi-mass">—</div>
+          <div class="mt-kpi-sub">เสร็จแล้ว</div>
         </div>
       </div>
 
@@ -5146,12 +5244,80 @@ function mtStatusBadge(m){
   return {cls:'mt-nodate', text:'— รอ REF.NM'};
 }
 
+// ── progress helpers ────────────────────────────────
+const MT_TYPE_ORDER = ['forecast','pp1','order','cci','mp'];
+function mtRowProgress(m){
+  if(!m.milestones.length) return {pct:0, done:0, total:MT_TYPE_ORDER.length};
+  const today = mtTodayISO();
+  const doneTypes = new Set(
+    m.milestones.filter(x=>x.date && x.date<=today).map(x=>x.type)
+  );
+  const hasTypes = new Set(m.milestones.filter(x=>x.date).map(x=>x.type));
+  // count steps: done = past milestones, total = all unique steps that exist
+  const done = MT_TYPE_ORDER.filter(t=>doneTypes.has(t)).length;
+  const total = MT_TYPE_ORDER.filter(t=>hasTypes.has(t)).length || MT_TYPE_ORDER.length;
+  return { pct: total ? Math.round(done/total*100) : 0, done, total };
+}
+function mtProgressColor(pct){
+  if(pct===100) return '#10b981';
+  if(pct>=60)   return 'var(--accent)';
+  if(pct>=30)   return '#f59e0b';
+  return '#6366f1';
+}
+
+// ── countdown helpers ───────────────────────────────
+function mtCountdown(m){
+  const mp = mtGetMpMs(m);
+  if(!mp) return null;
+  const today = new Date(mtTodayISO());
+  const mpDate = new Date(mp.date);
+  const days = Math.round((mpDate - today) / 86400000);
+  if(days < 0)   return { cls:'done',    dot:'done',    text:`M/P เสร็จแล้ว ${Math.abs(days)} วัน` };
+  if(days === 0) return { cls:'urgent',  dot:'urgent',  text:'M/P วันนี้!' };
+  if(days <= 30) return { cls:'urgent',  dot:'urgent',  text:`M/P อีก ${days} วัน` };
+  if(days <= 90) return { cls:'warning', dot:'warning', text:`M/P อีก ${days} วัน` };
+  return { cls:'ok', dot:'ok', text:`M/P อีก ${days} วัน` };
+}
+
+// ── KPI bar ─────────────────────────────────────────
+let mtKpiActiveFilter = '';
+function mtKpiClick(card, filter){
+  mtKpiActiveFilter = (mtKpiActiveFilter === filter && filter!=='') ? '' : filter;
+  document.querySelectorAll('.mt-kpi-card').forEach(c=>c.classList.remove('active'));
+  if(mtKpiActiveFilter !== '') card.classList.add('active');
+  // sync status dropdown if applicable
+  const sel = document.getElementById('mt-filterStatus');
+  if(mtKpiActiveFilter === 'inprogress') sel.value = 'inprogress';
+  else if(mtKpiActiveFilter === 'mass')  sel.value = 'mass';
+  else sel.value = '';
+  mtRenderGantt();
+}
+function mtUpdateKpi(){
+  const today = mtTodayISO();
+  const ninetyDays = new Date(); ninetyDays.setDate(ninetyDays.getDate()+90);
+  const ninetyISO = ninetyDays.toISOString().slice(0,10);
+  const total = MT_DATA.length;
+  const mass  = MT_DATA.filter(m=>{ const mp=mtGetMpMs(m); return mp&&mp.date<=today; }).length;
+  const prog  = MT_DATA.filter(m=>{ const s=mtModelStatus(m); return s==='inprogress'||s==='inprogress_mp_set'; }).length;
+  const soon  = MT_DATA.filter(m=>{ const mp=mtGetMpMs(m); return mp&&mp.date>today&&mp.date<=ninetyISO; }).length;
+  document.getElementById('kpi-total').textContent = total;
+  document.getElementById('kpi-prog').textContent  = prog;
+  document.getElementById('kpi-soon').textContent  = soon;
+  document.getElementById('kpi-mass').textContent  = mass;
+  // update soon card sub
+  document.querySelector('.mt-kpi-card.kpi-soon .mt-kpi-sub').textContent =
+    soon > 0 ? `ภายใน 90 วัน` : 'ยังไม่มี';
+}
+
+// ── collapse state ───────────────────────────────────
+const mtCollapsed = {}; // customer -> bool
+
 // ── date helpers ────────────────────────────────────
 function mtDateToCol(dateStr){
   const d = new Date(dateStr+'T00:00:00');
   const y=d.getFullYear(), mo=d.getMonth();
   const idx=(y-MT_YEAR_START)*12+mo;
-  return idx+0.5; // center marker in its month column
+  return idx+0.5;
 }
 function mtTotalMonths(){ return (MT_YEAR_END-MT_YEAR_START+1)*12; }
 function mtFmtDateTH(dateStr){
@@ -5173,9 +5339,17 @@ function mtGetFiltered(){
   const q=(document.getElementById('mt-searchInput').value||'').trim().toLowerCase();
   const cust=document.getElementById('mt-filterCustomer').value;
   const stat=document.getElementById('mt-filterStatus').value;
+  const today = mtTodayISO();
+  const ninetyDays = new Date(); ninetyDays.setDate(ninetyDays.getDate()+90);
+  const ninetyISO = ninetyDays.toISOString().slice(0,10);
   return MT_DATA.filter(m=>{
     if(q&&!(m.model.toLowerCase().includes(q)||(m.customer||'').toLowerCase().includes(q))) return false;
     if(cust&&m.customer!==cust) return false;
+    // KPI "soon" override
+    if(mtKpiActiveFilter==='soon'){
+      const mp=mtGetMpMs(m);
+      return mp&&mp.date>today&&mp.date<=ninetyISO;
+    }
     if(stat){
       const s=mtModelStatus(m);
       if(stat==='mass'&&s!=='mass') return false;
@@ -5193,18 +5367,16 @@ function mtRefreshCustomerFilter(){
   sel.value=cur;
 }
 
-// ── render gantt ────────────────────────────────────
+// ── render ────────────────────────────────────────────
 function renderModelTracker(){
   if(!mtInited){ mtSeedData(); mtInited=true; }
   const label=document.getElementById('mt-todayLabel');
   if(label){
     const now=new Date();
-    const d=now.getDate();
-    const mo=MT_MONTHS_TH[now.getMonth()];
-    const y=now.getFullYear()+543;
-    label.textContent=d+' '+mo+' '+y;
+    label.textContent=now.getDate()+' '+MT_MONTHS_TH[now.getMonth()]+' '+(now.getFullYear()+543);
   }
   mtRefreshCustomerFilter();
+  mtUpdateKpi();
   mtRenderGantt();
   mtRenderSide();
 }
@@ -5214,6 +5386,7 @@ function mtRenderGantt(){
   if(!wrap) return;
   const list=mtGetFiltered();
   document.getElementById('mt-modelCount').textContent=list.length+' models';
+  mtUpdateKpi();
 
   if(!list.length){
     wrap.innerHTML='<div class="mt-empty-state"><div style="font-size:2rem;margin-bottom:0.5rem;opacity:0.45">🔍</div>ไม่พบ Model ที่ตรงกับเงื่อนไข</div>';
@@ -5227,17 +5400,15 @@ function mtRenderGantt(){
 
   let html='<div class="mt-gantt">';
 
-  // header
+  // ── header ─────────────────────────────────────────
   html+='<div class="mt-gantt-header">';
   html+='<div class="mt-gtd mt-col-model">MODEL</div>';
-  html+='<div class="mt-gtd mt-col-status">สถานะ</div>';
+  html+='<div class="mt-gtd mt-col-status">สถานะ / M/P</div>';
   html+=`<div class="mt-gtd" style="padding:0;min-width:${months*cellW}px;height:42px;">`;
   html+=`<div style="position:relative;width:${months*cellW}px;height:100%;">`;
   for(let i=0;i<months;i++){
     const y=MT_YEAR_START+Math.floor(i/12), mo=i%12;
-    const isNewYear=(mo===0)&&(i>0);
-    const isFirst=(i===0);
-    const isEven=(i%2===0);
+    const isNewYear=(mo===0)&&(i>0), isFirst=(i===0), isEven=(i%2===0);
     html+=`<div class="mt-month-cell${isNewYear?' mt-new-year':''}${isFirst?' mt-first-month':''}${isEven?' mt-month-even':''}" style="left:${i*cellW}px;width:${cellW}px;">`;
     if(mo===0) html+=`<span class="mt-year-band">${y+543}</span>`;
     html+=`<span class="mt-month-label">${MT_MONTHS_TH[mo]}</span>`;
@@ -5245,92 +5416,129 @@ function mtRenderGantt(){
   }
   html+='</div></div></div>';
 
-  // rows
+  // ── group by customer ───────────────────────────────
+  const groups = {};
   list.forEach(m=>{
-    const badge=mtStatusBadge(m);
-    const isSel=m.id===mtSelectedId;
-    html+=`<div class="mt-gantt-row${isSel?' mt-selected':''}" data-mtid="${m.id}">`;
-    html+=`<div class="mt-gtd mt-col-model" data-mt-action="select" data-mtid="${m.id}">
-              <div class="mt-model-name">${mtEsc(m.model)}</div>
-              <div class="mt-model-customer">${mtEsc(m.customer||'—')}</div>
-            </div>`;
-    html+=`<div class="mt-gtd mt-col-status"><span class="mt-status-pill ${badge.cls}">${badge.text}</span></div>`;
-    html+=`<div class="mt-gtd mt-timeline-cell" style="min-width:${months*cellW}px" data-mt-action="timeline" data-mtid="${m.id}">`;
-    html+=`<div class="mt-timeline-track">`;
+    const key = m.customer || '(ไม่ระบุ)';
+    if(!groups[key]) groups[key]=[];
+    groups[key].push(m);
+  });
 
-    // month stripes + year dividers
-    for(let i=0;i<months;i++){
-      const mo2=(MT_YEAR_START*12+i)%12; // month index 0-11
-      const isNewYear2=(mo2===0)&&(i>0);
-      const isEven2=(i%2===0);
-      if(isEven2||isNewYear2){
-        html+=`<div class="mt-month-stripe${isEven2?' even':''}${isNewYear2?' new-year':''}" style="left:${i*cellW}px;width:${cellW}px;"></div>`;
+  Object.entries(groups).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([cust, models])=>{
+    const isCollapsed = !!mtCollapsed[cust];
+
+    // compute group M/P range for header
+    const mpDates = models.map(m=>mtGetMpMs(m)).filter(Boolean).map(x=>x.date).sort();
+    let mpRangeText = '';
+    if(mpDates.length===1) mpRangeText = 'M/P: '+mtFmtMonthYearTH(mpDates[0]);
+    else if(mpDates.length>1) mpRangeText = 'M/P: '+mtFmtMonthYearTH(mpDates[0])+' – '+mtFmtMonthYearTH(mpDates[mpDates.length-1]);
+
+    // group header row
+    html+=`<div class="mt-group-header" data-mt-group="${mtEsc(cust)}">`;
+    html+=`<div class="mt-group-label">
+      <span class="mt-group-chevron${isCollapsed?' collapsed':''}">▾</span>
+      <span>${mtEsc(cust)}</span>
+      <span class="mt-group-count">${models.length}</span>
+    </div>`;
+    if(mpRangeText) html+=`<span class="mt-group-mp-range">${mpRangeText}</span>`;
+    html+='</div>';
+
+    if(isCollapsed) return; // skip rows
+
+    models.forEach(m=>{
+      const badge = mtStatusBadge(m);
+      const isSel = m.id===mtSelectedId;
+      const prog  = mtRowProgress(m);
+      const cd    = mtCountdown(m);
+
+      html+=`<div class="mt-gantt-row${isSel?' mt-selected':''}" data-mtid="${m.id}">`;
+
+      // model col — with progress bar
+      html+=`<div class="mt-gtd mt-col-model" data-mt-action="select" data-mtid="${m.id}">
+        <div>
+          <div class="mt-model-name">${mtEsc(m.model)}</div>
+          <div class="mt-row-progress" title="${prog.pct}% (${prog.done}/${prog.total} steps)">
+            <div class="mt-row-progress-fill" style="width:${prog.pct}%;background:${mtProgressColor(prog.pct)}"></div>
+          </div>
+          <div class="mt-progress-label">${prog.pct}%&nbsp;·&nbsp;${prog.done}/${prog.total} steps</div>
+        </div>
+      </div>`;
+
+      // status col — with countdown
+      html+=`<div class="mt-gtd mt-col-status">
+        <div>
+          <span class="mt-status-pill ${badge.cls}">${badge.text}</span>
+          ${cd ? `<div class="mt-countdown ${cd.cls}"><span class="mt-countdown-dot"></span>${cd.text}</div>` : ''}
+        </div>
+      </div>`;
+
+      // timeline col
+      html+=`<div class="mt-gtd mt-timeline-cell" style="min-width:${months*cellW}px" data-mt-action="timeline" data-mtid="${m.id}">`;
+      html+=`<div class="mt-timeline-track">`;
+
+      for(let i=0;i<months;i++){
+        const mo2=(MT_YEAR_START*12+i)%12;
+        const isNewYear2=(mo2===0)&&(i>0), isEven2=(i%2===0);
+        if(isEven2||isNewYear2)
+          html+=`<div class="mt-month-stripe${isEven2?' even':''}${isNewYear2?' new-year':''}" style="left:${i*cellW}px;width:${cellW}px;"></div>`;
       }
-    }
-    // today line
-    if(todayCol>=0&&todayCol<=months){
-      html+=`<div class="mt-today-line" style="left:${todayPct}%"></div>`;
-    }
-    // connector
-    const sorted=[...m.milestones].filter(x=>x.date).sort((a,b)=>a.date.localeCompare(b.date));
-    if(sorted.length>=2){
-      const x1=(mtDateToCol(sorted[0].date)/months)*100;
-      const x2=(mtDateToCol(sorted[sorted.length-1].date)/months)*100;
-      html+=`<div class="mt-connector" style="left:${x1}%;width:${x2-x1}%"></div>`;
-    }
-    // markers — same-month items split top/bottom halves; labels only at bottom item per month
-    const pxPerPct=(months*cellW)/100;
-    const MIN_LABEL_GAP_PX=38;
-    let lastLabelPx=null;
+      if(todayCol>=0&&todayCol<=months)
+        html+=`<div class="mt-today-line" style="left:${todayPct}%"></div>`;
 
-    // group by month key YYYY-MM to detect collisions
-    const byMonth={};
-    sorted.forEach(item=>{
-      const mk=item.date.slice(0,7);
-      if(!byMonth[mk]) byMonth[mk]=[];
-      byMonth[mk].push(item);
-    });
-
-    // pre-assign vertical % for each item based on group size
-    const itemTopMap={};
-    Object.values(byMonth).forEach(grp=>{
-      if(grp.length===1){
-        itemTopMap[grp[0].id]='50%';
-      } else if(grp.length===2){
-        itemTopMap[grp[0].id]='27%';
-        itemTopMap[grp[1].id]='73%';
-      } else {
-        grp.forEach((it,idx)=>{
-          itemTopMap[it.id]=Math.round(15+idx*(70/(grp.length-1)))+'%';
-        });
+      const sorted=[...m.milestones].filter(x=>x.date).sort((a,b)=>a.date.localeCompare(b.date));
+      if(sorted.length>=2){
+        const x1=(mtDateToCol(sorted[0].date)/months)*100;
+        const x2=(mtDateToCol(sorted[sorted.length-1].date)/months)*100;
+        html+=`<div class="mt-connector" style="left:${x1}%;width:${x2-x1}%"></div>`;
       }
-    });
 
-    sorted.forEach(item=>{
-      const col=mtDateToCol(item.date);
-      const pct=(col/months)*100;
-      const px=pct*pxPerPct;
-      const t=MT_TYPES[item.type];
-      const topVal=itemTopMap[item.id]||'50%';
-      const d=new Date(item.date+'T00:00:00');
-      const dLabel=`${MT_MONTHS_TH[d.getMonth()]} ${d.getFullYear()+543}`;
-      // show label only for last item in each month group (bottom one), skip label collisions
-      const grp=byMonth[item.date.slice(0,7)];
-      const isLastInMonth=(grp[grp.length-1].id===item.id);
-      const showLabel=isLastInMonth&&((lastLabelPx===null)||((px-lastLabelPx)>=MIN_LABEL_GAP_PX));
-      if(showLabel) lastLabelPx=px;
-      html+=`<div class="mt-marker ${t.cls}" style="position:absolute;left:${pct}%;top:${topVal};transform:translate(-50%,-50%);" data-mt-action="editms" data-mt-model="${m.id}" data-mt-ms="${item.id}" title="${t.label} — ${mtFmtMonthYearTH(item.date)}${item.note?' ('+mtEsc(item.note)+')':''}">${t.icon}</div>`;
-      if(showLabel){
-        html+=`<div class="mt-date-label" style="position:absolute;left:${pct}%;bottom:2px;transform:translateX(-50%);">${dLabel}</div>`;
-      }
-    });
+      const pxPerPct=(months*cellW)/100;
+      const MIN_LABEL_GAP_PX=38;
+      let lastLabelPx=null;
+      const byMonth={};
+      sorted.forEach(item=>{ const mk=item.date.slice(0,7); if(!byMonth[mk]) byMonth[mk]=[]; byMonth[mk].push(item); });
+      const itemTopMap={};
+      Object.values(byMonth).forEach(grp=>{
+        if(grp.length===1){ itemTopMap[grp[0].id]='50%'; }
+        else if(grp.length===2){ itemTopMap[grp[0].id]='27%'; itemTopMap[grp[1].id]='73%'; }
+        else { grp.forEach((it,idx)=>{ itemTopMap[it.id]=Math.round(15+idx*(70/(grp.length-1)))+'%'; }); }
+      });
 
-    html+='</div></div></div>';
+      const today = mtTodayISO();
+      sorted.forEach(item=>{
+        const col=mtDateToCol(item.date);
+        const pct=(col/months)*100;
+        const px=pct*pxPerPct;
+        const t=MT_TYPES[item.type];
+        const topVal=itemTopMap[item.id]||'50%';
+        const d=new Date(item.date+'T00:00:00');
+        const dLabel=`${MT_MONTHS_TH[d.getMonth()]} ${d.getFullYear()+543}`;
+        const grp=byMonth[item.date.slice(0,7)];
+        const isLastInMonth=(grp[grp.length-1].id===item.id);
+        const showLabel=isLastInMonth&&((lastLabelPx===null)||((px-lastLabelPx)>=MIN_LABEL_GAP_PX));
+        if(showLabel) lastLabelPx=px;
+        // dim past markers slightly
+        const isPast = item.date <= today;
+        const opacity = isPast ? '0.45' : '1';
+        html+=`<div class="mt-marker ${t.cls}" style="position:absolute;left:${pct}%;top:${topVal};transform:translate(-50%,-50%);opacity:${opacity};" data-mt-action="editms" data-mt-model="${m.id}" data-mt-ms="${item.id}" title="${t.label} — ${mtFmtMonthYearTH(item.date)}${item.note?' ('+mtEsc(item.note)+')':''}">${t.icon}</div>`;
+        if(showLabel) html+=`<div class="mt-date-label" style="position:absolute;left:${pct}%;bottom:2px;transform:translateX(-50%);">${dLabel}</div>`;
+      });
+
+      html+='</div></div></div>';
+    });
   });
 
   html+='</div>';
   wrap.innerHTML=html;
 
+  // group collapse toggle
+  wrap.querySelectorAll('.mt-group-header').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const cust=el.dataset.mtGroup;
+      mtCollapsed[cust]=!mtCollapsed[cust];
+      mtRenderGantt();
+    });
+  });
   wrap.querySelectorAll('[data-mt-action="select"]').forEach(el=>{
     el.addEventListener('click',()=>mtSelectModel(el.dataset.mtid));
   });
@@ -5367,9 +5575,11 @@ function mtRenderSide(){
   let answerHtml='';
   if(mp){
     const isPast=mtTodayISO()>=mp.date;
+    const cd=mtCountdown(m);
     answerHtml=`<div class="mt-answer-box${isPast?'':' mt-notyet'}">
       <div class="mt-a-label">${isPast?'Mass Production เริ่มแล้วเมื่อ':'มีแผน Mass Production'}</div>
       <div class="mt-a-value">${mtFmtMonthYearTH(mp.date)}</div>
+      ${cd&&!isPast?`<div class="mt-a-sub" style="margin-top:0.4rem;font-size:0.75rem;font-weight:700;color:${cd.cls==='urgent'?'#f87171':cd.cls==='warning'?'#f59e0b':'var(--accent)'}">⏱ ${cd.text}</div>`:''}
     </div>`;
   } else {
     answerHtml=`<div class="mt-answer-box mt-notyet">
