@@ -1095,7 +1095,7 @@
   .mt-model-name { font-weight:700; font-size:0.84rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .mt-model-meta { font-size:0.65rem; color:var(--muted); margin-top:1px; font-family:var(--mono); }
   .mt-model-customer {
-    display:inline-flex; align-items:center; margin-top:4px;
+    display:inline-flex; align-items:center; margin-top:4px; margin-left:2px;
     font-size:0.58rem; font-weight:700; font-family:var(--mono);
     letter-spacing:0.08em; text-transform:uppercase;
     padding:0.08rem 0.42rem; border-radius:4px;
@@ -1209,7 +1209,7 @@
     cursor:pointer; transition:transform 0.12s;
   }
   .mt-marker-wrap:hover .mt-marker { transform:scale(1.18) !important; }
-  .mt-timeline-cell { padding:0; position:relative; height:62px; }
+  .mt-timeline-cell { padding:0; position:relative; height:70px; }
 
   .mt-connector { position:absolute; top:50%; height:0; border-top:1.5px dashed var(--mt-connector-color); z-index:1; }
   .mt-today-line { position:absolute; top:0; bottom:0; width:2px; background:#ffd166; z-index:8; pointer-events:none; border-radius:1px; }
@@ -1258,17 +1258,93 @@
   .mt-empty-state { text-align:center; padding:3rem 1rem; color:var(--muted); }
 
   /* MT Modals */
-  .mt-field-row { margin-bottom:0.75rem; }
-  .mt-field-row label { font-size:0.66rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; display:block; margin-bottom:0.28rem; }
-  .mt-field-row input, .mt-field-row select {
-    width:100%; background:var(--surface2); border:1px solid var(--border2); border-radius:7px;
-    padding:0.48rem 0.65rem; color:var(--text); font-family:var(--font); font-size:0.82rem; outline:none;
-    transition:border-color 0.15s;
+  .mt-modal-inner { background:var(--surface); border:1px solid var(--border); border-radius:20px; width:480px; max-width:95vw; max-height:90vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 24px 64px rgba(0,0,0,0.55); transform:scale(0.96); transition:transform 0.2s; }
+  .modal-overlay.open .mt-modal-inner { transform:scale(1); }
+
+  /* Head */
+  .modal-head {
+    padding:1.4rem 1.5rem 1.1rem;
+    border-bottom:1px solid var(--border);
+    display:flex; align-items:flex-start; justify-content:space-between; gap:1rem;
+    background:linear-gradient(135deg, rgba(99,102,241,0.07) 0%, rgba(0,229,160,0.04) 100%);
+    flex-shrink:0;
   }
-  .mt-field-row input:focus, .mt-field-row select:focus { border-color:var(--accent); }
-  .mt-two-col-fields { display:grid; grid-template-columns:1fr 1fr; gap:0.65rem; }
-  .mt-delete-btn { background:none; border:none; color:var(--danger); font-size:0.72rem; margin-top:0.25rem; cursor:pointer; }
-  .mt-delete-btn:hover { text-decoration:underline; }
+  .modal-head h3 {
+    font-size:1rem; font-weight:700; color:var(--text); letter-spacing:-0.01em;
+    display:flex; align-items:center; gap:0.55rem;
+  }
+  .modal-head h3::before {
+    content:''; display:inline-block; width:4px; height:1.1em;
+    background:linear-gradient(180deg,var(--accent2),var(--accent));
+    border-radius:3px; flex-shrink:0;
+  }
+  .modal-head-sub { font-size:0.67rem; color:var(--muted); margin-top:0.2rem; font-family:var(--mono); }
+  .modal-close {
+    width:30px; height:30px; border:1px solid var(--border); border-radius:8px;
+    background:transparent; color:var(--muted); font-size:0.9rem; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; transition:all 0.12s; flex-shrink:0;
+  }
+  .modal-close:hover { border-color:var(--danger); color:var(--danger); background:var(--glow-danger); }
+
+  /* Body */
+  .modal-body { padding:1.4rem 1.5rem; overflow-y:auto; flex:1; }
+
+  /* Fields */
+  .mt-field-row { margin-bottom:1rem; }
+  .mt-field-row label {
+    font-size:0.64rem; font-weight:700; color:var(--muted); text-transform:uppercase;
+    letter-spacing:0.08em; display:flex; align-items:center; gap:0.3rem; margin-bottom:0.35rem;
+  }
+  .mt-field-required { color:var(--danger); font-size:0.7rem; line-height:1; }
+  .mt-field-row input, .mt-field-row select {
+    width:100%; background:var(--surface2); border:1.5px solid var(--border);
+    border-radius:9px; padding:0.6rem 0.85rem; color:var(--text);
+    font-family:var(--font); font-size:0.84rem; outline:none;
+    transition:border-color 0.18s, box-shadow 0.18s;
+  }
+  .mt-field-row input:focus, .mt-field-row select:focus {
+    border-color:var(--accent); box-shadow:0 0 0 3px var(--glow-accent);
+  }
+  .mt-field-row input::placeholder { color:var(--muted); opacity:0.7; }
+  .mt-field-hint { font-size:0.63rem; color:var(--muted); margin-top:0.28rem; opacity:0.8; }
+  .mt-two-col-fields { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; }
+
+  /* Section divider inside modal */
+  .mt-modal-section {
+    border:1px solid var(--border); border-radius:11px; padding:0.9rem 1rem;
+    margin-bottom:1rem; background:var(--surface2);
+  }
+  .mt-modal-section-label {
+    font-size:0.6rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em;
+    color:var(--muted); margin-bottom:0.7rem;
+  }
+  .mt-modal-section .mt-field-row { margin-bottom:0.65rem; }
+  .mt-modal-section .mt-field-row:last-child { margin-bottom:0; }
+
+  /* Delete btn */
+  .mt-delete-btn {
+    display:inline-flex; align-items:center; gap:0.35rem;
+    background:rgba(239,68,68,0.07); border:1px solid rgba(239,68,68,0.2);
+    color:var(--danger); font-size:0.72rem; font-weight:600; font-family:var(--font);
+    padding:0.42rem 0.85rem; border-radius:8px; margin-top:0.5rem; cursor:pointer;
+    transition:all 0.15s;
+  }
+  .mt-delete-btn:hover { background:rgba(239,68,68,0.16); border-color:rgba(239,68,68,0.45); }
+
+  /* Foot */
+  .modal-foot {
+    padding:1rem 1.5rem;
+    border-top:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between; gap:0.65rem;
+    background:var(--surface2); flex-shrink:0;
+  }
+  .modal-foot-left { display:flex; align-items:center; }
+  .modal-foot-right { display:flex; align-items:center; gap:0.55rem; }
+  .modal-foot .btn { min-width:88px; justify-content:center; padding:0.55rem 1.2rem; font-size:0.82rem; }
+  .modal-foot .btn-primary { background:var(--accent); color:#000; font-weight:700; }
+  .modal-foot .btn-primary:hover { background:#00cfad; box-shadow:0 0 0 3px var(--glow-accent); }
+  .modal-foot .btn-ghost { color:var(--muted); border-color:var(--border); }
+  .modal-foot .btn-ghost:hover { border-color:var(--accent); color:var(--accent); }
 
 </style>
 </head>
@@ -4885,69 +4961,98 @@ document.addEventListener('keydown', function(e) {
      MODEL TRACKER MODALS
 ════════════════════════════════════════════ -->
 <div class="modal-overlay" id="mt-modelModal">
-  <div class="modal" style="width:460px">
+  <div class="mt-modal-inner">
     <div class="modal-head">
-      <h3 id="mt-modelModalTitle">เพิ่ม Model ใหม่</h3>
+      <div>
+        <h3 id="mt-modelModalTitle">เพิ่ม Model ใหม่</h3>
+        <div class="modal-head-sub">กรอกข้อมูล Model และ Customer</div>
+      </div>
       <button class="modal-close" onclick="mtCloseModal('mt-modelModal')">✕</button>
     </div>
     <div class="modal-body">
-      <div class="mt-field-row">
-        <label>Model</label>
-        <input type="text" id="mt-f-model" placeholder="เช่น P700">
-      </div>
-      <div class="mt-two-col-fields">
+      <div class="mt-modal-section">
+        <div class="mt-modal-section-label">📦 ข้อมูล Model</div>
         <div class="mt-field-row">
-          <label>Customer</label>
-          <input type="text" id="mt-f-customer" placeholder="เช่น ISUZU">
+          <label>Model <span class="mt-field-required">*</span></label>
+          <input type="text" id="mt-f-model" placeholder="เช่น P700, 9751, MMAA">
         </div>
-        <div class="mt-field-row">
-          <label>Volume</label>
-          <input type="text" id="mt-f-volume" placeholder="เช่น 12,000">
+        <div class="mt-two-col-fields">
+          <div class="mt-field-row">
+            <label>Customer <span class="mt-field-required">*</span></label>
+            <input type="text" id="mt-f-customer" placeholder="เช่น ISUZU, KMT">
+          </div>
+          <div class="mt-field-row">
+            <label>Volume</label>
+            <input type="text" id="mt-f-volume" placeholder="เช่น 12,000">
+            <div class="mt-field-hint">จำนวนชิ้น/ปี (ไม่บังคับ)</div>
+          </div>
         </div>
       </div>
-      <div class="mt-field-row">
-        <label>หมายเหตุสถานะ</label>
-        <input type="text" id="mt-f-statusnote" placeholder="เช่น รอ REF.NM / กำลังดำเนินการ">
+      <div class="mt-modal-section">
+        <div class="mt-modal-section-label">📋 สถานะ</div>
+        <div class="mt-field-row" style="margin-bottom:0">
+          <label>หมายเหตุสถานะ</label>
+          <input type="text" id="mt-f-statusnote" placeholder="เช่น รอ REF.NM / กำลังดำเนินการ">
+        </div>
       </div>
-      <button class="mt-delete-btn" id="mt-btnDeleteModel" style="display:none">🗑 ลบ Model นี้</button>
     </div>
     <div class="modal-foot">
-      <button class="btn" onclick="mtCloseModal('mt-modelModal')">ยกเลิก</button>
-      <button class="btn btn-primary" id="mt-btnSaveModel">บันทึก</button>
+      <div class="modal-foot-left">
+        <button class="mt-delete-btn" id="mt-btnDeleteModel" style="display:none">🗑 ลบ Model นี้</button>
+      </div>
+      <div class="modal-foot-right">
+        <button class="btn btn-ghost" onclick="mtCloseModal('mt-modelModal')">ยกเลิก</button>
+        <button class="btn btn-primary" id="mt-btnSaveModel">💾 บันทึก</button>
+      </div>
     </div>
   </div>
 </div>
 
 <div class="modal-overlay" id="mt-msModal">
-  <div class="modal" style="width:420px">
+  <div class="mt-modal-inner" style="width:440px">
     <div class="modal-head">
-      <h3 id="mt-msModalTitle">เพิ่ม Milestone</h3>
+      <div>
+        <h3 id="mt-msModalTitle">เพิ่ม Milestone</h3>
+        <div class="modal-head-sub">กำหนดประเภทและเดือน/ปีของ Milestone</div>
+      </div>
       <button class="modal-close" onclick="mtCloseModal('mt-msModal')">✕</button>
     </div>
     <div class="modal-body">
-      <div class="mt-field-row">
-        <label>ประเภท</label>
-        <select id="mt-f-mstype">
-          <option value="forecast">Forecast</option>
-          <option value="pp1">PP1 (Pre-Production)</option>
-          <option value="order">CCI Order</option>
-          <option value="cci">CCI Issued</option>
-          <option value="mp">Mass Production (M/P)</option>
-        </select>
+      <div class="mt-modal-section">
+        <div class="mt-modal-section-label">🏷 ประเภท Milestone</div>
+        <div class="mt-field-row" style="margin-bottom:0">
+          <label>ประเภท <span class="mt-field-required">*</span></label>
+          <select id="mt-f-mstype">
+            <option value="forecast">Forecast</option>
+            <option value="pp1">PP1 (Pre-Production)</option>
+            <option value="order">CCI Order</option>
+            <option value="cci">CCI Issued</option>
+            <option value="mp">Mass Production (M/P)</option>
+          </select>
+        </div>
       </div>
-      <div class="mt-field-row">
-        <label>เดือน / ปี</label>
-        <input type="month" id="mt-f-msdate" style="font-family:var(--mono);letter-spacing:0.04em;">
+      <div class="mt-modal-section">
+        <div class="mt-modal-section-label">📅 กำหนดเวลา</div>
+        <div class="mt-two-col-fields" style="margin-bottom:0">
+          <div class="mt-field-row" style="margin-bottom:0">
+            <label>เดือน / ปี <span class="mt-field-required">*</span></label>
+            <input type="month" id="mt-f-msdate" style="font-family:var(--mono);letter-spacing:0.04em;">
+          </div>
+          <div class="mt-field-row" style="margin-bottom:0">
+            <label>โน้ต</label>
+            <input type="text" id="mt-f-msnote" placeholder="เช่น Lot 1">
+          </div>
+        </div>
       </div>
-      <div class="mt-field-row">
-        <label>โน้ตเพิ่มเติม</label>
-        <input type="text" id="mt-f-msnote" placeholder="เช่น Lot 1, รอ confirm กับลูกค้า">
-      </div>
-      <button class="mt-delete-btn" id="mt-btnDeleteMs" style="display:none">🗑 ลบ Milestone นี้</button>
     </div>
     <div class="modal-foot">
-      <button class="btn" onclick="mtCloseModal('mt-msModal')">ยกเลิก</button>
-      <button class="btn btn-primary" id="mt-btnSaveMs">บันทึก</button>
+      <div class="modal-foot-left">
+        <button class="mt-delete-btn" id="mt-btnDeleteMs" style="display:none">🗑 ลบ Milestone นี้</button>
+      </div>
+      <div class="modal-foot-right">
+        <button class="btn btn-ghost" onclick="mtCloseModal('mt-msModal')">ยกเลิก</button>
+        <button class="btn btn-primary" id="mt-btnSaveMs">💾 บันทึก</button>
+      </div>
     </div>
   </div>
 </div>
@@ -5155,29 +5260,48 @@ function mtRenderGantt(){
       const x2=(mtDateToCol(sorted[sorted.length-1].date)/months)*100;
       html+=`<div class="mt-connector" style="left:${x1}%;width:${x2-x1}%"></div>`;
     }
-    // markers — collision-aware spacing (avoid icons & date labels overlapping when close together)
+    // markers — same-month items split top/bottom halves; labels only at bottom item per month
     const pxPerPct=(months*cellW)/100;
-    const MIN_ICON_GAP_PX=28, MIN_LABEL_GAP_PX=38;
-    let lastIconPx=null, lastLabelPx=null;
+    const MIN_LABEL_GAP_PX=38;
+    let lastLabelPx=null;
+
+    // group by month key YYYY-MM to detect collisions
+    const byMonth={};
+    sorted.forEach(item=>{
+      const mk=item.date.slice(0,7);
+      if(!byMonth[mk]) byMonth[mk]=[];
+      byMonth[mk].push(item);
+    });
+
+    // pre-assign vertical % for each item based on group size
+    const itemTopMap={};
+    Object.values(byMonth).forEach(grp=>{
+      if(grp.length===1){
+        itemTopMap[grp[0].id]='50%';
+      } else if(grp.length===2){
+        itemTopMap[grp[0].id]='27%';
+        itemTopMap[grp[1].id]='73%';
+      } else {
+        grp.forEach((it,idx)=>{
+          itemTopMap[it.id]=Math.round(15+idx*(70/(grp.length-1)))+'%';
+        });
+      }
+    });
+
     sorted.forEach(item=>{
       const col=mtDateToCol(item.date);
-      let pct=(col/months)*100;
-      let px=pct*pxPerPct;
-      // nudge right if this marker's icon would overlap the previous one
-      if(lastIconPx!==null && (px-lastIconPx)<MIN_ICON_GAP_PX){
-        px=lastIconPx+MIN_ICON_GAP_PX;
-        pct=px/pxPerPct;
-      }
-      lastIconPx=px;
+      const pct=(col/months)*100;
+      const px=pct*pxPerPct;
       const t=MT_TYPES[item.type];
-      // show month/year label below marker — skip if it would collide with the previous visible label
+      const topVal=itemTopMap[item.id]||'50%';
       const d=new Date(item.date+'T00:00:00');
       const dLabel=`${MT_MONTHS_TH[d.getMonth()]} ${d.getFullYear()+543}`;
-      const showLabel=(lastLabelPx===null)||((px-lastLabelPx)>=MIN_LABEL_GAP_PX);
+      // show label only for last item in each month group (bottom one), skip label collisions
+      const grp=byMonth[item.date.slice(0,7)];
+      const isLastInMonth=(grp[grp.length-1].id===item.id);
+      const showLabel=isLastInMonth&&((lastLabelPx===null)||((px-lastLabelPx)>=MIN_LABEL_GAP_PX));
       if(showLabel) lastLabelPx=px;
-      // badge centered vertically in the row (position:absolute, top/transform handles centering)
-      // date label positioned at bottom of the row with no-overflow
-      html+=`<div class="mt-marker ${t.cls}" style="position:absolute;left:${pct}%;top:50%;transform:translate(-50%,-50%);" data-mt-action="editms" data-mt-model="${m.id}" data-mt-ms="${item.id}" title="${t.label} — ${mtFmtMonthYearTH(item.date)}${item.note?' ('+mtEsc(item.note)+')':''}">${t.icon}</div>`;
+      html+=`<div class="mt-marker ${t.cls}" style="position:absolute;left:${pct}%;top:${topVal};transform:translate(-50%,-50%);" data-mt-action="editms" data-mt-model="${m.id}" data-mt-ms="${item.id}" title="${t.label} — ${mtFmtMonthYearTH(item.date)}${item.note?' ('+mtEsc(item.note)+')':''}">${t.icon}</div>`;
       if(showLabel){
         html+=`<div class="mt-date-label" style="position:absolute;left:${pct}%;bottom:2px;transform:translateX(-50%);">${dLabel}</div>`;
       }
