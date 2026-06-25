@@ -3049,7 +3049,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const now = new Date();
     const dateStr = now.toLocaleDateString('th-TH', {day:'numeric',month:'short',year:'numeric'});
     const timeStr = now.toLocaleTimeString('th-TH', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
-    document.getElementById('currentDateChip').textContent = dateStr + ' · ' + timeStr;
+    document.getElementById('currentDateChip').innerHTML = dateStr + ' · <span class="chip-time">' + timeStr + '</span>';
   }
   updateDateChip();
   setInterval(updateDateChip, 1000);
@@ -3139,7 +3139,14 @@ function updateFullscreenIcon() {
   btn.title = active ? 'ออกจากโหมดเต็มจอ' : 'ขยายเต็มจอ';
 }
 ['fullscreenchange','webkitfullscreenchange','mozfullscreenchange','MSFullscreenChange'].forEach(evt =>
-  document.addEventListener(evt, updateFullscreenIcon)
+  document.addEventListener(evt, () => {
+    updateFullscreenIcon();
+    if (isFullscreenActive()) {
+      document.documentElement.style.zoom = '0.9';
+    } else {
+      document.documentElement.style.zoom = '';
+    }
+  })
 );
 
 /* ── SIDEBAR ── */
