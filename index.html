@@ -2232,16 +2232,6 @@
          MODEL TRACKER PAGE
     ═══════════════════════════════════════════════════ -->
     <div class="page" id="page-modeltracker">
-      <div style="display:flex;justify-content:flex-end;align-items:center;gap:0.5rem;margin-bottom:0.7rem">
-        <!-- Year Navigator -->
-        <div class="mt-year-nav">
-          <button class="mt-year-nav-btn" onclick="mtYearPrev()">◀</button>
-          <span class="mt-year-nav-label" id="mt-yearLabel">—</span>
-          <button class="mt-year-nav-btn" onclick="mtYearNext()">▶</button>
-          <button class="mt-year-nav-today" onclick="mtYearToday()" title="กลับปีปัจจุบัน">วันนี้</button>
-        </div>
-        <button class="btn btn-primary btn-sm" id="mt-btnAddModel">+ เพิ่ม Model</button>
-      </div>
 
       <!-- Legend — ปรับปรุงใหม่ -->
       <div class="mt-legend">
@@ -2332,7 +2322,15 @@
           <option value="inprogress">กำลังดำเนินการ</option>
           <option value="mass">Mass Production แล้ว</option>
         </select>
-        <span style="font-size:0.72rem;color:var(--muted);margin-left:auto" id="mt-modelCount">0 models</span>
+        <span style="font-size:0.72rem;color:var(--muted)" id="mt-modelCount">0 models</span>
+        <!-- Year Navigator -->
+        <div class="mt-year-nav" style="margin-left:auto">
+          <button class="mt-year-nav-btn" onclick="mtYearPrev()">◀</button>
+          <span class="mt-year-nav-label" id="mt-yearLabel">—</span>
+          <button class="mt-year-nav-btn" onclick="mtYearNext()">▶</button>
+          <button class="mt-year-nav-today" onclick="mtYearToday()" title="กลับปีปัจจุบัน">วันนี้</button>
+        </div>
+        <button class="btn btn-primary btn-sm" id="mt-btnAddModel">+ เพิ่ม Model</button>
       </div>
 
       <!-- Gantt + Side panel layout -->
