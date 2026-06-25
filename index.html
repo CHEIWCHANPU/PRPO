@@ -7073,14 +7073,13 @@ function prGetRec(user,dk){ return user.records[dk]||{work:0,ot:0,note:''}; }
 
 function prGetCutoffRange(year, month) {
   // cutoffDay = วันที่ตัดรอบ (เช่น 21)
-  // เงินเดือน "มิถุนายน" (month=5) ← รอบ 22 พ.ค. – 21 มิ.ย.
-  // เงินเดือน "กรกฎาคม" (month=6) ← รอบ 22 มิ.ย. – 21 ก.ค.
-  // นั่นคือ: start = cutoffDay+1 ของเดือนก่อน, end = cutoffDay ของเดือนนี้
+  // เงินเดือน "มิถุนายน" = รอบ 22 มิ.ย. – 21 ก.ค.
+  // start = cutoffDay+1 ของเดือนนี้, end = cutoffDay ของเดือนถัดไป
   const cutoffDay = parseInt(document.getElementById('pr-cutoff-day')?.value) || 0;
   if (!cutoffDay) return null;
 
-  const startDate = new Date(year, month - 1, cutoffDay + 1); // เช่น 22 พ.ค.
-  const endDate   = new Date(year, month,     cutoffDay);     // เช่น 21 มิ.ย.
+  const startDate = new Date(year, month, cutoffDay + 1);     // เช่น 22 มิ.ย.
+  const endDate   = new Date(year, month + 1, cutoffDay);     // เช่น 21 ก.ค.
 
   return { startDate, endDate };
 }
