@@ -1605,6 +1605,7 @@
   .wp-modal-body { padding:1.2rem 1.4rem; overflow-y:auto; display:flex; flex-direction:column; gap:1rem; }
   .wp-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.85rem; }
   @media(max-width:560px) { .wp-form-grid { grid-template-columns:1fr; } }
+  @media(max-width:700px) { #pr-two-col { grid-template-columns:1fr !important; } }
   .wp-form-full { grid-column:1/-1; }
   .wp-form-group { display:flex; flex-direction:column; gap:0.3rem; }
   .wp-form-label { font-size:0.7rem; font-weight:700; color:var(--muted); letter-spacing:0.05em; text-transform:uppercase; }
@@ -2651,80 +2652,120 @@
 
       <!-- Detail View -->
       <div id="pr-detail" style="display:none">
-        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:1rem;flex-wrap:wrap">
-          <button class="btn btn-ghost" onclick="prBack()" style="font-size:0.8rem;padding:0.35rem 0.8rem">← กลับ</button>
-          <div id="pr-detail-name" style="font-size:1rem;font-weight:700;color:var(--text)"></div>
-          <div style="margin-left:auto;display:flex;align-items:center;gap:0.5rem">
-            <button class="btn btn-ghost" onclick="prPrevMonth()" style="padding:0.3rem 0.7rem">◀</button>
-            <span id="pr-month-label" style="font-size:0.88rem;font-weight:600;color:var(--accent);min-width:130px;text-align:center"></span>
-            <button class="btn btn-ghost" onclick="prNextMonth()" style="padding:0.3rem 0.7rem">▶</button>
-          </div>
+
+        <!-- Back + Name bar -->
+        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.85rem;flex-wrap:wrap">
+          <button class="btn btn-ghost" onclick="prBack()" style="font-size:0.8rem;padding:0.35rem 0.9rem">← กลับ</button>
+          <span id="pr-detail-topbar" style="font-size:0.95rem;font-weight:700;color:var(--text)"></span>
         </div>
 
-        <!-- Calendar -->
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:1rem">
-          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px" id="pr-cal-head"></div>
-          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px" id="pr-cal"></div>
-          <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:10px;font-size:0.7rem;color:var(--muted)">
-            <span><span style="display:inline-block;width:10px;height:10px;background:rgba(0,229,160,0.3);border-radius:3px;margin-right:4px"></span>มาทำงาน</span>
-            <span><span style="display:inline-block;width:10px;height:10px;background:rgba(245,158,11,0.35);border-radius:3px;margin-right:4px"></span>มี OT</span>
-            <span><span style="display:inline-block;width:10px;height:10px;background:rgba(239,68,68,0.15);border-radius:3px;margin-right:4px"></span>วันหยุด</span>
-          </div>
+        <!-- Top Bar: OT Rate -->
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:0.6rem 1rem;margin-bottom:1rem;display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap">
+          <span style="font-size:0.8rem;color:var(--accent)">💰</span>
+          <label style="font-size:0.78rem;color:var(--muted);white-space:nowrap;font-weight:600">ค่าแรง OT/ชม.</label>
+          <input type="number" id="pr-ot-rate" class="form-input" placeholder="เช่น 50" min="0" step="1"
+            style="width:90px;font-size:0.82rem;padding:0.3rem 0.55rem"
+            oninput="prRefreshDetail()">
+          <span style="font-size:0.72rem;color:var(--muted)">OT1 (×1.5) คือโอทีวันแรงงาน • OT2 (×2.0) คือโอทีวันหยุด</span>
         </div>
 
-        <!-- Employee card + OT rate + stats -->
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:1rem">
-          <div style="display:flex;align-items:center;gap:0.85rem;margin-bottom:1rem;flex-wrap:wrap">
-            <div id="pr-emp-avatar" style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;flex-shrink:0"></div>
-            <div style="flex:1;min-width:0">
-              <div id="pr-emp-name" style="font-size:1rem;font-weight:700;color:var(--text)"></div>
-              <div id="pr-emp-pos" style="font-size:0.72rem;color:var(--accent);margin-top:1px"></div>
-              <div id="pr-emp-phone" style="font-size:0.72rem;color:var(--muted);margin-top:2px"></div>
-            </div>
-            <div style="text-align:right">
-              <div style="font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em">ยอดสุทธิ</div>
-              <div id="pr-total" style="font-size:1.6rem;font-weight:700;color:var(--accent)">0</div>
-            </div>
-          </div>
-
-          <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:0.75rem;display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap;margin-bottom:0.9rem">
-            <label style="font-size:0.75rem;color:var(--muted);white-space:nowrap">อัตรา OT/ชม. (บาท):</label>
-            <input type="number" id="pr-ot-rate" class="form-input" placeholder="เช่น 150" min="0" step="1"
-              style="width:110px;font-size:0.82rem;padding:0.35rem 0.6rem"
-              oninput="prRefreshDetail()">
-            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-left:auto">
-              <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.4rem 0.75rem;text-align:center;min-width:75px">
-                <div style="font-size:0.6rem;color:var(--muted)">วันทำงาน</div>
-                <div id="pr-stat-days" style="font-size:0.95rem;font-weight:700;color:var(--accent2)">0</div>
-              </div>
-              <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.4rem 0.75rem;text-align:center;min-width:80px">
-                <div style="font-size:0.6rem;color:var(--muted)">OT ×1.5 (ชม)</div>
-                <div id="pr-stat-ot1" style="font-size:0.95rem;font-weight:700;color:#f59e0b">0</div>
-              </div>
-              <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.4rem 0.75rem;text-align:center;min-width:80px">
-                <div style="font-size:0.6rem;color:var(--muted)">OT ×2 (ชม)</div>
-                <div id="pr-stat-ot2" style="font-size:0.95rem;font-weight:700;color:#ef4444">0</div>
-              </div>
-              <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.4rem 0.75rem;text-align:center;min-width:90px">
-                <div style="font-size:0.6rem;color:var(--muted)">ค่า OT รวม</div>
-                <div id="pr-stat-ot-pay" style="font-size:0.95rem;font-weight:700;color:var(--accent)">0</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="table-wrap" style="margin:0;border-radius:10px;overflow:hidden">
-            <table style="font-size:0.78rem">
-              <thead><tr>
-                <th style="width:55px">วัน</th>
-                <th style="width:80px"></th>
-                <th>ทำงาน (วัน)</th>
-                <th>OT ก่อน 2 ทุ่ม (ชม)</th>
-                <th>OT หลัง 2 ทุ่ม (ชม)</th>
-              </tr></thead>
-              <tbody id="pr-day-tbody"></tbody>
-            </table>
-          </div>
+        <!-- Month Nav -->
+        <div style="display:flex;align-items:center;justify-content:center;gap:0.75rem;margin-bottom:1rem">
+          <button class="btn btn-ghost" onclick="prPrevMonth()" style="padding:0.3rem 0.7rem;font-size:1rem">◀</button>
+          <span id="pr-month-label" style="font-size:1rem;font-weight:700;color:var(--text);min-width:140px;text-align:center"></span>
+          <button class="btn btn-ghost" onclick="prNextMonth()" style="padding:0.3rem 0.7rem;font-size:1rem">▶</button>
         </div>
+
+        <!-- 2-column layout: left=mini-cal+summary, right=daily log -->
+        <div id="pr-two-col" style="display:grid;grid-template-columns:320px 1fr;gap:1rem;align-items:start">
+
+          <!-- LEFT COLUMN -->
+          <div style="display:flex;flex-direction:column;gap:1rem">
+
+            <!-- Mini Calendar -->
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:0.85rem">
+              <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.6rem">
+                <span style="font-size:0.7rem;color:var(--accent)">📅</span>
+                <span style="font-size:0.72rem;font-weight:700;color:var(--text)">ปฏิทิน – คลิกเพื่อสลับวัน</span>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px" id="pr-cal-head"></div>
+              <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px" id="pr-cal"></div>
+              <div style="display:flex;gap:0.8rem;flex-wrap:wrap;margin-top:8px;font-size:0.65rem;color:var(--muted)">
+                <span><span style="display:inline-block;width:9px;height:9px;background:rgba(0,229,160,0.3);border-radius:2px;margin-right:3px"></span>มาทำงาน</span>
+                <span><span style="display:inline-block;width:9px;height:9px;background:rgba(245,158,11,0.35);border-radius:2px;margin-right:3px"></span>มี OT</span>
+                <span><span style="display:inline-block;width:9px;height:9px;background:rgba(239,68,68,0.15);border-radius:2px;margin-right:3px"></span>วันหยุด</span>
+              </div>
+            </div>
+
+            <!-- Summary Card -->
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:0.85rem">
+              <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.8rem">
+                <span style="font-size:0.7rem;color:var(--accent)">📊</span>
+                <span style="font-size:0.72rem;font-weight:700;color:var(--text)">สรุปรายได้ประจำเดือน</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:0.45rem;font-size:0.78rem">
+                <div style="display:flex;justify-content:space-between">
+                  <span style="color:var(--muted)">วันทำงาน</span>
+                  <span id="pr-stat-days" style="font-weight:700;color:var(--accent2)">0 วัน</span>
+                </div>
+                <div style="display:flex;justify-content:space-between">
+                  <span style="color:var(--muted)">ค่าแรงปกติ</span>
+                  <span id="pr-stat-base" style="font-weight:700;color:var(--text)">฿0</span>
+                </div>
+                <div style="display:flex;justify-content:space-between">
+                  <span style="color:var(--muted)">OT1 (×1.5)</span>
+                  <span id="pr-stat-ot1" style="font-weight:700;color:#f59e0b">0 ชม. = ฿0</span>
+                </div>
+                <div style="display:flex;justify-content:space-between">
+                  <span style="color:var(--muted)">OT2 (×2.0)</span>
+                  <span id="pr-stat-ot2" style="font-weight:700;color:#ef4444">0 ชม. = ฿0</span>
+                </div>
+                <div style="height:1px;background:var(--border);margin:0.3rem 0"></div>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <span style="font-weight:700;color:var(--text)">รวมทั้งสิ้น</span>
+                  <span id="pr-total" style="font-size:1.3rem;font-weight:700;color:var(--accent)">฿0</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          <!-- /LEFT COLUMN -->
+
+          <!-- RIGHT COLUMN: Daily Log Table -->
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:0.85rem">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;flex-wrap:wrap;gap:0.5rem">
+              <div style="display:flex;align-items:center;gap:0.5rem">
+                <span style="font-size:0.7rem;color:var(--accent)">📋</span>
+                <span style="font-size:0.72rem;font-weight:700;color:var(--text)">บันทึกรายวัน</span>
+              </div>
+              <div style="font-size:0.62rem;color:var(--muted)">วัน · ปกติ · WD (วัน) · OT1 (ชม.) · OT2 (ชม.)</div>
+            </div>
+            <div style="overflow-y:auto;max-height:520px">
+              <table style="font-size:0.78rem;width:100%;border-collapse:collapse" id="pr-day-table">
+                <thead style="position:sticky;top:0;background:var(--surface2);z-index:1">
+                  <tr style="border-bottom:1px solid var(--border)">
+                    <th style="text-align:left;padding:5px 6px;font-size:0.65rem;color:var(--muted);font-weight:600;width:36px">วันที่</th>
+                    <th style="text-align:left;padding:5px 6px;font-size:0.65rem;color:var(--muted);font-weight:600;width:64px">วัน</th>
+                    <th style="padding:5px 6px;font-size:0.65rem;color:rgba(0,229,160,0.85);font-weight:600;text-align:center">
+                      <span style="display:inline-block;width:8px;height:8px;background:rgba(0,229,160,0.7);border-radius:50%;margin-right:3px"></span>WD (วัน)
+                    </th>
+                    <th style="padding:5px 6px;font-size:0.65rem;color:#f59e0b;font-weight:600;text-align:center">
+                      <span style="display:inline-block;width:8px;height:8px;background:#f59e0b;border-radius:50%;margin-right:3px"></span>OT1 (ชม.)
+                    </th>
+                    <th style="padding:5px 6px;font-size:0.65rem;color:#ef4444;font-weight:600;text-align:center">
+                      <span style="display:inline-block;width:8px;height:8px;background:#ef4444;border-radius:50%;margin-right:3px"></span>OT2 (ชม.)
+                    </th>
+                  </tr>
+                </thead>
+                <tbody id="pr-day-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+          <!-- /RIGHT COLUMN -->
+
+        </div>
+        <!-- /2-column -->
+
       </div>
 
       <!-- Add/Edit User Modal -->
@@ -7004,6 +7045,9 @@ function prSelectUser(id){
   if(!prSelected) return;
   document.getElementById('pr-userList').style.display='none';
   document.getElementById('pr-detail').style.display='block';
+  // set back button + name in top bar
+  const topBar=document.getElementById('pr-detail-topbar');
+  if(topBar) topBar.textContent=prSelected.name;
   prRefreshDetail();
 }
 function prBack(){
@@ -7021,24 +7065,14 @@ function prNextMonth(){ if(prCalMonth===11){prCalMonth=0;prCalYear++;}else prCal
 function prRefreshDetail(){
   if(!prSelected) return;
   const u=prSelected;
-  const col=PR_COLORS[u.color||0];
-  const initials=u.name.trim().split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase()||u.name.slice(0,2).toUpperCase();
-  document.getElementById('pr-detail-name').textContent=u.name;
   document.getElementById('pr-month-label').textContent=`${PR_MONTHS_TH[prCalMonth]} ${prCalYear+543}`;
-  const av=document.getElementById('pr-emp-avatar');
-  av.style.background=col.bg; av.style.color=col.text;
-  av.style.border=`2px solid ${col.text}44`; av.textContent=initials;
-  document.getElementById('pr-emp-name').textContent=u.name;
-  document.getElementById('pr-emp-pos').textContent=u.position||'';
-  const phoneEl=document.getElementById('pr-emp-phone');
-  phoneEl.textContent=u.phone?`📞 ${u.phone}`:'';
   prRenderCal(u); prRenderDayTable(u);
   const t=prCalcTotals(u);
-  document.getElementById('pr-total').textContent=Math.round(t.total).toLocaleString();
-  document.getElementById('pr-stat-days').textContent=t.days;
-  document.getElementById('pr-stat-ot1').textContent=t.ot1;
-  document.getElementById('pr-stat-ot2').textContent=t.ot2;
-  document.getElementById('pr-stat-ot-pay').textContent=Math.round(t.ot1pay+t.ot2pay).toLocaleString();
+  document.getElementById('pr-total').textContent='฿'+Math.round(t.total).toLocaleString();
+  document.getElementById('pr-stat-days').textContent=t.days+' วัน';
+  document.getElementById('pr-stat-base').textContent='฿'+Math.round(t.base).toLocaleString();
+  document.getElementById('pr-stat-ot1').textContent=t.ot1+' ชม. = ฿'+Math.round(t.ot1pay).toLocaleString();
+  document.getElementById('pr-stat-ot2').textContent=t.ot2+' ชม. = ฿'+Math.round(t.ot2pay).toLocaleString();
 }
 
 /* ── CALENDAR ── */
@@ -7093,32 +7127,39 @@ function prRenderDayTable(user){
     const worked=(rec.work||0)>0;
     const hasOT=(rec.ot1||0)>0||(rec.ot2||0)>0;
     let rowBg='';
-    if(worked&&hasOT) rowBg='background:rgba(245,158,11,0.07)';
-    else if(worked) rowBg='background:rgba(0,229,160,0.05)';
-    const dayBadge=isWknd
-      ?`<span style="font-size:0.65rem;padding:1px 6px;border-radius:8px;background:rgba(239,68,68,0.1);color:#ef4444">${PR_DAYS_FULL[dow]}</span>`
-      :`<span style="font-size:0.65rem;padding:1px 6px;border-radius:8px;background:var(--surface);color:var(--muted)">${PR_DAYS_FULL[dow]}</span>`;
-    rows+=`<tr style="${rowBg}${isToday?';border-left:2px solid var(--accent)':''}">
-      <td style="font-weight:${isToday?'700':'400'};color:${isToday?'var(--accent)':'var(--text)'}">${d}</td>
-      <td>${dayBadge}</td>
-      <td><div style="display:flex;align-items:center;gap:5px">
-        <button class="btn btn-ghost" style="padding:1px 8px;font-size:1.1rem;line-height:1.4" onclick="prAdj('${dk}','work',-0.5,${user.id})">−</button>
-        <span style="min-width:26px;text-align:center;font-weight:600">${rec.work||0}</span>
-        <button class="btn btn-ghost" style="padding:1px 8px;font-size:1.1rem;line-height:1.4" onclick="prAdj('${dk}','work',0.5,${user.id})">+</button>
-      </div></td>
-      <td><div style="display:flex;align-items:center;gap:5px">
-        <button class="btn btn-ghost" style="padding:1px 8px;font-size:1.1rem;line-height:1.4" onclick="prAdj('${dk}','ot1',-0.5,${user.id})">−</button>
-        <span style="min-width:26px;text-align:center;font-weight:600">${rec.ot1||0}</span>
-        <button class="btn btn-ghost" style="padding:1px 8px;font-size:1.1rem;line-height:1.4" onclick="prAdj('${dk}','ot1',0.5,${user.id})">+</button>
-      </div></td>
-      <td><div style="display:flex;align-items:center;gap:5px">
-        <button class="btn btn-ghost" style="padding:1px 8px;font-size:1.1rem;line-height:1.4" onclick="prAdj('${dk}','ot2',-0.5,${user.id})">−</button>
-        <span style="min-width:26px;text-align:center;font-weight:600">${rec.ot2||0}</span>
-        <button class="btn btn-ghost" style="padding:1px 8px;font-size:1.1rem;line-height:1.4" onclick="prAdj('${dk}','ot2',0.5,${user.id})">+</button>
-      </div></td>
+    if(isWknd) rowBg='background:rgba(239,68,68,0.04)';
+    else if(worked&&hasOT) rowBg='background:rgba(245,158,11,0.06)';
+    else if(worked) rowBg='background:rgba(0,229,160,0.04)';
+    const dayColor=isWknd?'#ef4444':isToday?'var(--accent)':'var(--text)';
+    const dayNameColor=isWknd?'#ef4444':'var(--muted)';
+    const adjBtn=(field,delta)=>`<button style="width:22px;height:22px;border-radius:5px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:0.95rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0" onclick="prAdj('${dk}','${field}',${delta},${user.id})">${delta>0?'+':'−'}</button>`;
+    rows+=`<tr style="${rowBg};border-bottom:1px solid var(--border)">
+      <td style="padding:5px 6px;font-weight:${isToday?'700':'500'};color:${dayColor};font-size:0.8rem">${d}</td>
+      <td style="padding:5px 6px;font-size:0.72rem;color:${dayNameColor}">${PR_DAYS_FULL[dow]}</td>
+      <td style="padding:4px 6px">
+        <div style="display:flex;align-items:center;gap:4px;justify-content:center">
+          ${adjBtn('work',-1)}
+          <span style="min-width:22px;text-align:center;font-weight:700;font-size:0.82rem;color:${worked?'var(--accent)':'var(--muted)'}">${rec.work||0}</span>
+          ${adjBtn('work',1)}
+        </div>
+      </td>
+      <td style="padding:4px 6px">
+        <div style="display:flex;align-items:center;gap:4px;justify-content:center">
+          ${adjBtn('ot1',-1)}
+          <span style="min-width:22px;text-align:center;font-weight:700;font-size:0.82rem;color:${(rec.ot1||0)>0?'#f59e0b':'var(--muted)'}">${rec.ot1||0}</span>
+          ${adjBtn('ot1',1)}
+        </div>
+      </td>
+      <td style="padding:4px 6px">
+        <div style="display:flex;align-items:center;gap:4px;justify-content:center">
+          ${adjBtn('ot2',-1)}
+          <span style="min-width:22px;text-align:center;font-weight:700;font-size:0.82rem;color:${(rec.ot2||0)>0?'#ef4444':'var(--muted)'}">${rec.ot2||0}</span>
+          ${adjBtn('ot2',1)}
+        </div>
+      </td>
     </tr>`;
   }
-  tbody.innerHTML=rows||`<tr><td colspan="5" class="empty">ไม่มีข้อมูล</td></tr>`;
+  tbody.innerHTML=rows||`<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted)">ไม่มีข้อมูล</td></tr>`;
 }
 
 function prAdj(dk,field,delta,userId){
