@@ -1499,6 +1499,116 @@
   .modal-foot .btn-ghost { color:var(--muted); border-color:var(--border); }
   .modal-foot .btn-ghost:hover { border-color:var(--accent); color:var(--accent); }
 
+  /* ── WORKPLAN PAGE ── */
+  .wp-kpi-banner {
+    display:grid; grid-template-columns:repeat(6,1fr); gap:0.75rem; margin-bottom:1rem;
+  }
+  @media (max-width:1200px) { .wp-kpi-banner { grid-template-columns:repeat(3,1fr); } }
+  @media (max-width:700px) { .wp-kpi-banner { grid-template-columns:repeat(2,1fr); } }
+  .wp-kpi-card {
+    background:var(--surface); border:1px solid var(--border); border-radius:14px;
+    padding:0.85rem 1rem; display:flex; align-items:center; gap:0.7rem;
+    transition:box-shadow 0.2s, border-color 0.2s;
+  }
+  .wp-kpi-card:hover { box-shadow:0 4px 16px rgba(0,0,0,0.12); border-color:var(--border2); }
+  .wp-kpi-card.wp-kpi-done   { border-left:3px solid var(--success); }
+  .wp-kpi-card.wp-kpi-inprog { border-left:3px solid var(--warn); }
+  .wp-kpi-card.wp-kpi-outside{ border-left:3px solid var(--accent2); }
+  .wp-kpi-card.wp-kpi-meeting{ border-left:3px solid #6366f1; }
+  .wp-kpi-card.wp-kpi-high   { border-left:3px solid var(--danger); }
+  .wp-kpi-icon { font-size:1.5rem; flex-shrink:0; }
+  .wp-kpi-body { display:flex; flex-direction:column; gap:0.1rem; }
+  .wp-kpi-label { font-size:0.62rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); white-space:nowrap; }
+  .wp-kpi-value { font-family:var(--mono); font-size:1.6rem; font-weight:600; line-height:1; color:var(--text); }
+  .wp-kpi-done   .wp-kpi-value { color:var(--success); }
+  .wp-kpi-inprog .wp-kpi-value { color:var(--warn); }
+  .wp-kpi-outside .wp-kpi-value { color:var(--accent2); }
+  .wp-kpi-meeting .wp-kpi-value { color:#6366f1; }
+  .wp-kpi-high   .wp-kpi-value { color:var(--danger); }
+
+  .wp-toolbar-row {
+    display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; gap:0.6rem; margin-bottom:0.75rem;
+  }
+  .wp-month-tabs { display:flex; gap:0.35rem; flex-wrap:wrap; }
+  .wp-month-tab {
+    padding:0.28rem 0.78rem; border-radius:20px; font-size:0.72rem;
+    font-family:var(--mono); font-weight:600; cursor:pointer; border:1px solid var(--border);
+    background:var(--surface2); color:var(--muted); transition:all 0.15s;
+  }
+  .wp-month-tab.active { background:var(--glow-accent); border-color:var(--accent); color:var(--accent); }
+  .wp-month-tab.has-data { color:var(--text); }
+  .wp-month-tab:hover:not(.active) { border-color:var(--border2); color:var(--text); }
+
+  .wp-chart-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:1rem; }
+  @media (max-width:900px) { .wp-chart-row { grid-template-columns:1fr; } }
+
+  /* Workplan table badge types */
+  .wp-type-badge {
+    display:inline-flex; align-items:center; gap:0.25rem;
+    font-size:0.65rem; font-weight:700; padding:0.15rem 0.55rem; border-radius:20px;
+    border:1px solid; white-space:nowrap;
+  }
+  .wp-type-meeting   { background:rgba(99,102,241,0.12); color:#818cf8; border-color:rgba(99,102,241,0.3); }
+  .wp-type-factory   { background:rgba(245,158,11,0.12); color:var(--warn); border-color:rgba(245,158,11,0.3); }
+  .wp-type-visit     { background:rgba(0,229,160,0.1); color:var(--accent); border-color:rgba(0,229,160,0.3); }
+  .wp-type-problem   { background:rgba(239,68,68,0.12); color:var(--danger); border-color:rgba(239,68,68,0.3); }
+  .wp-type-field     { background:rgba(99,198,255,0.12); color:#60a5fa; border-color:rgba(99,198,255,0.3); }
+
+  .wp-status-badge {
+    display:inline-flex; align-items:center; gap:0.2rem;
+    font-size:0.65rem; font-weight:700; padding:0.15rem 0.55rem; border-radius:20px;
+    border:1px solid; white-space:nowrap;
+  }
+  .wp-status-done   { background:rgba(16,185,129,0.12); color:var(--success); border-color:rgba(16,185,129,0.3); }
+  .wp-status-inprog { background:rgba(245,158,11,0.12); color:var(--warn); border-color:rgba(245,158,11,0.3); }
+  .wp-status-todo   { background:rgba(100,116,139,0.12); color:var(--muted); border-color:var(--border); }
+
+  .wp-imp-high   { color:var(--danger); font-weight:700; font-size:0.72rem; }
+  .wp-imp-medium { color:var(--warn); font-weight:600; font-size:0.72rem; }
+  .wp-imp-low    { color:var(--success); font-size:0.72rem; }
+
+  .wp-time-cell { font-family:var(--mono); font-size:0.72rem; color:var(--muted); }
+  .wp-note-cell { font-size:0.74rem; color:var(--text); max-width:240px; }
+  .wp-date-cell { font-family:var(--mono); font-size:0.72rem; color:var(--text); white-space:nowrap; }
+
+  /* Workplan modal */
+  .wp-modal-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,0.65); backdrop-filter:blur(4px);
+    z-index:1000; display:none; align-items:center; justify-content:center;
+  }
+  .wp-modal-overlay.open { display:flex; animation:fadeInOverlay 0.18s ease; }
+  .wp-modal {
+    background:var(--surface); border:1px solid var(--border); border-radius:20px;
+    width:min(680px,96vw); max-height:90vh; overflow:hidden; display:flex; flex-direction:column;
+    box-shadow:0 24px 64px rgba(0,0,0,0.5);
+  }
+  .wp-modal-header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:1.1rem 1.4rem; border-bottom:1px solid var(--border);
+    background:linear-gradient(135deg, rgba(0,229,160,0.06), transparent);
+  }
+  .wp-modal-title { font-size:1rem; font-weight:700; color:var(--text); }
+  .wp-modal-close { background:none; border:1px solid var(--border); border-radius:8px; color:var(--muted); cursor:pointer; width:30px; height:30px; display:flex; align-items:center; justify-content:center; font-size:0.9rem; transition:all 0.15s; }
+  .wp-modal-close:hover { border-color:var(--danger); color:var(--danger); }
+  .wp-modal-body { padding:1.2rem 1.4rem; overflow-y:auto; display:flex; flex-direction:column; gap:1rem; }
+  .wp-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.85rem; }
+  @media(max-width:560px) { .wp-form-grid { grid-template-columns:1fr; } }
+  .wp-form-full { grid-column:1/-1; }
+  .wp-form-group { display:flex; flex-direction:column; gap:0.3rem; }
+  .wp-form-label { font-size:0.7rem; font-weight:700; color:var(--muted); letter-spacing:0.05em; text-transform:uppercase; }
+  .wp-form-input {
+    background:var(--surface2); border:1px solid var(--border); border-radius:9px;
+    padding:0.5rem 0.85rem; color:var(--text); font-family:var(--font); font-size:0.82rem;
+    outline:none; transition:border-color 0.2s, box-shadow 0.2s; width:100%;
+  }
+  .wp-form-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--glow-accent); }
+  .wp-form-input option { background:var(--surface2); }
+  .wp-modal-foot {
+    padding:0.9rem 1.4rem; border-top:1px solid var(--border);
+    display:flex; justify-content:flex-end; gap:0.5rem;
+  }
+
 </style>
 </head>
 <body>
@@ -1630,6 +1740,17 @@
       <div class="nav-group-items">
         <button class="nav-item" id="nav-modeltracker" onclick="showPage('modeltracker',this)">
           <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><span class="nav-text">Model Tracker</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="nav-group" id="navGroup-workplan">
+      <div class="nav-label" onclick="toggleNavGroup('workplan')">
+        <span>ตารางแผนงาน</span><span class="nav-label-chevron">▾</span>
+      </div>
+      <div class="nav-group-items">
+        <button class="nav-item" id="nav-workplan" onclick="showPage('workplan',this)">
+          <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span><span class="nav-text">แผนงาน & KPI</span>
         </button>
       </div>
     </div>
@@ -2343,6 +2464,142 @@
     </div>
     <!-- /MODEL TRACKER PAGE -->
 
+    <!-- WORKPLAN PAGE -->
+    <div class="page" id="page-workplan">
+      <!-- KPI Summary Banner -->
+      <div class="wp-kpi-banner" id="wpKpiBanner">
+        <div class="wp-kpi-card">
+          <div class="wp-kpi-icon">📋</div>
+          <div class="wp-kpi-body">
+            <div class="wp-kpi-label">งานทั้งหมด</div>
+            <div class="wp-kpi-value" id="wp-total">0</div>
+          </div>
+        </div>
+        <div class="wp-kpi-card wp-kpi-done">
+          <div class="wp-kpi-icon">✅</div>
+          <div class="wp-kpi-body">
+            <div class="wp-kpi-label">เสร็จสิ้น</div>
+            <div class="wp-kpi-value" id="wp-done">0</div>
+          </div>
+        </div>
+        <div class="wp-kpi-card wp-kpi-inprog">
+          <div class="wp-kpi-icon">🔄</div>
+          <div class="wp-kpi-body">
+            <div class="wp-kpi-label">กำลังดำเนินการ</div>
+            <div class="wp-kpi-value" id="wp-inprog">0</div>
+          </div>
+        </div>
+        <div class="wp-kpi-card wp-kpi-outside">
+          <div class="wp-kpi-icon">🏭</div>
+          <div class="wp-kpi-body">
+            <div class="wp-kpi-label">ออกปฏิบัติงานนอก</div>
+            <div class="wp-kpi-value" id="wp-outside">0</div>
+          </div>
+        </div>
+        <div class="wp-kpi-card wp-kpi-meeting">
+          <div class="wp-kpi-icon">🤝</div>
+          <div class="wp-kpi-body">
+            <div class="wp-kpi-label">ประชุม / Meeting</div>
+            <div class="wp-kpi-value" id="wp-meeting">0</div>
+          </div>
+        </div>
+        <div class="wp-kpi-card wp-kpi-high">
+          <div class="wp-kpi-icon">🔥</div>
+          <div class="wp-kpi-body">
+            <div class="wp-kpi-label">ความสำคัญสูง</div>
+            <div class="wp-kpi-value" id="wp-high">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progress + Month filter row -->
+      <div class="wp-toolbar-row">
+        <div class="wp-month-tabs" id="wpMonthTabs"></div>
+        <div style="display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap">
+          <select class="filter-select" id="wpFilterType" onchange="renderWorkplan()">
+            <option value="">ประเภททั้งหมด</option>
+            <option value="Meeting">🤝 Meeting</option>
+            <option value="เข้าชมโรงงาน">🏭 เข้าชมโรงงาน</option>
+            <option value="Visit Factory">🔍 Visit Factory</option>
+            <option value="ขึ้นงานมีปัญหา">⚠️ ขึ้นงานมีปัญหา</option>
+            <option value="ออกปฏิบัติงาน">📋 ออกปฏิบัติงาน</option>
+          </select>
+          <select class="filter-select" id="wpFilterStatus" onchange="renderWorkplan()">
+            <option value="">สถานะทั้งหมด</option>
+            <option value="เสร็จสิ้น">✅ เสร็จสิ้น</option>
+            <option value="กำลังดำเนินการ">🔄 กำลังดำเนินการ</option>
+            <option value="ยังไม่เริ่ม">🕐 ยังไม่เริ่ม</option>
+          </select>
+          <select class="filter-select" id="wpFilterImportance" onchange="renderWorkplan()">
+            <option value="">ความสำคัญทั้งหมด</option>
+            <option value="สูง">🔥 สูง</option>
+            <option value="ปานกลาง">🟡 ปานกลาง</option>
+            <option value="ต่ำ">🟢 ต่ำ</option>
+          </select>
+          <button class="btn btn-primary" onclick="openWpModal()">+ เพิ่มแผนงาน</button>
+        </div>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="progress-section" style="margin-bottom:1rem">
+        <div class="progress-row">
+          <span class="progress-label">% งานเสร็จสิ้น (เดือนนี้)</span>
+          <div class="progress-bar-wrap"><div class="progress-bar" id="wpProgressBar" style="width:0%"></div></div>
+          <span class="progress-pct" id="wpProgressPct">0%</span>
+        </div>
+      </div>
+
+      <!-- KPI Chart Row -->
+      <div class="wp-chart-row">
+        <div class="chart-card">
+          <div class="chart-header"><div class="chart-title">สัดส่วนประเภทงาน</div></div>
+          <div class="chart-wrap" style="height:180px"><canvas id="wpChartType"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header"><div class="chart-title">สัดส่วนสถานะ</div></div>
+          <div class="chart-wrap" style="height:180px"><canvas id="wpChartStatus"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header"><div class="chart-title">งานตาม สถานที่/ซัพพลายเออร์</div></div>
+          <div class="chart-wrap" style="height:180px"><canvas id="wpChartLocation"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-wrap" id="wpTableWrap">
+        <div class="table-title-bar">
+          <span class="table-title-label">📋 ตารางแผนงาน Purchase Component</span>
+          <div style="display:flex;gap:0.5rem;align-items:center">
+            <div class="search-box" style="min-width:220px">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="wpSearch" placeholder="ค้นหางาน, สถานที่, หมายเหตุ..." oninput="renderWorkplan()">
+            </div>
+          </div>
+        </div>
+        <table id="wpTable">
+          <thead>
+            <tr>
+              <th style="width:36px">#</th>
+              <th>วันที่</th>
+              <th>ชื่องาน / กิจกรรม</th>
+              <th>ประเภท</th>
+              <th>สถานที่ / ซัพพลายเออร์</th>
+              <th>สถานะ</th>
+              <th>ความสำคัญ</th>
+              <th>เวลาเริ่ม</th>
+              <th>เวลาจบ</th>
+              <th>หมายเหตุ / เป้าหมาย</th>
+              <th style="width:80px"></th>
+            </tr>
+          </thead>
+          <tbody id="wpTableBody">
+            <tr><td colspan="11" class="empty"><div class="spinner"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <!-- /WORKPLAN PAGE -->
+
   </main>
 </div>
 
@@ -2397,6 +2654,76 @@
     </div>
   </div>
 </div>
+
+<!-- WORKPLAN MODAL -->
+<div class="wp-modal-overlay" id="wpModalOverlay">
+  <div class="wp-modal">
+    <div class="wp-modal-header">
+      <div class="wp-modal-title" id="wpModalTitle">➕ เพิ่มแผนงาน</div>
+      <button class="wp-modal-close" onclick="closeWpModal()">✕</button>
+    </div>
+    <div class="wp-modal-body">
+      <div class="wp-form-grid">
+        <div class="wp-form-group">
+          <label class="wp-form-label">วันที่ *</label>
+          <input type="text" class="wp-form-input" id="wpf-date" placeholder="เช่น 8/6/2026">
+        </div>
+        <div class="wp-form-group">
+          <label class="wp-form-label">ประเภทงาน *</label>
+          <select class="wp-form-input" id="wpf-type">
+            <option value="Meeting">🤝 Meeting</option>
+            <option value="เข้าชมโรงงาน">🏭 เข้าชมโรงงาน</option>
+            <option value="Visit Factory">🔍 Visit Factory</option>
+            <option value="ขึ้นงานมีปัญหา">⚠️ ขึ้นงานมีปัญหา</option>
+            <option value="ออกปฏิบัติงาน">📋 ออกปฏิบัติงาน</option>
+          </select>
+        </div>
+        <div class="wp-form-group wp-form-full">
+          <label class="wp-form-label">ชื่องาน / กิจกรรม *</label>
+          <input type="text" class="wp-form-input" id="wpf-name" placeholder="เช่น นัด Maker YTT ประชุมที่ CCI-S Buffing limit">
+        </div>
+        <div class="wp-form-group">
+          <label class="wp-form-label">สถานที่ / ซัพพลายเออร์</label>
+          <input type="text" class="wp-form-input" id="wpf-location" placeholder="เช่น CCI-S, FUSOH, ชัยทัด">
+        </div>
+        <div class="wp-form-group">
+          <label class="wp-form-label">สถานะ</label>
+          <select class="wp-form-input" id="wpf-status">
+            <option value="ยังไม่เริ่ม">🕐 ยังไม่เริ่ม</option>
+            <option value="กำลังดำเนินการ">🔄 กำลังดำเนินการ</option>
+            <option value="เสร็จสิ้น">✅ เสร็จสิ้น</option>
+          </select>
+        </div>
+        <div class="wp-form-group">
+          <label class="wp-form-label">ความสำคัญ</label>
+          <select class="wp-form-input" id="wpf-importance">
+            <option value="สูง">🔥 สูง</option>
+            <option value="ปานกลาง">🟡 ปานกลาง</option>
+            <option value="ต่ำ">🟢 ต่ำ</option>
+          </select>
+        </div>
+        <div class="wp-form-group">
+          <label class="wp-form-label">เวลาเริ่ม</label>
+          <input type="text" class="wp-form-input" id="wpf-timeStart" placeholder="เช่น 10.00">
+        </div>
+        <div class="wp-form-group">
+          <label class="wp-form-label">เวลาจบ</label>
+          <input type="text" class="wp-form-input" id="wpf-timeEnd" placeholder="เช่น 12.00">
+        </div>
+        <div class="wp-form-group wp-form-full">
+          <label class="wp-form-label">หมายเหตุ / เป้าหมาย</label>
+          <textarea class="wp-form-input" id="wpf-note" rows="2" placeholder="เช่น เรื่อง SET Limit Buffing Boss R_L, แนะนำบริษัท"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="wp-modal-foot">
+      <input type="hidden" id="wpf-editIdx" value="">
+      <button class="btn btn-ghost" onclick="closeWpModal()">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveWpItem()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+<!-- /WORKPLAN MODAL -->
 
 <!-- DETAIL PANEL -->
 <div class="detail-overlay" id="detailOverlay" onclick="closeDetail(event)">
@@ -2589,7 +2916,7 @@ function showPage(name, btn) {
   document.getElementById('page-' + name).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  const titles = { dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', summary:'📈 สรุปภาพรวม', gantt:'📅 Timeline / Gantt', setup:'⚙️ ตั้งค่าระบบ', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis', cer:'📄 ติดตามใบ CER', modeltracker:'🗂️ Model Tracker' };
+  const titles = { dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', summary:'📈 สรุปภาพรวม', gantt:'📅 Timeline / Gantt', setup:'⚙️ ตั้งค่าระบบ', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis', cer:'📄 ติดตามใบ CER', modeltracker:'🗂️ Model Tracker', workplan:'📅 ตารางแผนงาน & KPI' };
   document.getElementById('topbarTitle').textContent = titles[name] || name;
   if (name === 'summary') renderSummary();
   if (name === 'supplier') loadSuppliers();
@@ -2598,6 +2925,7 @@ function showPage(name, btn) {
   if (name === 'gantt') renderGantt();
   if (name === 'cer') loadCerPage();
   if (name === 'modeltracker') renderModelTracker();
+  if (name === 'workplan') renderWorkplan();
 }
 
 /* ── NOTIFICATIONS ── */
@@ -6008,6 +6336,281 @@ document.addEventListener('DOMContentLoaded', ()=>{
   ['mt-modelModal','mt-msModal'].forEach(id=>{
     document.getElementById(id).addEventListener('click',(e)=>{ if(e.target===document.getElementById(id)) mtCloseModal(id); });
   });
+});
+
+/* ══════════════════════════════════════════════════
+   📅 WORKPLAN & KPI MODULE
+══════════════════════════════════════════════════ */
+const WP_STORAGE_KEY = 'prpo_workplan_v1';
+let wpData = [];
+let wpActiveMonth = null;
+let wpCharts = {};
+
+// ── DEMO SEED DATA (from spreadsheet)
+const WP_DEMO = [
+  { id:'wp1', date:'8/6/2026',  name:'นัด Maker YTT ประชุมที่ CCI-S Buffing limit',      type:'Meeting',       location:'CCI-S',  status:'เสร็จสิ้น',        importance:'สูง',    timeStart:'10.00', timeEnd:'18.00', note:'เรื่อง SET Limit Buffing Boss R_L' },
+  { id:'wp2', date:'11/6/2026', name:'นัด Maker Thai Asakawa ใหม่เข้า พระประแดง',         type:'Meeting',       location:'CCI-P',  status:'เสร็จสิ้น',        importance:'สูง',    timeStart:'10.30', timeEnd:'12.00', note:'แนะนำบริษัท' },
+  { id:'wp3', date:'19/6/2026', name:'นัดไปแก้ปัญหา MAKER ชัยทัด',                        type:'ขึ้นงานมีปัญหา', location:'ชัยทัด', status:'เสร็จสิ้น',        importance:'สูง',    timeStart:'',      timeEnd:'',      note:'ขึ้นงานมีปัญหา' },
+  { id:'wp4', date:'22/6/2026', name:'ไป MAKER FUSOH ดูโรงงาน',                           type:'เข้าชมโรงงาน',  location:'FUSOH',  status:'เสร็จสิ้น',        importance:'สูง',    timeStart:'8.00',  timeEnd:'12.00', note:'Visi Factory Fusoh' },
+  { id:'wp5', date:'19/6/2026', name:'First Rubber มา Visit Factory',                      type:'Visit Factory', location:'CCI-P',  status:'เสร็จสิ้น',        importance:'สูง',    timeStart:'10.00', timeEnd:'12.00', note:'Visi Factory / Metting business' },
+];
+
+function loadWpData() {
+  try {
+    const raw = localStorage.getItem(WP_STORAGE_KEY);
+    wpData = raw ? JSON.parse(raw) : WP_DEMO;
+  } catch(e) { wpData = WP_DEMO; }
+  if (!wpData.length) wpData = [...WP_DEMO];
+}
+function saveWpData() {
+  localStorage.setItem(WP_STORAGE_KEY, JSON.stringify(wpData));
+}
+function wpParseDate(str) {
+  if (!str) return null;
+  const parts = String(str).split('/');
+  if (parts.length < 3) return null;
+  return new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
+}
+function wpMonthKey(dateStr) {
+  const d = wpParseDate(dateStr);
+  if (!d) return null;
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+function wpMonthLabel(key) {
+  if (!key) return 'ทั้งหมด';
+  const MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const [y,m] = key.split('-');
+  return MONTHS[parseInt(m)-1] + ' ' + y;
+}
+
+function wpGetFiltered() {
+  let data = wpActiveMonth ? wpData.filter(r => wpMonthKey(r.date) === wpActiveMonth) : wpData;
+  const type  = document.getElementById('wpFilterType')?.value || '';
+  const stat  = document.getElementById('wpFilterStatus')?.value || '';
+  const imp   = document.getElementById('wpFilterImportance')?.value || '';
+  const search= (document.getElementById('wpSearch')?.value || '').toLowerCase();
+  if (type)   data = data.filter(r => r.type === type);
+  if (stat)   data = data.filter(r => r.status === stat);
+  if (imp)    data = data.filter(r => r.importance === imp);
+  if (search) data = data.filter(r =>
+    (r.name||'').toLowerCase().includes(search) ||
+    (r.location||'').toLowerCase().includes(search) ||
+    (r.note||'').toLowerCase().includes(search)
+  );
+  return data.sort((a,b) => {
+    const da = wpParseDate(a.date), db = wpParseDate(b.date);
+    return (da||0) - (db||0);
+  });
+}
+
+function wpTypeClass(type) {
+  if (!type) return '';
+  if (type.includes('Meeting')) return 'wp-type-meeting';
+  if (type.includes('โรงงาน')) return 'wp-type-factory';
+  if (type.includes('Visit'))   return 'wp-type-visit';
+  if (type.includes('ปัญหา'))   return 'wp-type-problem';
+  return 'wp-type-field';
+}
+function wpTypeEmoji(type) {
+  if (!type) return '📋';
+  if (type.includes('Meeting'))  return '🤝';
+  if (type.includes('โรงงาน'))  return '🏭';
+  if (type.includes('Visit'))    return '🔍';
+  if (type.includes('ปัญหา'))   return '⚠️';
+  return '📋';
+}
+function wpStatusHtml(s) {
+  if (s === 'เสร็จสิ้น')        return `<span class="wp-status-badge wp-status-done">✅ เสร็จสิ้น</span>`;
+  if (s === 'กำลังดำเนินการ')  return `<span class="wp-status-badge wp-status-inprog">🔄 ดำเนินการ</span>`;
+  return `<span class="wp-status-badge wp-status-todo">🕐 ยังไม่เริ่ม</span>`;
+}
+function wpImpHtml(imp) {
+  if (imp === 'สูง')      return `<span class="wp-imp-high">🔥 สูง</span>`;
+  if (imp === 'ปานกลาง') return `<span class="wp-imp-medium">🟡 ปานกลาง</span>`;
+  return `<span class="wp-imp-low">🟢 ต่ำ</span>`;
+}
+
+function renderWorkplan() {
+  loadWpData();
+  renderWpKpiBanner();
+  renderWpMonthTabs();
+  renderWpTable();
+  renderWpCharts();
+}
+
+function renderWpKpiBanner() {
+  const allMonth = wpActiveMonth ? wpData.filter(r => wpMonthKey(r.date) === wpActiveMonth) : wpData;
+  document.getElementById('wp-total').textContent   = allMonth.length;
+  document.getElementById('wp-done').textContent    = allMonth.filter(r => r.status === 'เสร็จสิ้น').length;
+  document.getElementById('wp-inprog').textContent  = allMonth.filter(r => r.status === 'กำลังดำเนินการ').length;
+  document.getElementById('wp-outside').textContent = allMonth.filter(r => ['เข้าชมโรงงาน','Visit Factory','ออกปฏิบัติงาน','ขึ้นงานมีปัญหา'].includes(r.type)).length;
+  document.getElementById('wp-meeting').textContent = allMonth.filter(r => r.type === 'Meeting').length;
+  document.getElementById('wp-high').textContent    = allMonth.filter(r => r.importance === 'สูง').length;
+
+  const total = allMonth.length || 1;
+  const done  = allMonth.filter(r => r.status === 'เสร็จสิ้น').length;
+  const pct   = Math.round(done / total * 100);
+  document.getElementById('wpProgressBar').style.width = pct + '%';
+  document.getElementById('wpProgressPct').textContent  = pct + '%';
+}
+
+function renderWpMonthTabs() {
+  const dataMonths = new Set(wpData.map(r => wpMonthKey(r.date)).filter(Boolean));
+  const fixed = ['2026-06','2026-07','2026-08','2026-09','2026-10','2026-11','2026-12'];
+  const all = [...new Set([...fixed, ...dataMonths])].sort();
+  const cont = document.getElementById('wpMonthTabs');
+  cont.innerHTML = `<button class="wp-month-tab ${!wpActiveMonth ? 'active' : ''}" onclick="wpSetMonth(null)">ทั้งหมด</button>` +
+    all.map(m => {
+      const active = wpActiveMonth === m;
+      const has = dataMonths.has(m);
+      return `<button class="wp-month-tab ${active ? 'active' : ''} ${has ? 'has-data' : ''}" onclick="wpSetMonth('${m}')">${wpMonthLabel(m)}</button>`;
+    }).join('');
+}
+function wpSetMonth(m) { wpActiveMonth = m; renderWorkplan(); }
+
+function renderWpTable() {
+  const data = wpGetFiltered();
+  const body = document.getElementById('wpTableBody');
+  if (!data.length) {
+    body.innerHTML = `<tr><td colspan="11" class="empty"><div class="empty-icon">📅</div><div class="empty-title">ไม่มีแผนงาน</div><div class="empty-sub">กด "+ เพิ่มแผนงาน" เพื่อเริ่มต้น</div></td></tr>`;
+    return;
+  }
+  body.innerHTML = data.map((r,i) => `
+    <tr>
+      <td class="no-num">${i+1}</td>
+      <td class="wp-date-cell">${r.date || '—'}</td>
+      <td style="font-size:0.81rem;font-weight:600;max-width:260px">${r.name || '—'}</td>
+      <td><span class="wp-type-badge ${wpTypeClass(r.type)}">${wpTypeEmoji(r.type)} ${r.type || '—'}</span></td>
+      <td style="font-size:0.76rem">${r.location || '—'}</td>
+      <td>${wpStatusHtml(r.status)}</td>
+      <td>${wpImpHtml(r.importance)}</td>
+      <td class="wp-time-cell">${r.timeStart || '—'}</td>
+      <td class="wp-time-cell">${r.timeEnd || '—'}</td>
+      <td class="wp-note-cell">${r.note || '—'}</td>
+      <td>
+        <div style="display:flex;gap:0.3rem">
+          <button class="btn btn-ghost" style="padding:0.25rem 0.55rem;font-size:0.7rem" onclick='openWpEditModal(${JSON.stringify(r)})'>✏️</button>
+          <button class="btn btn-danger" style="padding:0.25rem 0.55rem;font-size:0.7rem" onclick="deleteWpItem('${r.id}')">🗑️</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function renderWpCharts() {
+  const data = wpActiveMonth ? wpData.filter(r => wpMonthKey(r.date) === wpActiveMonth) : wpData;
+  const cs = getComputedStyle(document.documentElement);
+  const chartText = cs.getPropertyValue('--chart-text').trim() || '#64748b';
+  const PALETTE = ['#00e5a0','#6366f1','#f59e0b','#ef4444','#3b82f6','#ec4899'];
+
+  // Type chart
+  const typeMap = {};
+  data.forEach(r => { typeMap[r.type] = (typeMap[r.type]||0)+1; });
+  if (wpCharts.type) { wpCharts.type.destroy(); delete wpCharts.type; }
+  const typeCanvas = document.getElementById('wpChartType');
+  if (typeCanvas) {
+    const entries = Object.entries(typeMap);
+    wpCharts.type = new Chart(typeCanvas, {
+      type:'doughnut',
+      data:{ labels:entries.map(e=>e[0]), datasets:[{ data:entries.map(e=>e[1]), backgroundColor:PALETTE, borderWidth:0, hoverOffset:6 }] },
+      options:{ responsive:true, maintainAspectRatio:false, cutout:'60%', plugins:{ legend:{ position:'bottom', labels:{ color:chartText, font:{size:9}, padding:10 } } } }
+    });
+  }
+
+  // Status chart
+  const done = data.filter(r => r.status === 'เสร็จสิ้น').length;
+  const inprog = data.filter(r => r.status === 'กำลังดำเนินการ').length;
+  const todo = data.filter(r => r.status === 'ยังไม่เริ่ม').length;
+  if (wpCharts.status) { wpCharts.status.destroy(); delete wpCharts.status; }
+  const statCanvas = document.getElementById('wpChartStatus');
+  if (statCanvas) {
+    wpCharts.status = new Chart(statCanvas, {
+      type:'doughnut',
+      data:{ labels:['เสร็จสิ้น','กำลังดำเนินการ','ยังไม่เริ่ม'], datasets:[{ data:[done,inprog,todo], backgroundColor:['#10b981','#f59e0b','#64748b'], borderWidth:0, hoverOffset:6 }] },
+      options:{ responsive:true, maintainAspectRatio:false, cutout:'60%', plugins:{ legend:{ position:'bottom', labels:{ color:chartText, font:{size:9}, padding:10 } } } }
+    });
+  }
+
+  // Location chart
+  const locMap = {};
+  data.forEach(r => { if(r.location) locMap[r.location] = (locMap[r.location]||0)+1; });
+  const locEntries = Object.entries(locMap).sort((a,b)=>b[1]-a[1]);
+  if (wpCharts.location) { wpCharts.location.destroy(); delete wpCharts.location; }
+  const locCanvas = document.getElementById('wpChartLocation');
+  if (locCanvas) {
+    wpCharts.location = new Chart(locCanvas, {
+      type:'bar',
+      data:{ labels:locEntries.map(e=>e[0]), datasets:[{ data:locEntries.map(e=>e[1]), backgroundColor:PALETTE, borderRadius:5 }] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+        scales:{ x:{ticks:{color:chartText,font:{size:8}},grid:{display:false}}, y:{ticks:{color:chartText,font:{size:8}},grid:{color:cs.getPropertyValue('--surface2').trim()},beginAtZero:true} } }
+    });
+  }
+}
+
+/* ── MODAL ── */
+function openWpModal() {
+  document.getElementById('wpModalTitle').textContent = '➕ เพิ่มแผนงาน';
+  document.getElementById('wpf-editIdx').value = '';
+  ['wpf-date','wpf-name','wpf-location','wpf-timeStart','wpf-timeEnd','wpf-note'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('wpf-type').value = 'Meeting';
+  document.getElementById('wpf-status').value = 'ยังไม่เริ่ม';
+  document.getElementById('wpf-importance').value = 'สูง';
+  document.getElementById('wpModalOverlay').classList.add('open');
+}
+function openWpEditModal(item) {
+  document.getElementById('wpModalTitle').textContent = '✏️ แก้ไขแผนงาน';
+  document.getElementById('wpf-editIdx').value = item.id;
+  document.getElementById('wpf-date').value = item.date || '';
+  document.getElementById('wpf-name').value = item.name || '';
+  document.getElementById('wpf-type').value = item.type || 'Meeting';
+  document.getElementById('wpf-location').value = item.location || '';
+  document.getElementById('wpf-status').value = item.status || 'ยังไม่เริ่ม';
+  document.getElementById('wpf-importance').value = item.importance || 'สูง';
+  document.getElementById('wpf-timeStart').value = item.timeStart || '';
+  document.getElementById('wpf-timeEnd').value = item.timeEnd || '';
+  document.getElementById('wpf-note').value = item.note || '';
+  document.getElementById('wpModalOverlay').classList.add('open');
+}
+function closeWpModal() { document.getElementById('wpModalOverlay').classList.remove('open'); }
+function saveWpItem() {
+  const date = document.getElementById('wpf-date').value.trim();
+  const name = document.getElementById('wpf-name').value.trim();
+  if (!date || !name) { showToast('⚠️ กรุณากรอกวันที่ และ ชื่องาน', 'warn'); return; }
+  const editId = document.getElementById('wpf-editIdx').value;
+  const item = {
+    id: editId || 'wp_' + Date.now(),
+    date, name,
+    type:       document.getElementById('wpf-type').value,
+    location:   document.getElementById('wpf-location').value.trim(),
+    status:     document.getElementById('wpf-status').value,
+    importance: document.getElementById('wpf-importance').value,
+    timeStart:  document.getElementById('wpf-timeStart').value.trim(),
+    timeEnd:    document.getElementById('wpf-timeEnd').value.trim(),
+    note:       document.getElementById('wpf-note').value.trim(),
+  };
+  loadWpData();
+  if (editId) {
+    const idx = wpData.findIndex(r => r.id === editId);
+    if (idx >= 0) wpData[idx] = item; else wpData.push(item);
+  } else {
+    wpData.push(item);
+  }
+  saveWpData();
+  closeWpModal();
+  renderWorkplan();
+  showToast(editId ? '✅ แก้ไขแผนงานแล้ว' : '✅ เพิ่มแผนงานแล้ว', 'success');
+}
+function deleteWpItem(id) {
+  if (!confirm('ลบแผนงานนี้ใช่ไหม?')) return;
+  loadWpData();
+  wpData = wpData.filter(r => r.id !== id);
+  saveWpData();
+  renderWorkplan();
+  showToast('🗑️ ลบแผนงานแล้ว', 'info');
+}
+
+// close workplan modal on overlay click
+document.getElementById('wpModalOverlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('wpModalOverlay')) closeWpModal();
 });
 </script>
 
