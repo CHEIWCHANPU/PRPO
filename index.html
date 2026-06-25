@@ -2666,7 +2666,7 @@
           <input type="number" id="pr-ot-rate" class="form-input" placeholder="เช่น 50" min="0" step="1"
             style="width:90px;font-size:0.82rem;padding:0.3rem 0.55rem"
             oninput="prRefreshDetail()">
-          <span style="font-size:0.72rem;color:var(--muted)">OT1 (×1.5) คือโอทีวันแรงงาน • OT2 (×2.0) คือโอทีวันหยุด</span>
+          <span style="font-size:0.72rem;color:var(--muted)">คิดจากอัตรา OT/ชม. หลังเลิกงาน</span>
         </div>
 
         <!-- Month Nav -->
@@ -2713,12 +2713,8 @@
                   <span id="pr-stat-base" style="font-weight:700;color:var(--text)">฿0</span>
                 </div>
                 <div style="display:flex;justify-content:space-between">
-                  <span style="color:var(--muted)">OT1 (×1.5)</span>
-                  <span id="pr-stat-ot1" style="font-weight:700;color:#f59e0b">0 ชม. = ฿0</span>
-                </div>
-                <div style="display:flex;justify-content:space-between">
-                  <span style="color:var(--muted)">OT2 (×2.0)</span>
-                  <span id="pr-stat-ot2" style="font-weight:700;color:#ef4444">0 ชม. = ฿0</span>
+                  <span style="color:var(--muted)">OT (×1)</span>
+                  <span id="pr-stat-ot" style="font-weight:700;color:#f59e0b">0 ชม. = ฿0</span>
                 </div>
                 <div style="height:1px;background:var(--border);margin:0.3rem 0"></div>
                 <div style="display:flex;justify-content:space-between;align-items:center">
@@ -2738,7 +2734,7 @@
                 <span style="font-size:0.7rem;color:var(--accent)">📋</span>
                 <span style="font-size:0.72rem;font-weight:700;color:var(--text)">บันทึกรายวัน</span>
               </div>
-              <div style="font-size:0.62rem;color:var(--muted)">วัน · ปกติ · WD (วัน) · OT1 (ชม.) · OT2 (ชม.)</div>
+              <div style="font-size:0.62rem;color:var(--muted)">วัน · WD (วัน) · OT (ชม.) · หมายเหตุ</div>
             </div>
             <div style="overflow-y:auto;max-height:520px">
               <table style="font-size:0.78rem;width:100%;border-collapse:collapse" id="pr-day-table">
@@ -2746,14 +2742,14 @@
                   <tr style="border-bottom:1px solid var(--border)">
                     <th style="text-align:left;padding:5px 6px;font-size:0.65rem;color:var(--muted);font-weight:600;width:36px">วันที่</th>
                     <th style="text-align:left;padding:5px 6px;font-size:0.65rem;color:var(--muted);font-weight:600;width:64px">วัน</th>
-                    <th style="padding:5px 6px;font-size:0.65rem;color:rgba(0,229,160,0.85);font-weight:600;text-align:center">
+                    <th style="padding:5px 6px;font-size:0.65rem;color:rgba(0,229,160,0.85);font-weight:600;text-align:center;width:110px">
                       <span style="display:inline-block;width:8px;height:8px;background:rgba(0,229,160,0.7);border-radius:50%;margin-right:3px"></span>WD (วัน)
                     </th>
-                    <th style="padding:5px 6px;font-size:0.65rem;color:#f59e0b;font-weight:600;text-align:center">
-                      <span style="display:inline-block;width:8px;height:8px;background:#f59e0b;border-radius:50%;margin-right:3px"></span>OT1 (ชม.)
+                    <th style="padding:5px 6px;font-size:0.65rem;color:#f59e0b;font-weight:600;text-align:center;width:110px">
+                      <span style="display:inline-block;width:8px;height:8px;background:#f59e0b;border-radius:50%;margin-right:3px"></span>OT (ชม.)
                     </th>
-                    <th style="padding:5px 6px;font-size:0.65rem;color:#ef4444;font-weight:600;text-align:center">
-                      <span style="display:inline-block;width:8px;height:8px;background:#ef4444;border-radius:50%;margin-right:3px"></span>OT2 (ชม.)
+                    <th style="padding:5px 6px;font-size:0.65rem;color:var(--muted);font-weight:600;text-align:left">
+                      📝 หมายเหตุ
                     </th>
                   </tr>
                 </thead>
@@ -6992,14 +6988,14 @@ let prEditingId = null;
 
 function prSave() { localStorage.setItem('prpo_payroll_users', JSON.stringify(prUsers)); }
 function prDateKey(y,m,d){ return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
-function prGetRec(user,dk){ return user.records[dk]||{work:0,ot1:0,ot2:0}; }
+function prGetRec(user,dk){ return user.records[dk]||{work:0,ot:0,note:''}; }
 
 function prCalcTotals(user){
-  let days=0,ot1=0,ot2=0;
-  Object.values(user.records).forEach(r=>{ days+=r.work||0; ot1+=r.ot1||0; ot2+=r.ot2||0; });
+  let days=0,ot=0;
+  Object.values(user.records).forEach(r=>{ days+=r.work||0; ot+=r.ot||0; });
   const otR=parseFloat(document.getElementById('pr-ot-rate')?.value)||0;
-  const ot1pay=otR*ot1*1.5; const ot2pay=otR*ot2*2;
-  return {days,ot1,ot2,ot1pay,ot2pay,base:days*(user.rate||0),total:days*(user.rate||0)+ot1pay+ot2pay};
+  const otPay=otR*ot;
+  return {days,ot,otPay,base:days*(user.rate||0),total:days*(user.rate||0)+otPay};
 }
 
 function payrollInit(){ prRenderGrid(); }
@@ -7071,8 +7067,7 @@ function prRefreshDetail(){
   document.getElementById('pr-total').textContent='฿'+Math.round(t.total).toLocaleString();
   document.getElementById('pr-stat-days').textContent=t.days+' วัน';
   document.getElementById('pr-stat-base').textContent='฿'+Math.round(t.base).toLocaleString();
-  document.getElementById('pr-stat-ot1').textContent=t.ot1+' ชม. = ฿'+Math.round(t.ot1pay).toLocaleString();
-  document.getElementById('pr-stat-ot2').textContent=t.ot2+' ชม. = ฿'+Math.round(t.ot2pay).toLocaleString();
+  document.getElementById('pr-stat-ot').textContent=t.ot+' ชม. = ฿'+Math.round(t.otPay).toLocaleString();
 }
 
 /* ── CALENDAR ── */
@@ -7093,7 +7088,7 @@ function prRenderCal(user){
     const isWknd=dow===0;
     const isToday=dk===todayKey;
     const worked=(rec.work||0)>0;
-    const hasOT=(rec.ot1||0)>0||(rec.ot2||0)>0;
+    const hasOT=(rec.ot||0)>0;
     let bg='transparent',color=isWknd?'rgba(239,68,68,0.7)':'var(--muted)',border='1px solid transparent';
     else if(worked){bg='rgba(0,229,160,0.22)';color='var(--accent)';}
     else if(isWknd){bg='rgba(239,68,68,0.07)';}
@@ -7105,7 +7100,7 @@ function prRenderCal(user){
 
 function prToggleDay(dk){
   if(!prSelected) return;
-  if(!prSelected.records[dk]) prSelected.records[dk]={work:0,ot1:0,ot2:0};
+  if(!prSelected.records[dk]) prSelected.records[dk]={work:0,ot:0,note:''};
   prSelected.records[dk].work=(prSelected.records[dk].work||0)>0?0:1;
   prSave(); prRefreshDetail();
 }
@@ -7124,8 +7119,9 @@ function prRenderDayTable(user){
     const isWknd=dow===0;
     const isToday=dk===todayKey;
     const worked=(rec.work||0)>0;
-    const hasOT=(rec.ot1||0)>0||(rec.ot2||0)>0;
+    const hasOT=(rec.ot||0)>0;
     let rowBg='';
+    if(isWknd) rowBg='background:rgba(239,68,68,0.04)';
     else if(worked&&hasOT) rowBg='background:rgba(245,158,11,0.06)';
     else if(worked) rowBg='background:rgba(0,229,160,0.04)';
     const dayColor=isWknd?'#ef4444':isToday?'var(--accent)':'var(--text)';
@@ -7143,17 +7139,18 @@ function prRenderDayTable(user){
       </td>
       <td style="padding:4px 6px">
         <div style="display:flex;align-items:center;gap:4px;justify-content:center">
-          ${adjBtn('ot1',-1)}
-          <span style="min-width:22px;text-align:center;font-weight:700;font-size:0.82rem;color:${(rec.ot1||0)>0?'#f59e0b':'var(--muted)'}">${rec.ot1||0}</span>
-          ${adjBtn('ot1',1)}
+          ${adjBtn('ot',-1)}
+          <span style="min-width:22px;text-align:center;font-weight:700;font-size:0.82rem;color:${hasOT?'#f59e0b':'var(--muted)'}">${rec.ot||0}</span>
+          ${adjBtn('ot',1)}
         </div>
       </td>
-      <td style="padding:4px 6px">
-        <div style="display:flex;align-items:center;gap:4px;justify-content:center">
-          ${adjBtn('ot2',-1)}
-          <span style="min-width:22px;text-align:center;font-weight:700;font-size:0.82rem;color:${(rec.ot2||0)>0?'#ef4444':'var(--muted)'}">${rec.ot2||0}</span>
-          ${adjBtn('ot2',1)}
-        </div>
+      <td style="padding:4px 8px">
+        <input type="text" value="${(rec.note||'').replace(/"/g,'&quot;')}"
+          placeholder="หมายเหตุ..."
+          onchange="prSetNote('${dk}',this.value,${user.id})"
+          style="width:100%;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-size:0.72rem;padding:2px 4px;outline:none;font-family:inherit"
+          onfocus="this.style.borderBottomColor='var(--accent)'"
+          onblur="this.style.borderBottomColor='var(--border)'">
       </td>
     </tr>`;
   }
@@ -7163,9 +7160,17 @@ function prRenderDayTable(user){
 function prAdj(dk,field,delta,userId){
   const u=prUsers.find(u=>u.id===userId);
   if(!u) return;
-  if(!u.records[dk]) u.records[dk]={work:0,ot1:0,ot2:0};
-  u.records[dk][field]=Math.max(0,Math.round((u.records[dk][field]+delta)*10)/10);
+  if(!u.records[dk]) u.records[dk]={work:0,ot:0,note:''};
+  u.records[dk][field]=Math.max(0,Math.round(((u.records[dk][field]||0)+delta)*10)/10);
   prSave(); prRefreshDetail();
+}
+
+function prSetNote(dk,val,userId){
+  const u=prUsers.find(u=>u.id===userId);
+  if(!u) return;
+  if(!u.records[dk]) u.records[dk]={work:0,ot:0,note:''};
+  u.records[dk].note=val;
+  prSave();
 }
 
 /* ── ADD / EDIT / DELETE ── */
