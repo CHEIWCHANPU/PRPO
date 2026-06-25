@@ -2668,10 +2668,15 @@
         </div>
 
         <!-- Month Nav -->
-        <div style="display:flex;align-items:center;justify-content:center;gap:0.75rem;margin-bottom:1rem">
-          <button class="btn btn-ghost" onclick="prPrevMonth()" style="padding:0.3rem 0.7rem;font-size:1rem">◀</button>
-          <span id="pr-month-label" style="font-size:1rem;font-weight:700;color:var(--text);min-width:140px;text-align:center"></span>
-          <button class="btn btn-ghost" onclick="prNextMonth()" style="padding:0.3rem 0.7rem;font-size:1rem">▶</button>
+        <div style="margin-bottom:1rem">
+          <!-- ปีและลูกศร -->
+          <div style="display:flex;align-items:center;justify-content:center;gap:0.6rem;margin-bottom:0.55rem">
+            <button class="btn btn-ghost" onclick="prPrevYear()" style="padding:0.25rem 0.65rem;font-size:0.9rem">◀</button>
+            <span id="pr-year-label" style="font-size:0.95rem;font-weight:700;color:var(--text);min-width:100px;text-align:center"></span>
+            <button class="btn btn-ghost" onclick="prNextYear()" style="padding:0.25rem 0.65rem;font-size:0.9rem">▶</button>
+          </div>
+          <!-- strip 12 เดือน -->
+          <div id="pr-month-strip" style="display:flex;gap:4px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;scrollbar-width:none"></div>
         </div>
 
         <!-- 2-column layout: left=mini-cal+summary, right=daily log -->
@@ -7235,12 +7240,60 @@ function prBack(){
 /* ── MONTH NAV ── */
 function prPrevMonth(){ if(prCalMonth===0){prCalMonth=11;prCalYear--;}else prCalMonth--; prRefreshDetail(); }
 function prNextMonth(){ if(prCalMonth===11){prCalMonth=0;prCalYear++;}else prCalMonth++; prRefreshDetail(); }
+function prPrevYear(){ prCalYear--; prRefreshDetail(); }
+function prNextYear(){ prCalYear++; prRefreshDetail(); }
+
+function prRenderMonthStrip(user){
+  const strip = document.getElementById('pr-month-strip');
+  const yearLabel = document.getElementById('pr-year-label');
+  if(!strip) return;
+  if(yearLabel) yearLabel.textContent = `${prCalYear+543} – ${prCalYear+544}`;
+
+  const SHORT_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+  strip.innerHTML = SHORT_TH.map((name, m) => {
+    const isActive = m === prCalMonth;
+    // เช็คว่าเดือนนี้มีข้อมูลไหม (นับเฉพาะในรอบถ้ามีการตั้งค่า)
+    const range = prGetCutoffRange(prCalYear, m);
+    let hasData = false;
+    Object.entries(user.records || {}).forEach(([dk, r]) => {
+      if((r.work||0)>0 || (r.ot||0)>0) {
+        if(prDateInRangeForMonth(dk, prCalYear, m, range)) hasData = true;
+      }
+    });
+
+    const bg = isActive ? 'var(--accent)' : hasData ? 'rgba(0,229,160,0.15)' : 'var(--surface2)';
+    const color = isActive ? '#000' : hasData ? 'var(--accent)' : 'var(--muted)';
+    const border = isActive ? '1.5px solid var(--accent)' : hasData ? '1px solid rgba(0,229,160,0.4)' : '1px solid var(--border)';
+    const fw = isActive || hasData ? '700' : '400';
+    const dot = hasData && !isActive ? `<div style="width:5px;height:5px;border-radius:50%;background:var(--accent);margin:1px auto 0"></div>` : '';
+
+    return `<button onclick="prCalMonth=${m};prRefreshDetail()"
+      style="flex:1;min-width:52px;padding:0.4rem 0.2rem;border-radius:8px;border:${border};
+             background:${bg};color:${color};font-size:0.7rem;font-weight:${fw};
+             cursor:pointer;transition:all 0.15s;line-height:1.3;font-family:inherit">
+      ${name}${dot}
+    </button>`;
+  }).join('');
+}
+
+// เช็คว่า dateKey อยู่ในรอบของเดือนนั้นหรือไม่
+function prDateInRangeForMonth(dk, year, month, range) {
+  if(!range) {
+    // ไม่มีตัดรอบ → เช็คว่าอยู่ในเดือนนั้น
+    const [y,m] = dk.split('-').map(Number);
+    return y===year && m===month+1;
+  }
+  return prDateInRange(dk, range);
+}
 
 /* ── REFRESH DETAIL ── */
 function prRefreshDetail(){
   if(!prSelected) return;
   const u=prSelected;
-  document.getElementById('pr-month-label').textContent=`${PR_MONTHS_TH[prCalMonth]} ${prCalYear+543}`;
+
+  // render month strip (แทน label เดิม)
+  prRenderMonthStrip(u);
 
   // แสดง label ช่วงตัดรอบ
   const rangeLabel = document.getElementById('pr-cutoff-range-label');
