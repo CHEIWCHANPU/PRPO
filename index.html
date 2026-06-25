@@ -1782,6 +1782,17 @@
       </div>
     </div>
 
+    <div class="nav-group" id="navGroup-payroll">
+      <div class="nav-label" onclick="toggleNavGroup('payroll')">
+        <span>ลงเวลา & ค่าแรง</span><span class="nav-label-chevron">▾</span>
+      </div>
+      <div class="nav-group-items">
+        <button class="nav-item" id="nav-payroll" onclick="showPage('payroll',this)">
+          <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14.01"/><line x1="12" y1="14" x2="12" y2="14.01"/><line x1="8" y1="18" x2="8" y2="18.01"/><line x1="12" y1="18" x2="12" y2="18.01"/></svg></span><span class="nav-text">ลงเวลาทำงาน</span>
+        </button>
+      </div>
+    </div>
+
     <div class="nav-group" id="navGroup-manage">
       <div class="nav-label" onclick="toggleNavGroup('manage')">
         <span>จัดการ</span><span class="nav-label-chevron">▾</span>
@@ -2624,6 +2635,121 @@
     </div>
     <!-- /WORKPLAN PAGE -->
 
+    <!-- ═══════════════════════════════════════════════════
+         PAYROLL / ATTENDANCE PAGE
+    ═══════════════════════════════════════════════════ -->
+    <div class="page" id="page-payroll">
+      <div id="pr-userList">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+          <div style="font-size:0.95rem;font-weight:700;color:var(--text)">👥 เลือกพนักงาน</div>
+          <button class="btn btn-primary" onclick="prOpenAddUser()" style="font-size:0.8rem;padding:0.4rem 0.9rem">+ เพิ่มพนักงาน</button>
+        </div>
+        <div id="pr-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1rem"></div>
+      </div>
+
+      <div id="pr-detail" style="display:none">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:1rem;flex-wrap:wrap">
+          <button class="btn btn-ghost" onclick="prBack()" style="font-size:0.8rem;padding:0.35rem 0.8rem">← กลับ</button>
+          <div id="pr-detail-name" style="font-size:1rem;font-weight:700;color:var(--text)"></div>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
+            <button class="btn btn-ghost" onclick="prPrevMonth()" style="padding:0.3rem 0.7rem">◀</button>
+            <span id="pr-month-label" style="font-size:0.88rem;font-weight:600;color:var(--accent);min-width:120px;text-align:center"></span>
+            <button class="btn btn-ghost" onclick="prNextMonth()" style="padding:0.3rem 0.7rem">▶</button>
+          </div>
+        </div>
+
+        <!-- Calendar -->
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:1rem">
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px" id="pr-cal-head"></div>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px" id="pr-cal"></div>
+          <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:10px;font-size:0.7rem;color:var(--muted)">
+            <span><span style="display:inline-block;width:10px;height:10px;background:rgba(0,229,160,0.25);border-radius:3px;margin-right:4px"></span>มาทำงาน</span>
+            <span><span style="display:inline-block;width:10px;height:10px;background:rgba(245,158,11,0.3);border-radius:3px;margin-right:4px"></span>มี OT</span>
+            <span><span style="display:inline-block;width:10px;height:10px;background:rgba(239,68,68,0.15);border-radius:3px;margin-right:4px"></span>วันหยุด</span>
+          </div>
+        </div>
+
+        <!-- Employee card + OT rate -->
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:1rem">
+          <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.9rem;flex-wrap:wrap">
+            <div id="pr-emp-avatar" style="width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;flex-shrink:0"></div>
+            <div style="flex:1">
+              <div id="pr-emp-name" style="font-size:0.95rem;font-weight:700;color:var(--text)"></div>
+              <div id="pr-emp-rate" style="font-size:0.75rem;color:var(--muted);margin-top:2px"></div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em">ยอดสุทธิ</div>
+              <div id="pr-total" style="font-size:1.5rem;font-weight:700;color:var(--accent)">0</div>
+            </div>
+          </div>
+
+          <!-- OT Rate setup -->
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:0.75rem;display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap;margin-bottom:0.9rem">
+            <label style="font-size:0.75rem;color:var(--muted);white-space:nowrap">อัตรา OT/ชม. (บาท):</label>
+            <input type="number" id="pr-ot-rate" class="form-input" placeholder="เช่น 150" min="0" step="1"
+              style="width:110px;font-size:0.82rem;padding:0.35rem 0.6rem"
+              oninput="prRefreshDetail()">
+            <div style="display:flex;gap:0.6rem;flex-wrap:wrap;margin-left:auto">
+              <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.4rem 0.8rem;text-align:center;min-width:80px">
+                <div style="font-size:0.62rem;color:var(--muted)">วันทำงาน</div>
+                <div id="pr-stat-days" style="font-size:0.95rem;font-weight:700;color:var(--accent2)">0</div>
+              </div>
+              <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.4rem 0.8rem;text-align:center;min-width:80px">
+                <div style="font-size:0.62rem;color:var(--muted)">OT ×1.5 (ชม)</div>
+                <div id="pr-stat-ot1" style="font-size:0.95rem;font-weight:700;color:#f59e0b">0</div>
+              </div>
+              <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.4rem 0.8rem;text-align:center;min-width:80px">
+                <div style="font-size:0.62rem;color:var(--muted)">OT ×2 (ชม)</div>
+                <div id="pr-stat-ot2" style="font-size:0.95rem;font-weight:700;color:#ef4444">0</div>
+              </div>
+              <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.4rem 0.8rem;text-align:center;min-width:90px">
+                <div style="font-size:0.62rem;color:var(--muted)">ค่า OT รวม</div>
+                <div id="pr-stat-ot-pay" style="font-size:0.95rem;font-weight:700;color:var(--accent)">0</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Day table -->
+          <div class="table-wrap" style="margin:0;border-radius:10px;overflow:hidden">
+            <table style="font-size:0.78rem">
+              <thead><tr>
+                <th style="width:60px">วัน</th>
+                <th></th>
+                <th>ทำงาน (วัน)</th>
+                <th>OT ก่อน 2 ทุ่ม (ชม)</th>
+                <th>OT หลัง 2 ทุ่ม (ชม)</th>
+              </tr></thead>
+              <tbody id="pr-day-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add User Modal -->
+      <div id="pr-add-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:none;align-items:center;justify-content:center">
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:1.4rem;width:320px;max-width:90vw">
+          <div style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:1rem">➕ เพิ่มพนักงาน</div>
+          <div class="form-group" style="margin-bottom:0.8rem">
+            <label class="form-label">ชื่อ-นามสกุล *</label>
+            <input type="text" id="pr-f-name" class="form-input" placeholder="เช่น สมชาย ใจดี">
+          </div>
+          <div class="form-group" style="margin-bottom:0.8rem">
+            <label class="form-label">ค่าแรงต่อวัน (บาท) *</label>
+            <input type="number" id="pr-f-rate" class="form-input" placeholder="เช่น 8888" min="0">
+          </div>
+          <div class="form-group" style="margin-bottom:1rem">
+            <label class="form-label">สีโปรไฟล์</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px" id="pr-color-pick"></div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:0.5rem">
+            <button class="btn btn-ghost" onclick="prCloseAddUser()">ยกเลิก</button>
+            <button class="btn btn-primary" onclick="prSaveUser()">บันทึก</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- /PAYROLL PAGE -->
+
   </main>
 </div>
 
@@ -2941,7 +3067,7 @@ function showPage(name, btn) {
   document.getElementById('page-' + name).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  const titles = { home:'🏠 หน้าหลัก', dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', summary:'📈 สรุปภาพรวม', gantt:'📅 Timeline / Gantt', setup:'⚙️ ตั้งค่าระบบ', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis', cer:'📄 ติดตามใบ CER', modeltracker:'🗂️ Model Tracker', workplan:'📅 ตารางแผนงาน & KPI' };
+  const titles = { home:'🏠 หน้าหลัก', dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', summary:'📈 สรุปภาพรวม', gantt:'📅 Timeline / Gantt', setup:'⚙️ ตั้งค่าระบบ', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis', cer:'📄 ติดตามใบ CER', modeltracker:'🗂️ Model Tracker', workplan:'📅 ตารางแผนงาน & KPI', payroll:'⏱️ ลงเวลา & ค่าแรง' };
   document.getElementById('topbarTitle').textContent = titles[name] || name;
   if (name === 'home') renderDailyBriefing();
   if (name === 'summary') renderSummary();
@@ -2952,6 +3078,7 @@ function showPage(name, btn) {
   if (name === 'cer') loadCerPage();
   if (name === 'modeltracker') renderModelTracker();
   if (name === 'workplan') renderWorkplan();
+  if (name === 'payroll') payrollInit();
 }
 
 /* ── NOTIFICATIONS ── */
@@ -6786,6 +6913,219 @@ async function deleteWpItem(rowIndex) {
 document.getElementById('wpModalOverlay').addEventListener('click', (e) => {
   if (e.target === document.getElementById('wpModalOverlay')) closeWpModal();
 });
+
+/* ══════════════════════════════════════════════════
+   ⏱️ PAYROLL / ATTENDANCE MODULE
+══════════════════════════════════════════════════ */
+const PR_COLORS = [
+  {bg:'rgba(0,229,160,0.18)',text:'#00b87d'},
+  {bg:'rgba(99,102,241,0.18)',text:'#6366f1'},
+  {bg:'rgba(245,158,11,0.22)',text:'#b45309'},
+  {bg:'rgba(239,68,68,0.15)',text:'#dc2626'},
+  {bg:'rgba(59,130,246,0.18)',text:'#2563eb'},
+  {bg:'rgba(168,85,247,0.18)',text:'#9333ea'},
+];
+const PR_MONTHS_TH = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const PR_DAYS_SHORT = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+const PR_DAYS_FULL  = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'];
+
+let prUsers = JSON.parse(localStorage.getItem('prpo_payroll_users') || '[]');
+let prNextId = prUsers.length ? Math.max(...prUsers.map(u=>u.id))+1 : 1;
+let prSelected = null;
+let prCalYear  = new Date().getFullYear();
+let prCalMonth = new Date().getMonth();
+let prNewColor = 0;
+
+function prSave() { localStorage.setItem('prpo_payroll_users', JSON.stringify(prUsers)); }
+
+function prDateKey(y,m,d){ return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+function prGetRec(user, dk){ return user.records[dk] || {work:0,ot1:0,ot2:0}; }
+function prSetRec(user, dk, field, val){
+  if(!user.records[dk]) user.records[dk]={work:0,ot1:0,ot2:0};
+  user.records[dk][field]=Math.max(0, Math.round(val*10)/10);
+  prSave(); prRefreshDetail();
+}
+
+function prCalcTotals(user){
+  let days=0,ot1=0,ot2=0;
+  Object.values(user.records).forEach(r=>{ days+=r.work||0; ot1+=r.ot1||0; ot2+=r.ot2||0; });
+  const otR=parseFloat(document.getElementById('pr-ot-rate')?.value)||0;
+  const ot1pay=otR*ot1*1.5; const ot2pay=otR*ot2*2;
+  return {days,ot1,ot2,ot1pay,ot2pay,base:days*user.rate,total:days*user.rate+ot1pay+ot2pay};
+}
+
+function prInit(){
+  prRenderGrid();
+  prRenderDetail();
+}
+function payrollInit(){ prInit(); }
+
+function prRenderGrid(){
+  const grid=document.getElementById('pr-grid');
+  if(!grid) return;
+  grid.innerHTML = prUsers.map(u=>{
+    const col=PR_COLORS[u.color||0];
+    return `<div onclick="prSelectUser(${u.id})" style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:1.2rem;text-align:center;cursor:pointer;transition:border-color 0.2s" onmouseenter="this.style.borderColor='var(--accent)'" onmouseleave="this.style.borderColor='var(--border)'">
+      <div style="width:52px;height:52px;border-radius:50%;background:${col.bg};color:${col.text};display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;margin:0 auto 0.7rem">${u.name.slice(0,2)}</div>
+      <div style="font-size:0.88rem;font-weight:700;color:var(--text)">${u.name}</div>
+      <div style="font-size:0.72rem;color:var(--muted);margin-top:3px">${u.rate.toLocaleString()} บ./วัน</div>
+    </div>`;
+  }).join('') + `<div onclick="prOpenAddUser()" style="background:var(--surface2);border:1px dashed var(--border);border-radius:14px;padding:1.2rem;text-align:center;cursor:pointer;color:var(--muted);transition:border-color 0.2s" onmouseenter="this.style.borderColor='var(--accent)'" onmouseleave="this.style.borderColor='var(--border)'">
+    <div style="font-size:2rem;margin-bottom:0.4rem">＋</div>
+    <div style="font-size:0.8rem">เพิ่มพนักงาน</div>
+  </div>`;
+}
+
+function prSelectUser(id){
+  prSelected=prUsers.find(u=>u.id===id);
+  if(!prSelected) return;
+  document.getElementById('pr-userList').style.display='none';
+  document.getElementById('pr-detail').style.display='block';
+  const col=PR_COLORS[prSelected.color||0];
+  document.getElementById('pr-emp-avatar').style.background=col.bg;
+  document.getElementById('pr-emp-avatar').style.color=col.text;
+  document.getElementById('pr-emp-avatar').textContent=prSelected.name.slice(0,2);
+  document.getElementById('pr-emp-name').textContent=prSelected.name;
+  document.getElementById('pr-emp-rate').textContent=`${prSelected.rate.toLocaleString()} บาท/วัน`;
+  prRefreshDetail();
+}
+
+function prBack(){
+  prSelected=null;
+  document.getElementById('pr-userList').style.display='block';
+  document.getElementById('pr-detail').style.display='none';
+  prRenderGrid();
+}
+
+function prPrevMonth(){ if(prCalMonth===0){prCalMonth=11;prCalYear--;}else prCalMonth--; prRefreshDetail(); }
+function prNextMonth(){ if(prCalMonth===11){prCalMonth=0;prCalYear++;}else prCalMonth++; prRefreshDetail(); }
+
+function prRefreshDetail(){
+  if(!prSelected) return;
+  const u=prSelected;
+  document.getElementById('pr-month-label').textContent=`${PR_MONTHS_TH[prCalMonth]} ${prCalYear+543}`;
+  prRenderCal(u);
+  prRenderDayTable(u);
+  const t=prCalcTotals(u);
+  document.getElementById('pr-total').textContent=Math.round(t.total).toLocaleString();
+  document.getElementById('pr-stat-days').textContent=t.days;
+  document.getElementById('pr-stat-ot1').textContent=t.ot1;
+  document.getElementById('pr-stat-ot2').textContent=t.ot2;
+  document.getElementById('pr-stat-ot-pay').textContent=Math.round(t.ot1pay+t.ot2pay).toLocaleString();
+}
+
+function prRenderCal(user){
+  const head=document.getElementById('pr-cal-head');
+  const cal=document.getElementById('pr-cal');
+  if(!head||!cal) return;
+  head.innerHTML=PR_DAYS_SHORT.map(d=>`<div style="text-align:center;font-size:0.66rem;color:var(--muted);padding:2px 0">${d}</div>`).join('');
+  const today=new Date(); const todayKey=prDateKey(today.getFullYear(),today.getMonth(),today.getDate());
+  const firstDow=new Date(prCalYear,prCalMonth,1).getDay();
+  const daysInMo=new Date(prCalYear,prCalMonth+1,0).getDate();
+  let cells='';
+  for(let i=0;i<firstDow;i++) cells+=`<div></div>`;
+  for(let d=1;d<=daysInMo;d++){
+    const dk=prDateKey(prCalYear,prCalMonth,d);
+    const rec=prGetRec(user,dk);
+    const dow=new Date(prCalYear,prCalMonth,d).getDay();
+    const isWknd=dow===0||dow===6;
+    const isToday=dk===todayKey;
+    const worked=(rec.work||0)>0;
+    const hasOT=(rec.ot1||0)>0||(rec.ot2||0)>0;
+    let bg='transparent'; let color=isWknd?'#ef4444':'var(--text)'; let border='';
+    if(worked&&hasOT){bg='rgba(245,158,11,0.28)';color='#b45309';}
+    else if(worked){bg='rgba(0,229,160,0.2)';color='#00b87d';}
+    else if(isWknd){bg='rgba(239,68,68,0.08)';}
+    if(isToday) border='2px solid var(--accent)';
+    cells+=`<div onclick="prToggleDay('${dk}')" style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:0.75rem;border-radius:7px;cursor:pointer;background:${bg};color:${color};border:${border||'1px solid transparent'};font-weight:${worked?'700':'400'};transition:all 0.15s" title="${PR_DAYS_FULL[dow]} ${d}">${d}</div>`;
+  }
+  cal.innerHTML=cells;
+}
+
+function prToggleDay(dk){
+  if(!prSelected) return;
+  if(!prSelected.records[dk]) prSelected.records[dk]={work:0,ot1:0,ot2:0};
+  prSelected.records[dk].work = (prSelected.records[dk].work||0)>0?0:1;
+  prSave(); prRefreshDetail();
+}
+
+function prRenderDayTable(user){
+  const tbody=document.getElementById('pr-day-tbody');
+  if(!tbody) return;
+  const daysInMo=new Date(prCalYear,prCalMonth+1,0).getDate();
+  const today=new Date(); const todayKey=prDateKey(today.getFullYear(),today.getMonth(),today.getDate());
+  let rows='';
+  for(let d=1;d<=daysInMo;d++){
+    const dk=prDateKey(prCalYear,prCalMonth,d);
+    const rec=prGetRec(user,dk);
+    const dow=new Date(prCalYear,prCalMonth,d).getDay();
+    const isWknd=dow===0||dow===6;
+    const isToday=dk===todayKey;
+    const worked=(rec.work||0)>0;
+    const hasOT=(rec.ot1||0)>0||(rec.ot2||0)>0;
+    let rowBg='';
+    if(worked&&hasOT) rowBg='background:rgba(245,158,11,0.08)';
+    else if(worked) rowBg='background:rgba(0,229,160,0.06)';
+    const dayBadge=isWknd
+      ?`<span style="font-size:0.65rem;padding:1px 6px;border-radius:8px;background:rgba(239,68,68,0.1);color:#ef4444">${PR_DAYS_FULL[dow]}</span>`
+      :`<span style="font-size:0.65rem;padding:1px 6px;border-radius:8px;background:var(--surface);color:var(--muted)">${PR_DAYS_FULL[dow]}</span>`;
+    rows+=`<tr style="${rowBg}${isToday?';border-left:2px solid var(--accent)':''}">
+      <td style="font-weight:${isToday?'700':'400'};color:${isToday?'var(--accent)':'var(--text)'}">${d}</td>
+      <td>${dayBadge}</td>
+      <td><div style="display:flex;align-items:center;gap:6px">
+        <button class="btn btn-ghost" style="padding:2px 8px;font-size:1rem;line-height:1" onclick="prAdj('${dk}','work',-0.5,${user.id})">−</button>
+        <span style="min-width:28px;text-align:center;font-weight:600">${rec.work||0}</span>
+        <button class="btn btn-ghost" style="padding:2px 8px;font-size:1rem;line-height:1" onclick="prAdj('${dk}','work',0.5,${user.id})">+</button>
+      </div></td>
+      <td><div style="display:flex;align-items:center;gap:6px">
+        <button class="btn btn-ghost" style="padding:2px 8px;font-size:1rem;line-height:1" onclick="prAdj('${dk}','ot1',-0.5,${user.id})">−</button>
+        <span style="min-width:28px;text-align:center;font-weight:600">${rec.ot1||0}</span>
+        <button class="btn btn-ghost" style="padding:2px 8px;font-size:1rem;line-height:1" onclick="prAdj('${dk}','ot1',0.5,${user.id})">+</button>
+      </div></td>
+      <td><div style="display:flex;align-items:center;gap:6px">
+        <button class="btn btn-ghost" style="padding:2px 8px;font-size:1rem;line-height:1" onclick="prAdj('${dk}','ot2',-0.5,${user.id})">−</button>
+        <span style="min-width:28px;text-align:center;font-weight:600">${rec.ot2||0}</span>
+        <button class="btn btn-ghost" style="padding:2px 8px;font-size:1rem;line-height:1" onclick="prAdj('${dk}','ot2',0.5,${user.id})">+</button>
+      </div></td>
+    </tr>`;
+  }
+  tbody.innerHTML=rows;
+}
+
+function prAdj(dk, field, delta, userId){
+  const u=prUsers.find(u=>u.id===userId);
+  if(!u) return;
+  if(!u.records[dk]) u.records[dk]={work:0,ot1:0,ot2:0};
+  u.records[dk][field]=Math.max(0,Math.round((u.records[dk][field]+delta)*10)/10);
+  prSave(); prRefreshDetail();
+}
+
+function prOpenAddUser(){
+  prNewColor=0;
+  document.getElementById('pr-f-name').value='';
+  document.getElementById('pr-f-rate').value='';
+  const pick=document.getElementById('pr-color-pick');
+  pick.innerHTML=PR_COLORS.map((c,i)=>`<div onclick="prSelectColor(${i})" id="pr-col-${i}" style="width:28px;height:28px;border-radius:50%;background:${c.bg};cursor:pointer;border:3px solid ${i===0?c.text:'transparent'};transition:border-color 0.15s"></div>`).join('');
+  const modal=document.getElementById('pr-add-modal');
+  modal.style.display='flex';
+}
+function prSelectColor(i){
+  prNewColor=i;
+  PR_COLORS.forEach((_,idx)=>{
+    const el=document.getElementById('pr-col-'+idx);
+    if(el) el.style.borderColor=idx===i?PR_COLORS[idx].text:'transparent';
+  });
+}
+function prCloseAddUser(){ document.getElementById('pr-add-modal').style.display='none'; }
+function prSaveUser(){
+  const name=(document.getElementById('pr-f-name').value||'').trim();
+  const rate=parseFloat(document.getElementById('pr-f-rate').value)||0;
+  if(!name){ showToast('⚠️ กรุณาใส่ชื่อพนักงาน','warn'); return; }
+  prUsers.push({id:prNextId++,name,rate,color:prNewColor,records:{}});
+  prSave(); prCloseAddUser(); prRenderGrid();
+  showToast(`✅ เพิ่ม ${name} แล้ว`,'success');
+}
+
 </script>
 
 </html>
