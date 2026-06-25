@@ -2709,10 +2709,6 @@
                   <span id="pr-stat-days" style="font-weight:700;color:var(--accent2)">0 วัน</span>
                 </div>
                 <div style="display:flex;justify-content:space-between">
-                  <span style="color:var(--muted)">ค่าแรงปกติ</span>
-                  <span id="pr-stat-base" style="font-weight:700;color:var(--text)">฿0</span>
-                </div>
-                <div style="display:flex;justify-content:space-between">
                   <span style="color:var(--muted)">OT (×1)</span>
                   <span id="pr-stat-ot" style="font-weight:700;color:#f59e0b">0 ชม. = ฿0</span>
                 </div>
@@ -2769,8 +2765,16 @@
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:1.5rem;width:340px;max-width:92vw;max-height:90vh;overflow-y:auto">
           <div style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:1.1rem" id="pr-modal-title">➕ เพิ่มพนักงาน</div>
           <div class="form-group" style="margin-bottom:0.75rem">
+            <label class="form-label">รหัสพนักงาน</label>
+            <input type="text" id="pr-f-empid" class="form-input" placeholder="">
+          </div>
+          <div class="form-group" style="margin-bottom:0.75rem">
             <label class="form-label">ชื่อ-นามสกุล *</label>
             <input type="text" id="pr-f-name" class="form-input" placeholder="">
+          </div>
+          <div class="form-group" style="margin-bottom:0.75rem">
+            <label class="form-label">แผนก</label>
+            <input type="text" id="pr-f-dept" class="form-input" placeholder="">
           </div>
           <div class="form-group" style="margin-bottom:0.75rem">
             <label class="form-label">ตำแหน่ง</label>
@@ -2779,10 +2783,6 @@
           <div class="form-group" style="margin-bottom:0.75rem">
             <label class="form-label">เบอร์โทรศัพท์</label>
             <input type="text" id="pr-f-phone" class="form-input" placeholder="">
-          </div>
-          <div class="form-group" style="margin-bottom:0.75rem">
-            <label class="form-label">ค่าแรงต่อวัน (บาท) *</label>
-            <input type="number" id="pr-f-rate" class="form-input" placeholder="" min="0">
           </div>
           <div class="form-group" style="margin-bottom:1rem">
             <label class="form-label">สีโปรไฟล์</label>
@@ -6995,7 +6995,7 @@ function prCalcTotals(user){
   Object.values(user.records).forEach(r=>{ days+=r.work||0; ot+=r.ot||0; });
   const otR=parseFloat(document.getElementById('pr-ot-rate')?.value)||0;
   const otPay=otR*ot;
-  return {days,ot,otPay,base:days*(user.rate||0),total:days*(user.rate||0)+otPay};
+  return {days,ot,otPay,base:0,total:otPay};
 }
 
 function payrollInit(){ prRenderGrid(); }
@@ -7027,7 +7027,9 @@ function prRenderGrid(){
         <div style="width:52px;height:52px;border-radius:50%;background:${col.bg};color:${col.text};display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;border:2px solid ${col.text}22">${initials}</div>
         <div>
           <div style="font-size:0.92rem;font-weight:700;color:var(--text)">${u.name}</div>
-          ${u.position?`<div style="font-size:0.72rem;color:${col.text};margin-top:1px">${u.position}</div>`:''}
+          ${u.empid?`<div style="font-size:0.68rem;color:var(--muted);margin-top:2px">🪪 ${u.empid}</div>`:''}
+          ${u.dept?`<div style="font-size:0.72rem;color:${col.text};margin-top:2px">🏢 ${u.dept}</div>`:''}
+          ${u.position?`<div style="font-size:0.72rem;color:var(--muted);margin-top:1px">${u.position}</div>`:''}
           ${u.phone?`<div style="font-size:0.7rem;color:var(--muted);margin-top:3px;display:flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 9a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>${u.phone}</div>`:''}
         </div>
       </div>
@@ -7066,7 +7068,6 @@ function prRefreshDetail(){
   const t=prCalcTotals(u);
   document.getElementById('pr-total').textContent='฿'+Math.round(t.total).toLocaleString();
   document.getElementById('pr-stat-days').textContent=t.days+' วัน';
-  document.getElementById('pr-stat-base').textContent='฿'+Math.round(t.base).toLocaleString();
   document.getElementById('pr-stat-ot').textContent=t.ot+' ชม. = ฿'+Math.round(t.otPay).toLocaleString();
 }
 
@@ -7179,10 +7180,11 @@ function prOpenAddUser(){
   prEditingId=null;
   document.getElementById('pr-modal-title').textContent='➕ เพิ่มพนักงาน';
   document.getElementById('pr-save-btn').textContent='บันทึก';
+  document.getElementById('pr-f-empid').value='';
   document.getElementById('pr-f-name').value='';
+  document.getElementById('pr-f-dept').value='';
   document.getElementById('pr-f-pos').value='';
   document.getElementById('pr-f-phone').value='';
-  document.getElementById('pr-f-rate').value='';
   prNewColor=0;
   prRenderColorPick();
   document.getElementById('pr-add-modal').style.display='flex';
@@ -7193,10 +7195,11 @@ function prOpenEditUser(id){
   prEditingId=id;
   document.getElementById('pr-modal-title').textContent='✏️ แก้ไขข้อมูลพนักงาน';
   document.getElementById('pr-save-btn').textContent='บันทึก';
+  document.getElementById('pr-f-empid').value=u.empid||'';
   document.getElementById('pr-f-name').value=u.name||'';
+  document.getElementById('pr-f-dept').value=u.dept||'';
   document.getElementById('pr-f-pos').value=u.position||'';
   document.getElementById('pr-f-phone').value=u.phone||'';
-  document.getElementById('pr-f-rate').value=u.rate||'';
   prNewColor=u.color||0;
   prRenderColorPick();
   document.getElementById('pr-add-modal').style.display='flex';
@@ -7212,17 +7215,18 @@ function prSelectColor(i){
 }
 function prCloseAddUser(){ document.getElementById('pr-add-modal').style.display='none'; }
 function prSaveUser(){
+  const empid=(document.getElementById('pr-f-empid').value||'').trim();
   const name=(document.getElementById('pr-f-name').value||'').trim();
+  const dept=(document.getElementById('pr-f-dept').value||'').trim();
   const position=(document.getElementById('pr-f-pos').value||'').trim();
   const phone=(document.getElementById('pr-f-phone').value||'').trim();
-  const rate=parseFloat(document.getElementById('pr-f-rate').value)||0;
   if(!name){ showToast('⚠️ กรุณาใส่ชื่อพนักงาน','warn'); return; }
   if(prEditingId){
     const u=prUsers.find(u=>u.id===prEditingId);
-    if(u){ u.name=name; u.position=position; u.phone=phone; u.rate=rate; u.color=prNewColor; }
+    if(u){ u.empid=empid; u.name=name; u.dept=dept; u.position=position; u.phone=phone; u.color=prNewColor; }
     showToast(`✅ แก้ไข ${name} แล้ว`,'success');
   } else {
-    prUsers.push({id:prNextId++,name,position,phone,rate,color:prNewColor,records:{}});
+    prUsers.push({id:prNextId++,empid,name,dept,position,phone,color:prNewColor,records:{}});
     showToast(`✅ เพิ่ม ${name} แล้ว`,'success');
   }
   prSave(); prCloseAddUser(); prRenderGrid();
