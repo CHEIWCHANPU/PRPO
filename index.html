@@ -2764,6 +2764,20 @@
       <div id="pr-add-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;align-items:center;justify-content:center">
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:1.5rem;width:340px;max-width:92vw;max-height:90vh;overflow-y:auto">
           <div style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:1.1rem" id="pr-modal-title">➕ เพิ่มพนักงาน</div>
+
+          <!-- รูปพนักงาน -->
+          <div class="form-group" style="margin-bottom:0.9rem">
+            <label class="form-label">รูปพนักงาน</label>
+            <div style="display:flex;align-items:center;gap:0.8rem;margin-top:6px">
+              <div id="pr-photo-preview" style="width:56px;height:56px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;font-size:1.3rem;color:var(--muted)">👤</div>
+              <div style="display:flex;flex-direction:column;gap:0.4rem">
+                <input type="file" id="pr-f-photo-input" accept="image/*" style="display:none" onchange="prHandlePhotoSelect(this)">
+                <button type="button" class="btn btn-ghost" style="font-size:0.72rem;padding:0.35rem 0.8rem" onclick="document.getElementById('pr-f-photo-input').click()">📷 เลือกรูป</button>
+                <button type="button" id="pr-photo-remove-btn" class="btn btn-ghost" style="font-size:0.7rem;padding:0.3rem 0.8rem;display:none;color:var(--danger)" onclick="prRemovePhoto()">ลบรูป</button>
+              </div>
+            </div>
+          </div>
+
           <div class="form-group" style="margin-bottom:0.75rem">
             <label class="form-label">รหัสพนักงาน</label>
             <input type="text" id="pr-f-empid" class="form-input" placeholder="">
@@ -2784,6 +2798,11 @@
             <label class="form-label">เบอร์โทรศัพท์</label>
             <input type="text" id="pr-f-phone" class="form-input" placeholder="">
           </div>
+          <div class="form-group" style="margin-bottom:0.75rem">
+            <label class="form-label">PIN 4 หลัก *</label>
+            <input type="password" id="pr-f-pin" class="form-input" placeholder="••••" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" oninput="this.value=this.value.replace(/\D/g,'').slice(0,4)">
+            <span class="form-error-msg" id="pr-f-pin-err" style="display:none"></span>
+          </div>
           <div class="form-group" style="margin-bottom:1rem">
             <label class="form-label">สีโปรไฟล์</label>
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px" id="pr-color-pick"></div>
@@ -2791,6 +2810,37 @@
           <div style="display:flex;justify-content:flex-end;gap:0.5rem">
             <button class="btn btn-ghost" onclick="prCloseAddUser()">ยกเลิก</button>
             <button class="btn btn-primary" onclick="prSaveUser()" id="pr-save-btn">บันทึก</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PIN Verify Modal -->
+      <div id="pr-pin-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;align-items:center;justify-content:center">
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:1.5rem;width:300px;max-width:92vw;text-align:center">
+          <div id="pr-pin-avatar" style="width:60px;height:60px;border-radius:50%;margin:0 auto 0.7rem;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;overflow:hidden"></div>
+          <div id="pr-pin-name" style="font-size:0.95rem;font-weight:700;color:var(--text);margin-bottom:0.2rem"></div>
+          <div style="font-size:0.72rem;color:var(--muted);margin-bottom:1rem">กรุณากรอก PIN 4 หลักเพื่อเข้าสู่ระบบ</div>
+          <input type="password" id="pr-pin-input" class="form-input" placeholder="••••" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off"
+            style="text-align:center;font-size:1.3rem;letter-spacing:0.4em;margin-bottom:0.4rem"
+            oninput="this.value=this.value.replace(/\D/g,'').slice(0,4)"
+            onkeydown="if(event.key==='Enter') prVerifyPin()">
+          <div id="pr-pin-err" style="font-size:0.72rem;color:var(--danger);min-height:1.1em;margin-bottom:0.6rem"></div>
+          <div style="display:flex;justify-content:center;gap:0.5rem">
+            <button class="btn btn-ghost" onclick="prCancelPin()">ยกเลิก</button>
+            <button class="btn btn-primary" onclick="prVerifyPin()">เข้าสู่ระบบ</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delete Confirm Modal -->
+      <div id="pr-del-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;align-items:center;justify-content:center">
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:1.5rem;width:300px;max-width:92vw;text-align:center">
+          <div style="font-size:1.8rem;margin-bottom:0.4rem">🗑️</div>
+          <div style="font-size:0.92rem;font-weight:700;color:var(--text);margin-bottom:0.3rem">ลบพนักงาน?</div>
+          <div id="pr-del-msg" style="font-size:0.78rem;color:var(--muted);margin-bottom:1.1rem;line-height:1.5"></div>
+          <div style="display:flex;justify-content:center;gap:0.5rem">
+            <button class="btn btn-ghost" onclick="prCancelDelete()">ยกเลิก</button>
+            <button class="btn btn-primary" style="background:var(--danger);border-color:var(--danger)" onclick="prConfirmDelete()">ลบ</button>
           </div>
         </div>
       </div>
@@ -6984,6 +7034,7 @@ let prSelected = null;
 let prCalYear  = new Date().getFullYear();
 let prCalMonth = new Date().getMonth();
 let prNewColor = 0;
+let prNewPhoto = null;
 let prEditingId = null;
 
 function prSave() { localStorage.setItem('prpo_payroll_users', JSON.stringify(prUsers)); }
@@ -7014,6 +7065,9 @@ function prRenderGrid(){
   grid.innerHTML = prUsers.map(u=>{
     const col=PR_COLORS[u.color||0];
     const initials=u.name.trim().split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase()||u.name.slice(0,2).toUpperCase();
+    const avatarInner = u.photo
+      ? `<img src="${u.photo}" style="width:100%;height:100%;object-fit:cover">`
+      : initials;
     return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:1.1rem;cursor:pointer;transition:border-color 0.2s,box-shadow 0.2s;position:relative"
       onmouseenter="this.style.borderColor='var(--accent)';this.style.boxShadow='0 0 0 2px rgba(0,229,160,0.15)'"
       onmouseleave="this.style.borderColor='var(--border)';this.style.boxShadow='none'">
@@ -7024,7 +7078,7 @@ function prRenderGrid(){
       </div>
       <!-- card body — click to go detail -->
       <div onclick="prSelectUser(${u.id})" style="display:flex;flex-direction:column;align-items:flex-start;gap:0.6rem">
-        <div style="width:52px;height:52px;border-radius:50%;background:${col.bg};color:${col.text};display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;border:2px solid ${col.text}22">${initials}</div>
+        <div style="width:52px;height:52px;border-radius:50%;background:${col.bg};color:${col.text};display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;border:2px solid ${col.text}22;overflow:hidden">${avatarInner}</div>
         <div>
           <div style="font-size:0.92rem;font-weight:700;color:var(--text)">${u.name}</div>
           ${u.empid?`<div style="font-size:0.68rem;color:var(--muted);margin-top:2px">🪪 ${u.empid}</div>`:''}
@@ -7038,7 +7092,54 @@ function prRenderGrid(){
 }
 
 /* ── SELECT / BACK ── */
+let prPinPendingId=null;
+let prPinAttempts=0;
+
 function prSelectUser(id){
+  const u=prUsers.find(u=>u.id===id);
+  if(!u) return;
+  prPinPendingId=id;
+  prPinAttempts=0;
+  const col=PR_COLORS[u.color||0];
+  const initials=u.name.trim().split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase()||u.name.slice(0,2).toUpperCase();
+  const avatarEl=document.getElementById('pr-pin-avatar');
+  avatarEl.style.background=col.bg; avatarEl.style.color=col.text;
+  avatarEl.innerHTML = u.photo ? `<img src="${u.photo}" style="width:100%;height:100%;object-fit:cover">` : initials;
+  document.getElementById('pr-pin-name').textContent=u.name;
+  const input=document.getElementById('pr-pin-input');
+  input.value='';
+  document.getElementById('pr-pin-err').textContent='';
+  document.getElementById('pr-pin-modal').style.display='flex';
+  setTimeout(()=>input.focus(),50);
+}
+
+function prCancelPin(){
+  prPinPendingId=null;
+  document.getElementById('pr-pin-modal').style.display='none';
+}
+
+function prVerifyPin(){
+  if(!prPinPendingId) return;
+  const u=prUsers.find(u=>u.id===prPinPendingId);
+  if(!u) return;
+  const entered=(document.getElementById('pr-pin-input').value||'').trim();
+  const errEl=document.getElementById('pr-pin-err');
+  const correctPin=u.pin||'';
+  if(!entered || entered!==correctPin){
+    prPinAttempts++;
+    errEl.textContent = prPinAttempts>=3 ? '❌ PIN ไม่ถูกต้องหลายครั้ง กรุณาตรวจสอบใหม่' : '❌ PIN ไม่ถูกต้อง กรุณาลองอีกครั้ง';
+    const input=document.getElementById('pr-pin-input');
+    input.value='';
+    input.focus();
+    return;
+  }
+  // PIN correct → proceed into employee detail
+  document.getElementById('pr-pin-modal').style.display='none';
+  prPinPendingId=null;
+  prEnterDetail(u.id);
+}
+
+function prEnterDetail(id){
   prSelected=prUsers.find(u=>u.id===id);
   if(!prSelected) return;
   document.getElementById('pr-userList').style.display='none';
@@ -7048,6 +7149,7 @@ function prSelectUser(id){
   if(topBar) topBar.textContent=prSelected.name;
   prRefreshDetail();
 }
+
 function prBack(){
   prSelected=null;
   document.getElementById('pr-userList').style.display='block';
@@ -7185,7 +7287,12 @@ function prOpenAddUser(){
   document.getElementById('pr-f-dept').value='';
   document.getElementById('pr-f-pos').value='';
   document.getElementById('pr-f-phone').value='';
+  document.getElementById('pr-f-pin').value='';
+  document.getElementById('pr-f-pin-err').style.display='none';
+  document.getElementById('pr-f-photo-input').value='';
   prNewColor=0;
+  prNewPhoto=null;
+  prUpdatePhotoPreview();
   prRenderColorPick();
   document.getElementById('pr-add-modal').style.display='flex';
 }
@@ -7200,7 +7307,12 @@ function prOpenEditUser(id){
   document.getElementById('pr-f-dept').value=u.dept||'';
   document.getElementById('pr-f-pos').value=u.position||'';
   document.getElementById('pr-f-phone').value=u.phone||'';
+  document.getElementById('pr-f-pin').value=u.pin||'';
+  document.getElementById('pr-f-pin-err').style.display='none';
+  document.getElementById('pr-f-photo-input').value='';
   prNewColor=u.color||0;
+  prNewPhoto=u.photo||null;
+  prUpdatePhotoPreview();
   prRenderColorPick();
   document.getElementById('pr-add-modal').style.display='flex';
 }
@@ -7213,6 +7325,34 @@ function prSelectColor(i){
   prNewColor=i;
   PR_COLORS.forEach((_,idx)=>{ const el=document.getElementById('pr-col-'+idx); if(el) el.style.borderColor=idx===i?PR_COLORS[idx].text:'transparent'; });
 }
+function prHandlePhotoSelect(input){
+  const file=input.files&&input.files[0];
+  if(!file) return;
+  if(!file.type.startsWith('image/')){ showToast('⚠️ กรุณาเลือกไฟล์รูปภาพ','warn'); return; }
+  const reader=new FileReader();
+  reader.onload=e=>{
+    prNewPhoto=e.target.result;
+    prUpdatePhotoPreview();
+  };
+  reader.readAsDataURL(file);
+}
+function prRemovePhoto(){
+  prNewPhoto=null;
+  document.getElementById('pr-f-photo-input').value='';
+  prUpdatePhotoPreview();
+}
+function prUpdatePhotoPreview(){
+  const prev=document.getElementById('pr-photo-preview');
+  const removeBtn=document.getElementById('pr-photo-remove-btn');
+  if(!prev) return;
+  if(prNewPhoto){
+    prev.innerHTML=`<img src="${prNewPhoto}" style="width:100%;height:100%;object-fit:cover">`;
+    if(removeBtn) removeBtn.style.display='inline-block';
+  } else {
+    prev.innerHTML='👤';
+    if(removeBtn) removeBtn.style.display='none';
+  }
+}
 function prCloseAddUser(){ document.getElementById('pr-add-modal').style.display='none'; }
 function prSaveUser(){
   const empid=(document.getElementById('pr-f-empid').value||'').trim();
@@ -7220,23 +7360,54 @@ function prSaveUser(){
   const dept=(document.getElementById('pr-f-dept').value||'').trim();
   const position=(document.getElementById('pr-f-pos').value||'').trim();
   const phone=(document.getElementById('pr-f-phone').value||'').trim();
+  const pin=(document.getElementById('pr-f-pin').value||'').trim();
+  const pinErr=document.getElementById('pr-f-pin-err');
+  pinErr.style.display='none';
   if(!name){ showToast('⚠️ กรุณาใส่ชื่อพนักงาน','warn'); return; }
+  if(!/^\d{4}$/.test(pin)){
+    pinErr.textContent='กรุณาใส่ PIN ให้ครบ 4 หลัก (ตัวเลขเท่านั้น)';
+    pinErr.style.display='block';
+    showToast('⚠️ กรุณาใส่ PIN 4 หลัก','warn');
+    return;
+  }
+  const dupUser=prUsers.find(u=>u.pin===pin && u.id!==prEditingId);
+  if(dupUser){
+    pinErr.textContent=`PIN นี้ถูกใช้แล้วโดย ${dupUser.name}`;
+    pinErr.style.display='block';
+    showToast('⚠️ PIN นี้ถูกใช้แล้ว กรุณาเลือก PIN อื่น','warn');
+    return;
+  }
   if(prEditingId){
     const u=prUsers.find(u=>u.id===prEditingId);
-    if(u){ u.empid=empid; u.name=name; u.dept=dept; u.position=position; u.phone=phone; u.color=prNewColor; }
+    if(u){ u.empid=empid; u.name=name; u.dept=dept; u.position=position; u.phone=phone; u.pin=pin; u.photo=prNewPhoto; u.color=prNewColor; }
     showToast(`✅ แก้ไข ${name} แล้ว`,'success');
   } else {
-    prUsers.push({id:prNextId++,empid,name,dept,position,phone,color:prNewColor,records:{}});
+    prUsers.push({id:prNextId++,empid,name,dept,position,phone,pin,photo:prNewPhoto,color:prNewColor,records:{}});
     showToast(`✅ เพิ่ม ${name} แล้ว`,'success');
   }
   prSave(); prCloseAddUser(); prRenderGrid();
 }
+let prDeletePendingId=null;
 function prDeleteUser(id){
   const u=prUsers.find(u=>u.id===id);
-  if(!u||!confirm(`ต้องการลบ "${u.name}" ออกจากระบบ?\n(ข้อมูลลงเวลาทั้งหมดจะหายไป)`)) return;
-  prUsers=prUsers.filter(u=>u.id!==id);
+  if(!u) return;
+  prDeletePendingId=id;
+  document.getElementById('pr-del-msg').textContent=`ต้องการลบ "${u.name}" ออกจากระบบ? (ข้อมูลลงเวลาทั้งหมดจะหายไป)`;
+  document.getElementById('pr-del-modal').style.display='flex';
+}
+function prCancelDelete(){
+  prDeletePendingId=null;
+  document.getElementById('pr-del-modal').style.display='none';
+}
+function prConfirmDelete(){
+  if(!prDeletePendingId) return;
+  const u=prUsers.find(u=>u.id===prDeletePendingId);
+  if(!u){ prCancelDelete(); return; }
+  prUsers=prUsers.filter(x=>x.id!==prDeletePendingId);
   prSave(); prRenderGrid();
   showToast(`🗑️ ลบ ${u.name} แล้ว`,'info');
+  prDeletePendingId=null;
+  document.getElementById('pr-del-modal').style.display='none';
 }
 
 </script>
