@@ -2651,14 +2651,20 @@
           <span id="pr-detail-topbar" style="font-size:0.95rem;font-weight:700;color:var(--text)"></span>
         </div>
 
-        <!-- Top Bar: OT Rate -->
+        <!-- Top Bar: OT Rate + Cutoff -->
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:0.6rem 1rem;margin-bottom:1rem;display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap">
           <span style="font-size:0.8rem;color:var(--accent)">💰</span>
           <label style="font-size:0.78rem;color:var(--muted);white-space:nowrap;font-weight:600">ค่าแรง OT/ชม.</label>
           <input type="number" id="pr-ot-rate" class="form-input" placeholder="เช่น 50" min="0" step="1"
             style="width:90px;font-size:0.82rem;padding:0.3rem 0.55rem"
             oninput="prRefreshDetail()">
-          <span style="font-size:0.72rem;color:var(--muted)">คิดจากอัตรา OT/ชม. หลังเลิกงาน</span>
+          <div style="width:1px;height:20px;background:var(--border);margin:0 0.2rem"></div>
+          <span style="font-size:0.8rem;color:#f59e0b">✂️</span>
+          <label style="font-size:0.78rem;color:var(--muted);white-space:nowrap;font-weight:600">วันตัดรอบ</label>
+          <input type="number" id="pr-cutoff-day" class="form-input" placeholder="เช่น 21" min="1" max="31" step="1"
+            style="width:70px;font-size:0.82rem;padding:0.3rem 0.55rem"
+            oninput="prRefreshDetail()">
+          <span style="font-size:0.72rem;color:var(--muted)" id="pr-cutoff-range-label"></span>
         </div>
 
         <!-- Month Nav -->
@@ -7040,9 +7046,34 @@ function prSave() { localStorage.setItem('prpo_payroll_users', JSON.stringify(pr
 function prDateKey(y,m,d){ return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
 function prGetRec(user,dk){ return user.records[dk]||{work:0,ot:0,note:''}; }
 
+function prGetCutoffRange(year, month) {
+  // cutoffDay = วันที่ตัดรอบ (เช่น 21)
+  // รอบปัจจุบัน: cutoffDay เดือนที่แล้ว+1  →  cutoffDay เดือนนี้
+  const cutoffDay = parseInt(document.getElementById('pr-cutoff-day')?.value) || 0;
+  if (!cutoffDay) return null; // ไม่ได้กรอก → นับทั้งเดือน
+
+  // start = วันที่ cutoffDay+1 ของเดือนก่อน
+  const startDate = new Date(year, month - 1, cutoffDay + 1);
+  // end = วันที่ cutoffDay ของเดือนปัจจุบัน
+  const endDate = new Date(year, month, cutoffDay);
+
+  return { startDate, endDate };
+}
+
+function prDateInRange(dk, range) {
+  if (!range) return true;
+  const [y, m, d] = dk.split('-').map(Number);
+  const date = new Date(y, m - 1, d);
+  return date >= range.startDate && date <= range.endDate;
+}
+
 function prCalcTotals(user){
   let days=0,ot=0;
-  Object.values(user.records).forEach(r=>{ days+=r.work||0; ot+=r.ot||0; });
+  const range = prGetCutoffRange(prCalYear, prCalMonth);
+  Object.entries(user.records).forEach(([dk, r])=>{
+    if (!prDateInRange(dk, range)) return;
+    days+=r.work||0; ot+=r.ot||0;
+  });
   const otR=parseFloat(document.getElementById('pr-ot-rate')?.value)||0;
   const otPay=otR*ot;
   return {days,ot,otPay,base:0,total:otPay};
@@ -7190,6 +7221,19 @@ function prRefreshDetail(){
   if(!prSelected) return;
   const u=prSelected;
   document.getElementById('pr-month-label').textContent=`${PR_MONTHS_TH[prCalMonth]} ${prCalYear+543}`;
+
+  // แสดง label ช่วงตัดรอบ
+  const rangeLabel = document.getElementById('pr-cutoff-range-label');
+  if (rangeLabel) {
+    const range = prGetCutoffRange(prCalYear, prCalMonth);
+    if (range) {
+      const fmt = d => `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()+543}`;
+      rangeLabel.textContent = `รอบ: ${fmt(range.startDate)} – ${fmt(range.endDate)}`;
+    } else {
+      rangeLabel.textContent = 'นับทั้งเดือน';
+    }
+  }
+
   prRenderCal(u); prRenderDayTable(u);
   const t=prCalcTotals(u);
   document.getElementById('pr-total').textContent='฿'+Math.round(t.total).toLocaleString();
