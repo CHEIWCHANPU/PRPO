@@ -2719,7 +2719,7 @@
     <div class="wp-modal-foot">
       <input type="hidden" id="wpf-editIdx" value="">
       <button class="btn btn-ghost" onclick="closeWpModal()">ยกเลิก</button>
-      <button class="btn btn-primary" onclick="saveWpItem()">💾 บันทึก</button>
+      <button class="btn btn-primary" id="wpBtnSave" onclick="saveWpItem()">💾 บันทึก</button>
     </div>
   </div>
 </div>
@@ -6341,29 +6341,33 @@ document.addEventListener('DOMContentLoaded', ()=>{
 /* ══════════════════════════════════════════════════
    📅 WORKPLAN & KPI MODULE
 ══════════════════════════════════════════════════ */
-const WP_STORAGE_KEY = 'prpo_workplan_v1';
+// v8.6 — เปลี่ยนจากเก็บใน localStorage (เฉพาะเบราว์เซอร์ตัวเอง) มาเป็นเชื่อมกับ
+// Google Sheet "workplan" จริง ผ่าน Apps Script (action: getWorkplan /
+// addWorkplan / editWorkplan / delWorkplan) — เหมือนรูปแบบเดียวกับ
+// Model Tracker (v8.5) ทุกประการ เพื่อให้ข้อมูลซิงค์กันทุกเครื่อง/ทุกคน
 let wpData = [];
 let wpActiveMonth = null;
 let wpCharts = {};
+let wpInited = false;
+let wpLoading = false;
 
-// ── DEMO SEED DATA (from spreadsheet)
-const WP_DEMO = [
-  { id:'wp1', date:'8/6/2026',  name:'นัด Maker YTT ประชุมที่ CCI-S Buffing limit',      type:'Meeting',       location:'CCI-S',  status:'เสร็จสิ้น',        importance:'สูง',    timeStart:'10.00', timeEnd:'18.00', note:'เรื่อง SET Limit Buffing Boss R_L' },
-  { id:'wp2', date:'11/6/2026', name:'นัด Maker Thai Asakawa ใหม่เข้า พระประแดง',         type:'Meeting',       location:'CCI-P',  status:'เสร็จสิ้น',        importance:'สูง',    timeStart:'10.30', timeEnd:'12.00', note:'แนะนำบริษัท' },
-  { id:'wp3', date:'19/6/2026', name:'นัดไปแก้ปัญหา MAKER ชัยทัด',                        type:'ขึ้นงานมีปัญหา', location:'ชัยทัด', status:'เสร็จสิ้น',        importance:'สูง',    timeStart:'',      timeEnd:'',      note:'ขึ้นงานมีปัญหา' },
-  { id:'wp4', date:'22/6/2026', name:'ไป MAKER FUSOH ดูโรงงาน',                           type:'เข้าชมโรงงาน',  location:'FUSOH',  status:'เสร็จสิ้น',        importance:'สูง',    timeStart:'8.00',  timeEnd:'12.00', note:'Visi Factory Fusoh' },
-  { id:'wp5', date:'19/6/2026', name:'First Rubber มา Visit Factory',                      type:'Visit Factory', location:'CCI-P',  status:'เสร็จสิ้น',        importance:'สูง',    timeStart:'10.00', timeEnd:'12.00', note:'Visi Factory / Metting business' },
-];
-
-function loadWpData() {
+// โหลดข้อมูลจาก Sheet "workplan" — แทนที่ loadWpData() แบบ localStorage เดิม
+async function wpLoadData() {
+  if (!WEB_APP_URL) { wpData = []; return; }
+  wpLoading = true;
   try {
-    const raw = localStorage.getItem(WP_STORAGE_KEY);
-    wpData = raw ? JSON.parse(raw) : WP_DEMO;
-  } catch(e) { wpData = WP_DEMO; }
-  if (!wpData.length) wpData = [...WP_DEMO];
-}
-function saveWpData() {
-  localStorage.setItem(WP_STORAGE_KEY, JSON.stringify(wpData));
+    const res = await fetch(WEB_APP_URL + '?action=getWorkplan');
+    const json = await res.json();
+    if (json.success) {
+      wpData = json.data || [];
+    } else {
+      showToast('⚠️ โหลดตารางแผนงานไม่สำเร็จ: ' + (json.error||''), 'error');
+    }
+  } catch(e) {
+    showToast('⚠️ เชื่อมต่อตารางแผนงานไม่สำเร็จ', 'error');
+  } finally {
+    wpLoading = false;
+  }
 }
 function wpParseDate(str) {
   if (!str) return null;
@@ -6430,8 +6434,13 @@ function wpImpHtml(imp) {
   return `<span class="wp-imp-low">🟢 ต่ำ</span>`;
 }
 
-function renderWorkplan() {
-  loadWpData();
+async function renderWorkplan() {
+  if (!wpInited) {
+    wpInited = true;
+    const body = document.getElementById('wpTableBody');
+    if (body) body.innerHTML = '<tr><td colspan="11" class="empty"><div class="spinner"></div></td></tr>';
+    await wpLoadData();
+  }
   renderWpKpiBanner();
   renderWpMonthTabs();
   renderWpTable();
@@ -6490,7 +6499,7 @@ function renderWpTable() {
       <td>
         <div style="display:flex;gap:0.3rem">
           <button class="btn btn-ghost" style="padding:0.25rem 0.55rem;font-size:0.7rem" onclick='openWpEditModal(${JSON.stringify(r)})'>✏️</button>
-          <button class="btn btn-danger" style="padding:0.25rem 0.55rem;font-size:0.7rem" onclick="deleteWpItem('${r.id}')">🗑️</button>
+          <button class="btn btn-danger" style="padding:0.25rem 0.55rem;font-size:0.7rem" onclick="deleteWpItem(${r.rowIndex})">🗑️</button>
         </div>
       </td>
     </tr>`).join('');
@@ -6558,7 +6567,7 @@ function openWpModal() {
 }
 function openWpEditModal(item) {
   document.getElementById('wpModalTitle').textContent = '✏️ แก้ไขแผนงาน';
-  document.getElementById('wpf-editIdx').value = item.id;
+  document.getElementById('wpf-editIdx').value = item.rowIndex;
   document.getElementById('wpf-date').value = item.date || '';
   document.getElementById('wpf-name').value = item.name || '';
   document.getElementById('wpf-type').value = item.type || 'Meeting';
@@ -6571,13 +6580,12 @@ function openWpEditModal(item) {
   document.getElementById('wpModalOverlay').classList.add('open');
 }
 function closeWpModal() { document.getElementById('wpModalOverlay').classList.remove('open'); }
-function saveWpItem() {
+async function saveWpItem() {
   const date = document.getElementById('wpf-date').value.trim();
   const name = document.getElementById('wpf-name').value.trim();
   if (!date || !name) { showToast('⚠️ กรุณากรอกวันที่ และ ชื่องาน', 'warn'); return; }
-  const editId = document.getElementById('wpf-editIdx').value;
+  const editRowIndex = document.getElementById('wpf-editIdx').value;
   const item = {
-    id: editId || 'wp_' + Date.now(),
     date, name,
     type:       document.getElementById('wpf-type').value,
     location:   document.getElementById('wpf-location').value.trim(),
@@ -6587,23 +6595,42 @@ function saveWpItem() {
     timeEnd:    document.getElementById('wpf-timeEnd').value.trim(),
     note:       document.getElementById('wpf-note').value.trim(),
   };
-  loadWpData();
-  if (editId) {
-    const idx = wpData.findIndex(r => r.id === editId);
-    if (idx >= 0) wpData[idx] = item; else wpData.push(item);
-  } else {
-    wpData.push(item);
+  const saveBtn = document.getElementById('wpBtnSave');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '💾 กำลังบันทึก...'; }
+  try {
+    if (editRowIndex) {
+      const params = new URLSearchParams({ action:'editWorkplan', rowIndex:editRowIndex, ...item });
+      const res  = await fetch(WEB_APP_URL + '?' + params.toString());
+      const json = await res.json();
+      if (!json.success) { showToast('⚠️ บันทึกไม่สำเร็จ: ' + (json.error||''), 'error'); return; }
+      const idx = wpData.findIndex(r => String(r.rowIndex) === String(editRowIndex));
+      if (idx >= 0) wpData[idx] = { ...item, rowIndex: Number(editRowIndex), no: wpData[idx].no };
+    } else {
+      const params = new URLSearchParams({ action:'addWorkplan', ...item });
+      const res  = await fetch(WEB_APP_URL + '?' + params.toString());
+      const json = await res.json();
+      if (!json.success) { showToast('⚠️ บันทึกไม่สำเร็จ: ' + (json.error||''), 'error'); return; }
+      // กรณีเพิ่มใหม่ ต้องดึงข้อมูลซ้ำเพื่อรู้ rowIndex จริงจาก Sheet
+      await wpLoadData();
+    }
+    closeWpModal();
+    renderWorkplan();
+    showToast(editRowIndex ? '✅ แก้ไขแผนงานแล้ว' : '✅ เพิ่มแผนงานแล้ว', 'success');
+  } catch(e) {
+    showToast('⚠️ เชื่อมต่อ Sheet ไม่สำเร็จ', 'error');
+  } finally {
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 บันทึก'; }
   }
-  saveWpData();
-  closeWpModal();
-  renderWorkplan();
-  showToast(editId ? '✅ แก้ไขแผนงานแล้ว' : '✅ เพิ่มแผนงานแล้ว', 'success');
 }
-function deleteWpItem(id) {
+async function deleteWpItem(rowIndex) {
   if (!confirm('ลบแผนงานนี้ใช่ไหม?')) return;
-  loadWpData();
-  wpData = wpData.filter(r => r.id !== id);
-  saveWpData();
+  try {
+    const res  = await fetch(WEB_APP_URL + '?action=delWorkplan&rowIndex=' + rowIndex);
+    const json = await res.json();
+    if (!json.success) { showToast('⚠️ ลบไม่สำเร็จ: ' + (json.error||''), 'error'); return; }
+  } catch(e) { showToast('⚠️ เชื่อมต่อ Sheet ไม่สำเร็จ', 'error'); return; }
+  // ลบออกจากข้อมูลในเครื่องทันที ไม่ต้องดึงทั้งชีตซ้ำ
+  wpData = wpData.filter(r => String(r.rowIndex) !== String(rowIndex));
   renderWorkplan();
   showToast('🗑️ ลบแผนงานแล้ว', 'info');
 }
