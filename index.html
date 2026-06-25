@@ -433,6 +433,10 @@
 
   /* TOOLBAR */
   .toolbar { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.95rem; flex-wrap: wrap; }
+  @media (max-width: 640px) {
+    .toolbar .search-box { flex: 1 1 100%; min-width: 0; order: -1; }
+    .toolbar .btn-primary { flex: 1 1 100%; }
+  }
   .search-box { flex: 1; min-width: 200px; position: relative; }
   .search-box input {
     width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 9px;
@@ -2119,10 +2123,6 @@
 
     <!-- CER PAGE -->
     <div class="page" id="page-cer">
-      <div style="display:flex;justify-content:flex-end;margin-bottom:0.8rem">
-        <button class="btn btn-primary" onclick="openCerModal()">+ เพิ่มบริษัท</button>
-      </div>
-
       <div class="cer-stat-grid">
         <div class="cer-stat-card" id="cer-stat-total" onclick="filterCerByStat('total')">
           <div class="cer-stat-label">บริษัทรวม</div>
@@ -2201,6 +2201,7 @@
           <option value="tracking">🔄 กำลังติดตาม</option>
           <option value="danger">🔴 หมดอายุแล้ว</option>
         </select>
+        <button class="btn btn-primary" onclick="openCerModal()" style="white-space:nowrap">+ เพิ่มบริษัท</button>
       </div>
 
       <div class="table-wrap">
