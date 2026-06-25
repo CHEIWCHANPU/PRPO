@@ -7093,12 +7093,14 @@ function prRenderGrid(){
 /* ── SELECT / BACK ── */
 let prPinPendingId=null;
 let prPinAttempts=0;
+let prPinAction='detail'; // 'detail' | 'edit'
 
 function prSelectUser(id){
   const u=prUsers.find(u=>u.id===id);
   if(!u) return;
   prPinPendingId=id;
   prPinAttempts=0;
+  prPinAction='detail';
   const col=PR_COLORS[u.color||0];
   const initials=u.name.trim().split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase()||u.name.slice(0,2).toUpperCase();
   const avatarEl=document.getElementById('pr-pin-avatar');
@@ -7132,10 +7134,33 @@ function prVerifyPin(){
     input.focus();
     return;
   }
-  // PIN correct → proceed into employee detail
+  // PIN correct → proceed
   document.getElementById('pr-pin-modal').style.display='none';
+  const targetId=prPinPendingId;
+  const action=prPinAction;
   prPinPendingId=null;
-  prEnterDetail(u.id);
+  if(action==='edit'){
+    const u=prUsers.find(u=>u.id===targetId);
+    if(!u) return;
+    prEditingId=targetId;
+    document.getElementById('pr-modal-title').textContent='✏️ แก้ไขข้อมูลพนักงาน';
+    document.getElementById('pr-save-btn').textContent='บันทึก';
+    document.getElementById('pr-f-empid').value=u.empid||'';
+    document.getElementById('pr-f-name').value=u.name||'';
+    document.getElementById('pr-f-dept').value=u.dept||'';
+    document.getElementById('pr-f-pos').value=u.position||'';
+    document.getElementById('pr-f-phone').value=u.phone||'';
+    document.getElementById('pr-f-pin').value=u.pin||'';
+    document.getElementById('pr-f-pin-err').style.display='none';
+    document.getElementById('pr-f-photo-input').value='';
+    prNewColor=u.color||0;
+    prNewPhoto=u.photo||null;
+    prUpdatePhotoPreview();
+    prRenderColorPick();
+    document.getElementById('pr-add-modal').style.display='flex';
+  } else {
+    prEnterDetail(targetId);
+  }
 }
 
 function prEnterDetail(id){
@@ -7298,22 +7323,20 @@ function prOpenAddUser(){
 function prOpenEditUser(id){
   const u=prUsers.find(u=>u.id===id);
   if(!u) return;
-  prEditingId=id;
-  document.getElementById('pr-modal-title').textContent='✏️ แก้ไขข้อมูลพนักงาน';
-  document.getElementById('pr-save-btn').textContent='บันทึก';
-  document.getElementById('pr-f-empid').value=u.empid||'';
-  document.getElementById('pr-f-name').value=u.name||'';
-  document.getElementById('pr-f-dept').value=u.dept||'';
-  document.getElementById('pr-f-pos').value=u.position||'';
-  document.getElementById('pr-f-phone').value=u.phone||'';
-  document.getElementById('pr-f-pin').value=u.pin||'';
-  document.getElementById('pr-f-pin-err').style.display='none';
-  document.getElementById('pr-f-photo-input').value='';
-  prNewColor=u.color||0;
-  prNewPhoto=u.photo||null;
-  prUpdatePhotoPreview();
-  prRenderColorPick();
-  document.getElementById('pr-add-modal').style.display='flex';
+  prPinPendingId=id;
+  prPinAttempts=0;
+  prPinAction='edit';
+  const col=PR_COLORS[u.color||0];
+  const initials=u.name.trim().split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase()||u.name.slice(0,2).toUpperCase();
+  const avatarEl=document.getElementById('pr-pin-avatar');
+  avatarEl.style.background=col.bg; avatarEl.style.color=col.text;
+  avatarEl.innerHTML = u.photo ? `<img src="${u.photo}" style="width:100%;height:100%;object-fit:cover">` : initials;
+  document.getElementById('pr-pin-name').textContent=u.name;
+  const input=document.getElementById('pr-pin-input');
+  input.value='';
+  document.getElementById('pr-pin-err').textContent='';
+  document.getElementById('pr-pin-modal').style.display='flex';
+  setTimeout(()=>input.focus(),50);
 }
 function prRenderColorPick(){
   document.getElementById('pr-color-pick').innerHTML=PR_COLORS.map((c,i)=>
