@@ -2693,7 +2693,7 @@
               <div style="display:flex;gap:0.8rem;flex-wrap:wrap;margin-top:8px;font-size:0.65rem;color:var(--muted)">
                 <span><span style="display:inline-block;width:9px;height:9px;background:rgba(0,229,160,0.3);border-radius:2px;margin-right:3px"></span>มาทำงาน</span>
                 <span><span style="display:inline-block;width:9px;height:9px;background:rgba(245,158,11,0.35);border-radius:2px;margin-right:3px"></span>มี OT</span>
-                <span><span style="display:inline-block;width:9px;height:9px;background:rgba(239,68,68,0.15);border-radius:2px;margin-right:3px"></span>วันหยุด</span>
+                <span><span style="display:inline-block;width:9px;height:9px;background:rgba(239,68,68,0.15);border-radius:2px;margin-right:3px"></span>อาทิตย์</span>
               </div>
             </div>
 
@@ -7090,12 +7090,11 @@ function prRenderCal(user){
     const dk=prDateKey(prCalYear,prCalMonth,d);
     const rec=prGetRec(user,dk);
     const dow=new Date(prCalYear,prCalMonth,d).getDay();
-    const isWknd=dow===0||dow===6;
+    const isWknd=dow===0;
     const isToday=dk===todayKey;
     const worked=(rec.work||0)>0;
     const hasOT=(rec.ot1||0)>0||(rec.ot2||0)>0;
     let bg='transparent',color=isWknd?'rgba(239,68,68,0.7)':'var(--muted)',border='1px solid transparent';
-    if(worked&&hasOT){bg='rgba(245,158,11,0.3)';color='#fbbf24';}
     else if(worked){bg='rgba(0,229,160,0.22)';color='var(--accent)';}
     else if(isWknd){bg='rgba(239,68,68,0.07)';}
     if(isToday) border='2px solid var(--accent)';
@@ -7122,12 +7121,11 @@ function prRenderDayTable(user){
     const dk=prDateKey(prCalYear,prCalMonth,d);
     const rec=prGetRec(user,dk);
     const dow=new Date(prCalYear,prCalMonth,d).getDay();
-    const isWknd=dow===0||dow===6;
+    const isWknd=dow===0;
     const isToday=dk===todayKey;
     const worked=(rec.work||0)>0;
     const hasOT=(rec.ot1||0)>0||(rec.ot2||0)>0;
     let rowBg='';
-    if(isWknd) rowBg='background:rgba(239,68,68,0.04)';
     else if(worked&&hasOT) rowBg='background:rgba(245,158,11,0.06)';
     else if(worked) rowBg='background:rgba(0,229,160,0.04)';
     const dayColor=isWknd?'#ef4444':isToday?'var(--accent)':'var(--text)';
