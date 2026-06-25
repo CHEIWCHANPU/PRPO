@@ -7090,6 +7090,7 @@ function prRenderCal(user){
     const worked=(rec.work||0)>0;
     const hasOT=(rec.ot||0)>0;
     let bg='transparent',color=isWknd?'rgba(239,68,68,0.7)':'var(--muted)',border='1px solid transparent';
+    if(worked&&hasOT){bg='rgba(245,158,11,0.3)';color='#fbbf24';}
     else if(worked){bg='rgba(0,229,160,0.22)';color='var(--accent)';}
     else if(isWknd){bg='rgba(239,68,68,0.07)';}
     if(isToday) border='2px solid var(--accent)';
