@@ -7175,8 +7175,17 @@ async function prSyncFromSheet(){
 
     fromSheet.forEach(u => {
       const cacheRecs = cacheByUid[String(u.id)] || {};
-      // เอา dateKey ที่มีใน cache แต่ยังไม่อยู่ใน Sheet (หรือน้อยกว่า) มา merge ด้วย
+      // โหลด resetLog ของ user นี้ — dateKey ที่อยู่ใน log = ถูกรีเซ็ตแล้ว ห้าม merge ข้อมูล Sheet กลับมา
+      const resetLog = JSON.parse(localStorage.getItem(`prpo_resetlog_${u.id}`) || '{}');
+
+      // กรอง records จาก Sheet ที่ถูกรีเซ็ตแล้วออกก่อน
+      Object.keys(u.records).forEach(dk => {
+        if (resetLog[dk]) { delete u.records[dk]; }
+      });
+
+      // merge cache เฉพาะวันที่ไม่ได้ถูกรีเซ็ต
       Object.entries(cacheRecs).forEach(([dk, cr]) => {
+        if (resetLog[dk]) return; // วันนี้ถูกรีเซ็ตแล้ว ข้ามเลย
         if (!u.records[dk]) {
           u.records[dk] = cr;
         } else {
@@ -7919,10 +7928,26 @@ function prConfirmResetPeriod(){
   const range = prGetCutoffRange(prCalYear, prCalMonth);
   const userId = prSelected.id;
 
-  // เก็บ dateKey ที่อยู่ในรอบนี้และมีข้อมูลอยู่จริง (ไม่ลบวันที่ไม่มีข้อมูลอยู่แล้ว ไม่มีประโยชน์)
-  const datesToReset = Object.keys(prSelected.records).filter(dk => prDateInRange(dk, range));
+  // เก็บ dateKey ทั้งหมดในรอบนี้ (ทั้งที่มีและไม่มีข้อมูล) เพื่อให้ resetLog ครอบคลุมครบ
+  const allDatesInRange = [];
+  const tmpRange = prGetCutoffRange(prCalYear, prCalMonth);
+  const start = tmpRange ? new Date(tmpRange.startDate) : new Date(prCalYear, prCalMonth, 1);
+  const end   = tmpRange ? new Date(tmpRange.endDate)   : new Date(prCalYear, prCalMonth+1, 0);
+  for(let d = new Date(start); d <= end; d.setDate(d.getDate()+1)){
+    allDatesInRange.push(prDateKey(d.getFullYear(), d.getMonth(), d.getDate()));
+  }
 
+  const datesToReset = Object.keys(prSelected.records).filter(dk => prDateInRange(dk, range));
   datesToReset.forEach(dk => { delete prSelected.records[dk]; });
+
+  // ── บันทึก resetLog ลง localStorage ──
+  // ป้องกัน prSyncFromSheet เอาข้อมูลเก่าจาก Sheet กลับมา merge ทับ
+  const resetLogKey = `prpo_resetlog_${userId}`;
+  const resetLog = JSON.parse(localStorage.getItem(resetLogKey) || '{}');
+  const resetTs = Date.now();
+  allDatesInRange.forEach(dk => { resetLog[dk] = resetTs; });
+  localStorage.setItem(resetLogKey, JSON.stringify(resetLog));
+
   prSave(); prRefreshDetail();
   document.getElementById('pr-reset-modal').style.display='none';
   showToast(`🔄 รีเซ็ตข้อมูล ${datesToReset.length} วันแล้ว`,'info');
