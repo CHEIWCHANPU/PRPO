@@ -7067,6 +7067,8 @@ const PR_MONTHS_TH = ['มกราคม','กุมภาพันธ์','ม
 const PR_DAYS_SHORT = ['อา','จ','อ','พ','พฤ','ศ','ส'];
 const PR_DAYS_FULL  = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'];
 
+const PAYROLL_API_URL = 'https://script.google.com/macros/s/AKfycbxGqLFU6cltVxCZbBi-ryj2MuJTsarqDq2dkLL6ysm3e3YjhMxKvu9jn4fXSimM8cehjw/exec';
+
 let prUsers    = JSON.parse(localStorage.getItem('prpo_payroll_users') || '[]');
 let prNextId   = prUsers.length ? Math.max(...prUsers.map(u=>u.id))+1 : 1;
 let prSelected = null;
@@ -7075,8 +7077,73 @@ let prCalMonth = new Date().getMonth();
 let prNewColor = 0;
 let prNewPhoto = null;
 let prEditingId = null;
+let prSyncStatus = 'idle'; // 'idle' | 'loading' | 'online' | 'offline'
 
 function prSave() { localStorage.setItem('prpo_payroll_users', JSON.stringify(prUsers)); }
+
+/* ── Sheet API wrapper ──
+   GET ใช้ query string, POST ใช้ JSON body (action-based ตาม Code.gs)
+   ทุกอันมี try/catch กันพังตอน offline — ฟังก์ชันเรียกจะตัดสินใจเอง
+   ว่าจะ fallback ไป localStorage หรือไม่ */
+async function prApiGet(action, params){
+  params = params || {};
+  const qs = new URLSearchParams(Object.assign({action}, params)).toString();
+  const res = await fetch(`${PAYROLL_API_URL}?${qs}`);
+  const json = await res.json();
+  if(!json.success) throw new Error(json.error || 'API error');
+  return json.data;
+}
+async function prApiPost(action, body){
+  const res = await fetch(PAYROLL_API_URL, {
+    method:'POST',
+    body: JSON.stringify(Object.assign({action}, body))
+  });
+  const json = await res.json();
+  if(!json.success) throw new Error(json.error || 'API error');
+  return json.data;
+}
+
+/* แปลงข้อมูลจาก Sheet (employees flat list + attendance flat list)
+   กลับเป็นโครงสร้าง prUsers เดิมที่โค้ดทั้งหมดคุ้นเคย (user.records[dateKey]) */
+function prMergeFromSheet(employees, attendanceRows){
+  const byUser = {};
+  (attendanceRows||[]).forEach(r=>{
+    const uid = r.userId;
+    if(!byUser[uid]) byUser[uid] = {};
+    byUser[uid][r.dateKey] = { work:Number(r.work)||0, ot:Number(r.ot)||0, note:r.note||'' };
+  });
+  return (employees||[]).map(e=>({
+    id: Number(e.id),
+    empid: e.empid||'',
+    name: e.name||'',
+    dept: e.dept||'',
+    position: e.position||'',
+    phone: e.phone||'',
+    pin: e.pin||'',
+    color: Number(e.color)||0,
+    photo: e.photo||null,
+    otRate: e.otRate!==undefined && e.otRate!=='' ? Number(e.otRate) : 0,
+    records: byUser[e.id] || byUser[String(e.id)] || {}
+  }));
+}
+
+/* โหลดข้อมูลจาก Google Sheet → sync เข้า prUsers + localStorage (cache)
+   ถ้าโหลดไม่สำเร็จ (ออฟไลน์/deploy ปิด) จะใช้ค่าใน localStorage เดิมต่อไปเฉยๆ */
+async function prSyncFromSheet(){
+  prSyncStatus = 'loading';
+  try{
+    const all = await prApiGet('getAll');
+    prUsers = prMergeFromSheet(all.employees, all.attendance);
+    prNextId = prUsers.length ? Math.max(...prUsers.map(u=>u.id))+1 : 1;
+    prSave(); // อัปเดต cache
+    prSyncStatus = 'online';
+  }catch(err){
+    console.warn('[payroll] โหลดจาก Sheet ไม่สำเร็จ ใช้ข้อมูล cache แทน:', err.message||err);
+    prSyncStatus = 'offline';
+  }
+  prRenderGrid();
+  if(prSelected) prRefreshDetail();
+}
 function prDateKey(y,m,d){ return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
 function prGetRec(user,dk){ return user.records[dk]||{work:0,ot:0,note:''}; }
 
@@ -7112,7 +7179,10 @@ function prCalcTotals(user){
   return {days,ot,otPay,base:0,total:otPay};
 }
 
-function payrollInit(){ prRenderGrid(); }
+function payrollInit(){
+  prRenderGrid(); // render ของ cache ไปก่อนให้เห็นทันที ไม่ต้องรอ network
+  prSyncFromSheet();
+}
 
 /* ── GRID ── */
 function prRenderGrid(){
@@ -7432,6 +7502,13 @@ function prToggleDay(dk){
   if(!prSelected.records[dk]) prSelected.records[dk]={work:0,ot:0,note:''};
   prSelected.records[dk].work=(prSelected.records[dk].work||0)>0?0:1;
   prSave(); prRefreshDetail();
+  prSyncAttendanceToSheet(prSelected.id, dk, prSelected.records[dk]);
+}
+
+/* sync record วันเดียวไป Sheet แบบไม่บล็อก UI — เรียกจากทุกจุดที่แก้ records[dk] */
+function prSyncAttendanceToSheet(userId, dk, record){
+  prApiPost('saveAttendanceRecord', { userId, dateKey: dk, record })
+    .catch(err=>console.warn('[payroll] saveAttendanceRecord ไป Sheet ไม่สำเร็จ:', err.message||err));
 }
 
 /* ── DAY TABLE ── */
@@ -7524,6 +7601,7 @@ function prAdj(dk,field,delta,userId){
   if(!u.records[dk]) u.records[dk]={work:0,ot:0,note:''};
   u.records[dk][field]=Math.max(0,Math.round(((u.records[dk][field]||0)+delta)*10)/10);
   prSave(); prRefreshDetail();
+  prSyncAttendanceToSheet(userId, dk, u.records[dk]);
 }
 
 function prSetNote(dk,val,userId){
@@ -7532,6 +7610,7 @@ function prSetNote(dk,val,userId){
   if(!u.records[dk]) u.records[dk]={work:0,ot:0,note:''};
   u.records[dk].note=val;
   prSave();
+  prSyncAttendanceToSheet(userId, dk, u.records[dk]);
 }
 
 /* ── ADD / EDIT / DELETE ── */
@@ -7632,15 +7711,33 @@ function prSaveUser(){
     showToast('⚠️ PIN นี้ถูกใช้แล้ว กรุณาเลือก PIN อื่น','warn');
     return;
   }
+  let savedEmployee;
   if(prEditingId){
     const u=prUsers.find(u=>u.id===prEditingId);
-    if(u){ u.empid=empid; u.name=name; u.dept=dept; u.position=position; u.phone=phone; u.pin=pin; u.photo=prNewPhoto; u.color=prNewColor; }
+    if(u){ u.empid=empid; u.name=name; u.dept=dept; u.position=position; u.phone=phone; u.pin=pin; u.photo=prNewPhoto; u.color=prNewColor; savedEmployee=u; }
     showToast(`✅ แก้ไข ${name} แล้ว`,'success');
   } else {
-    prUsers.push({id:prNextId++,empid,name,dept,position,phone,pin,photo:prNewPhoto,color:prNewColor,records:{}});
+    const newUser={id:prNextId++,empid,name,dept,position,phone,pin,photo:prNewPhoto,color:prNewColor,otRate:0,records:{}};
+    prUsers.push(newUser);
+    savedEmployee=newUser;
     showToast(`✅ เพิ่ม ${name} แล้ว`,'success');
   }
   prSave(); prCloseAddUser(); prRenderGrid();
+
+  // sync ไป Google Sheet แบบไม่บล็อก UI — ถ้าพังก็แค่เตือนใน console, ข้อมูล local ยังอยู่
+  prApiPost('saveEmployee', { employee: {
+    id: savedEmployee.id, empid: savedEmployee.empid, name: savedEmployee.name,
+    dept: savedEmployee.dept, position: savedEmployee.position, phone: savedEmployee.phone,
+    pin: savedEmployee.pin, color: savedEmployee.color, photo: savedEmployee.photo,
+    otRate: savedEmployee.otRate||0
+  }}).then(saved=>{
+    // ถ้าเป็นการเพิ่มใหม่ sheet จะ gen id ของจริงกลับมา — sync id ให้ตรงกัน
+    if(saved && saved.id!==undefined && savedEmployee.id!==Number(saved.id)){
+      savedEmployee.id = Number(saved.id);
+      prNextId = Math.max(...prUsers.map(u=>u.id))+1;
+      prSave(); prRenderGrid();
+    }
+  }).catch(err=>console.warn('[payroll] saveEmployee ไป Sheet ไม่สำเร็จ:', err.message||err));
 }
 let prDeletePendingId=null;
 function prDeleteUser(id){
@@ -7658,11 +7755,15 @@ function prConfirmDelete(){
   if(!prDeletePendingId) return;
   const u=prUsers.find(u=>u.id===prDeletePendingId);
   if(!u){ prCancelDelete(); return; }
+  const deletedId=prDeletePendingId;
   prUsers=prUsers.filter(x=>x.id!==prDeletePendingId);
   prSave(); prRenderGrid();
   showToast(`🗑️ ลบ ${u.name} แล้ว`,'info');
   prDeletePendingId=null;
   document.getElementById('pr-del-modal').style.display='none';
+
+  prApiPost('deleteEmployee', { id: deletedId })
+    .catch(err=>console.warn('[payroll] deleteEmployee ไป Sheet ไม่สำเร็จ:', err.message||err));
 }
 
 </script>
