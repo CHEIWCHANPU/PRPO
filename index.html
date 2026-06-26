@@ -7157,13 +7157,37 @@ function prMergeFromSheet(employees, attendanceRows){
 }
 
 /* โหลดข้อมูลจาก Google Sheet → sync เข้า prUsers + localStorage (cache)
-   ถ้าโหลดไม่สำเร็จ (ออฟไลน์/deploy ปิด) จะใช้ค่าใน localStorage เดิมต่อไปเฉยๆ */
+   ถ้าโหลดไม่สำเร็จ (ออฟไลน์/deploy ปิด) จะใช้ค่าใน localStorage เดิมต่อไปเฉยๆ
+   FIX: merge Sheet กับ localStorage แทนการทับ — ป้องกันข้อมูลหายเมื่อ Sheet ยังไม่ได้รับ
+        request ล่าสุด (เช่น กด Work แล้ว refresh ก่อน sync เสร็จ) */
 async function prSyncFromSheet(){
   prSyncStatus = 'loading';
   prRenderGrid(); // โชว์สถานะกำลังโหลดทันที (เผื่อยังไม่มี cache)
   try{
     const all = await prApiGet('getAll');
-    prUsers = prMergeFromSheet(all.employees, all.attendance);
+    const fromSheet = prMergeFromSheet(all.employees, all.attendance);
+
+    // merge: สำหรับแต่ละ user+dateKey เอาค่า max ระหว่าง Sheet กับ localStorage cache
+    // ป้องกัน Sheet "เก่ากว่า" cache (เกิดเมื่อ request ยังไม่ถึง Sheet ตอน refresh)
+    const cacheUsers = JSON.parse(localStorage.getItem('prpo_payroll_users') || '[]');
+    const cacheByUid = {};
+    cacheUsers.forEach(u => { cacheByUid[String(u.id)] = u.records || {}; });
+
+    fromSheet.forEach(u => {
+      const cacheRecs = cacheByUid[String(u.id)] || {};
+      // เอา dateKey ที่มีใน cache แต่ยังไม่อยู่ใน Sheet (หรือน้อยกว่า) มา merge ด้วย
+      Object.entries(cacheRecs).forEach(([dk, cr]) => {
+        if (!u.records[dk]) {
+          u.records[dk] = cr;
+        } else {
+          u.records[dk].work = Math.max(u.records[dk].work || 0, cr.work || 0);
+          u.records[dk].ot   = Math.max(u.records[dk].ot   || 0, cr.ot   || 0);
+          if (!u.records[dk].note && cr.note) u.records[dk].note = cr.note;
+        }
+      });
+    });
+
+    prUsers = fromSheet;
     prNextId = prUsers.length ? Math.max(...prUsers.map(u=>u.id))+1 : 1;
     prSave(); // อัปเดต cache
     prSyncStatus = 'online';
@@ -7575,7 +7599,7 @@ const _prSyncPending = {};
 function prSyncAttendanceToSheet(userId, dk, record){
   const key = String(userId) + '|' + dk;
   if(_prSyncTimers[key]) clearTimeout(_prSyncTimers[key]);
-  _prSyncTimers[key] = setTimeout(() => {
+  _prSyncTimers[key] = setTimeout(() => { // FIX: ลดจาก 800ms → 300ms ป้องกันข้อมูลหายตอน refresh เร็ว
     delete _prSyncTimers[key];
     const u = prUsers.find(u => u.id === userId);
     const latest = (u && u.records && u.records[dk])
