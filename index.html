@@ -7073,13 +7073,13 @@ function prGetRec(user,dk){ return user.records[dk]||{work:0,ot:0,note:''}; }
 
 function prGetCutoffRange(year, month) {
   // cutoffDay = วันที่ตัดรอบ (เช่น 21)
-  // เงินเดือน "กรกฎาคม" = รอบ 22 มิ.ย. – 21 ก.ค.
-  // start = cutoffDay+1 ของเดือนก่อนหน้า, end = cutoffDay ของเดือนนี้
+  // แท็บ มิ.ย. = รอบ 22/6 – 21/7
+  // start = cutoffDay+1 ของเดือนนี้, end = cutoffDay ของเดือนถัดไป
   const cutoffDay = parseInt(document.getElementById('pr-cutoff-day')?.value) || 0;
   if (!cutoffDay) return null;
 
-  const startDate = new Date(year, month - 1, cutoffDay + 1); // เช่น 22 มิ.ย. (เดือนก่อน)
-  const endDate   = new Date(year, month,     cutoffDay);     // เช่น 21 ก.ค. (เดือนนี้)
+  const startDate = new Date(year, month,     cutoffDay + 1); // เช่น 22 มิ.ย.
+  const endDate   = new Date(year, month + 1, cutoffDay);     // เช่น 21 ก.ค.
 
   return { startDate, endDate };
 }
@@ -7380,65 +7380,76 @@ function prToggleDay(dk){
 function prRenderDayTable(user){
   const tbody=document.getElementById('pr-day-tbody');
   if(!tbody) return;
-  const daysInMo=new Date(prCalYear,prCalMonth+1,0).getDate();
   const today=new Date(); const todayKey=prDateKey(today.getFullYear(),today.getMonth(),today.getDate());
   const range=prGetCutoffRange(prCalYear,prCalMonth);
   let rows='';
-  for(let d=1;d<=daysInMo;d++){
-    const dk=prDateKey(prCalYear,prCalMonth,d);
+
+  // ถ้ามี range → วนตามวันในรอบจริง (ข้ามเดือนได้)
+  // ถ้าไม่มี range → วนแค่วันในเดือนนั้น
+  let iterStart, iterEnd;
+  if(range){
+    iterStart = new Date(range.startDate);
+    iterEnd   = new Date(range.endDate);
+  } else {
+    iterStart = new Date(prCalYear, prCalMonth, 1);
+    iterEnd   = new Date(prCalYear, prCalMonth+1, 0);
+  }
+
+  // แทรก header แบ่งเดือนถ้าข้ามเดือน
+  let lastMonth = -1;
+
+  for(let cur=new Date(iterStart); cur<=iterEnd; cur.setDate(cur.getDate()+1)){
+    const y=cur.getFullYear(), m=cur.getMonth(), d=cur.getDate();
+    const dk=prDateKey(y,m,d);
     const rec=prGetRec(user,dk);
-    const dow=new Date(prCalYear,prCalMonth,d).getDay();
+    const dow=cur.getDay();
     const isWknd=dow===0;
     const isToday=dk===todayKey;
     const worked=(rec.work||0)>0;
     const hasOT=(rec.ot||0)>0;
-    const inRange=prDateInRange(dk,range);
-    const outOfRange=range&&!inRange;
 
-    // เส้นคั่นรอบ: วันแรกของรอบ
-    let rangeMarker='';
-    if(range){
-      const dateObj=new Date(prCalYear,prCalMonth,d);
-      if(dateObj.getTime()===range.startDate.getTime())
-        rangeMarker=`<tr><td colspan="5" style="padding:2px 6px;background:rgba(245,158,11,0.12);border-bottom:1px solid rgba(245,158,11,0.4);font-size:0.65rem;color:#f59e0b;text-align:center;font-weight:600">✂️ เริ่มรอบตัด</td></tr>`;
-      if(dateObj.getTime()===range.endDate.getTime()+86400000)
-        rangeMarker=`<tr><td colspan="5" style="padding:2px 6px;background:rgba(245,158,11,0.08);border-top:1px solid rgba(245,158,11,0.4);font-size:0.65rem;color:#f59e0b;text-align:center;font-weight:600">✂️ สิ้นสุดรอบตัด</td></tr>`;
+    // header แบ่งเดือน (แสดงเมื่อวนข้ามเดือน)
+    if(m !== lastMonth){
+      if(lastMonth !== -1){
+        rows+=`<tr><td colspan="5" style="padding:3px 6px;background:rgba(99,102,241,0.1);border-top:1px solid rgba(99,102,241,0.3);border-bottom:1px solid rgba(99,102,241,0.3);font-size:0.65rem;color:#818cf8;text-align:center;font-weight:600">📅 ${PR_MONTHS_TH[m]} ${y+543}</td></tr>`;
+      }
+      lastMonth = m;
     }
 
     let rowBg='';
-    if(outOfRange) rowBg='background:rgba(255,255,255,0.015)';
-    else if(isWknd) rowBg='background:rgba(239,68,68,0.04)';
+    if(isWknd) rowBg='background:rgba(239,68,68,0.04)';
     else if(worked&&hasOT) rowBg='background:rgba(245,158,11,0.06)';
     else if(worked) rowBg='background:rgba(0,229,160,0.04)';
 
-    const opacity=outOfRange?0.35:1;
-    const dayColor=outOfRange?'var(--muted)':isWknd?'#ef4444':isToday?'var(--accent)':'var(--text)';
-    const dayNameColor=outOfRange?'rgba(120,120,120,0.5)':isWknd?'#ef4444':'var(--muted)';
-    const adjBtn=(field,delta)=>`<button style="width:22px;height:22px;border-radius:5px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:0.95rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:${opacity}" onclick="prAdj('${dk}','${field}',${delta},${user.id})">${delta>0?'+':'−'}</button>`;
+    const dayColor=isWknd?'#ef4444':isToday?'var(--accent)':'var(--text)';
+    const dayNameColor=isWknd?'#ef4444':'var(--muted)';
+    const adjBtn=(field,delta)=>`<button style="width:22px;height:22px;border-radius:5px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:0.95rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0" onclick="prAdj('${dk}','${field}',${delta},${user.id})">${delta>0?'+':'−'}</button>`;
 
-    // เส้นขอบซ้ายแสดงช่วงรอบ
-    const leftBorder=(!outOfRange&&range)?'border-left:3px solid rgba(245,158,11,0.4)':'border-left:3px solid transparent';
+    const leftBorder=range?'border-left:3px solid rgba(245,158,11,0.4)':'border-left:3px solid transparent';
 
-    rows+=rangeMarker+`<tr style="${rowBg};${leftBorder};border-bottom:1px solid var(--border);opacity:${opacity}">
-      <td style="padding:5px 6px;font-weight:${isToday?'700':'500'};color:${dayColor};font-size:0.8rem">${d}</td>
+    // แสดงวันที่ พร้อม ชื่อเดือนย่อถ้าข้ามเดือน
+    const dayLabel = (range && m !== prCalMonth) ? `<span style="font-size:0.65rem;color:var(--muted)">${PR_MONTHS_TH[m].slice(0,3)}</span><br>${d}` : d;
+
+    rows+=`<tr style="${rowBg};${leftBorder};border-bottom:1px solid var(--border)">
+      <td style="padding:5px 6px;font-weight:${isToday?'700':'500'};color:${dayColor};font-size:0.8rem;line-height:1.3;text-align:center">${dayLabel}</td>
       <td style="padding:5px 6px;font-size:0.72rem;color:${dayNameColor}">${PR_DAYS_FULL[dow]}</td>
       <td style="padding:4px 6px">
         <div style="display:flex;align-items:center;gap:4px;justify-content:center">
           ${adjBtn('work',-1)}
-          <span style="min-width:22px;text-align:center;font-weight:700;font-size:0.82rem;color:${worked&&!outOfRange?'var(--accent)':'var(--muted)'}">${rec.work||0}</span>
+          <span style="min-width:22px;text-align:center;font-weight:700;font-size:0.82rem;color:${worked?'var(--accent)':'var(--muted)'}">${rec.work||0}</span>
           ${adjBtn('work',1)}
         </div>
       </td>
       <td style="padding:4px 6px">
         <div style="display:flex;align-items:center;gap:4px;justify-content:center">
           ${adjBtn('ot',-1)}
-          <span style="min-width:22px;text-align:center;font-weight:700;font-size:0.82rem;color:${hasOT&&!outOfRange?'#f59e0b':'var(--muted)'}">${rec.ot||0}</span>
+          <span style="min-width:22px;text-align:center;font-weight:700;font-size:0.82rem;color:${hasOT?'#f59e0b':'var(--muted)'}">${rec.ot||0}</span>
           ${adjBtn('ot',1)}
         </div>
       </td>
       <td style="padding:4px 8px">
         <input type="text" value="${(rec.note||'').replace(/"/g,'&quot;')}"
-          placeholder="${outOfRange?'(นอกรอบ)':'หมายเหตุ...'}"
+          placeholder="หมายเหตุ..."
           onchange="prSetNote('${dk}',this.value,${user.id})"
           style="width:100%;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-size:0.72rem;padding:2px 4px;outline:none;font-family:inherit"
           onfocus="this.style.borderBottomColor='var(--accent)'"
