@@ -7545,9 +7545,21 @@ function prToggleDay(dk){
 }
 
 /* sync record วันเดียวไป Sheet แบบไม่บล็อก UI — เรียกจากทุกจุดที่แก้ records[dk] */
+/* debounce 600ms per userId+dateKey: รวม work/OT/note ที่กดรัว ๆ ให้เป็น request เดียว
+   ป้องกัน race condition ที่ทำให้ Sheet เพิ่มแถวใหม่แทนที่จะอัปเดตแถวเดิม */
+const _prSyncTimers = {};
 function prSyncAttendanceToSheet(userId, dk, record){
-  prApiPost('saveAttendanceRecord', { userId, dateKey: dk, record })
-    .catch(err=>console.warn('[payroll] saveAttendanceRecord ไป Sheet ไม่สำเร็จ:', err.message||err));
+  const key = String(userId) + '|' + dk;
+  if(_prSyncTimers[key]) clearTimeout(_prSyncTimers[key]);
+  // snapshot ค่าล่าสุด ณ ขณะที่ debounce หมดเวลา (ไม่ใช่ค่าตอนที่กดปุ่ม)
+  _prSyncTimers[key] = setTimeout(() => {
+    delete _prSyncTimers[key];
+    // ดึง record ล่าสุดจาก prUsers แทนที่จะใช้ closure เก่า
+    const u = prUsers.find(u => u.id === userId);
+    const latestRecord = (u && u.records && u.records[dk]) ? u.records[dk] : record;
+    prApiPost('saveAttendanceRecord', { userId, dateKey: dk, record: latestRecord })
+      .catch(err => console.warn('[payroll] saveAttendanceRecord ไป Sheet ไม่สำเร็จ:', err.message||err));
+  }, 600);
 }
 
 /* ── DAY TABLE ── */
