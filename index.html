@@ -7544,22 +7544,54 @@ function prToggleDay(dk){
   prSyncAttendanceToSheet(prSelected.id, dk, prSelected.records[dk]);
 }
 
-/* sync record วันเดียวไป Sheet แบบไม่บล็อก UI — เรียกจากทุกจุดที่แก้ records[dk] */
-/* debounce 600ms per userId+dateKey: รวม work/OT/note ที่กดรัว ๆ ให้เป็น request เดียว
-   ป้องกัน race condition ที่ทำให้ Sheet เพิ่มแถวใหม่แทนที่จะอัปเดตแถวเดิม */
-const _prSyncTimers = {};
+/* ─────────────────────────────────────────────────────────────────────────────
+   prSyncAttendanceToSheet  —  debounce 800ms + per-key serial queue
+   ปัญหาเดิม: กด Work +1 แล้วกด OT +1 ต่อทันที → ยิง 2 request พร้อมกัน
+   request ที่ 2 อ่าน sheet ก่อนที่ request แรกจะเขียนเสร็จ → เห็นว่า "ไม่มีแถวเดิม"
+   → เขียนแถวใหม่ซ้อน ทำให้ได้ 2 แถวแทน 1 แถว
+   แก้โดย:
+   1. debounce 800ms  — รวม Work/OT/note ที่เปลี่ยนรัวๆ ให้เป็น API call เดียว
+   2. serial queue per key — ถ้ายังมี request อยู่ก็รอให้เสร็จก่อน ไม่ส่งซ้อน
+   ────────────────────────────────────────────────────────────────────────────*/
+const _prSyncTimers  = {};   // debounce timer per "userId|dk"
+const _prSyncRunning = {};   // true ถ้า request กำลัง in-flight
+const _prSyncPending = {};   // pending call ที่รอ in-flight เสร็จ
+
 function prSyncAttendanceToSheet(userId, dk, record){
   const key = String(userId) + '|' + dk;
+
+  // รีเซ็ต debounce timer ทุกครั้งที่มีการเปลี่ยนค่า
   if(_prSyncTimers[key]) clearTimeout(_prSyncTimers[key]);
-  // snapshot ค่าล่าสุด ณ ขณะที่ debounce หมดเวลา (ไม่ใช่ค่าตอนที่กดปุ่ม)
+
   _prSyncTimers[key] = setTimeout(() => {
     delete _prSyncTimers[key];
-    // ดึง record ล่าสุดจาก prUsers แทนที่จะใช้ closure เก่า
+
+    // ดึงค่าล่าสุดจาก prUsers (ไม่ใช้ closure เก่าที่อาจ stale)
     const u = prUsers.find(u => u.id === userId);
-    const latestRecord = (u && u.records && u.records[dk]) ? u.records[dk] : record;
-    prApiPost('saveAttendanceRecord', { userId, dateKey: dk, record: latestRecord })
-      .catch(err => console.warn('[payroll] saveAttendanceRecord ไป Sheet ไม่สำเร็จ:', err.message||err));
-  }, 600);
+    const latest = (u && u.records && u.records[dk])
+      ? Object.assign({}, u.records[dk])
+      : Object.assign({}, record);
+
+    if(_prSyncRunning[key]){
+      // มี request กำลังวิ่งอยู่ → เก็บไว้ใน pending แทน (จะยิงต่อหลัง request เสร็จ)
+      _prSyncPending[key] = latest;
+      return;
+    }
+
+    _prSyncRunning[key] = true;
+    prApiPost('saveAttendanceRecord', { userId, dateKey: dk, record: latest })
+      .catch(err => console.warn('[payroll] saveAttendanceRecord ไม่สำเร็จ:', err.message||err))
+      .finally(() => {
+        _prSyncRunning[key] = false;
+        // ถ้ามี pending ค้างอยู่ → ยิงต่อทันที
+        if(_prSyncPending[key]){
+          const next = _prSyncPending[key];
+          delete _prSyncPending[key];
+          prApiPost('saveAttendanceRecord', { userId, dateKey: dk, record: next })
+            .catch(err => console.warn('[payroll] saveAttendanceRecord (retry) ไม่สำเร็จ:', err.message||err));
+        }
+      });
+  }, 800);
 }
 
 /* ── DAY TABLE ── */
