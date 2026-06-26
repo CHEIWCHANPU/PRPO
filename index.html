@@ -7320,14 +7320,31 @@ function prCancelPin(){
   document.getElementById('pr-pin-modal').style.display='none';
 }
 
-function prVerifyPin(){
+async function prVerifyPin(){
   if(!prPinPendingId) return;
   const u=prUsers.find(u=>u.id===prPinPendingId);
   if(!u) return;
   const entered=(document.getElementById('pr-pin-input').value||'').trim();
   const errEl=document.getElementById('pr-pin-err');
-  const correctPin=u.pin||'';
-  if(!entered || entered!==correctPin){
+  const verifyBtn=document.querySelector('#pr-pin-modal .btn-primary');
+  if(!entered){
+    errEl.textContent='❌ กรุณากรอก PIN';
+    return;
+  }
+  // ตรวจ PIN กับฝั่งเซิร์ฟเวอร์เสมอ (อย่าเทียบกับ u.pin ในเครื่อง — ฟิลด์นี้ถูกลบออกจากข้อมูล
+  // ที่ดึงมาจาก Sheet ทุกครั้งเพื่อความปลอดภัย ทำให้เทียบในเครื่องเฟลหลัง sync/refresh)
+  let verified=false;
+  if(verifyBtn){ verifyBtn.disabled=true; verifyBtn.textContent='กำลังตรวจสอบ...'; }
+  try{
+    const result=await prApiPost('verifyPin', { userId:u.id, pin:entered });
+    verified=!!(result && result.verified);
+  }catch(err){
+    errEl.textContent='⚠️ ตรวจสอบ PIN ไม่สำเร็จ (เช็คอินเทอร์เน็ต) กรุณาลองใหม่';
+    if(verifyBtn){ verifyBtn.disabled=false; verifyBtn.textContent='เข้าสู่ระบบ'; }
+    return;
+  }
+  if(verifyBtn){ verifyBtn.disabled=false; verifyBtn.textContent='เข้าสู่ระบบ'; }
+  if(!verified){
     prPinAttempts++;
     errEl.textContent = prPinAttempts>=3 ? '❌ PIN ไม่ถูกต้องหลายครั้ง กรุณาตรวจสอบใหม่' : '❌ PIN ไม่ถูกต้อง กรุณาลองอีกครั้ง';
     const input=document.getElementById('pr-pin-input');
@@ -7351,7 +7368,11 @@ function prVerifyPin(){
     document.getElementById('pr-f-dept').value=u.dept||'';
     document.getElementById('pr-f-pos').value=u.position||'';
     document.getElementById('pr-f-phone').value=u.phone||'';
-    document.getElementById('pr-f-pin').value=u.pin||'';
+    // เว้น PIN ว่างไว้เสมอตอนแก้ไข — ค่า u.pin ในเครื่องไม่น่าเชื่อถือ (ถูกลบออกจากข้อมูล
+    // ที่ sync มาจาก Sheet) เว้นว่างไว้ = ไม่เปลี่ยน PIN เดิม, กรอกใหม่ = เปลี่ยน PIN
+    const pinField=document.getElementById('pr-f-pin');
+    pinField.value='';
+    pinField.placeholder='เว้นว่างไว้ = ไม่เปลี่ยน PIN เดิม';
     document.getElementById('pr-f-pin-err').style.display='none';
     document.getElementById('pr-f-photo-input').value='';
     prNewColor=u.color||0;
@@ -7523,44 +7544,10 @@ function prToggleDay(dk){
   prSyncAttendanceToSheet(prSelected.id, dk, prSelected.records[dk]);
 }
 
-/* ── Write Queue ── v1.1 FIX ──────────────────────────────────────────
-   กัน race condition: ถ้ากด toggle เร็วๆ หลายครั้ง
-   write queue จะ flush ทีละ 1 request เรียงลำดับ ไม่มีการแข่งกัน
-   ────────────────────────────────────────────────────────────────── */
-const _prWriteQueue   = []; // [{userId, dk, record}, ...]
-const _prPendingKeys  = {}; // "userId|dk" -> true  (มีใน queue แล้ว ยังไม่ flush)
-let   _prFlushing     = false;
-
-async function _prFlushQueue(){
-  if(_prFlushing || !_prWriteQueue.length) return;
-  _prFlushing = true;
-  while(_prWriteQueue.length){
-    const job = _prWriteQueue.shift();
-    const key = job.userId + '|' + job.dk;
-    delete _prPendingKeys[key];
-    try{
-      await prApiPost('saveAttendanceRecord', { userId: job.userId, dateKey: job.dk, record: job.record });
-    }catch(err){
-      console.warn('[payroll] saveAttendanceRecord failed:', err.message||err);
-    }
-  }
-  _prFlushing = false;
-}
-
-/* sync record วันเดียวไป Sheet แบบไม่บล็อก UI
-   ถ้า key เดียวกันถูก queue ไว้แล้ว → อัปเดต record ใน slot เดิม (ไม่เพิ่ม job ใหม่)
-   ป้องกัน Sheet ได้รับ request ซ้ำสำหรับวันเดียวกัน */
+/* sync record วันเดียวไป Sheet แบบไม่บล็อก UI — เรียกจากทุกจุดที่แก้ records[dk] */
 function prSyncAttendanceToSheet(userId, dk, record){
-  const key = userId + '|' + dk;
-  if(_prPendingKeys[key]){
-    // อัปเดต record ใน slot ที่มีอยู่แล้ว (เขียนค่าใหม่ล่าสุด ไม่เพิ่ม job ซ้ำ)
-    const job = _prWriteQueue.find(j => j.userId + '|' + j.dk === key);
-    if(job) job.record = Object.assign({}, record);
-  } else {
-    _prPendingKeys[key] = true;
-    _prWriteQueue.push({ userId, dk, record: Object.assign({}, record) });
-  }
-  _prFlushQueue();
+  prApiPost('saveAttendanceRecord', { userId, dateKey: dk, record })
+    .catch(err=>console.warn('[payroll] saveAttendanceRecord ไป Sheet ไม่สำเร็จ:', err.message||err));
 }
 
 /* ── DAY TABLE ── */
@@ -7675,7 +7662,9 @@ function prOpenAddUser(){
   document.getElementById('pr-f-dept').value='';
   document.getElementById('pr-f-pos').value='';
   document.getElementById('pr-f-phone').value='';
-  document.getElementById('pr-f-pin').value='';
+  const pinField=document.getElementById('pr-f-pin');
+  pinField.value='';
+  pinField.placeholder='••••';
   document.getElementById('pr-f-pin-err').style.display='none';
   document.getElementById('pr-f-photo-input').value='';
   prNewColor=0;
@@ -7750,39 +7739,55 @@ function prSaveUser(){
   const pinErr=document.getElementById('pr-f-pin-err');
   pinErr.style.display='none';
   if(!name){ showToast('⚠️ กรุณาใส่ชื่อพนักงาน','warn'); return; }
-  if(!/^\d{4}$/.test(pin)){
+  // ตอนแก้ไข: เว้น PIN ว่างไว้ = ไม่เปลี่ยน PIN เดิม (ไม่ต้องครบ 4 หลัก)
+  // ตอนเพิ่มใหม่ หรือถ้ากรอกมาเพื่อเปลี่ยน PIN: ต้องเป็นเลข 4 หลัก
+  const keepExistingPin = !!prEditingId && pin==='';
+  if(!keepExistingPin && !/^\d{4}$/.test(pin)){
     pinErr.textContent='กรุณาใส่ PIN ให้ครบ 4 หลัก (ตัวเลขเท่านั้น)';
     pinErr.style.display='block';
     showToast('⚠️ กรุณาใส่ PIN 4 หลัก','warn');
     return;
   }
-  const dupUser=prUsers.find(u=>u.pin===pin && u.id!==prEditingId);
-  if(dupUser){
-    pinErr.textContent=`PIN นี้ถูกใช้แล้วโดย ${dupUser.name}`;
-    pinErr.style.display='block';
-    showToast('⚠️ PIN นี้ถูกใช้แล้ว กรุณาเลือก PIN อื่น','warn');
-    return;
+  // เช็คซ้ำได้แค่กับ PIN ที่กรอกใหม่ในรอบนี้เท่านั้น (ค่า u.pin ในเครื่องของคนอื่นอาจไม่อัปเดต
+  // เพราะถูกลบออกตอน sync — ฉะนั้นจุดนี้เช็คได้แบบ best-effort เท่านั้น ไม่ใช่การันตี 100%)
+  if(!keepExistingPin){
+    const dupUser=prUsers.find(u=>u.pin===pin && u.id!==prEditingId);
+    if(dupUser){
+      pinErr.textContent=`PIN นี้ถูกใช้แล้วโดย ${dupUser.name}`;
+      pinErr.style.display='block';
+      showToast('⚠️ PIN นี้ถูกใช้แล้ว กรุณาเลือก PIN อื่น','warn');
+      return;
+    }
   }
   let savedEmployee;
+  let sendPin; // ค่าที่จะส่งไป backend: undefined = ให้ backend คงค่าเดิมไว้
   if(prEditingId){
     const u=prUsers.find(u=>u.id===prEditingId);
-    if(u){ u.empid=empid; u.name=name; u.dept=dept; u.position=position; u.phone=phone; u.pin=pin; u.photo=prNewPhoto; u.color=prNewColor; savedEmployee=u; }
+    if(u){
+      u.empid=empid; u.name=name; u.dept=dept; u.position=position; u.phone=phone;
+      if(!keepExistingPin) u.pin=pin; // ไม่แตะ u.pin ถ้าผู้ใช้เว้นว่างไว้
+      u.photo=prNewPhoto; u.color=prNewColor; savedEmployee=u;
+    }
+    sendPin = keepExistingPin ? undefined : pin;
     showToast(`✅ แก้ไข ${name} แล้ว`,'success');
   } else {
     const newUser={id:prNextId++,empid,name,dept,position,phone,pin,photo:prNewPhoto,color:prNewColor,otRate:0,records:{}};
     prUsers.push(newUser);
     savedEmployee=newUser;
+    sendPin = pin;
     showToast(`✅ เพิ่ม ${name} แล้ว`,'success');
   }
   prSave(); prCloseAddUser(); prRenderGrid();
 
   // sync ไป Google Sheet แบบไม่บล็อก UI — ถ้าพังก็แค่เตือนใน console, ข้อมูล local ยังอยู่
-  prApiPost('saveEmployee', { employee: {
+  const employeePayload = {
     id: savedEmployee.id, empid: savedEmployee.empid, name: savedEmployee.name,
     dept: savedEmployee.dept, position: savedEmployee.position, phone: savedEmployee.phone,
-    pin: savedEmployee.pin, color: savedEmployee.color, photo: savedEmployee.photo,
+    color: savedEmployee.color, photo: savedEmployee.photo,
     otRate: savedEmployee.otRate||0
-  }}).then(saved=>{
+  };
+  if(sendPin!==undefined) employeePayload.pin = sendPin; // omit key entirely = backend keeps existing hash
+  prApiPost('saveEmployee', { employee: employeePayload }).then(saved=>{
     // ถ้าเป็นการเพิ่มใหม่ sheet จะ gen id ของจริงกลับมา — sync id ให้ตรงกัน
     if(saved && saved.id!==undefined && savedEmployee.id!==Number(saved.id)){
       savedEmployee.id = Number(saved.id);
@@ -7840,19 +7845,16 @@ function prConfirmResetPeriod(){
   const range = prGetCutoffRange(prCalYear, prCalMonth);
   const userId = prSelected.id;
 
+  // เก็บ dateKey ที่อยู่ในรอบนี้และมีข้อมูลอยู่จริง (ไม่ลบวันที่ไม่มีข้อมูลอยู่แล้ว ไม่มีประโยชน์)
   const datesToReset = Object.keys(prSelected.records).filter(dk => prDateInRange(dk, range));
+
   datesToReset.forEach(dk => { delete prSelected.records[dk]; });
   prSave(); prRefreshDetail();
   document.getElementById('pr-reset-modal').style.display='none';
   showToast(`🔄 รีเซ็ตข้อมูล ${datesToReset.length} วันแล้ว`,'info');
 
-  // ── v1.1 FIX: ใช้ bulkSaveAttendance แทน forEach เพื่อลด API call ──
-  // ส่ง work=0,ot=0 ให้ Apps Script ลบแถวออกให้เองใน Sheet
-  if(datesToReset.length){
-    const records = datesToReset.map(dk => ({ dateKey: dk, work: 0, ot: 0, note: '' }));
-    prApiPost('bulkSaveAttendance', { userId, records })
-      .catch(err => console.warn('[payroll] bulkSaveAttendance failed:', err.message||err));
-  }
+  // sync ไป Sheet ทีละวัน (เขียนเป็น work=0,ot=0 ซึ่งฝั่ง Apps Script จะลบแถวออกให้เอง)
+  datesToReset.forEach(dk => prSyncAttendanceToSheet(userId, dk, {work:0, ot:0, note:''}));
 }
 
 </script>
