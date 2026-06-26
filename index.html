@@ -7160,6 +7160,7 @@ function prMergeFromSheet(employees, attendanceRows){
    ถ้าโหลดไม่สำเร็จ (ออฟไลน์/deploy ปิด) จะใช้ค่าใน localStorage เดิมต่อไปเฉยๆ */
 async function prSyncFromSheet(){
   prSyncStatus = 'loading';
+  prRenderGrid(); // โชว์สถานะกำลังโหลดทันที (เผื่อยังไม่มี cache)
   try{
     const all = await prApiGet('getAll');
     prUsers = prMergeFromSheet(all.employees, all.attendance);
@@ -7218,8 +7219,16 @@ function prRenderGrid(){
   const grid=document.getElementById('pr-grid');
   if(!grid) return;
   const countEl=document.getElementById('pr-emp-count');
-  if(countEl) countEl.textContent=prUsers.length+' คน';
   if(!prUsers.length){
+    if(prSyncStatus === 'loading'){
+      if(countEl) countEl.textContent='กำลังโหลด...';
+      grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:4rem 1rem;color:var(--muted)">
+        <div class="spinner" style="width:28px;height:28px;border-width:3px;margin:0 auto 1rem"></div>
+        <div style="font-size:0.85rem;font-weight:600;color:var(--text)">กำลังโหลดข้อมูลพนักงาน...</div>
+      </div>`;
+      return;
+    }
+    if(countEl) countEl.textContent='0 คน';
     grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:4rem 1rem;color:var(--muted)">
       <div style="width:64px;height:64px;border-radius:50%;background:var(--surface2);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin:0 auto 1rem">&#128100;</div>
       <div style="font-size:0.88rem;font-weight:600;color:var(--text);margin-bottom:0.3rem">ยังไม่มีพนักงาน</div>
@@ -7227,6 +7236,8 @@ function prRenderGrid(){
     </div>`;
     return;
   }
+  const refreshTag = prSyncStatus === 'loading' ? ` <span class="spinner" style="width:11px;height:11px;border-width:2px;vertical-align:-1px;margin-left:0.3rem"></span>` : '';
+  if(countEl) countEl.innerHTML = prUsers.length+' คน'+refreshTag;
   grid.innerHTML = prUsers.map(u=>{
     const col=PR_COLORS[u.color||0];
     const initials=u.name.trim().split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase()||u.name.slice(0,2).toUpperCase();
