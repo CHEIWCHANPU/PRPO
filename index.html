@@ -7523,10 +7523,44 @@ function prToggleDay(dk){
   prSyncAttendanceToSheet(prSelected.id, dk, prSelected.records[dk]);
 }
 
-/* sync record วันเดียวไป Sheet แบบไม่บล็อก UI — เรียกจากทุกจุดที่แก้ records[dk] */
+/* ── Write Queue ── v1.1 FIX ──────────────────────────────────────────
+   กัน race condition: ถ้ากด toggle เร็วๆ หลายครั้ง
+   write queue จะ flush ทีละ 1 request เรียงลำดับ ไม่มีการแข่งกัน
+   ────────────────────────────────────────────────────────────────── */
+const _prWriteQueue   = []; // [{userId, dk, record}, ...]
+const _prPendingKeys  = {}; // "userId|dk" -> true  (มีใน queue แล้ว ยังไม่ flush)
+let   _prFlushing     = false;
+
+async function _prFlushQueue(){
+  if(_prFlushing || !_prWriteQueue.length) return;
+  _prFlushing = true;
+  while(_prWriteQueue.length){
+    const job = _prWriteQueue.shift();
+    const key = job.userId + '|' + job.dk;
+    delete _prPendingKeys[key];
+    try{
+      await prApiPost('saveAttendanceRecord', { userId: job.userId, dateKey: job.dk, record: job.record });
+    }catch(err){
+      console.warn('[payroll] saveAttendanceRecord failed:', err.message||err);
+    }
+  }
+  _prFlushing = false;
+}
+
+/* sync record วันเดียวไป Sheet แบบไม่บล็อก UI
+   ถ้า key เดียวกันถูก queue ไว้แล้ว → อัปเดต record ใน slot เดิม (ไม่เพิ่ม job ใหม่)
+   ป้องกัน Sheet ได้รับ request ซ้ำสำหรับวันเดียวกัน */
 function prSyncAttendanceToSheet(userId, dk, record){
-  prApiPost('saveAttendanceRecord', { userId, dateKey: dk, record })
-    .catch(err=>console.warn('[payroll] saveAttendanceRecord ไป Sheet ไม่สำเร็จ:', err.message||err));
+  const key = userId + '|' + dk;
+  if(_prPendingKeys[key]){
+    // อัปเดต record ใน slot ที่มีอยู่แล้ว (เขียนค่าใหม่ล่าสุด ไม่เพิ่ม job ซ้ำ)
+    const job = _prWriteQueue.find(j => j.userId + '|' + j.dk === key);
+    if(job) job.record = Object.assign({}, record);
+  } else {
+    _prPendingKeys[key] = true;
+    _prWriteQueue.push({ userId, dk, record: Object.assign({}, record) });
+  }
+  _prFlushQueue();
 }
 
 /* ── DAY TABLE ── */
@@ -7806,16 +7840,19 @@ function prConfirmResetPeriod(){
   const range = prGetCutoffRange(prCalYear, prCalMonth);
   const userId = prSelected.id;
 
-  // เก็บ dateKey ที่อยู่ในรอบนี้และมีข้อมูลอยู่จริง (ไม่ลบวันที่ไม่มีข้อมูลอยู่แล้ว ไม่มีประโยชน์)
   const datesToReset = Object.keys(prSelected.records).filter(dk => prDateInRange(dk, range));
-
   datesToReset.forEach(dk => { delete prSelected.records[dk]; });
   prSave(); prRefreshDetail();
   document.getElementById('pr-reset-modal').style.display='none';
   showToast(`🔄 รีเซ็ตข้อมูล ${datesToReset.length} วันแล้ว`,'info');
 
-  // sync ไป Sheet ทีละวัน (เขียนเป็น work=0,ot=0 ซึ่งฝั่ง Apps Script จะลบแถวออกให้เอง)
-  datesToReset.forEach(dk => prSyncAttendanceToSheet(userId, dk, {work:0, ot:0, note:''}));
+  // ── v1.1 FIX: ใช้ bulkSaveAttendance แทน forEach เพื่อลด API call ──
+  // ส่ง work=0,ot=0 ให้ Apps Script ลบแถวออกให้เองใน Sheet
+  if(datesToReset.length){
+    const records = datesToReset.map(dk => ({ dateKey: dk, work: 0, ot: 0, note: '' }));
+    prApiPost('bulkSaveAttendance', { userId, records })
+      .catch(err => console.warn('[payroll] bulkSaveAttendance failed:', err.message||err));
+  }
 }
 
 </script>
