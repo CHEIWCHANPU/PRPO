@@ -7122,13 +7122,26 @@ async function prApiPost(action, body){
 }
 
 /* แปลงข้อมูลจาก Sheet (employees flat list + attendance flat list)
-   กลับเป็นโครงสร้าง prUsers เดิมที่โค้ดทั้งหมดคุ้นเคย (user.records[dateKey]) */
+   กลับเป็นโครงสร้าง prUsers เดิมที่โค้ดทั้งหมดคุ้นเคย (user.records[dateKey])
+   ถ้ามีแถวซ้ำของ userId+dateKey เดียวกัน (เกิดจาก race condition เดิม)
+   จะ merge โดยเอาค่า work/ot สูงสุด แทนที่จะทับค่าเดิม */
 function prMergeFromSheet(employees, attendanceRows){
   const byUser = {};
   (attendanceRows||[]).forEach(r=>{
-    const uid = r.userId;
+    const uid  = String(r.userId);
+    const dk   = r.dateKey;
+    const work = Number(r.work)||0;
+    const ot   = Number(r.ot)||0;
+    const note = r.note||'';
     if(!byUser[uid]) byUser[uid] = {};
-    byUser[uid][r.dateKey] = { work:Number(r.work)||0, ot:Number(r.ot)||0, note:r.note||'' };
+    if(!byUser[uid][dk]){
+      byUser[uid][dk] = { work, ot, note };
+    } else {
+      // แถวซ้ำ → merge เอาค่าสูงสุด ไม่ให้ข้อมูลหาย
+      byUser[uid][dk].work = Math.max(byUser[uid][dk].work, work);
+      byUser[uid][dk].ot   = Math.max(byUser[uid][dk].ot,   ot);
+      if(!byUser[uid][dk].note && note) byUser[uid][dk].note = note;
+    }
   });
   return (employees||[]).map(e=>({
     id: Number(e.id),
@@ -7544,46 +7557,33 @@ function prToggleDay(dk){
   prSyncAttendanceToSheet(prSelected.id, dk, prSelected.records[dk]);
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   prSyncAttendanceToSheet  —  debounce 800ms + per-key serial queue
+/* sync record วันเดียวไป Sheet — debounce 800ms + serial queue ป้องกัน race condition
    ปัญหาเดิม: กด Work +1 แล้วกด OT +1 ต่อทันที → ยิง 2 request พร้อมกัน
-   request ที่ 2 อ่าน sheet ก่อนที่ request แรกจะเขียนเสร็จ → เห็นว่า "ไม่มีแถวเดิม"
-   → เขียนแถวใหม่ซ้อน ทำให้ได้ 2 แถวแทน 1 แถว
-   แก้โดย:
-   1. debounce 800ms  — รวม Work/OT/note ที่เปลี่ยนรัวๆ ให้เป็น API call เดียว
-   2. serial queue per key — ถ้ายังมี request อยู่ก็รอให้เสร็จก่อน ไม่ส่งซ้อน
-   ────────────────────────────────────────────────────────────────────────────*/
-const _prSyncTimers  = {};   // debounce timer per "userId|dk"
-const _prSyncRunning = {};   // true ถ้า request กำลัง in-flight
-const _prSyncPending = {};   // pending call ที่รอ in-flight เสร็จ
-
+   request ที่ 2 อ่าน sheet ก่อน request แรกเขียนเสร็จ → ไม่เจอแถวเดิม → เขียนแถวใหม่ซ้อน
+   แก้โดย: 1) debounce รวม Work/OT/note ที่เปลี่ยนรัวๆ เป็น call เดียว
+            2) serial queue — ถ้า request อยู่ระหว่างส่ง ให้รอก่อน ไม่ส่งซ้อน */
+const _prSyncTimers  = {};
+const _prSyncRunning = {};
+const _prSyncPending = {};
 function prSyncAttendanceToSheet(userId, dk, record){
   const key = String(userId) + '|' + dk;
-
-  // รีเซ็ต debounce timer ทุกครั้งที่มีการเปลี่ยนค่า
   if(_prSyncTimers[key]) clearTimeout(_prSyncTimers[key]);
-
   _prSyncTimers[key] = setTimeout(() => {
     delete _prSyncTimers[key];
-
-    // ดึงค่าล่าสุดจาก prUsers (ไม่ใช้ closure เก่าที่อาจ stale)
+    // ดึงค่าล่าสุดจาก prUsers ณ ขณะที่ timer หมดเวลา (ไม่ใช้ค่า closure เก่า)
     const u = prUsers.find(u => u.id === userId);
     const latest = (u && u.records && u.records[dk])
       ? Object.assign({}, u.records[dk])
       : Object.assign({}, record);
-
     if(_prSyncRunning[key]){
-      // มี request กำลังวิ่งอยู่ → เก็บไว้ใน pending แทน (จะยิงต่อหลัง request เสร็จ)
-      _prSyncPending[key] = latest;
+      _prSyncPending[key] = latest; // รอ request ที่กำลังวิ่งให้เสร็จก่อน
       return;
     }
-
     _prSyncRunning[key] = true;
     prApiPost('saveAttendanceRecord', { userId, dateKey: dk, record: latest })
       .catch(err => console.warn('[payroll] saveAttendanceRecord ไม่สำเร็จ:', err.message||err))
       .finally(() => {
         _prSyncRunning[key] = false;
-        // ถ้ามี pending ค้างอยู่ → ยิงต่อทันที
         if(_prSyncPending[key]){
           const next = _prSyncPending[key];
           delete _prSyncPending[key];
