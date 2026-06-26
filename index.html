@@ -7123,8 +7123,7 @@ async function prApiPost(action, body){
 
 /* แปลงข้อมูลจาก Sheet (employees flat list + attendance flat list)
    กลับเป็นโครงสร้าง prUsers เดิมที่โค้ดทั้งหมดคุ้นเคย (user.records[dateKey])
-   ถ้ามีแถวซ้ำของ userId+dateKey เดียวกัน (เกิดจาก race condition เดิม)
-   จะ merge โดยเอาค่า work/ot สูงสุด แทนที่จะทับค่าเดิม */
+   FIX: ถ้ามีแถวซ้ำ userId+dateKey เดียวกัน → merge เอาค่า max แทนการทับ */
 function prMergeFromSheet(employees, attendanceRows){
   const byUser = {};
   (attendanceRows||[]).forEach(r=>{
@@ -7137,7 +7136,6 @@ function prMergeFromSheet(employees, attendanceRows){
     if(!byUser[uid][dk]){
       byUser[uid][dk] = { work, ot, note };
     } else {
-      // แถวซ้ำ → merge เอาค่าสูงสุด ไม่ให้ข้อมูลหาย
       byUser[uid][dk].work = Math.max(byUser[uid][dk].work, work);
       byUser[uid][dk].ot   = Math.max(byUser[uid][dk].ot,   ot);
       if(!byUser[uid][dk].note && note) byUser[uid][dk].note = note;
@@ -7557,11 +7555,9 @@ function prToggleDay(dk){
   prSyncAttendanceToSheet(prSelected.id, dk, prSelected.records[dk]);
 }
 
-/* sync record วันเดียวไป Sheet — debounce 800ms + serial queue ป้องกัน race condition
-   ปัญหาเดิม: กด Work +1 แล้วกด OT +1 ต่อทันที → ยิง 2 request พร้อมกัน
-   request ที่ 2 อ่าน sheet ก่อน request แรกเขียนเสร็จ → ไม่เจอแถวเดิม → เขียนแถวใหม่ซ้อน
-   แก้โดย: 1) debounce รวม Work/OT/note ที่เปลี่ยนรัวๆ เป็น call เดียว
-            2) serial queue — ถ้า request อยู่ระหว่างส่ง ให้รอก่อน ไม่ส่งซ้อน */
+/* sync record — debounce 800ms + serial queue ป้องกัน race condition
+   FIX: กด Work แล้วกด OT ทันที → เดิมยิง 2 request พร้อมกัน → Sheet เขียนแถวซ้อน
+   ตอนนี้: รอ 800ms แล้วส่งครั้งเดียวพร้อมค่าล่าสุด, ถ้า request กำลังวิ่งอยู่ให้รอก่อน */
 const _prSyncTimers  = {};
 const _prSyncRunning = {};
 const _prSyncPending = {};
@@ -7570,13 +7566,12 @@ function prSyncAttendanceToSheet(userId, dk, record){
   if(_prSyncTimers[key]) clearTimeout(_prSyncTimers[key]);
   _prSyncTimers[key] = setTimeout(() => {
     delete _prSyncTimers[key];
-    // ดึงค่าล่าสุดจาก prUsers ณ ขณะที่ timer หมดเวลา (ไม่ใช้ค่า closure เก่า)
     const u = prUsers.find(u => u.id === userId);
     const latest = (u && u.records && u.records[dk])
       ? Object.assign({}, u.records[dk])
       : Object.assign({}, record);
     if(_prSyncRunning[key]){
-      _prSyncPending[key] = latest; // รอ request ที่กำลังวิ่งให้เสร็จก่อน
+      _prSyncPending[key] = latest;
       return;
     }
     _prSyncRunning[key] = true;
@@ -7588,7 +7583,7 @@ function prSyncAttendanceToSheet(userId, dk, record){
           const next = _prSyncPending[key];
           delete _prSyncPending[key];
           prApiPost('saveAttendanceRecord', { userId, dateKey: dk, record: next })
-            .catch(err => console.warn('[payroll] saveAttendanceRecord (retry) ไม่สำเร็จ:', err.message||err));
+            .catch(err => console.warn('[payroll] saveAttendanceRecord (pending) ไม่สำเร็จ:', err.message||err));
         }
       });
   }, 800);
