@@ -2732,6 +2732,11 @@
                   <span id="pr-total" style="font-size:1.3rem;font-weight:700;color:var(--accent)">฿0</span>
                 </div>
               </div>
+              <button onclick="prOpenResetPeriod()" style="width:100%;margin-top:0.7rem;padding:0.5rem;border-radius:8px;border:1px solid rgba(239,68,68,0.35);background:rgba(239,68,68,0.08);color:#f87171;font-size:0.72rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.4rem;transition:all 0.15s"
+                onmouseenter="this.style.background='rgba(239,68,68,0.16)'"
+                onmouseleave="this.style.background='rgba(239,68,68,0.08)'">
+                🔄 รีเซ็ตข้อมูลรอบนี้
+              </button>
             </div>
 
           </div>
@@ -2855,6 +2860,19 @@
           <div style="display:flex;justify-content:center;gap:0.5rem">
             <button class="btn btn-ghost" onclick="prCancelDelete()">ยกเลิก</button>
             <button class="btn btn-primary" style="background:var(--danger);border-color:var(--danger)" onclick="prConfirmDelete()">ลบ</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reset Period Confirm Modal -->
+      <div id="pr-reset-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;align-items:center;justify-content:center">
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:1.5rem;width:300px;max-width:92vw;text-align:center">
+          <div style="font-size:1.8rem;margin-bottom:0.4rem">🔄</div>
+          <div style="font-size:0.92rem;font-weight:700;color:var(--text);margin-bottom:0.3rem">รีเซ็ตข้อมูลรอบนี้?</div>
+          <div id="pr-reset-msg" style="font-size:0.78rem;color:var(--muted);margin-bottom:1.1rem;line-height:1.5"></div>
+          <div style="display:flex;justify-content:center;gap:0.5rem">
+            <button class="btn btn-ghost" onclick="prCancelResetPeriod()">ยกเลิก</button>
+            <button class="btn btn-primary" style="background:var(--danger);border-color:var(--danger)" onclick="prConfirmResetPeriod()">รีเซ็ต</button>
           </div>
         </div>
       </div>
@@ -7764,6 +7782,40 @@ function prConfirmDelete(){
 
   prApiPost('deleteEmployee', { id: deletedId })
     .catch(err=>console.warn('[payroll] deleteEmployee ไป Sheet ไม่สำเร็จ:', err.message||err));
+}
+
+/* ── RESET PERIOD (ล้างข้อมูล work/ot/note ทุกวันในรอบบิล/เดือนที่กำลังดูอยู่) ── */
+function prOpenResetPeriod(){
+  if(!prSelected) return;
+  const range = prGetCutoffRange(prCalYear, prCalMonth);
+  const payMonthName = PR_MONTHS_TH[prCalMonth];
+  const msgEl = document.getElementById('pr-reset-msg');
+  if(range){
+    const fmt = d => `${d.getDate()}/${d.getMonth()+1}/${String(d.getFullYear()+543).slice(-2)}`;
+    msgEl.innerHTML = `ล้างข้อมูลลงเวลาของ <strong style="color:var(--text)">${prSelected.name}</strong><br>ช่วง ${fmt(range.startDate)} – ${fmt(range.endDate)}<br>(เงินเดือน${payMonthName}) ทั้งหมด — ทำย้อนกลับไม่ได้`;
+  } else {
+    msgEl.innerHTML = `ล้างข้อมูลลงเวลาของ <strong style="color:var(--text)">${prSelected.name}</strong><br>ทั้งเดือน${payMonthName} — ทำย้อนกลับไม่ได้`;
+  }
+  document.getElementById('pr-reset-modal').style.display='flex';
+}
+function prCancelResetPeriod(){
+  document.getElementById('pr-reset-modal').style.display='none';
+}
+function prConfirmResetPeriod(){
+  if(!prSelected){ document.getElementById('pr-reset-modal').style.display='none'; return; }
+  const range = prGetCutoffRange(prCalYear, prCalMonth);
+  const userId = prSelected.id;
+
+  // เก็บ dateKey ที่อยู่ในรอบนี้และมีข้อมูลอยู่จริง (ไม่ลบวันที่ไม่มีข้อมูลอยู่แล้ว ไม่มีประโยชน์)
+  const datesToReset = Object.keys(prSelected.records).filter(dk => prDateInRange(dk, range));
+
+  datesToReset.forEach(dk => { delete prSelected.records[dk]; });
+  prSave(); prRefreshDetail();
+  document.getElementById('pr-reset-modal').style.display='none';
+  showToast(`🔄 รีเซ็ตข้อมูล ${datesToReset.length} วันแล้ว`,'info');
+
+  // sync ไป Sheet ทีละวัน (เขียนเป็น work=0,ot=0 ซึ่งฝั่ง Apps Script จะลบแถวออกให้เอง)
+  datesToReset.forEach(dk => prSyncAttendanceToSheet(userId, dk, {work:0, ot:0, note:''}));
 }
 
 </script>
