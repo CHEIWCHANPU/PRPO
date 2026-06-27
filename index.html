@@ -2250,6 +2250,40 @@
   .mute-pill.muted:hover { background: rgba(16,185,129,0.14) !important; }
 
 
+  /* ── SUPPLIER INLINE COMMENT ── */
+  .sc-section { margin-top: 0.85rem; border-top: 1px solid var(--border); padding-top: 0.75rem; }
+  .sc-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; cursor: pointer; user-select: none; }
+  .sc-title { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 0.4rem; }
+  .sc-badge { background: var(--accent2); color: #fff; font-size: 0.58rem; font-weight: 800; padding: 0.08rem 0.42rem; border-radius: 10px; }
+  .sc-toggle { font-size: 0.65rem; color: var(--muted); transition: transform 0.2s; display: inline-block; }
+  .sc-toggle.open { transform: rotate(180deg); }
+  .sc-body { display: none; }
+  .sc-body.open { display: block; }
+  .sc-list { max-height: 160px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 0.5rem; }
+  .sc-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.65rem; }
+  .sc-item.sc-issue { border-left: 3px solid var(--danger); }
+  .sc-meta { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.2rem; }
+  .sc-author { font-size: 0.67rem; font-weight: 700; color: var(--accent); }
+  .sc-time { font-size: 0.62rem; color: var(--muted); font-family: var(--mono); }
+  .sc-tag { font-size: 0.58rem; font-weight: 700; padding: 0.08rem 0.38rem; border-radius: 6px; }
+  .sc-tag.update { background: rgba(99,102,241,0.15); color: var(--accent2); }
+  .sc-tag.issue  { background: rgba(239,68,68,0.12);  color: var(--danger); }
+  .sc-tag.done   { background: rgba(16,185,129,0.12); color: var(--success); }
+  .sc-tag.info   { background: rgba(0,229,160,0.1);   color: var(--accent); }
+  .sc-text { font-size: 0.76rem; line-height: 1.5; color: var(--text); word-break: break-word; }
+  .sc-del { margin-left: auto; background: none; border: none; cursor: pointer; font-size: 0.7rem; color: var(--muted); padding: 0.1rem 0.25rem; border-radius: 4px; transition: color 0.12s; }
+  .sc-del:hover { color: var(--danger); }
+  .sc-empty { text-align: center; padding: 0.75rem; color: var(--muted); font-size: 0.72rem; }
+  .sc-input-row { display: flex; gap: 0.35rem; margin-bottom: 0.35rem; }
+  .sc-name { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; padding: 0.35rem 0.6rem; font-size: 0.74rem; color: var(--text); font-family: var(--font); outline: none; transition: border-color 0.15s; }
+  .sc-name:focus { border-color: var(--accent2); }
+  .sc-select { background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; padding: 0.35rem 0.5rem; font-size: 0.72rem; color: var(--text); font-family: var(--font); outline: none; cursor: pointer; }
+  .sc-textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 0.45rem 0.65rem; font-size: 0.76rem; color: var(--text); font-family: var(--font); resize: none; outline: none; line-height: 1.5; transition: border-color 0.15s; margin-bottom: 0.35rem; }
+  .sc-textarea:focus { border-color: var(--accent2); }
+  .sc-submit { background: var(--accent2); border: none; color: #fff; font-family: var(--font); font-size: 0.72rem; font-weight: 700; padding: 0.38rem 0.9rem; border-radius: 7px; cursor: pointer; transition: opacity 0.15s; }
+  .sc-submit:hover { opacity: 0.85; }
+
+
 </style>
 </head>
 <body>
@@ -5217,7 +5251,30 @@ function renderSummaryCards(mData, mLabel) {
       <div style="height:6px;background:var(--surface2);border-radius:3px;overflow:hidden">
         <div style="height:100%;width:${p}%;background:${b.color};border-radius:3px;transition:width 0.6s ease"></div>
       </div>
-    </div>`;
+      <div class="sc-section">
+        <div class="sc-header" onclick="scToggle('${s.id}')">
+          <div class="sc-title">
+            💬 บันทึกทีม
+            <span class="sc-badge" id="scbadge-${s.id}" style="display:none"></span>
+          </div>
+          <span class="sc-toggle" id="sca-${s.id}">▾</span>
+        </div>
+        <div class="sc-body" id="scb-${s.id}">
+          <div class="sc-list" id="scl-${s.id}"><div class="sc-empty">ยังไม่มีบันทึก</div></div>
+          <div class="sc-input-row">
+            <input class="sc-name" id="scauthor-${s.id}" placeholder="ชื่อของคุณ" value="${localStorage.getItem('prpo_username')||''}">
+            <select class="sc-select" id="sctag-${s.id}">
+              <option value="update">🔄 อัปเดต</option>
+              <option value="info">💬 ทั่วไป</option>
+              <option value="issue">⚠️ ปัญหา</option>
+              <option value="done">✅ เสร็จ</option>
+            </select>
+          </div>
+          <textarea class="sc-textarea" id="sctext-${s.id}" rows="2" placeholder="บันทึกความคืบหน้า, ปัญหา, หรือหมายเหตุ..."></textarea>
+          <button class="sc-submit" onclick="scAdd('${s.id}')">+ บันทึก</button>
+        </div>
+      </div>
+    `;
   }).join('');
 
   // Maker chart
@@ -6191,6 +6248,8 @@ function renderSuppliers() {
       </div>` : ''}` : ''}
     </div>`;
   }).join('');
+  // render inline supplier comments
+  list.forEach(s => setTimeout(() => scRender(s.id), 0));
 }
 
 /* แปลงลิงก์ Google Maps ให้เป็น embed URL (รองรับเฉพาะลิงก์แบบเต็มที่มีพิกัด/คำค้นใน query)
@@ -8732,6 +8791,66 @@ function prConfirmResetPeriod(){
 
   // sync ไป Sheet ทีละวัน (เขียนเป็น work=0,ot=0 ซึ่งฝั่ง Apps Script จะลบแถวออกให้เอง)
   datesToReset.forEach(dk => prSyncAttendanceToSheet(userId, dk, {work:0, ot:0, note:''}));
+}
+
+
+/* ── SUPPLIER INLINE COMMENTS ── */
+function scKey(sid) { return 'sc_' + sid; }
+function scLoad(sid) { try { return JSON.parse(localStorage.getItem(scKey(sid)) || '[]'); } catch { return []; } }
+function scSave(sid, arr) { localStorage.setItem(scKey(sid), JSON.stringify(arr)); }
+
+function scToggle(sid) {
+  const body  = document.getElementById('scb-' + sid);
+  const arrow = document.getElementById('sca-' + sid);
+  if (!body) return;
+  body.classList.toggle('open');
+  arrow.classList.toggle('open');
+}
+
+function scRender(sid) {
+  const arr   = scLoad(sid);
+  const list  = document.getElementById('scl-' + sid);
+  const badge = document.getElementById('scbadge-' + sid);
+  if (!list) return;
+  if (badge) { badge.textContent = arr.length || ''; badge.style.display = arr.length ? '' : 'none'; }
+  const TAG_LABELS = { update:'🔄', issue:'⚠️', done:'✅', info:'💬' };
+  if (!arr.length) { list.innerHTML = '<div class="sc-empty">ยังไม่มีบันทึก</div>'; return; }
+  list.innerHTML = arr.map((c, i) => `
+    <div class="sc-item ${c.tag === 'issue' ? 'sc-issue' : ''}">
+      <div class="sc-meta">
+        <span class="sc-author">👤 ${c.author || '-'}</span>
+        <span class="sc-time">${c.time}</span>
+        <span class="sc-tag ${c.tag}">${TAG_LABELS[c.tag] || ''} ${c.tag}</span>
+        <button class="sc-del" onclick="scDelete('${sid}',${i})">✕</button>
+      </div>
+      <div class="sc-text">${c.text.replace(/\n/g,'<br>')}</div>
+    </div>`).join('');
+  list.scrollTop = list.scrollHeight;
+}
+
+function scAdd(sid) {
+  const author = (document.getElementById('scauthor-'+sid)?.value || '').trim();
+  const text   = (document.getElementById('sctext-'+sid)?.value   || '').trim();
+  const tag    = document.getElementById('sctag-'+sid)?.value || 'update';
+  if (!text) { showToast('⚠️ กรุณาพิมพ์ข้อความก่อนบันทึก','error'); return; }
+  const now  = new Date();
+  const time = now.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'}) + ' ' +
+               now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+  const arr = scLoad(sid);
+  arr.push({ author, text, tag, time });
+  scSave(sid, arr);
+  const ta = document.getElementById('sctext-'+sid);
+  if (ta) ta.value = '';
+  if (author) localStorage.setItem('prpo_username', author);
+  scRender(sid);
+  showToast('✅ บันทึกแล้ว','success');
+}
+
+function scDelete(sid, idx) {
+  const arr = scLoad(sid);
+  arr.splice(idx, 1);
+  scSave(sid, arr);
+  scRender(sid);
 }
 
 </script>
