@@ -740,6 +740,16 @@
   .setup-action-label { font-size: 0.76rem; font-weight: 600; color: var(--text); }
   .setup-action-sub { font-size: 0.68rem; color: var(--muted); margin-top: 0.15rem; }
 
+  /* ── ACCENT THEME PICKER ── */
+  .accent-pick-row { display: flex; gap: 0.65rem; flex-wrap: wrap; margin-top: 0.7rem; }
+  .accent-swatch {
+    width: 38px; height: 38px; border-radius: 50%; cursor: pointer; flex-shrink: 0;
+    border: 3px solid transparent; box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    transition: transform 0.15s, border-color 0.15s; position: relative;
+  }
+  .accent-swatch:hover { transform: scale(1.08); }
+  .accent-swatch.active { border-color: var(--accent2); box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent2); }
+
   /* DIVIDER */
   .section-divider { display: flex; align-items: center; gap: 0.75rem; margin: 1.2rem 0; }
   .section-divider-line { flex: 1; height: 1px; background: var(--border); }
@@ -2194,6 +2204,11 @@
         <div id="sheetUrlDisplay" style="display:none;margin-top:0.55rem;font-size:0.72rem;color:var(--muted);font-family:var(--mono);word-break:break-all"></div>
       </div>
       <div class="instruction-card">
+        <h3>🎨 ปรับธีมสีหลัก</h3>
+        <p style="margin-bottom:0.3rem">เลือกสีที่ใช้เน้นทั่วทั้งระบบ (ปุ่ม, ไอคอน, เส้นไฮไลต์)</p>
+        <div class="accent-pick-row" id="accentColorPick"></div>
+      </div>
+      <div class="instruction-card">
         <div class="setup-grid">
 
           <div class="setup-action" onclick="downloadHTML()">
@@ -3110,6 +3125,7 @@ window.addEventListener('DOMContentLoaded', () => {
   updateDateChip();
   setInterval(updateDateChip, 1000);
   initTheme();
+  renderAccentPicker();
   initToastMuteBtn();
   initPerPage();
   initAutoSync();
@@ -3161,12 +3177,73 @@ function applyTheme(theme) {
   const btn = document.getElementById('themeToggle');
   if (btn) btn.innerHTML = isLight ? '☀️ Light' : '🌙 Dark';
   localStorage.setItem('prpo_theme', theme);
+  const savedAccent = parseInt(localStorage.getItem('prpo_accent') || '0', 10);
+  applyAccent(savedAccent);
   if (Object.keys(charts).length) renderCharts();
 }
 function toggleTheme() {
   const cur = localStorage.getItem('prpo_theme') || (document.body.classList.contains('light-theme') ? 'light' : 'dark');
   applyTheme(cur === 'light' ? 'dark' : 'light');
 }
+
+/* ── ACCENT COLOR PICKER ── */
+const ACCENT_PRESETS = [
+  { name: 'เขียวมรกต',  dark: '#00e5a0', light: '#1a8c6e', pastel: '#bfeede' },
+  { name: 'มินต์',      dark: '#5eead4', light: '#0d9488', pastel: '#a6e8d4' },
+  { name: 'ส้มทอง',     dark: '#fbbf24', light: '#c2740a', pastel: '#f3d9a5' },
+  { name: 'ชมพูพีช',    dark: '#fca5a5', light: '#cc4b3f', pastel: '#f0c4c4' },
+  { name: 'ฟ้าพาสเทล',  dark: '#93c5fd', light: '#2563eb', pastel: '#bcd4ef' },
+  { name: 'ลาเวนเดอร์', dark: '#c4b5fd', light: '#7c3aed', pastel: '#ddcdf0' },
+  { name: 'ชมพูบานเย็น', dark: '#f9a8d4', light: '#be185d', pastel: '#f0cbdc' },
+];
+
+function renderAccentPicker() {
+  const wrap = document.getElementById('accentColorPick');
+  if (!wrap) return;
+  const saved = localStorage.getItem('prpo_accent') || '0';
+  wrap.innerHTML = ACCENT_PRESETS.map((c, i) => `
+    <div class="accent-swatch ${String(i) === saved ? 'active' : ''}"
+         id="accentSwatch-${i}"
+         style="background:${c.pastel}"
+         title="${c.name}"
+         onclick="selectAccent(${i})"></div>
+  `).join('');
+}
+
+function selectAccent(idx) {
+  localStorage.setItem('prpo_accent', String(idx));
+  applyAccent(idx);
+  ACCENT_PRESETS.forEach((_, i) => {
+    const el = document.getElementById('accentSwatch-' + i);
+    if (el) el.classList.toggle('active', i === idx);
+  });
+  showToast('🎨 เปลี่ยนสีธีมแล้ว', 'success');
+}
+
+function applyAccent(idx) {
+  const preset = ACCENT_PRESETS[idx];
+  if (!preset) return;
+  const isLight = document.body.classList.contains('light-theme');
+  const accentColor = isLight ? preset.light : preset.dark;
+  document.documentElement.style.setProperty('--accent', accentColor);
+  document.documentElement.style.setProperty('--glow-accent', hexToRgba(accentColor, isLight ? 0.09 : 0.12));
+  if (Object.keys(charts).length) renderCharts();
+}
+
+function hexToRgba(hex, alpha) {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.substring(0,2), 16);
+  const g = parseInt(h.substring(2,4), 16);
+  const b = parseInt(h.substring(4,6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function initAccent() {
+  const saved = parseInt(localStorage.getItem('prpo_accent') || '0', 10);
+  applyAccent(saved);
+  renderAccentPicker();
+}
+
 
 /* ── FULLSCREEN ── */
 const FS_EXPAND_ICON   = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>';
