@@ -7233,7 +7233,7 @@ function prSyncMonthToSheet(userId, yearMonth){
         monthData[day] = { work: rec.work||0, ot: rec.ot||0, note: rec.note||'' };
       }
     });
-    prApiPost('saveMonthlyData', { userId, yearMonth, data: monthData })
+    prApiPost('saveMonthlyData', { userId: String(userId), yearMonth, data: monthData })
       .catch(err => console.warn('[payroll] saveMonthlyData ไม่สำเร็จ:', err.message||err));
   }, 600);
 }
@@ -7290,10 +7290,11 @@ function prConfirmResetPeriod(){
   document.getElementById('pr-reset-modal').style.display='none';
   showToast(`🔄 รีเซ็ตข้อมูล ${datesToReset.length} วันแล้ว`,'info');
 
-  // ส่ง resetMonthlyData ไปลบใน Sheet ทีละ yearMonth
+  // ส่ง saveMonthlyData({}) ทับข้อมูลเดิมใน Sheet — ใช้ upsert แทน delete
+  // เพื่อให้แน่ใจว่าแม้ yearMonth format ต่างกัน ก็ยังลบข้อมูลออกได้
   ymSet.forEach(ym => {
-    prApiPost('resetMonthlyData', { userId, yearMonth: ym })
-      .catch(err => console.warn('[payroll] resetMonthlyData ไม่สำเร็จ:', err.message||err));
+    prApiPost('saveMonthlyData', { userId: String(userId), yearMonth: ym, data: {} })
+      .catch(err => console.warn('[payroll] reset saveMonthlyData ไม่สำเร็จ:', err.message||err));
   });
 }
 
