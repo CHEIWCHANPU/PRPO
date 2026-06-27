@@ -1703,7 +1703,7 @@
           <div class="wl-chip"><div class="wl-chip-dot"></div>ติดตามใบ CER</div>
           <div class="wl-chip"><div class="wl-chip-dot"></div>Model Tracker</div>
           <div class="wl-chip"><div class="wl-chip-dot"></div>แผนงานข้างนอก</div>
-          <div class="wl-chip"><div class="wl-chip-dot"></div>ลงเวลา & ค่าแรง</div>
+          <div class="wl-chip"><div class="wl-chip-dot"></div>ลงเวลาการทำงาน/div>
           <div class="wl-chip"><div class="wl-chip-dot"></div>Supplier</div>
         </div>
       </div>
@@ -3189,9 +3189,10 @@ function initNavGroups() {
 
 /* ── THEME ── */
 function initTheme() {
-  const saved = localStorage.getItem('prpo_theme');
-  const theme = saved || 'dark';
-  applyTheme(theme);
+  // รีเซ็ตทุกครั้งที่โหลด: dark + accent 0 เสมอ
+  localStorage.removeItem('prpo_theme');
+  localStorage.removeItem('prpo_accent');
+  applyTheme('dark');
 }
 function applyTheme(theme) {
   const isLight = theme === 'light';
@@ -3365,7 +3366,7 @@ function showPage(name, btn) {
   document.getElementById('page-' + name).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  const titles = { home:'🏠 หน้าหลัก', dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', summary:'📈 สรุปภาพรวม', gantt:'📅 Timeline / Gantt', setup:'⚙️ ตั้งค่าระบบ', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis', cer:'📄 ติดตามใบ CER', modeltracker:'🗂️ Model Tracker', workplan:'📅 ตารางแผนงานข้างนอก', payroll:'⏱️ ลงเวลา & ค่าแรง' };
+  const titles = { home:'🏠 หน้าหลัก', dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', summary:'📈 สรุปภาพรวม', gantt:'📅 Timeline / Gantt', setup:'⚙️ ตั้งค่าระบบ', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis', cer:'📄 ติดตามใบ CER', modeltracker:'🗂️ Model Tracker', workplan:'📅 ตารางแผนงานข้างนอก', payroll:'⏱️ ลงเวลาการทำงาน' };
   document.getElementById('topbarTitle').textContent = titles[name] || name;
   if (name === 'home') renderDailyBriefing();
   if (name === 'summary') renderSummary();
@@ -5215,16 +5216,25 @@ function toggleToastMute() {
   localStorage.setItem('toastMuted', toastMuted);
   const btn = document.getElementById('toastMuteBtn');
   if (toastMuted) {
-    btn.textContent = '🔔 เปิด popup';
+    btn.textContent = '🔔';
+    btn.title = 'เปิด popup แจ้งเตือน';
     btn.classList.add('muted');
   } else {
-    btn.textContent = '🔕 ปิด popup';
+    btn.textContent = '🔕';
+    btn.title = 'ปิด popup แจ้งเตือน';
     btn.classList.remove('muted');
   }
 }
 function initToastMuteBtn() {
   const btn = document.getElementById('toastMuteBtn');
-  if (toastMuted) { btn.textContent = '🔔 เปิด popup'; btn.classList.add('muted'); }
+  if (toastMuted) {
+    btn.textContent = '🔔';
+    btn.title = 'เปิด popup แจ้งเตือน';
+    btn.classList.add('muted');
+  } else {
+    btn.textContent = '🔕';
+    btn.title = 'ปิด popup แจ้งเตือน';
+  }
 }
 
 /* ── TOAST ── */
