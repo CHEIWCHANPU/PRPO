@@ -2843,18 +2843,18 @@
 
       <!-- PIN Verify Modal -->
       <div id="pr-pin-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;align-items:center;justify-content:center">
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:1.5rem;width:300px;max-width:92vw;text-align:center">
-          <div id="pr-pin-avatar" style="width:60px;height:60px;border-radius:50%;margin:0 auto 0.7rem;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;overflow:hidden"></div>
-          <div id="pr-pin-name" style="font-size:0.95rem;font-weight:700;color:var(--text);margin-bottom:0.2rem"></div>
-          <div style="font-size:0.72rem;color:var(--muted);margin-bottom:1rem">กรุณากรอก PIN 4 หลักเพื่อเข้าสู่ระบบ</div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:22px;padding:2.4rem 2rem;width:420px;max-width:92vw;text-align:center">
+          <div id="pr-pin-avatar" style="width:96px;height:96px;border-radius:50%;margin:0 auto 1.1rem;display:flex;align-items:center;justify-content:center;font-size:1.9rem;font-weight:700;overflow:hidden"></div>
+          <div id="pr-pin-name" style="font-size:1.3rem;font-weight:700;color:var(--text);margin-bottom:0.35rem"></div>
+          <div style="font-size:0.92rem;color:var(--muted);margin-bottom:1.6rem">กรุณากรอก PIN 4 หลักเพื่อเข้าสู่ระบบ</div>
           <input type="password" id="pr-pin-input" class="form-input" placeholder="••••" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off"
-            style="text-align:center;font-size:1.3rem;letter-spacing:0.4em;margin-bottom:0.4rem"
+            style="text-align:center;font-size:1.9rem;letter-spacing:0.5em;margin-bottom:0.6rem;padding:0.9rem 0.85rem"
             oninput="this.value=this.value.replace(/\D/g,'').slice(0,4)"
             onkeydown="if(event.key==='Enter') prVerifyPin()">
-          <div id="pr-pin-err" style="font-size:0.72rem;color:var(--danger);min-height:1.1em;margin-bottom:0.6rem"></div>
-          <div style="display:flex;justify-content:center;gap:0.5rem">
-            <button class="btn btn-ghost" onclick="prCancelPin()">ยกเลิก</button>
-            <button class="btn btn-primary" onclick="prVerifyPin()">เข้าสู่ระบบ</button>
+          <div id="pr-pin-err" style="font-size:0.85rem;color:var(--danger);min-height:1.2em;margin-bottom:1rem"></div>
+          <div style="display:flex;justify-content:center;gap:0.75rem">
+            <button class="btn btn-ghost" onclick="prCancelPin()" style="font-size:0.92rem;padding:0.6rem 1.5rem">ยกเลิก</button>
+            <button class="btn btn-primary" onclick="prVerifyPin()" style="font-size:0.92rem;padding:0.6rem 1.5rem">เข้าสู่ระบบ</button>
           </div>
         </div>
       </div>
