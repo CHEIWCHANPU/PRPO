@@ -7298,6 +7298,461 @@ function prConfirmResetPeriod(){
 }
 
 
+function prCalcTotals(user){
+  let days=0,ot=0;
+  const range = prGetCutoffRange(prCalYear, prCalMonth);
+  Object.entries(user.records).forEach(([dk, r])=>{
+    if (!prDateInRange(dk, range)) return;
+    days+=r.work||0; ot+=r.ot||0;
+  });
+  const otR=parseFloat(document.getElementById('pr-ot-rate')?.value)||0;
+  const otPay=otR*ot;
+  return {days,ot,otPay,base:0,total:otPay};
+}
+
+function payrollInit(){
+  prRenderGrid(); // render ของ cache ไปก่อนให้เห็นทันที ไม่ต้องรอ network
+  prSyncFromSheet();
+}
+
+/* ── GRID ── */
+function prRenderGrid(){
+  const grid=document.getElementById('pr-grid');
+  if(!grid) return;
+  const countEl=document.getElementById('pr-emp-count');
+  if(!prUsers.length){
+    if(prSyncStatus === 'loading'){
+      if(countEl) countEl.textContent='กำลังโหลด...';
+      grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:4rem 1rem;color:var(--muted)">
+        <div class="spinner" style="width:28px;height:28px;border-width:3px;margin:0 auto 1rem"></div>
+        <div style="font-size:0.85rem;font-weight:600;color:var(--text)">กำลังโหลดข้อมูลพนักงาน...</div>
+      </div>`;
+      return;
+    }
+    if(countEl) countEl.textContent='0 คน';
+    grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:4rem 1rem;color:var(--muted)">
+      <div style="width:64px;height:64px;border-radius:50%;background:var(--surface2);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin:0 auto 1rem">&#128100;</div>
+      <div style="font-size:0.88rem;font-weight:600;color:var(--text);margin-bottom:0.3rem">ยังไม่มีพนักงาน</div>
+      <div style="font-size:0.75rem">กด &quot;+ เพิ่มพนักงาน&quot; เพื่อเริ่มต้น</div>
+    </div>`;
+    return;
+  }
+  const refreshTag = prSyncStatus === 'loading' ? ` <span class="spinner" style="width:11px;height:11px;border-width:2px;vertical-align:-1px;margin-left:0.3rem"></span>` : '';
+  if(countEl) countEl.innerHTML = prUsers.length+' คน'+refreshTag;
+  grid.innerHTML = prUsers.map(u=>{
+    const col=PR_COLORS[u.color||0];
+    const initials=u.name.trim().split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase()||u.name.slice(0,2).toUpperCase();
+    const avatarInner = u.photo
+      ? `<img src="${u.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
+      : `<span style="font-size:1.2rem;font-weight:800;letter-spacing:-0.02em">${initials}</span>`;
+    const bc=col.text;
+    const bb=col.bg;
+
+    return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:18px;overflow:hidden;display:flex;flex-direction:column;transition:transform 0.18s,box-shadow 0.18s,border-color 0.18s;cursor:default"
+      onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 32px rgba(0,0,0,0.25)';this.style.borderColor='${bc}55'"
+      onmouseleave="this.style.transform='none';this.style.boxShadow='none';this.style.borderColor='var(--border)'">
+
+      <!-- TOP COLOR STRIPE -->
+      <div style="height:4px;background:linear-gradient(90deg,${bc},${bc}44);flex-shrink:0"></div>
+
+      <!-- MAIN BODY -->
+      <div style="padding:1.1rem 1rem 0.9rem;display:flex;flex-direction:column;gap:0.85rem;flex:1">
+
+        <!-- ROW 1: avatar + action buttons -->
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem">
+
+          <!-- Avatar with subtle ring -->
+          <div onclick="prSelectUser(${u.id})" style="width:56px;height:56px;border-radius:50%;background:${bb};color:${bc};display:flex;align-items:center;justify-content:center;border:2.5px solid ${bc}55;overflow:hidden;flex-shrink:0;cursor:pointer;box-shadow:0 0 0 4px ${bc}12;transition:box-shadow 0.15s"
+            onmouseenter="this.style.boxShadow='0 0 0 6px ${bc}22'"
+            onmouseleave="this.style.boxShadow='0 0 0 4px ${bc}12'">${avatarInner}</div>
+
+          <!-- Action buttons -->
+          <div style="display:flex;gap:0.3rem;margin-left:auto" onclick="event.stopPropagation()">
+            <button onclick="prOpenEditUser(${u.id})" title="แก้ไข"
+              style="width:30px;height:30px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:0.78rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s"
+              onmouseenter="this.style.borderColor='var(--accent)';this.style.color='var(--accent)';this.style.background='rgba(0,229,160,0.1)'"
+              onmouseleave="this.style.borderColor='var(--border)';this.style.color='var(--muted)';this.style.background='var(--surface)'">✏️</button>
+            <button onclick="prDeleteUser(${u.id})" title="ลบ"
+              style="width:30px;height:30px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:0.78rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s"
+              onmouseenter="this.style.borderColor='#ef4444';this.style.color='#ef4444';this.style.background='rgba(239,68,68,0.1)'"
+              onmouseleave="this.style.borderColor='var(--border)';this.style.color='var(--muted)';this.style.background='var(--surface)'">🗑️</button>
+          </div>
+        </div>
+
+        <!-- ROW 2: name + id -->
+        <div onclick="prSelectUser(${u.id})" style="cursor:pointer">
+          <div style="font-size:1rem;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:0.12rem;letter-spacing:-0.01em">${u.name}</div>
+          ${u.empid?`<div style="font-size:0.68rem;color:var(--muted);font-family:monospace;letter-spacing:0.06em;opacity:0.8">#${u.empid}</div>`:''}
+        </div>
+
+        <!-- ROW 3: chips -->
+        <div onclick="prSelectUser(${u.id})" style="display:flex;flex-wrap:wrap;gap:0.3rem;cursor:pointer">
+          ${u.dept?`<span style="display:inline-flex;align-items:center;padding:0.2rem 0.6rem;border-radius:20px;background:${bb};color:${bc};font-size:0.67rem;font-weight:700;border:1px solid ${bc}44;letter-spacing:0.02em">${u.dept}</span>`:''}
+          ${u.position?`<span style="display:inline-flex;align-items:center;padding:0.2rem 0.6rem;border-radius:20px;background:rgba(255,255,255,0.05);color:var(--muted);font-size:0.67rem;font-weight:600;border:1px solid var(--border)">${u.position}</span>`:''}
+        </div>
+
+        <!-- ROW 4: phone (if any) -->
+        ${u.phone?`<div onclick="prSelectUser(${u.id})" style="display:flex;align-items:center;gap:0.4rem;font-size:0.72rem;color:var(--muted);cursor:pointer;letter-spacing:0.01em">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.55;flex-shrink:0"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          <span style="font-family:monospace">${u.phone}</span>
+        </div>`:''}
+
+      </div>
+
+      <!-- FOOTER CTA -->
+      <div onclick="prSelectUser(${u.id})" style="padding:0.6rem 1rem;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,0.12);cursor:pointer;transition:background 0.15s"
+        onmouseenter="this.style.background='rgba(0,0,0,0.22)'"
+        onmouseleave="this.style.background='rgba(0,0,0,0.12)'">
+        <span style="font-size:0.68rem;color:var(--muted);font-weight:500">บันทึกเวลา</span>
+        <span style="font-size:0.7rem;color:${bc};font-weight:700;display:flex;align-items:center;gap:4px">
+          เปิดดู
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </span>
+      </div>
+
+    </div>`;
+  }).join('');
+}
+
+/* ── SELECT / BACK ── */
+let prPinPendingId=null;
+let prPinAttempts=0;
+let prPinAction='detail'; // 'detail' | 'edit'
+
+function prSelectUser(id){
+  const u=prUsers.find(u=>u.id===id);
+  if(!u) return;
+  prPinPendingId=id;
+  prPinAttempts=0;
+  prPinAction='detail';
+  const col=PR_COLORS[u.color||0];
+  const initials=u.name.trim().split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase()||u.name.slice(0,2).toUpperCase();
+  const avatarEl=document.getElementById('pr-pin-avatar');
+  avatarEl.style.background=col.bg; avatarEl.style.color=col.text;
+  avatarEl.innerHTML = u.photo ? `<img src="${u.photo}" style="width:100%;height:100%;object-fit:cover">` : initials;
+  document.getElementById('pr-pin-name').textContent=u.name;
+  const input=document.getElementById('pr-pin-input');
+  input.value='';
+  document.getElementById('pr-pin-err').textContent='';
+  document.getElementById('pr-pin-modal').style.display='flex';
+  setTimeout(()=>input.focus(),50);
+}
+
+function prCancelPin(){
+  prPinPendingId=null;
+  document.getElementById('pr-pin-modal').style.display='none';
+}
+
+async function prVerifyPin(){
+  if(!prPinPendingId) return;
+  const u=prUsers.find(u=>u.id===prPinPendingId);
+  if(!u) return;
+  const entered=(document.getElementById('pr-pin-input').value||'').trim();
+  const errEl=document.getElementById('pr-pin-err');
+  const verifyBtn=document.querySelector('#pr-pin-modal .btn-primary');
+  if(!entered){
+    errEl.textContent='❌ กรุณากรอก PIN';
+    return;
+  }
+  // ตรวจ PIN กับฝั่งเซิร์ฟเวอร์เสมอ (อย่าเทียบกับ u.pin ในเครื่อง — ฟิลด์นี้ถูกลบออกจากข้อมูล
+  // ที่ดึงมาจาก Sheet ทุกครั้งเพื่อความปลอดภัย ทำให้เทียบในเครื่องเฟลหลัง sync/refresh)
+  let verified=false;
+  if(verifyBtn){ verifyBtn.disabled=true; verifyBtn.textContent='กำลังตรวจสอบ...'; }
+  try{
+    const result=await prApiPost('verifyPin', { userId:u.id, pin:entered });
+    verified=!!(result && result.verified);
+  }catch(err){
+    errEl.textContent='⚠️ ตรวจสอบ PIN ไม่สำเร็จ (เช็คอินเทอร์เน็ต) กรุณาลองใหม่';
+    if(verifyBtn){ verifyBtn.disabled=false; verifyBtn.textContent='เข้าสู่ระบบ'; }
+    return;
+  }
+  if(verifyBtn){ verifyBtn.disabled=false; verifyBtn.textContent='เข้าสู่ระบบ'; }
+  if(!verified){
+    prPinAttempts++;
+    errEl.textContent = prPinAttempts>=3 ? '❌ PIN ไม่ถูกต้องหลายครั้ง กรุณาตรวจสอบใหม่' : '❌ PIN ไม่ถูกต้อง กรุณาลองอีกครั้ง';
+    const input=document.getElementById('pr-pin-input');
+    input.value='';
+    input.focus();
+    return;
+  }
+  // PIN correct → proceed
+  document.getElementById('pr-pin-modal').style.display='none';
+  const targetId=prPinPendingId;
+  const action=prPinAction;
+  prPinPendingId=null;
+  if(action==='edit'){
+    const u=prUsers.find(u=>u.id===targetId);
+    if(!u) return;
+    prEditingId=targetId;
+    document.getElementById('pr-modal-title').textContent='✏️ แก้ไขข้อมูลพนักงาน';
+    document.getElementById('pr-save-btn').textContent='บันทึก';
+    document.getElementById('pr-f-empid').value=u.empid||'';
+    document.getElementById('pr-f-name').value=u.name||'';
+    document.getElementById('pr-f-dept').value=u.dept||'';
+    document.getElementById('pr-f-pos').value=u.position||'';
+    document.getElementById('pr-f-phone').value=u.phone||'';
+    // เว้น PIN ว่างไว้เสมอตอนแก้ไข — ค่า u.pin ในเครื่องไม่น่าเชื่อถือ (ถูกลบออกจากข้อมูล
+    // ที่ sync มาจาก Sheet) เว้นว่างไว้ = ไม่เปลี่ยน PIN เดิม, กรอกใหม่ = เปลี่ยน PIN
+    const pinField=document.getElementById('pr-f-pin');
+    pinField.value='';
+    pinField.placeholder='เว้นว่างไว้ = ไม่เปลี่ยน PIN เดิม';
+    document.getElementById('pr-f-pin-err').style.display='none';
+    document.getElementById('pr-f-photo-input').value='';
+    prNewColor=u.color||0;
+    prNewPhoto=u.photo||null;
+    prUpdatePhotoPreview();
+    prRenderColorPick();
+    document.getElementById('pr-add-modal').style.display='flex';
+  } else {
+    prEnterDetail(targetId);
+  }
+}
+
+function prEnterDetail(id){
+  prSelected=prUsers.find(u=>u.id===id);
+  if(!prSelected) return;
+  document.getElementById('pr-userList').style.display='none';
+  document.getElementById('pr-detail').style.display='block';
+  // set back button + name in top bar
+  const topBar=document.getElementById('pr-detail-topbar');
+  if(topBar) topBar.textContent=prSelected.name;
+  prRefreshDetail();
+}
+
+function prBack(){
+  prSelected=null;
+  document.getElementById('pr-userList').style.display='block';
+  document.getElementById('pr-detail').style.display='none';
+  prRenderGrid();
+}
+
+/* ── MONTH NAV ── */
+function prPrevMonth(){ if(prCalMonth===0){prCalMonth=11;prCalYear--;}else prCalMonth--; prRefreshDetail(); }
+function prNextMonth(){ if(prCalMonth===11){prCalMonth=0;prCalYear++;}else prCalMonth++; prRefreshDetail(); }
+function prPrevYear(){ prCalYear--; prRefreshDetail(); }
+function prNextYear(){ prCalYear++; prRefreshDetail(); }
+
+function prRenderMonthStrip(user){
+  const strip = document.getElementById('pr-month-strip');
+  const yearLabel = document.getElementById('pr-year-label');
+  if(!strip) return;
+  if(yearLabel) yearLabel.textContent = `${prCalYear+543} – ${prCalYear+544}`;
+
+  const SHORT_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+  strip.innerHTML = SHORT_TH.map((name, m) => {
+    const isActive = m === prCalMonth;
+    // เช็คว่าเดือนนี้มีข้อมูลไหม (นับเฉพาะในรอบถ้ามีการตั้งค่า)
+    const range = prGetCutoffRange(prCalYear, m);
+    let hasData = false;
+    Object.entries(user.records || {}).forEach(([dk, r]) => {
+      if((r.work||0)>0 || (r.ot||0)>0) {
+        if(prDateInRangeForMonth(dk, prCalYear, m, range)) hasData = true;
+      }
+    });
+
+    const bg = isActive ? 'var(--accent)' : hasData ? 'rgba(0,229,160,0.15)' : 'var(--surface2)';
+    const color = isActive ? '#000' : hasData ? 'var(--accent)' : 'var(--muted)';
+    const border = isActive ? '1.5px solid var(--accent)' : hasData ? '1px solid rgba(0,229,160,0.4)' : '1px solid var(--border)';
+    const fw = isActive || hasData ? '700' : '400';
+    const dot = hasData && !isActive ? `<div style="width:5px;height:5px;border-radius:50%;background:var(--accent);margin:1px auto 0"></div>` : '';
+
+    return `<button onclick="prCalMonth=${m};prRefreshDetail()"
+      style="flex:1;min-width:52px;padding:0.4rem 0.2rem;border-radius:8px;border:${border};
+             background:${bg};color:${color};font-size:0.7rem;font-weight:${fw};
+             cursor:pointer;transition:all 0.15s;line-height:1.3;font-family:inherit">
+      ${name}${dot}
+    </button>`;
+  }).join('');
+}
+
+// เช็คว่า dateKey อยู่ในรอบของเดือนนั้นหรือไม่
+function prDateInRangeForMonth(dk, year, month, range) {
+  if(!range) {
+    // ไม่มีตัดรอบ → เช็คว่าอยู่ในเดือนนั้น
+    const [y,m] = dk.split('-').map(Number);
+    return y===year && m===month+1;
+  }
+  return prDateInRange(dk, range);
+}
+
+/* ── REFRESH DETAIL ── */
+function prRefreshDetail(){
+  if(!prSelected) return;
+  const u=prSelected;
+
+  // render month strip (แทน label เดิม)
+  prRenderMonthStrip(u);
+
+  // แสดง label ช่วงตัดรอบ
+  const rangeLabel = document.getElementById('pr-cutoff-range-label');
+  if (rangeLabel) {
+    const range = prGetCutoffRange(prCalYear, prCalMonth);
+    if (range) {
+      const fmt = d => `${d.getDate()}/${d.getMonth()+1}/${String(d.getFullYear()+543).slice(-2)}`;
+      const payMonthName = PR_MONTHS_TH[prCalMonth];
+      rangeLabel.innerHTML = `<span style="color:var(--accent);font-weight:700">เงินเดือน${payMonthName}</span> <span style="color:var(--muted)">= รอบ</span> <span style="color:#f59e0b;font-weight:600">${fmt(range.startDate)} – ${fmt(range.endDate)}</span>`;
+    } else {
+      rangeLabel.textContent = 'นับทั้งเดือน';
+    }
+  }
+
+  prRenderCal(u); prRenderDayTable(u);
+  const t=prCalcTotals(u);
+  document.getElementById('pr-total').textContent='฿'+Math.round(t.total).toLocaleString();
+  document.getElementById('pr-stat-days').textContent=t.days+' วัน';
+  document.getElementById('pr-stat-ot').textContent=t.ot+' ชม. = ฿'+Math.round(t.otPay).toLocaleString();
+
+  // อัปเดต summary period label
+  const periodEl = document.getElementById('pr-summary-period');
+  if (periodEl) {
+    const range = prGetCutoffRange(prCalYear, prCalMonth);
+    const payMonthName = PR_MONTHS_TH[prCalMonth];
+    if (range) {
+      const fmt = d => `${d.getDate()}/${d.getMonth()+1}/${String(d.getFullYear()+543).slice(-2)}`;
+      periodEl.innerHTML = `💰 <strong style="color:var(--accent)">เงินเดือน${payMonthName}</strong><br>📅 รอบงาน: <span style="color:#f59e0b">${fmt(range.startDate)} – ${fmt(range.endDate)}</span>`;
+      periodEl.style.display='block';
+    } else {
+      periodEl.innerHTML = `💰 <strong style="color:var(--accent)">เดือน${payMonthName}</strong> — นับทั้งเดือน`;
+      periodEl.style.display='block';
+    }
+  }
+}
+
+/* ── CALENDAR ── */
+function prRenderCal(user){
+  const head=document.getElementById('pr-cal-head');
+  const cal=document.getElementById('pr-cal');
+  if(!head||!cal) return;
+  head.innerHTML=PR_DAYS_SHORT.map(d=>`<div style="text-align:center;font-size:0.66rem;color:var(--muted);padding:2px 0">${d}</div>`).join('');
+  const today=new Date(); const todayKey=prDateKey(today.getFullYear(),today.getMonth(),today.getDate());
+  const range=prGetCutoffRange(prCalYear,prCalMonth);
+  const firstDow=new Date(prCalYear,prCalMonth,1).getDay();
+  const daysInMo=new Date(prCalYear,prCalMonth+1,0).getDate();
+  let cells='';
+  for(let i=0;i<firstDow;i++) cells+=`<div></div>`;
+  for(let d=1;d<=daysInMo;d++){
+    const dk=prDateKey(prCalYear,prCalMonth,d);
+    const rec=prGetRec(user,dk);
+    const dow=new Date(prCalYear,prCalMonth,d).getDay();
+    const isWknd=dow===0;
+    const isToday=dk===todayKey;
+    const worked=(rec.work||0)>0;
+    const hasOT=(rec.ot||0)>0;
+    const inRange=prDateInRange(dk,range);
+    // วันนอกรอบ → จาง
+    const opacity=(!range||inRange)?1:0.28;
+    let bg='transparent',color=isWknd?'rgba(239,68,68,0.7)':'var(--muted)',border='1px solid transparent';
+    if(worked&&hasOT){bg='rgba(245,158,11,0.3)';color='#fbbf24';}
+    else if(worked){bg='rgba(0,229,160,0.22)';color='var(--accent)';}
+    else if(isWknd){bg='rgba(239,68,68,0.07)';}
+    // กรอบพิเศษ: วันแรก/วันสุดท้ายของรอบ
+    if(range){
+      const dateObj=new Date(prCalYear,prCalMonth,d);
+      if(dateObj.getTime()===range.startDate.getTime()) border='2px dashed rgba(245,158,11,0.7)';
+      else if(dateObj.getTime()===range.endDate.getTime()) border='2px solid #f59e0b';
+      else if(inRange&&!isToday) border='1px solid rgba(245,158,11,0.18)';
+    }
+    if(isToday) border='2px solid var(--accent)';
+    cells+=`<div onclick="prToggleDay('${dk}')" style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:0.75rem;border-radius:7px;cursor:pointer;background:${bg};color:${color};border:${border};font-weight:${worked||isToday?'700':'400'};opacity:${opacity};transition:all 0.12s" title="${PR_DAYS_FULL[dow]} ${d}${!inRange&&range?' (นอกรอบ)':''}">${d}</div>`;
+  }
+  cal.innerHTML=cells;
+}
+
+function prToggleDay(dk){
+  if(!prSelected) return;
+  if(!prSelected.records[dk]) prSelected.records[dk]={work:0,ot:0,note:''};
+  prSelected.records[dk].work=(prSelected.records[dk].work||0)>0?0:1;
+  prSave(); prRefreshDetail();
+  prSyncAttendanceToSheet(prSelected.id, dk, prSelected.records[dk]);
+}
+
+/* prSyncAttendanceToSheet v3.0 — ใช้ฟังก์ชัน wrapper ด้านบนแทน */
+
+/* ── DAY TABLE ── */
+function prRenderDayTable(user){
+  const tbody=document.getElementById('pr-day-tbody');
+  if(!tbody) return;
+  const today=new Date(); const todayKey=prDateKey(today.getFullYear(),today.getMonth(),today.getDate());
+  const range=prGetCutoffRange(prCalYear,prCalMonth);
+  let rows='';
+
+  // ถ้ามี range → วนตามวันในรอบจริง (ข้ามเดือนได้)
+  // ถ้าไม่มี range → วนแค่วันในเดือนนั้น
+  let iterStart, iterEnd;
+  if(range){
+    iterStart = new Date(range.startDate);
+    iterEnd   = new Date(range.endDate);
+  } else {
+    iterStart = new Date(prCalYear, prCalMonth, 1);
+    iterEnd   = new Date(prCalYear, prCalMonth+1, 0);
+  }
+
+  // แทรก header แบ่งเดือนถ้าข้ามเดือน
+  let lastMonth = -1;
+
+  for(let cur=new Date(iterStart); cur<=iterEnd; cur.setDate(cur.getDate()+1)){
+    const y=cur.getFullYear(), m=cur.getMonth(), d=cur.getDate();
+    const dk=prDateKey(y,m,d);
+    const rec=prGetRec(user,dk);
+    const dow=cur.getDay();
+    const isWknd=dow===0;
+    const isToday=dk===todayKey;
+    const worked=(rec.work||0)>0;
+    const hasOT=(rec.ot||0)>0;
+
+    // header แบ่งเดือน (แสดงเมื่อวนข้ามเดือน)
+    if(m !== lastMonth){
+      if(lastMonth !== -1){
+        rows+=`<tr><td colspan="5" style="padding:3px 6px;background:rgba(99,102,241,0.1);border-top:1px solid rgba(99,102,241,0.3);border-bottom:1px solid rgba(99,102,241,0.3);font-size:0.65rem;color:#818cf8;text-align:center;font-weight:600">📅 ${PR_MONTHS_TH[m]} ${y+543}</td></tr>`;
+      }
+      lastMonth = m;
+    }
+
+    let rowBg='';
+    if(isWknd) rowBg='background:rgba(239,68,68,0.04)';
+    else if(worked&&hasOT) rowBg='background:rgba(245,158,11,0.06)';
+    else if(worked) rowBg='background:rgba(0,229,160,0.04)';
+
+    const dayColor=isWknd?'#ef4444':isToday?'var(--accent)':'var(--text)';
+    const dayNameColor=isWknd?'#ef4444':'var(--muted)';
+    const adjBtn=(field,delta)=>`<button style="width:22px;height:22px;border-radius:5px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:0.95rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0" onclick="prAdj('${dk}','${field}',${delta},${user.id})">${delta>0?'+':'−'}</button>`;
+
+    const leftBorder=range?'border-left:3px solid rgba(245,158,11,0.4)':'border-left:3px solid transparent';
+
+    // แสดงวันที่ พร้อม ชื่อเดือนย่อถ้าข้ามเดือน
+    const dayLabel = (range && m !== prCalMonth) ? `<span style="font-size:0.65rem;color:var(--muted)">${PR_MONTHS_TH[m].slice(0,3)}</span><br>${d}` : d;
+
+    rows+=`<tr style="${rowBg};${leftBorder};border-bottom:1px solid var(--border)">
+      <td style="padding:5px 6px;font-weight:${isToday?'700':'500'};color:${dayColor};font-size:0.8rem;line-height:1.3;text-align:center">${dayLabel}</td>
+      <td style="padding:5px 6px;font-size:0.72rem;color:${dayNameColor}">${PR_DAYS_FULL[dow]}</td>
+      <td style="padding:4px 6px">
+        <div style="display:flex;align-items:center;gap:4px;justify-content:center">
+          ${adjBtn('work',-1)}
+          <span style="min-width:22px;text-align:center;font-weight:700;font-size:0.82rem;color:${worked?'var(--accent)':'var(--muted)'}">${rec.work||0}</span>
+          ${adjBtn('work',1)}
+        </div>
+      </td>
+      <td style="padding:4px 6px">
+        <div style="display:flex;align-items:center;gap:4px;justify-content:center">
+          ${adjBtn('ot',-1)}
+          <span style="min-width:22px;text-align:center;font-weight:700;font-size:0.82rem;color:${hasOT?'#f59e0b':'var(--muted)'}">${rec.ot||0}</span>
+          ${adjBtn('ot',1)}
+        </div>
+      </td>
+      <td style="padding:4px 8px">
+        <input type="text" value="${(rec.note||'').replace(/"/g,'&quot;')}"
+          placeholder="หมายเหตุ..."
+          onchange="prSetNote('${dk}',this.value,${user.id})"
+          style="width:100%;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-size:0.72rem;padding:2px 4px;outline:none;font-family:inherit"
+          onfocus="this.style.borderBottomColor='var(--accent)'"
+          onblur="this.style.borderBottomColor='var(--border)'">
+      </td>
+    </tr>`;
+  }
+  tbody.innerHTML=rows||`<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted)">ไม่มีข้อมูล</td></tr>`;
+}
+
 function prAdj(dk,field,delta,userId){
   const u=prUsers.find(u=>u.id===userId);
   if(!u) return;
