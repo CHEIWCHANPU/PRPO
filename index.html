@@ -1669,7 +1669,7 @@
         <div style="font-weight:700;color:var(--text);font-size:0.8rem">ศูนย์ควบคุม <span style="color:var(--accent)">PU/EN Management</span></div>
         <div style="font-size:0.64rem;color:var(--muted);line-height:1.5">
           ติดตามสถานะการสั่งซื้อ · Lead Time · Supplier · CER · Model Tracker<br>
-          แผนงานข้างนอก · ลงเวลา/ค่าแรง · วิเคราะห์ภาพรวม พร้อมส่งออก Excel ครบในระบบเดียว
+          แผนงานข้างนอก · ลงเวลาการทำงาน · วิเคราะห์ภาพรวม พร้อมส่งออก Excel ครบในระบบเดียว
         </div>
         <div class="wl-chips">
           <div class="wl-chip"><div class="wl-chip-dot"></div>Dashboard</div>
@@ -1678,7 +1678,7 @@
           <div class="wl-chip"><div class="wl-chip-dot"></div>ติดตามใบ CER</div>
           <div class="wl-chip"><div class="wl-chip-dot"></div>Model Tracker</div>
           <div class="wl-chip"><div class="wl-chip-dot"></div>แผนงานข้างนอก</div>
-          <div class="wl-chip"><div class="wl-chip-dot"></div>ลงเวลา & ค่าแรง</div>
+          <div class="wl-chip"><div class="wl-chip-dot"></div>ลงเวลาการทำงาน</div>
           <div class="wl-chip"><div class="wl-chip-dot"></div>Supplier</div>
         </div>
       </div>
@@ -3216,7 +3216,7 @@ function showPage(name, btn) {
   document.getElementById('page-' + name).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  const titles = { home:'🏠 หน้าหลัก', dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', summary:'📈 สรุปภาพรวม', gantt:'📅 Timeline / Gantt', setup:'⚙️ ตั้งค่าระบบ', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis', cer:'📄 ติดตามใบ CER', modeltracker:'🗂️ Model Tracker', workplan:'📅 ตารางแผนงานข้างนอก', payroll:'⏱️ ลงเวลา & ค่าแรง' };
+  const titles = { home:'🏠 หน้าหลัก', dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', summary:'📈 สรุปภาพรวม', gantt:'📅 Timeline / Gantt', setup:'⚙️ ตั้งค่าระบบ', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis', cer:'📄 ติดตามใบ CER', modeltracker:'🗂️ Model Tracker', workplan:'📅 ตารางแผนงานข้างนอก', payroll:'⏱️ ลงเวลาการทำงาน' };
   document.getElementById('topbarTitle').textContent = titles[name] || name;
   if (name === 'home') renderDailyBriefing();
   if (name === 'summary') renderSummary();
