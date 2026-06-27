@@ -750,6 +750,18 @@
   .accent-swatch:hover { transform: scale(1.08); }
   .accent-swatch.active { border-color: var(--accent2); box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent2); }
 
+  /* ── ACCENT POPOVER (topbar quick picker) ── */
+  .accent-popover-wrap { position: relative; }
+  .accent-popover {
+    position: absolute; top: calc(100% + 10px); right: 0; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 12px 48px rgba(0,0,0,0.45);
+    padding: 0.9rem; z-index: 999; display: none; width: 230px; animation: slideDown 0.18s ease;
+  }
+  .accent-popover.show { display: block; }
+  .accent-popover-title { font-size: 0.72rem; font-weight: 700; color: var(--muted); letter-spacing: 0.04em; margin-bottom: 0.65rem; }
+  .accent-popover .accent-pick-row { margin-top: 0; gap: 0.55rem; }
+  .accent-popover .accent-swatch { width: 30px; height: 30px; }
+
   /* DIVIDER */
   .section-divider { display: flex; align-items: center; gap: 0.75rem; margin: 1.2rem 0; }
   .section-divider-line { flex: 1; height: 1px; background: var(--border); }
@@ -1885,6 +1897,13 @@
     <div class="topbar-right">
       <div class="topbar-chip" id="currentDateChip"></div>
       <button class="theme-pill" id="themeToggle" onclick="toggleTheme()">🌙 Dark</button>
+      <div class="accent-popover-wrap">
+        <div class="icon-action" id="accentBtn" onclick="toggleAccentPopover(event)" title="ปรับสีธีม">🎨</div>
+        <div class="accent-popover" id="accentPopover">
+          <div class="accent-popover-title">เลือกสีธีม</div>
+          <div class="accent-pick-row" id="accentColorPickTop"></div>
+        </div>
+      </div>
       <button class="sync-pill" onclick="syncData()"><span id="syncIcon">⟳</span> Sync</button>
       <div class="notif-wrap">
         <div class="icon-action bell" onclick="toggleNotif()" id="notifBell" style="position:relative">🔔<div class="notif-dot" id="notifDot"></div></div>
@@ -3078,6 +3097,7 @@ let charts = {};
 let editingItem = null;
 let sidebarCollapsed = false;
 let notifOpen = false;
+let accentPopoverOpen = false;
 let activeMonthTab = null;
 let cerData = [];
 let cerLoaded = false;
@@ -3133,6 +3153,7 @@ window.addEventListener('DOMContentLoaded', () => {
   initNavGroups();
   document.addEventListener('click', (e) => {
     if (notifOpen && !e.target.closest('#notifPanel') && !e.target.closest('#notifBell')) closeNotif();
+    if (accentPopoverOpen && !e.target.closest('#accentPopover') && !e.target.closest('#accentBtn')) closeAccentPopover();
   });
   loadData();
   loadSuppliers();
@@ -3198,26 +3219,37 @@ const ACCENT_PRESETS = [
 ];
 
 function renderAccentPicker() {
-  const wrap = document.getElementById('accentColorPick');
-  if (!wrap) return;
   const saved = localStorage.getItem('prpo_accent') || '0';
-  wrap.innerHTML = ACCENT_PRESETS.map((c, i) => `
+  const html = ACCENT_PRESETS.map((c, i) => `
     <div class="accent-swatch ${String(i) === saved ? 'active' : ''}"
-         id="accentSwatch-${i}"
+         data-accent-idx="${i}"
          style="background:${c.pastel}"
          title="${c.name}"
          onclick="selectAccent(${i})"></div>
   `).join('');
+  const wrap = document.getElementById('accentColorPick');
+  if (wrap) wrap.innerHTML = html;
+  const wrapTop = document.getElementById('accentColorPickTop');
+  if (wrapTop) wrapTop.innerHTML = html;
 }
 
 function selectAccent(idx) {
   localStorage.setItem('prpo_accent', String(idx));
   applyAccent(idx);
-  ACCENT_PRESETS.forEach((_, i) => {
-    const el = document.getElementById('accentSwatch-' + i);
-    if (el) el.classList.toggle('active', i === idx);
+  document.querySelectorAll('.accent-swatch').forEach(el => {
+    el.classList.toggle('active', Number(el.dataset.accentIdx) === idx);
   });
   showToast('🎨 เปลี่ยนสีธีมแล้ว', 'success');
+}
+
+function toggleAccentPopover(e) {
+  if (e) e.stopPropagation();
+  accentPopoverOpen = !accentPopoverOpen;
+  document.getElementById('accentPopover').classList.toggle('show', accentPopoverOpen);
+}
+function closeAccentPopover() {
+  accentPopoverOpen = false;
+  document.getElementById('accentPopover')?.classList.remove('show');
 }
 
 function applyAccent(idx) {
