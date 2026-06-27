@@ -3259,7 +3259,36 @@ function applyAccent(idx) {
   const accentColor = isLight ? preset.light : preset.dark;
   document.documentElement.style.setProperty('--accent', accentColor);
   document.documentElement.style.setProperty('--glow-accent', hexToRgba(accentColor, isLight ? 0.09 : 0.12));
+
+  // Tint the sidebar/page background using the pastel swatch color itself
+  if (idx === 0) {
+    // preset 0 = original default background, clear overrides
+    document.documentElement.style.removeProperty('--bg');
+    document.documentElement.style.removeProperty('--sidebar');
+    document.documentElement.style.removeProperty('--surface');
+    document.documentElement.style.removeProperty('--surface2');
+  } else {
+    const tintBg = isLight ? mixHex(preset.pastel, '#ffffff', 0.55) : mixHex(preset.pastel, '#0d1117', 0.88);
+    const tintSidebar = isLight ? mixHex(preset.pastel, '#ffffff', 0.45) : mixHex(preset.pastel, '#0d1117', 0.85);
+    const tintSurface = isLight ? mixHex(preset.pastel, '#ffffff', 0.62) : mixHex(preset.pastel, '#0d1117', 0.9);
+    const tintSurface2 = isLight ? mixHex(preset.pastel, '#ffffff', 0.5) : mixHex(preset.pastel, '#0d1117', 0.82);
+    document.documentElement.style.setProperty('--bg', tintBg);
+    document.documentElement.style.setProperty('--sidebar', tintSidebar);
+    document.documentElement.style.setProperty('--surface', tintSurface);
+    document.documentElement.style.setProperty('--surface2', tintSurface2);
+  }
+
   if (Object.keys(charts).length) renderCharts();
+}
+
+function mixHex(hexA, hexB, weightA) {
+  const a = hexA.replace('#', ''), b = hexB.replace('#', '');
+  const ar = parseInt(a.substring(0,2),16), ag = parseInt(a.substring(2,4),16), ab = parseInt(a.substring(4,6),16);
+  const br = parseInt(b.substring(0,2),16), bg = parseInt(b.substring(2,4),16), bb = parseInt(b.substring(4,6),16);
+  const r = Math.round(ar*weightA + br*(1-weightA));
+  const g = Math.round(ag*weightA + bg*(1-weightA));
+  const bl = Math.round(ab*weightA + bb*(1-weightA));
+  return `rgb(${r},${g},${bl})`;
 }
 
 function hexToRgba(hex, alpha) {
