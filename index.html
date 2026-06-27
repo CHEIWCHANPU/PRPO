@@ -7124,25 +7124,31 @@ async function prApiPost(action, body){
   return json.data;
 }
 
-/* แปลงข้อมูลจาก Sheet (employees flat list + attendance flat list)
+/* แปลงข้อมูลจาก Sheet (employees flat list + attendance MONTHLY list)
    กลับเป็นโครงสร้าง prUsers เดิมที่โค้ดทั้งหมดคุ้นเคย (user.records[dateKey])
+   หมายเหตุ: backend v3.0 ส่ง attendance มาเป็น { userId, yearMonth, data:{ "22":{work,ot,note}, ... } }
+   ไม่ใช่ flat list ต่อวัน { userId, dateKey, work, ot, note } แบบเดิมแล้ว
    FIX: ถ้ามีแถวซ้ำ userId+dateKey เดียวกัน → merge เอาค่า max แทนการทับ */
 function prMergeFromSheet(employees, attendanceRows){
   const byUser = {};
   (attendanceRows||[]).forEach(r=>{
-    const uid  = String(r.userId);
-    const dk   = r.dateKey;
-    const work = Number(r.work)||0;
-    const ot   = Number(r.ot)||0;
-    const note = r.note||'';
+    const uid = String(r.userId);
+    const ym  = String(r.yearMonth||'');
+    const data = r.data || {};
     if(!byUser[uid]) byUser[uid] = {};
-    if(!byUser[uid][dk]){
-      byUser[uid][dk] = { work, ot, note };
-    } else {
-      byUser[uid][dk].work = Math.max(byUser[uid][dk].work, work);
-      byUser[uid][dk].ot   = Math.max(byUser[uid][dk].ot,   ot);
-      if(!byUser[uid][dk].note && note) byUser[uid][dk].note = note;
-    }
+    Object.entries(data).forEach(([day, rec])=>{
+      const dk   = `${ym}-${String(day).padStart(2,'0')}`; // "2026-06" + "22" → "2026-06-22"
+      const work = Number(rec.work)||0;
+      const ot   = Number(rec.ot)||0;
+      const note = rec.note||'';
+      if(!byUser[uid][dk]){
+        byUser[uid][dk] = { work, ot, note };
+      } else {
+        byUser[uid][dk].work = Math.max(byUser[uid][dk].work, work);
+        byUser[uid][dk].ot   = Math.max(byUser[uid][dk].ot,   ot);
+        if(!byUser[uid][dk].note && note) byUser[uid][dk].note = note;
+      }
+    });
   });
   return (employees||[]).map(e=>({
     id: Number(e.id),
