@@ -2284,6 +2284,56 @@
   .sc-submit:hover { opacity: 0.85; }
 
 
+  /* ── BRIEFING INLINE COMMENT ── */
+  .briefing-item { position: relative; }
+  .bc-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface2); cursor: pointer; transition: all 0.15s;
+    color: var(--muted); font-size: 0.82rem; flex-shrink: 0; user-select: none;
+    position: relative;
+  }
+  .bc-btn:hover { border-color: var(--accent2); color: var(--accent2); background: rgba(99,102,241,0.1); }
+  .bc-btn.has-comment { border-color: var(--accent2); color: var(--accent2); background: rgba(99,102,241,0.08); }
+  .bc-btn.open { border-color: var(--accent2); color: var(--accent2); background: rgba(99,102,241,0.12); }
+  .bc-count {
+    position: absolute; top: -5px; right: -5px;
+    background: var(--accent2); color: #fff; font-size: 0.52rem; font-weight: 800;
+    width: 14px; height: 14px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    border: 1.5px solid var(--surface);
+  }
+  .bc-panel {
+    display: none; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 0.65rem 0.75rem; margin-top: 0.45rem;
+    animation: bcSlide 0.15s ease;
+  }
+  .bc-panel.open { display: block; }
+  @keyframes bcSlide { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+  .bc-list { max-height: 130px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.45rem; }
+  .bc-item { background: var(--surface); border: 1px solid var(--border); border-radius: 7px; padding: 0.4rem 0.6rem; }
+  .bc-item.bc-issue { border-left: 3px solid var(--danger); }
+  .bc-meta { display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; margin-bottom: 0.15rem; }
+  .bc-author { font-size: 0.65rem; font-weight: 700; color: var(--accent); }
+  .bc-time { font-size: 0.6rem; color: var(--muted); font-family: var(--mono); }
+  .bc-tag { font-size: 0.56rem; font-weight: 700; padding: 0.06rem 0.34rem; border-radius: 5px; }
+  .bc-tag.update { background: rgba(99,102,241,0.15); color: var(--accent2); }
+  .bc-tag.issue  { background: rgba(239,68,68,0.12);  color: var(--danger); }
+  .bc-tag.done   { background: rgba(16,185,129,0.12); color: var(--success); }
+  .bc-tag.info   { background: rgba(0,229,160,0.1);   color: var(--accent); }
+  .bc-text { font-size: 0.74rem; line-height: 1.45; color: var(--text); word-break: break-word; }
+  .bc-del { margin-left: auto; background: none; border: none; cursor: pointer; font-size: 0.66rem; color: var(--muted); padding: 0.08rem 0.2rem; border-radius: 4px; transition: color 0.12s; }
+  .bc-del:hover { color: var(--danger); }
+  .bc-empty { text-align: center; padding: 0.5rem; color: var(--muted); font-size: 0.7rem; }
+  .bc-form-row { display: flex; gap: 0.3rem; margin-bottom: 0.3rem; }
+  .bc-name { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0.3rem 0.5rem; font-size: 0.72rem; color: var(--text); font-family: var(--font); outline: none; transition: border-color 0.12s; }
+  .bc-name:focus { border-color: var(--accent2); }
+  .bc-sel { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0.3rem 0.4rem; font-size: 0.7rem; color: var(--text); font-family: var(--font); outline: none; cursor: pointer; }
+  .bc-ta { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 7px; padding: 0.35rem 0.55rem; font-size: 0.73rem; color: var(--text); font-family: var(--font); resize: none; outline: none; line-height: 1.45; transition: border-color 0.12s; margin-bottom: 0.3rem; }
+  .bc-ta:focus { border-color: var(--accent2); }
+  .bc-submit { background: var(--accent2); border: none; color: #fff; font-family: var(--font); font-size: 0.7rem; font-weight: 700; padding: 0.32rem 0.8rem; border-radius: 6px; cursor: pointer; transition: opacity 0.12s; }
+  .bc-submit:hover { opacity: 0.85; }
+
+
 </style>
 </head>
 <body>
@@ -4289,8 +4339,25 @@ function renderDailyBriefing() {
           </div>
           <div style="display:flex;align-items:center;gap:0.5rem;flex-shrink:0">
             <span class="briefing-tag" style="color:${tag.color};border-color:${tag.color}">${tag.text}</span>
-            <span style="font-size:0.7rem;color:var(--muted);opacity:0.6">💬 ดู</span>
+            <div class="bc-btn" id="bcb-${r.rowIndex}" onclick="bcToggle(${r.rowIndex},event)" title="บันทึก / ความคืบหน้า">
+              💬
+              <span class="bc-count" id="bcc-${r.rowIndex}" style="display:none"></span>
+            </div>
           </div>
+        </div>
+        <div class="bc-panel" id="bcp-${r.rowIndex}" onclick="event.stopPropagation()">
+          <div class="bc-list" id="bcl-${r.rowIndex}"></div>
+          <div class="bc-form-row">
+            <input class="bc-name" id="bca-${r.rowIndex}" placeholder="ชื่อของคุณ" value="${localStorage.getItem('prpo_username')||''}">
+            <select class="bc-sel" id="bcs-${r.rowIndex}">
+              <option value="update">🔄 อัปเดต</option>
+              <option value="info">💬 ทั่วไป</option>
+              <option value="issue">⚠️ ปัญหา</option>
+              <option value="done">✅ เสร็จ</option>
+            </select>
+          </div>
+          <textarea class="bc-ta" id="bct-${r.rowIndex}" rows="2" placeholder="อัปเดตสถานะ, ปัญหา, หรือหมายเหตุ..."></textarea>
+          <button class="bc-submit" onclick="bcAdd(${r.rowIndex},event)">+ บันทึก</button>
         </div>`;
       }).join('');
       return `<div class="briefing-group">
@@ -4361,6 +4428,8 @@ function renderDailyBriefing() {
   }
 
   body.innerHTML = sections.join('');
+  // init comment badges for all briefing items
+  partsFollow.forEach(r => { if (r.rowIndex) setTimeout(() => bcRender(r.rowIndex), 0); });
 }
 
 /* ── DATA LOAD ── */
@@ -8851,6 +8920,73 @@ function scDelete(sid, idx) {
   arr.splice(idx, 1);
   scSave(sid, arr);
   scRender(sid);
+}
+
+
+/* ── BRIEFING INLINE COMMENT (bc) ── */
+function bcKey(rowIndex) { return 'comments_' + rowIndex; }
+function bcLoad(rowIndex) { try { return JSON.parse(localStorage.getItem(bcKey(rowIndex)) || '[]'); } catch { return []; } }
+function bcSave(rowIndex, arr) { localStorage.setItem(bcKey(rowIndex), JSON.stringify(arr)); }
+
+function bcToggle(rowIndex, event) {
+  if (event) event.stopPropagation();
+  const panel = document.getElementById('bcp-' + rowIndex);
+  const btn   = document.getElementById('bcb-' + rowIndex);
+  if (!panel) return;
+  const isOpen = panel.classList.toggle('open');
+  if (btn) btn.classList.toggle('open', isOpen);
+  if (isOpen) { bcRender(rowIndex); }
+}
+
+function bcRender(rowIndex) {
+  const arr   = bcLoad(rowIndex);
+  const list  = document.getElementById('bcl-' + rowIndex);
+  const btn   = document.getElementById('bcb-' + rowIndex);
+  const cnt   = document.getElementById('bcc-' + rowIndex);
+  if (!list) return;
+  // update badge count
+  if (cnt) { cnt.textContent = arr.length || ''; cnt.style.display = arr.length ? '' : 'none'; }
+  if (btn) { btn.classList.toggle('has-comment', arr.length > 0); }
+  const TAG = { update:'🔄', issue:'⚠️', done:'✅', info:'💬' };
+  if (!arr.length) { list.innerHTML = '<div class="bc-empty">ยังไม่มีบันทึก — เพิ่มด้านล่างได้เลย</div>'; return; }
+  list.innerHTML = arr.map((c, i) => `
+    <div class="bc-item ${c.tag==='issue'?'bc-issue':''}">
+      <div class="bc-meta">
+        <span class="bc-author">👤 ${c.author||'-'}</span>
+        <span class="bc-time">${c.time}</span>
+        <span class="bc-tag ${c.tag}">${TAG[c.tag]||''} ${c.tag}</span>
+        <button class="bc-del" onclick="bcDelete(${rowIndex},${i},event)">✕</button>
+      </div>
+      <div class="bc-text">${c.text.replace(/\n/g,'<br>')}</div>
+    </div>`).join('');
+  list.scrollTop = list.scrollHeight;
+}
+
+function bcAdd(rowIndex, event) {
+  if (event) event.stopPropagation();
+  const author = (document.getElementById('bca-'+rowIndex)?.value || '').trim();
+  const text   = (document.getElementById('bct-'+rowIndex)?.value || '').trim();
+  const tag    = document.getElementById('bcs-'+rowIndex)?.value || 'update';
+  if (!text) { showToast('⚠️ กรุณาพิมพ์ข้อความก่อนบันทึก','error'); return; }
+  const now  = new Date();
+  const time = now.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'}) + ' ' +
+               now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+  const arr = bcLoad(rowIndex);
+  arr.push({ author, text, tag, time });
+  bcSave(rowIndex, arr);
+  const ta = document.getElementById('bct-'+rowIndex);
+  if (ta) ta.value = '';
+  if (author) localStorage.setItem('prpo_username', author);
+  bcRender(rowIndex);
+  showToast('✅ บันทึกแล้ว','success');
+}
+
+function bcDelete(rowIndex, idx, event) {
+  if (event) event.stopPropagation();
+  const arr = bcLoad(rowIndex);
+  arr.splice(idx, 1);
+  bcSave(rowIndex, arr);
+  bcRender(rowIndex);
 }
 
 </script>
