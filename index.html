@@ -1703,7 +1703,7 @@
           <div class="wl-chip"><div class="wl-chip-dot"></div>ติดตามใบ CER</div>
           <div class="wl-chip"><div class="wl-chip-dot"></div>Model Tracker</div>
           <div class="wl-chip"><div class="wl-chip-dot"></div>แผนงานข้างนอก</div>
-          <div class="wl-chip"><div class="wl-chip-dot"></div>ลงเวลาการทำงาน/div>
+          <div class="wl-chip"><div class="wl-chip-dot"></div>ลงเวลา & ค่าแรง</div>
           <div class="wl-chip"><div class="wl-chip-dot"></div>Supplier</div>
         </div>
       </div>
@@ -1896,22 +1896,31 @@
     </div>
     <div class="topbar-right">
       <div class="topbar-chip" id="currentDateChip"></div>
-      <div style="width:1px;height:20px;background:var(--border);flex-shrink:0"></div>
       <button class="sync-pill" onclick="syncData()"><span id="syncIcon">⟳</span> Sync</button>
+      <div style="width:1px;height:20px;background:var(--border);flex-shrink:0"></div>
       <div class="notif-wrap">
-        <div class="icon-action bell" onclick="toggleNotif()" id="notifBell" style="position:relative">🔔<div class="notif-dot" id="notifDot"></div></div>
+        <div class="icon-action bell" onclick="toggleNotif()" id="notifBell" style="position:relative">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <div class="notif-dot" id="notifDot"></div>
+        </div>
       </div>
-      <div class="icon-action" id="fullscreenBtn" onclick="toggleFullscreen()" title="ขยายเต็มจอ"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg></div>
+      <div class="icon-action" id="fullscreenBtn" onclick="toggleFullscreen()" title="เต็มจอ">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+      </div>
+      <div class="icon-action toast-mute-btn" id="toastMuteBtn" onclick="toggleToastMute()" title="ปิด popup แจ้งเตือน">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="muteBellIcon"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+      </div>
       <div style="width:1px;height:20px;background:var(--border);flex-shrink:0"></div>
       <div class="accent-popover-wrap">
-        <div class="icon-action" id="accentBtn" onclick="toggleAccentPopover(event)" title="ปรับสีธีม">🎨</div>
+        <div class="icon-action" id="accentBtn" onclick="toggleAccentPopover(event)" title="ปรับสีธีม">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+        </div>
         <div class="accent-popover" id="accentPopover">
           <div class="accent-popover-title">เลือกสีธีม</div>
           <div class="accent-pick-row" id="accentColorPickTop"></div>
         </div>
       </div>
       <button class="theme-pill" id="themeToggle" onclick="toggleTheme()">🌙 Dark</button>
-      <div class="icon-action toast-mute-btn" id="toastMuteBtn" onclick="toggleToastMute()" title="เปิด/ปิด popup แจ้งเตือน" style="border-radius:8px">🔕</div>
     </div>
   </div>
 
@@ -3366,7 +3375,7 @@ function showPage(name, btn) {
   document.getElementById('page-' + name).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  const titles = { home:'🏠 หน้าหลัก', dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', summary:'📈 สรุปภาพรวม', gantt:'📅 Timeline / Gantt', setup:'⚙️ ตั้งค่าระบบ', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis', cer:'📄 ติดตามใบ CER', modeltracker:'🗂️ Model Tracker', workplan:'📅 ตารางแผนงานข้างนอก', payroll:'⏱️ ลงเวลาการทำงาน' };
+  const titles = { home:'🏠 หน้าหลัก', dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', summary:'📈 สรุปภาพรวม', gantt:'📅 Timeline / Gantt', setup:'⚙️ ตั้งค่าระบบ', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis', cer:'📄 ติดตามใบ CER', modeltracker:'🗂️ Model Tracker', workplan:'📅 ตารางแผนงานข้างนอก', payroll:'⏱️ ลงเวลา & ค่าแรง' };
   document.getElementById('topbarTitle').textContent = titles[name] || name;
   if (name === 'home') renderDailyBriefing();
   if (name === 'summary') renderSummary();
@@ -5215,26 +5224,25 @@ function toggleToastMute() {
   toastMuted = !toastMuted;
   localStorage.setItem('toastMuted', toastMuted);
   const btn = document.getElementById('toastMuteBtn');
+  // SVG bell: มีขีดฆ่า = muted, ไม่มีขีด = active
+  const svgOn  = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>';
+  const svgOff = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
   if (toastMuted) {
-    btn.textContent = '🔔';
+    btn.innerHTML = svgOff;
     btn.title = 'เปิด popup แจ้งเตือน';
     btn.classList.add('muted');
   } else {
-    btn.textContent = '🔕';
+    btn.innerHTML = svgOn;
     btn.title = 'ปิด popup แจ้งเตือน';
     btn.classList.remove('muted');
   }
 }
 function initToastMuteBtn() {
   const btn = document.getElementById('toastMuteBtn');
-  if (toastMuted) {
-    btn.textContent = '🔔';
-    btn.title = 'เปิด popup แจ้งเตือน';
-    btn.classList.add('muted');
-  } else {
-    btn.textContent = '🔕';
-    btn.title = 'ปิด popup แจ้งเตือน';
-  }
+  const svgOn  = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>';
+  const svgOff = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+  if (toastMuted) { btn.innerHTML = svgOff; btn.title = 'เปิด popup แจ้งเตือน'; btn.classList.add('muted'); }
+  else             { btn.innerHTML = svgOn;  btn.title = 'ปิด popup แจ้งเตือน'; }
 }
 
 /* ── TOAST ── */
