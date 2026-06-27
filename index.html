@@ -150,6 +150,7 @@
     padding: 1rem 0.85rem; display: flex; align-items: center; gap: 0.75rem;
     border-bottom: 1px solid var(--border); min-height: 64px; white-space: nowrap;
     background: linear-gradient(135deg, rgba(0,229,160,0.06), rgba(99,102,241,0.04));
+    overflow: hidden;
   }
   .logo-icon {
     width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center;
@@ -161,6 +162,8 @@
   .logo-texts { overflow: hidden; }
   .logo-title { font-size: 0.88rem; font-weight: 700; color: var(--text); white-space: nowrap; letter-spacing: -0.01em; }
   .logo-sub { font-size: 0.62rem; color: var(--muted); font-family: var(--mono); white-space: nowrap; margin-top: 1px; }
+  .sidebar.collapsed .sidebar-logo { padding: 1rem 0.5rem; justify-content: center; gap: 0; }
+  .sidebar.collapsed .logo-texts { width: 0; opacity: 0; pointer-events: none; }
 
   .nav-section { flex: 1; padding: 0.75rem 0.55rem; overflow-y: auto; overflow-x: hidden; }
   .nav-group {
@@ -1669,7 +1672,7 @@
         <div style="font-weight:700;color:var(--text);font-size:0.8rem">ศูนย์ควบคุม <span style="color:var(--accent)">PU/EN Management</span></div>
         <div style="font-size:0.64rem;color:var(--muted);line-height:1.5">
           ติดตามสถานะการสั่งซื้อ · Lead Time · Supplier · CER · Model Tracker<br>
-          แผนงานข้างนอก · ลงเวลาการทำงาน · วิเคราะห์ภาพรวม พร้อมส่งออก Excel ครบในระบบเดียว
+          แผนงานข้างนอก · ลงเวลา/ค่าแรง · วิเคราะห์ภาพรวม พร้อมส่งออก Excel ครบในระบบเดียว
         </div>
         <div class="wl-chips">
           <div class="wl-chip"><div class="wl-chip-dot"></div>Dashboard</div>
@@ -1678,7 +1681,7 @@
           <div class="wl-chip"><div class="wl-chip-dot"></div>ติดตามใบ CER</div>
           <div class="wl-chip"><div class="wl-chip-dot"></div>Model Tracker</div>
           <div class="wl-chip"><div class="wl-chip-dot"></div>แผนงานข้างนอก</div>
-          <div class="wl-chip"><div class="wl-chip-dot"></div>ลงเวลาการทำงาน</div>
+          <div class="wl-chip"><div class="wl-chip-dot"></div>ลงเวลา & ค่าแรง</div>
           <div class="wl-chip"><div class="wl-chip-dot"></div>Supplier</div>
         </div>
       </div>
@@ -3216,7 +3219,7 @@ function showPage(name, btn) {
   document.getElementById('page-' + name).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  const titles = { home:'🏠 หน้าหลัก', dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', summary:'📈 สรุปภาพรวม', gantt:'📅 Timeline / Gantt', setup:'⚙️ ตั้งค่าระบบ', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis', cer:'📄 ติดตามใบ CER', modeltracker:'🗂️ Model Tracker', workplan:'📅 ตารางแผนงานข้างนอก', payroll:'⏱️ ลงเวลาการทำงาน' };
+  const titles = { home:'🏠 หน้าหลัก', dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', summary:'📈 สรุปภาพรวม', gantt:'📅 Timeline / Gantt', setup:'⚙️ ตั้งค่าระบบ', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis', cer:'📄 ติดตามใบ CER', modeltracker:'🗂️ Model Tracker', workplan:'📅 ตารางแผนงานข้างนอก', payroll:'⏱️ ลงเวลา & ค่าแรง' };
   document.getElementById('topbarTitle').textContent = titles[name] || name;
   if (name === 'home') renderDailyBriefing();
   if (name === 'summary') renderSummary();
