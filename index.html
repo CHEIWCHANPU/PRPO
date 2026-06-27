@@ -7425,7 +7425,13 @@ async function prVerifyPin(){
     document.getElementById('pr-f-pin-err').style.display='none';
     document.getElementById('pr-f-photo-input').value='';
     prNewColor=u.color||0;
-    prNewPhoto=u.photo||null;
+    // ดึงรูปจาก localStorage cache ถ้า u.photo ว่าง (Sheet อาจตัดออกเพราะใหญ่เกิน)
+    prNewPhoto = u.photo || null;
+    if(!prNewPhoto){
+      const cached = JSON.parse(localStorage.getItem('prpo_payroll_users')||'[]');
+      const cu = cached.find(c => String(c.id)===String(u.id));
+      if(cu && cu.photo) prNewPhoto = cu.photo;
+    }
     prUpdatePhotoPreview();
     prRenderColorPick();
     document.getElementById('pr-add-modal').style.display='flex';
@@ -7783,8 +7789,21 @@ function prHandlePhotoSelect(input){
   if(!file.type.startsWith('image/')){ showToast('⚠️ กรุณาเลือกไฟล์รูปภาพ','warn'); return; }
   const reader=new FileReader();
   reader.onload=e=>{
-    prNewPhoto=e.target.result;
-    prUpdatePhotoPreview();
+    // บีบอัดรูปให้เล็กลงก่อนบันทึก (max 200x200px, quality 0.7)
+    // เพื่อให้ส่งไป Google Sheet ได้และไม่ใช้พื้นที่ localStorage เยอะ
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 200;
+      const scale = Math.min(MAX / img.width, MAX / img.height, 1);
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      prNewPhoto = canvas.toDataURL('image/jpeg', 0.75);
+      prUpdatePhotoPreview();
+    };
+    img.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
