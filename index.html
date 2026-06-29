@@ -3047,9 +3047,17 @@
     <!-- SUMMARY -->
     <div class="page" id="page-summary">
       <div class="chart-card" style="margin-bottom:1rem">
-        <div class="chart-header">
-          <div class="chart-title">📅 สรุปรายเดือน 2026</div>
-          <button class="btn btn-ghost" style="font-size:0.7rem;padding:0.28rem 0.7rem" onclick="activeMonthTab=null;renderSummary()">ภาพรวมทั้งหมด</button>
+        <div class="chart-header" style="flex-wrap:wrap;gap:0.6rem">
+          <div class="chart-title">📅 สรุปรายเดือน</div>
+          <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
+            <div class="mt-year-nav">
+              <button class="mt-year-nav-btn" onclick="summaryYearPrev()">◀</button>
+              <span class="mt-year-nav-label" id="summary-yearLabel">—</span>
+              <button class="mt-year-nav-btn" onclick="summaryYearNext()">▶</button>
+              <button class="mt-year-nav-today" onclick="summaryYearToday()" title="กลับปีปัจจุบัน">วันนี้</button>
+            </div>
+            <button class="btn btn-ghost" style="font-size:0.7rem;padding:0.28rem 0.7rem" onclick="activeMonthTab=null;renderSummary()">ภาพรวมทั้งหมด</button>
+          </div>
         </div>
         <div id="monthTabs" style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:1rem"></div>
         <div id="monthSummaryContent"></div>
@@ -3528,7 +3536,15 @@
 
       <!-- Progress + Month filter row -->
       <div class="wp-toolbar-row">
-        <div class="wp-month-tabs" id="wpMonthTabs"></div>
+        <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap">
+          <div class="mt-year-nav">
+            <button class="mt-year-nav-btn" onclick="wpYearPrev()">◀</button>
+            <span class="mt-year-nav-label" id="wp-yearLabel">—</span>
+            <button class="mt-year-nav-btn" onclick="wpYearNext()">▶</button>
+            <button class="mt-year-nav-today" onclick="wpYearToday()" title="กลับปีปัจจุบัน">วันนี้</button>
+          </div>
+          <div class="wp-month-tabs" id="wpMonthTabs"></div>
+        </div>
         <div style="display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap">
           <select class="filter-select" id="wpFilterType" onchange="renderWorkplan()">
             <option value="">ประเภททั้งหมด</option>
@@ -5635,16 +5651,24 @@ function getMonthLabel(key) {
   const [y, m] = key.split('-');
   return MONTH_NAMES[parseInt(m)-1] + ' ' + y;
 }
+let summaryYear = new Date().getFullYear();
+function summaryUpdateYearLabel(){
+  const el = document.getElementById('summary-yearLabel');
+  if (el) el.textContent = summaryYear;
+}
+function summaryYearPrev(){ summaryYear--; activeMonthTab=null; renderSummary(); }
+function summaryYearNext(){ summaryYear++; activeMonthTab=null; renderSummary(); }
+function summaryYearToday(){ summaryYear=new Date().getFullYear(); activeMonthTab=null; renderSummary(); }
 function getMonthData() {
   if (!activeMonthTab) return allData;
   return allData.filter(r => getMonthKey(r.dueDate) === activeMonthTab);
 }
 function renderMonthTabs() {
+  summaryUpdateYearLabel();
   // เดือนที่มีข้อมูล
   const dataMonths = new Set(allData.map(r => getMonthKey(r.dueDate)).filter(Boolean));
-  // เดือนคงที่ ม.ค.–ธ.ค. 2026
-  const fixedMonths = ['2026-01','2026-02','2026-03','2026-04','2026-05','2026-06',
-                       '2026-07','2026-08','2026-09','2026-10','2026-11','2026-12'];
+  // เดือนคงที่ ม.ค.–ธ.ค. ของปีที่เลือกผ่าน Year Navigator (รองรับทุกปีในอนาคต ไม่ตายตัวที่ 2026 อีกต่อไป)
+  const fixedMonths = Array.from({length:12}, (_,i) => `${summaryYear}-${String(i+1).padStart(2,'0')}`);
   // รวมและ sort (กันกรณีมีปีอื่น)
   const allMonths = [...new Set([...fixedMonths, ...dataMonths])].sort();
   const container = document.getElementById('monthTabs');
@@ -8324,6 +8348,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
 // Model Tracker (v8.5) ทุกประการ เพื่อให้ข้อมูลซิงค์กันทุกเครื่อง/ทุกคน
 let wpData = [];
 let wpActiveMonth = null;
+let wpYear = new Date().getFullYear();
 let wpCharts = {};
 let wpInited = false;
 let wpLoading = false;
@@ -8441,9 +8466,18 @@ function renderWpKpiBanner() {
   document.getElementById('wpProgressPct').textContent  = pct + '%';
 }
 
+function wpUpdateYearLabel(){
+  const el = document.getElementById('wp-yearLabel');
+  if (el) el.textContent = wpYear;
+}
+function wpYearPrev(){ wpYear--; wpActiveMonth=null; renderWorkplan(); }
+function wpYearNext(){ wpYear++; wpActiveMonth=null; renderWorkplan(); }
+function wpYearToday(){ wpYear=new Date().getFullYear(); wpActiveMonth=null; renderWorkplan(); }
 function renderWpMonthTabs() {
+  wpUpdateYearLabel();
   const dataMonths = new Set(wpData.map(r => wpMonthKey(r.date)).filter(Boolean));
-  const fixed = ['2026-06','2026-07','2026-08','2026-09','2026-10','2026-11','2026-12'];
+  // เดือนคงที่ ม.ค.–ธ.ค. ของปีที่เลือกผ่าน Year Navigator (รองรับทุกปีในอนาคต ไม่ตายตัวที่ 2026 อีกต่อไป)
+  const fixed = Array.from({length:12}, (_,i) => `${wpYear}-${String(i+1).padStart(2,'0')}`);
   const all = [...new Set([...fixed, ...dataMonths])].sort();
   const cont = document.getElementById('wpMonthTabs');
   cont.innerHTML = `<button class="wp-month-tab ${!wpActiveMonth ? 'active' : ''}" onclick="wpSetMonth(null)">ทั้งหมด</button>` +
