@@ -6390,7 +6390,8 @@ function showToast(msg, type = 'info', duration = 3200) {
    type: 'success' | 'error' | 'warn'
    title: ข้อความหลัก เช่น "บันทึกสำเร็จ"
    sub: ข้อความรองไม่บังคับ เช่น รายละเอียด error */
-function showResultModal(title, type = 'success', sub = '') {
+let _resultModalOnClose = null;
+function showResultModal(title, type = 'success', sub = '', onClose = null) {
   const overlay = document.getElementById('resultModalOverlay');
   const iconWrap = document.getElementById('resultModalIcon');
   const titleEl = document.getElementById('resultModalTitle');
@@ -6402,6 +6403,8 @@ function showResultModal(title, type = 'success', sub = '') {
   if (sub) { subEl.textContent = sub; subEl.style.display = 'block'; }
   else { subEl.style.display = 'none'; }
   btnEl.textContent = 'ตกลง';
+  // callback หลังกดตกลง/Esc (ใช้แล้วทิ้ง — ไม่ผูกถาวร เพื่อไม่กระทบการเรียกแบบเดิมที่ไม่ส่ง onClose)
+  _resultModalOnClose = (typeof onClose === 'function') ? onClose : null;
   // ปิดด้วย Esc ได้ด้วย (กดครั้งเดียวพอ ไม่ผูกซ้ำ)
   document.addEventListener('keydown', _resultModalEscHandler);
 }
@@ -6412,6 +6415,9 @@ function closeResultModal() {
   const overlay = document.getElementById('resultModalOverlay');
   overlay.classList.remove('open');
   document.removeEventListener('keydown', _resultModalEscHandler);
+  const cb = _resultModalOnClose;
+  _resultModalOnClose = null;
+  if (cb) cb();
 }
 
 /* ── NOTIFY TOAST — แจ้งเตือนรายการใกล้ถึงวันส่ง ── */
@@ -9023,7 +9029,9 @@ async function prVerifyPin(){
     prRenderColorPick();
     document.getElementById('pr-add-modal').style.display='flex';
   } else {
-    prEnterDetail(targetId);
+    showResultModal('เข้าสู่ระบบสำเร็จ', 'success', '', function(){
+      prEnterDetail(targetId);
+    });
   }
 }
 
