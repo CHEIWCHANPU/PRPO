@@ -171,6 +171,8 @@
     background: var(--surface2); transition: all 0.2s;
   }
   .nav-group:hover { border-color: rgba(0,229,160,0.15); }
+  .nav-group-plain { border: none; background: transparent; }
+  .nav-group-plain:hover { border-color: transparent; }
   .sidebar.collapsed .nav-group { border: none; background: transparent; margin-bottom: 0.25rem; }
   .nav-label {
     font-size: 0.66rem; font-weight: 700; letter-spacing: 0.02em;
@@ -251,7 +253,10 @@
   .sidebar.collapsed .nav-group { position: relative; padding-bottom: 0.4rem; margin-bottom: 0.4rem; }
   .sidebar.collapsed .nav-group:not(:last-child)::after {
     content: ''; position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
-    width: 20px; height: 1px; background: var(--border2);
+    width: 24px; height: 1px; background: var(--border2); opacity: 0.65;
+  }
+  body:not(.light-theme) .sidebar.collapsed .nav-group:not(:last-child)::after {
+    background: rgba(255,255,255,0.16);
   }
   .sidebar.collapsed .logout-btn {
     justify-content: center;
@@ -2704,7 +2709,7 @@
     </div>
   </div>
   <nav class="nav-section">
-    <div style="margin-bottom:0.65rem">
+    <div class="nav-group nav-group-plain" id="navGroup-main">
       <button class="nav-item active" id="nav-home" onclick="showPage('home',this)">
         <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-5h4v5a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1V10"/></svg></span><span class="nav-text">หน้าหลัก</span>
       </button>
