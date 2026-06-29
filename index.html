@@ -5313,37 +5313,14 @@ function renderSummaryCards(mData, mLabel) {
   ];
   document.getElementById('statusBars').innerHTML = bars.map(b => {
     const p = total ? Math.round(b.count/total*100) : 0;
-    return `<div>
+    return `<div style="margin-bottom:0.6rem">
       <div style="display:flex;justify-content:space-between;font-size:0.75rem;margin-bottom:0.3rem">
         <span>${b.label}</span><span style="font-family:var(--mono);color:${b.color}">${b.count} (${p}%)</span>
       </div>
       <div style="height:6px;background:var(--surface2);border-radius:3px;overflow:hidden">
         <div style="height:100%;width:${p}%;background:${b.color};border-radius:3px;transition:width 0.6s ease"></div>
       </div>
-      <div class="sc-section">
-        <div class="sc-header" onclick="scToggle('${s.id}')">
-          <div class="sc-title">
-            💬 บันทึกทีม
-            <span class="sc-badge" id="scbadge-${s.id}" style="display:none"></span>
-          </div>
-          <span class="sc-toggle" id="sca-${s.id}">▾</span>
-        </div>
-        <div class="sc-body" id="scb-${s.id}">
-          <div class="sc-list" id="scl-${s.id}"><div class="sc-empty">ยังไม่มีบันทึก</div></div>
-          <div class="sc-input-row">
-            <input class="sc-name" id="scauthor-${s.id}" placeholder="ชื่อของคุณ" value="${localStorage.getItem('prpo_username')||''}">
-            <select class="sc-select" id="sctag-${s.id}">
-              <option value="update">🔄 อัปเดต</option>
-              <option value="info">💬 ทั่วไป</option>
-              <option value="issue">⚠️ ปัญหา</option>
-              <option value="done">✅ เสร็จ</option>
-            </select>
-          </div>
-          <textarea class="sc-textarea" id="sctext-${s.id}" rows="2" placeholder="บันทึกความคืบหน้า, ปัญหา, หรือหมายเหตุ..."></textarea>
-          <button class="sc-submit" onclick="scAdd('${s.id}')">+ บันทึก</button>
-        </div>
-      </div>
-    `;
+    </div>`;
   }).join('');
 
   // Maker chart
