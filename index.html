@@ -4287,9 +4287,10 @@ const ADMIN_PIN = 'puen12345';
 const ADMIN_LOCKED_PAGES = ['setup', 'history'];
 let adminPinPendingPage = null;
 let adminPinPendingBtn = null;
+let adminPinBypassing = false; // flag ชั่วคราว เพื่อให้ showPage ผ่านได้ครั้งเดียว
 
 function isAdminUnlocked() {
-  return false; // ต้องกรอกรหัสผ่านทุกครั้ง
+  return adminPinBypassing; // ต้องกรอกรหัสผ่านทุกครั้ง (ยกเว้นขณะ bypass)
 }
 
 function requireAdminPin(page, btn) {
@@ -4312,7 +4313,9 @@ function verifyAdminPin() {
     const btn = adminPinPendingBtn;
     adminPinPendingPage = null;
     adminPinPendingBtn = null;
+    adminPinBypassing = true;       // เปิด bypass ชั่วคราว
     if (page) showPage(page, btn);
+    adminPinBypassing = false;      // ปิด bypass ทันทีหลัง showPage
     showToast('🔓 ปลดล็อกสำเร็จ', 'success');
   } else {
     document.getElementById('adminPinErr').textContent = '❌ รหัสผ่านไม่ถูกต้อง';
