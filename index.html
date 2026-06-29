@@ -2414,8 +2414,8 @@
   /* ── MOBILE TOPBAR ── */
   @media (max-width: 768px) {
     /* Hide sidebar, show mobile nav */
-    .sidebar { transform: translateX(-100%); transition: transform 0.28s cubic-bezier(0.4,0,0.2,1); width: var(--sw) !important; z-index: 201; }
-    .sidebar.mobile-open { transform: translateX(0); }
+    .sidebar { display: none !important; }
+    .sidebar.mobile-open { display: none !important; }
     .main-wrap { margin-left: 0 !important; }
     .main-wrap.collapsed { margin-left: 0 !important; }
 
@@ -4289,7 +4289,7 @@ let adminPinPendingPage = null;
 let adminPinPendingBtn = null;
 
 function isAdminUnlocked() {
-  return sessionStorage.getItem('prpo_admin_unlocked') === 'true';
+  return false; // ต้องกรอกรหัสผ่านทุกครั้ง
 }
 
 function requireAdminPin(page, btn) {
@@ -4307,7 +4307,6 @@ function requireAdminPin(page, btn) {
 function verifyAdminPin() {
   const entered = document.getElementById('adminPinInput').value.trim();
   if (entered === ADMIN_PIN) {
-    sessionStorage.setItem('prpo_admin_unlocked', 'true');
     document.getElementById('adminPinModal').style.display = 'none';
     const page = adminPinPendingPage;
     const btn = adminPinPendingBtn;
@@ -7149,7 +7148,7 @@ function renderLeadTime() {
     const menuBtn = document.getElementById('mobileMenuBtn');
     const bottomNav = document.getElementById('bottomNav');
     const fab = document.getElementById('mobileFab');
-    if (menuBtn) menuBtn.style.display = mobile ? 'flex' : 'none';
+    if (menuBtn) menuBtn.style.display = 'none';
     if (bottomNav) bottomNav.style.display = mobile ? 'block' : 'none';
     // FAB แสดงเฉพาะหน้า list บนมือถือ
     updateFabVisibility();
