@@ -5665,12 +5665,11 @@ function getMonthData() {
 }
 function renderMonthTabs() {
   summaryUpdateYearLabel();
-  // เดือนที่มีข้อมูล
+  // เดือนที่มีข้อมูล (ใช้แค่เช็ค has-data ไม่เอามาผสมข้ามปี)
   const dataMonths = new Set(allData.map(r => getMonthKey(r.dueDate)).filter(Boolean));
-  // เดือนคงที่ ม.ค.–ธ.ค. ของปีที่เลือกผ่าน Year Navigator (รองรับทุกปีในอนาคต ไม่ตายตัวที่ 2026 อีกต่อไป)
+  // เดือนคงที่ ม.ค.–ธ.ค. ของปีที่เลือกผ่าน Year Navigator เท่านั้น (เปลี่ยนปีแล้วไม่เอาเดือนปีเก่าติดมาด้วย)
   const fixedMonths = Array.from({length:12}, (_,i) => `${summaryYear}-${String(i+1).padStart(2,'0')}`);
-  // รวมและ sort (กันกรณีมีปีอื่น)
-  const allMonths = [...new Set([...fixedMonths, ...dataMonths])].sort();
+  const allMonths = fixedMonths;
   const container = document.getElementById('monthTabs');
   container.innerHTML = allMonths.map(m => {
     const isActive = m === activeMonthTab;
@@ -8475,10 +8474,11 @@ function wpYearNext(){ wpYear++; wpActiveMonth=null; renderWorkplan(); }
 function wpYearToday(){ wpYear=new Date().getFullYear(); wpActiveMonth=null; renderWorkplan(); }
 function renderWpMonthTabs() {
   wpUpdateYearLabel();
+  // เดือนที่มีข้อมูล (ใช้แค่เช็ค has-data ไม่เอามาผสมข้ามปี)
   const dataMonths = new Set(wpData.map(r => wpMonthKey(r.date)).filter(Boolean));
-  // เดือนคงที่ ม.ค.–ธ.ค. ของปีที่เลือกผ่าน Year Navigator (รองรับทุกปีในอนาคต ไม่ตายตัวที่ 2026 อีกต่อไป)
+  // เดือนคงที่ ม.ค.–ธ.ค. ของปีที่เลือกผ่าน Year Navigator เท่านั้น (เปลี่ยนปีแล้วไม่เอาเดือนปีเก่าติดมาด้วย)
   const fixed = Array.from({length:12}, (_,i) => `${wpYear}-${String(i+1).padStart(2,'0')}`);
-  const all = [...new Set([...fixed, ...dataMonths])].sort();
+  const all = fixed;
   const cont = document.getElementById('wpMonthTabs');
   cont.innerHTML = `<button class="wp-month-tab ${!wpActiveMonth ? 'active' : ''}" onclick="wpSetMonth(null)">ทั้งหมด</button>` +
     all.map(m => {
