@@ -715,6 +715,42 @@
 
   .spinner { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.65s linear infinite; display: inline-block; flex-shrink: 0; }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* RESULT MODAL — popup ยืนยันผลลัพธ์หลังบันทึก/ลบ/ยืนยัน (ต้องกด OK เอง) */
+  .result-modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);
+    z-index: 99999; opacity: 0; pointer-events: none; transition: opacity 0.18s;
+    display: flex; align-items: center; justify-content: center; padding: 1.5rem;
+  }
+  .result-modal-overlay.open { opacity: 1; pointer-events: all; }
+  .result-modal-box {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+    width: 380px; max-width: 100%; padding: 2rem 1.75rem 1.5rem; text-align: center;
+    box-shadow: 0 24px 70px rgba(0,0,0,0.55); transform: scale(0.92) translateY(6px); opacity: 0;
+    transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1), opacity 0.18s;
+  }
+  .result-modal-overlay.open .result-modal-box { transform: scale(1) translateY(0); opacity: 1; }
+  .result-modal-icon-wrap {
+    width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 1.1rem;
+    display: flex; align-items: center; justify-content: center; font-size: 2.1rem;
+  }
+  .result-modal-overlay.success .result-modal-icon-wrap { background: var(--glow-accent); color: var(--success); border: 2px solid var(--success); }
+  .result-modal-overlay.error   .result-modal-icon-wrap { background: var(--glow-danger); color: var(--danger);  border: 2px solid var(--danger); }
+  .result-modal-overlay.warn    .result-modal-icon-wrap { background: var(--glow-warn);   color: var(--warn);   border: 2px solid var(--warn); }
+  .result-modal-title { font-size: 1.05rem; font-weight: 700; color: var(--text); margin-bottom: 0.4rem; line-height: 1.4; }
+  .result-modal-sub { font-size: 0.82rem; color: var(--muted); line-height: 1.55; margin-bottom: 1.4rem; word-break: break-word; }
+  .result-modal-btn {
+    width: 100%; padding: 0.75rem 1rem; border-radius: 12px; border: none; cursor: pointer;
+    font-family: var(--font); font-size: 0.88rem; font-weight: 700; color: #fff;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .result-modal-btn:hover { opacity: 0.88; }
+  .result-modal-btn:active { transform: scale(0.97); }
+  .result-modal-overlay.success .result-modal-btn { background: var(--success); }
+  .result-modal-overlay.error   .result-modal-btn { background: var(--danger); }
+  .result-modal-overlay.warn    .result-modal-btn { background: var(--warn); }
+  @keyframes resultPop { 0% { transform: scale(0.7); opacity: 0; } 60% { transform: scale(1.08); } 100% { transform: scale(1); opacity: 1; } }
+  .result-modal-overlay.open .result-modal-icon-wrap { animation: resultPop 0.32s cubic-bezier(0.34,1.56,0.64,1); }
   .empty { text-align: center; padding: 3rem 1rem; color: var(--muted); }
   .empty-icon { font-size: 2rem; margin-bottom: 0.7rem; }
   .empty-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.3rem; color: var(--text); }
@@ -3761,6 +3797,15 @@
 
 <div class="toast-container" id="toastContainer"></div>
 
+<div class="result-modal-overlay" id="resultModalOverlay">
+  <div class="result-modal-box">
+    <div class="result-modal-icon-wrap" id="resultModalIcon">✅</div>
+    <div class="result-modal-title" id="resultModalTitle">บันทึกสำเร็จ</div>
+    <div class="result-modal-sub" id="resultModalSub" style="display:none"></div>
+    <button class="result-modal-btn" id="resultModalBtn" onclick="closeResultModal()">ตกลง</button>
+  </div>
+</div>
+
 <script>
 /* ══════════════════════════════════════════════════════
    ⚙️ ตั้งค่าเริ่มต้น (ฝังไว้ในไฟล์ ไม่ใช่ localStorage)
@@ -5046,7 +5091,7 @@ async function saveCer() {
     localStorage.setItem('cer_data', JSON.stringify(local));
     cerData = local;
     closeCerModal(); renderCerTable();
-    showToast('✅ บันทึกสำเร็จ (local)', 'success');
+    showResultModal('บันทึกสำเร็จ', 'success', '(บันทึกในเครื่องนี้ ยังไม่ตั้งค่า Web App URL)');
     return;
   }
 
@@ -5059,12 +5104,12 @@ async function saveCer() {
     if (json.success) {
       closeCerModal();
       await loadCerPage();
-      showToast('✅ บันทึกสำเร็จ', 'success');
+      showResultModal('บันทึกสำเร็จ', 'success');
     } else {
-      showToast('❌ บันทึกไม่สำเร็จ: ' + json.error, 'error');
+      showResultModal('บันทึกไม่สำเร็จ', 'error', json.error || '');
     }
   } catch (e) {
-    showToast('❌ เกิดข้อผิดพลาด: ' + e.message, 'error');
+    showResultModal('เกิดข้อผิดพลาด', 'error', e.message);
   }
 }
 
@@ -5076,7 +5121,7 @@ async function deleteCerItem(rowIndex) {
     localStorage.setItem('cer_data', JSON.stringify(local));
     cerData = local;
     renderCerTable();
-    showToast('🗑️ ลบแล้ว', 'success');
+    showResultModal('ลบสำเร็จ', 'success');
     return;
   }
   try {
@@ -5084,9 +5129,9 @@ async function deleteCerItem(rowIndex) {
     const json = await res.json();
     if (json.success) {
       await loadCerPage();
-      showToast('🗑️ ลบแล้ว', 'success');
+      showResultModal('ลบสำเร็จ', 'success');
     } else {
-      showToast('❌ ลบไม่สำเร็จ: ' + json.error, 'error');
+      showResultModal('ลบไม่สำเร็จ', 'error', json.error || '');
     }
   } catch (e) {
     showToast('❌ เกิดข้อผิดพลาด: ' + e.message, 'error');
@@ -5463,9 +5508,9 @@ async function clearPrFile() {
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error || 'ลบไม่สำเร็จ');
-      showToast('🗑️ ลบไฟล์จาก Drive สำเร็จ', 'success');
+      showResultModal('ลบไฟล์จาก Drive สำเร็จ', 'success');
     } catch (err) {
-      showToast('⚠️ ลบไฟล์จาก Drive ไม่สำเร็จ: ' + err.message, 'error');
+      showResultModal('ลบไฟล์จาก Drive ไม่สำเร็จ', 'error', err.message);
       // แม้ลบ Drive ไม่ได้ ก็ยังล้าง UI ให้
     } finally {
       clearBtn.disabled = false;
@@ -5528,10 +5573,10 @@ async function handlePrFileUpload(event) {
     document.getElementById('f-prFileName').value = json.fileName || file.name;
     document.getElementById('f-prFile-clearBtn').style.display = '';
     statusEl.innerHTML = `✅ อัปโหลดสำเร็จ — "${json.fileName || file.name}" <a href="${json.url}" target="_blank" style="color:var(--accent);text-decoration:none">เปิดดูไฟล์ →</a>`;
-    showToast('✅ อัปโหลดไฟล์ขึ้น Drive สำเร็จ', 'success');
+    showResultModal('อัปโหลดไฟล์ขึ้น Drive สำเร็จ', 'success');
   } catch (err) {
     statusEl.textContent = '❌ อัปโหลดไม่สำเร็จ: ' + err.message + ' — ลองใหม่อีกครั้ง';
-    showToast('❌ อัปโหลดไฟล์ไม่สำเร็จ: ' + err.message, 'error');
+    showResultModal('อัปโหลดไฟล์ไม่สำเร็จ', 'error', err.message);
     event.target.value = '';
   }
 }
@@ -5552,11 +5597,11 @@ async function saveItem() {
   const logAction = rowIndex ? 'edit' : 'add';
   addHistoryLog(logAction, params.partNo, params.partName, rowIndex ? 'แก้ไขข้อมูล' : 'เพิ่มรายการใหม่');
   closeModal(); processData();
-  showToast(rowIndex ? '✅ แก้ไขสำเร็จ' : '✅ เพิ่มรายการสำเร็จ', 'success');
+  showResultModal(rowIndex ? 'แก้ไขสำเร็จ' : 'เพิ่มรายการสำเร็จ', 'success');
   if (WEB_APP_URL) {
     const action = rowIndex ? 'edit' : 'add';
     const p = new URLSearchParams({ action, rowIndex, ...params });
-    try { await fetch(WEB_APP_URL + '?' + p.toString()); } catch(e) { showToast('⚠️ บันทึกใน Sheet ไม่สำเร็จ', 'error'); }
+    try { await fetch(WEB_APP_URL + '?' + p.toString()); } catch(e) { showResultModal('บันทึกใน Sheet ไม่สำเร็จ', 'error', 'ข้อมูลอาจไม่ถูกบันทึกลง Google Sheet กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่'); }
   }
 }
 async function deleteItem(rowIndex) {
@@ -5564,8 +5609,8 @@ async function deleteItem(rowIndex) {
   const delItem = allData.find(r => r.rowIndex === rowIndex);
   if(delItem) addHistoryLog('del', delItem.partNo, delItem.partName, 'ลบรายการ');
   allData = allData.filter(r => r.rowIndex !== rowIndex);
-  processData(); showToast('🗑️ ลบรายการสำเร็จ', 'success');
-  if (WEB_APP_URL) { try { await fetch(WEB_APP_URL + '?action=del&rowIndex=' + rowIndex); } catch(e) {} }
+  processData(); showResultModal('ลบรายการสำเร็จ', 'success');
+  if (WEB_APP_URL) { try { await fetch(WEB_APP_URL + '?action=del&rowIndex=' + rowIndex); } catch(e) { showResultModal('ลบใน Sheet ไม่สำเร็จ', 'error', 'รายการถูกลบจากหน้าจอแล้ว แต่อาจยังอยู่ใน Google Sheet กรุณาตรวจสอบอินเทอร์เน็ต'); } }
 }
 
 /* ── DETAIL PANEL ── */
@@ -5668,11 +5713,14 @@ async function saveComments(key, comments, rowIndex) {
     try {
       const res  = await fetch(`${WEB_APP_URL}?action=setComments&rowIndex=${rowIndex}&comments=${encodeURIComponent(JSON.stringify(comments))}`);
       const json = await res.json();
-      if (!json.success) showToast('⚠️ ซิงค์ Comment ไม่สำเร็จ: ' + json.error, 'error');
+      if (!json.success) { showResultModal('ซิงค์ Comment ไม่สำเร็จ', 'error', json.error||''); return false; }
+      return true;
     } catch(e) {
-      showToast('⚠️ ซิงค์ Comment ไม่สำเร็จ: ' + e.message, 'error');
+      showResultModal('ซิงค์ Comment ไม่สำเร็จ', 'error', e.message);
+      return false;
     }
   }
+  return true;
 }
 
 // ดึง comment ล่าสุดจาก Sheet สำหรับ row นี้ แล้วอัปเดต localStorage ก่อนแสดง
@@ -5757,17 +5805,17 @@ async function addComment(key, rowIndex) {
 
   const comments = loadComments(key);
   comments.push({ author, text, tag, time });
-  await saveComments(key, comments, rowIndex);
+  const ok = await saveComments(key, comments, rowIndex);
   renderComments(key, rowIndex);
-  if (!WEB_APP_URL) showToast('✅ บันทึกแล้ว (เก็บในเครื่องนี้)', 'info');
+  if (ok) showResultModal('บันทึกคอมเมนต์แล้ว', 'success');
 }
 
 async function deleteComment(key, idx, rowIndex) {
   const comments = loadComments(key);
   comments.splice(idx, 1);
-  await saveComments(key, comments, rowIndex);
+  const ok = await saveComments(key, comments, rowIndex);
   renderComments(key, rowIndex);
-  showToast('🗑️ ลบบันทึกแล้ว', 'info');
+  if (ok) showResultModal('ลบคอมเมนต์แล้ว', 'success');
 }
 
 
@@ -5777,7 +5825,7 @@ function saveUrl() {
   WEB_APP_URL = url; localStorage.setItem('prpo_url', url);
   document.getElementById('currentUrl').textContent = url;
   document.getElementById('currentUrl').style.display = url ? 'block' : 'none';
-  showToast('✅ บันทึก URL สำเร็จ — กำลัง Sync...', 'success'); syncData();
+  showResultModal('บันทึก URL สำเร็จ', 'success', 'กำลัง Sync ข้อมูล...'); syncData();
 }
 function saveSheetUrl() {
   const url = document.getElementById('googleSheetUrl').value.trim();
@@ -5786,7 +5834,7 @@ function saveSheetUrl() {
   localStorage.setItem('prpo_sheet_url', url);
   document.getElementById('sheetUrlDisplay').textContent = url;
   document.getElementById('sheetUrlDisplay').style.display = 'block';
-  showToast('✅ บันทึก Google Sheet URL แล้ว', 'success');
+  showResultModal('บันทึก Google Sheet URL แล้ว', 'success');
 }
 function openGoogleSheet() {
   const url = localStorage.getItem('prpo_sheet_url') || document.getElementById('googleSheetUrl').value.trim() || (DEFAULT_SHEET_URL.startsWith('วาง_') ? '' : DEFAULT_SHEET_URL);
@@ -5799,8 +5847,9 @@ async function testUrl() {
   try {
     const res = await fetch(url + '?action=getData');
     const j = await res.json();
-    showToast(j.success ? `✅ เชื่อมต่อสำเร็จ! พบ ${j.data.length} รายการ` : '❌ Response ไม่ถูกต้อง', j.success ? 'success' : 'error');
-  } catch(e) { showToast('❌ ไม่สามารถเชื่อมต่อ: ' + e.message, 'error'); }
+    if (j.success) showResultModal('เชื่อมต่อสำเร็จ', 'success', `พบ ${j.data.length} รายการ`);
+    else showResultModal('Response ไม่ถูกต้อง', 'error');
+  } catch(e) { showResultModal('ไม่สามารถเชื่อมต่อ', 'error', e.message); }
 }
 function downloadHTML() {
   const blob = new Blob([document.documentElement.outerHTML], { type: 'text/html' });
@@ -6008,6 +6057,34 @@ function showToast(msg, type = 'info', duration = 3200) {
   setTimeout(() => { if (el.parentNode) { el.style.opacity='0'; el.style.transform='translateX(16px)'; el.style.transition='all 0.25s'; setTimeout(()=>el.remove(),260); } }, duration);
 }
 
+/* ── RESULT MODAL — popup ผลลัพธ์หลังบันทึก/ลบ/ยืนยัน (ต้องกด "ตกลง" เองเท่านั้น) ──
+   type: 'success' | 'error' | 'warn'
+   title: ข้อความหลัก เช่น "บันทึกสำเร็จ"
+   sub: ข้อความรองไม่บังคับ เช่น รายละเอียด error */
+function showResultModal(title, type = 'success', sub = '') {
+  const overlay = document.getElementById('resultModalOverlay');
+  const iconWrap = document.getElementById('resultModalIcon');
+  const titleEl = document.getElementById('resultModalTitle');
+  const subEl = document.getElementById('resultModalSub');
+  const btnEl = document.getElementById('resultModalBtn');
+  overlay.className = 'result-modal-overlay open ' + type;
+  iconWrap.textContent = type === 'success' ? '✅' : (type === 'error' ? '❌' : '⚠️');
+  titleEl.textContent = title;
+  if (sub) { subEl.textContent = sub; subEl.style.display = 'block'; }
+  else { subEl.style.display = 'none'; }
+  btnEl.textContent = 'ตกลง';
+  // ปิดด้วย Esc ได้ด้วย (กดครั้งเดียวพอ ไม่ผูกซ้ำ)
+  document.addEventListener('keydown', _resultModalEscHandler);
+}
+function _resultModalEscHandler(e) {
+  if (e.key === 'Escape') closeResultModal();
+}
+function closeResultModal() {
+  const overlay = document.getElementById('resultModalOverlay');
+  overlay.classList.remove('open');
+  document.removeEventListener('keydown', _resultModalEscHandler);
+}
+
 /* ── NOTIFY TOAST — แจ้งเตือนรายการใกล้ถึงวันส่ง ── */
 function showDueAlerts() {
   if (toastMuted) return;
@@ -6105,9 +6182,9 @@ async function clearHistory() {
   localStorage.removeItem('prpo_history');
   renderHistory();
   if (WEB_APP_URL) {
-    try { await fetch(WEB_APP_URL + '?action=clearLogs'); } catch(e) { showToast('⚠️ ล้าง Log ใน Sheet ไม่สำเร็จ', 'error'); }
+    try { await fetch(WEB_APP_URL + '?action=clearLogs'); } catch(e) { showResultModal('ล้าง Log ใน Sheet ไม่สำเร็จ', 'error', 'ล้างประวัติในเครื่องนี้แล้ว แต่ Sheet อาจยังมีข้อมูลเดิมอยู่'); return; }
   }
-  showToast('🗑️ ล้างประวัติแล้ว', 'success');
+  showResultModal('ล้างประวัติแล้ว', 'success');
 }
 
 /* ══════════════════════════════════════════════════════
@@ -6237,7 +6314,7 @@ async function saveSupplier() {
     if (idx >= 0) suppliers[idx] = data; else suppliers.push(data);
     localStorage.setItem('prpo_suppliers', JSON.stringify(suppliers));
     closeSupplierModal(); renderSuppliers();
-    showToast('✅ บันทึก Supplier สำเร็จ (local)', 'success');
+    showResultModal('บันทึก Supplier สำเร็จ', 'success', '(บันทึกในเครื่องนี้ ยังไม่ตั้งค่า Web App URL)');
     return;
   }
 
@@ -6250,12 +6327,12 @@ async function saveSupplier() {
     if (json.success) {
       closeSupplierModal();
       await loadSuppliers();
-      showToast('✅ บันทึก Supplier สำเร็จ', 'success');
+      showResultModal('บันทึก Supplier สำเร็จ', 'success');
     } else {
-      showToast('❌ บันทึกไม่สำเร็จ: ' + json.error, 'error');
+      showResultModal('บันทึกไม่สำเร็จ', 'error', json.error || '');
     }
   } catch(e) {
-    showToast('❌ เกิดข้อผิดพลาด: ' + e.message, 'error');
+    showResultModal('เกิดข้อผิดพลาด', 'error', e.message);
   }
 }
 
@@ -6265,7 +6342,7 @@ async function deleteSupplier(rowIndex) {
     suppliers = suppliers.filter(s => String(s.id) !== String(rowIndex));
     localStorage.setItem('prpo_suppliers', JSON.stringify(suppliers));
     renderSuppliers();
-    showToast('🗑️ ลบ Supplier แล้ว', 'success');
+    showResultModal('ลบ Supplier สำเร็จ', 'success');
     return;
   }
   try {
@@ -6273,12 +6350,12 @@ async function deleteSupplier(rowIndex) {
     const json = await res.json();
     if (json.success) {
       await loadSuppliers();
-      showToast('🗑️ ลบ Supplier แล้ว', 'success');
+      showResultModal('ลบ Supplier สำเร็จ', 'success');
     } else {
-      showToast('❌ ลบไม่สำเร็จ: ' + json.error, 'error');
+      showResultModal('ลบไม่สำเร็จ', 'error', json.error || '');
     }
   } catch(e) {
-    showToast('❌ เกิดข้อผิดพลาด: ' + e.message, 'error');
+    showResultModal('เกิดข้อผิดพลาด', 'error', e.message);
   }
 }
 
@@ -7529,22 +7606,22 @@ async function mtSaveModel(){
       const params=new URLSearchParams({ action:'editModelTracker', rowIndex:m.rowIndex, model, customer, volume, statusNote, ...ms });
       const res=await fetch(WEB_APP_URL+'?'+params.toString());
       const json=await res.json();
-      if(!json.success){ showToast('⚠️ บันทึกไม่สำเร็จ: '+(json.error||''),'error'); return; }
+      if(!json.success){ showResultModal('บันทึกไม่สำเร็จ', 'error', json.error||''); return; }
       // อัปเดตข้อมูลในเครื่องทันที ไม่ต้องดึงทั้งชีตซ้ำ (เร็วขึ้น ~2 เท่า)
       m.model=model; m.customer=customer; m.volume=volume; m.statusNote=statusNote;
     } else {
       const params=new URLSearchParams({ action:'addModelTracker', model, customer, volume, statusNote });
       const res=await fetch(WEB_APP_URL+'?'+params.toString());
       const json=await res.json();
-      if(!json.success){ showToast('⚠️ บันทึกไม่สำเร็จ: '+(json.error||''),'error'); return; }
+      if(!json.success){ showResultModal('บันทึกไม่สำเร็จ', 'error', json.error||''); return; }
       // กรณีเพิ่มใหม่ ต้องดึงข้อมูลซ้ำเพื่อรู้ rowIndex จริงจาก Sheet
       await mtLoadData();
     }
     mtCloseModal('mt-modelModal');
     mtRefreshCustomerFilter(); mtRenderGantt(); mtRenderSide();
-    showToast('✅ บันทึก Model แล้ว','success');
+    showResultModal('บันทึก Model แล้ว', 'success');
   } catch(e){
-    showToast('⚠️ เชื่อมต่อ Sheet ไม่สำเร็จ','error');
+    showResultModal('เชื่อมต่อ Sheet ไม่สำเร็จ', 'error');
   } finally {
     saveBtn.disabled=false; saveBtn.textContent='💾 บันทึก';
   }
@@ -7556,14 +7633,14 @@ async function mtDeleteModel(){
   try{
     const res=await fetch(WEB_APP_URL+'?action=delModelTracker&rowIndex='+m.rowIndex);
     const json=await res.json();
-    if(!json.success){ showToast('⚠️ ลบไม่สำเร็จ: '+(json.error||''),'error'); return; }
-  } catch(e){ showToast('⚠️ เชื่อมต่อ Sheet ไม่สำเร็จ','error'); return; }
+    if(!json.success){ showResultModal('ลบไม่สำเร็จ', 'error', json.error||''); return; }
+  } catch(e){ showResultModal('เชื่อมต่อ Sheet ไม่สำเร็จ', 'error'); return; }
   // ลบออกจากข้อมูลในเครื่องทันที ไม่ต้องดึงทั้งชีตซ้ำ
   MT_DATA = MT_DATA.filter(x=>x.id!==mtEditingModelId);
   if(mtSelectedId===mtEditingModelId) mtSelectedId=null;
   mtCloseModal('mt-modelModal');
   mtRefreshCustomerFilter(); mtRenderGantt(); mtRenderSide();
-  showToast('🗑️ ลบ Model แล้ว','success');
+  showResultModal('ลบ Model แล้ว', 'success');
 }
 
 function mtOpenMsModal(modelId, msId){
@@ -7628,14 +7705,14 @@ async function mtSaveMs(){
     });
     const res=await fetch(WEB_APP_URL+'?'+params.toString());
     const json=await res.json();
-    if(!json.success){ showToast('⚠️ บันทึกไม่สำเร็จ: '+(json.error||''),'error'); return; }
+    if(!json.success){ showResultModal('บันทึกไม่สำเร็จ', 'error', json.error||''); return; }
     // ใช้ผลลัพธ์ที่คำนวณไว้แล้วในเครื่อง (milestones) แทนการดึงทั้งชีตซ้ำ
     m.milestones = milestones;
     mtCloseModal('mt-msModal');
     mtRenderGantt(); mtRenderSide();
-    showToast('✅ บันทึก Milestone แล้ว','success');
+    showResultModal('บันทึก Milestone แล้ว', 'success');
   } catch(e){
-    showToast('⚠️ เชื่อมต่อ Sheet ไม่สำเร็จ','error');
+    showResultModal('เชื่อมต่อ Sheet ไม่สำเร็จ', 'error');
   } finally {
     saveBtn.disabled=false; saveBtn.textContent='💾 บันทึก';
   }
@@ -7654,13 +7731,13 @@ async function mtDeleteMs(){
     });
     const res=await fetch(WEB_APP_URL+'?'+params.toString());
     const json=await res.json();
-    if(!json.success){ showToast('⚠️ ลบไม่สำเร็จ: '+(json.error||''),'error'); return; }
-  } catch(e){ showToast('⚠️ เชื่อมต่อ Sheet ไม่สำเร็จ','error'); return; }
+    if(!json.success){ showResultModal('ลบไม่สำเร็จ', 'error', json.error||''); return; }
+  } catch(e){ showResultModal('เชื่อมต่อ Sheet ไม่สำเร็จ', 'error'); return; }
   // ลบออกจากข้อมูลในเครื่องทันที ไม่ต้องดึงทั้งชีตซ้ำ
   m.milestones = newMilestones;
   mtCloseModal('mt-msModal');
   mtRenderGantt(); mtRenderSide();
-  showToast('🗑️ ลบ Milestone แล้ว','success');
+  showResultModal('ลบ Milestone แล้ว', 'success');
 }
 
 // ── export ──────────────────────────────────────────
@@ -7955,22 +8032,22 @@ async function saveWpItem() {
       const params = new URLSearchParams({ action:'editWorkplan', rowIndex:editRowIndex, ...item });
       const res  = await fetch(WEB_APP_URL + '?' + params.toString());
       const json = await res.json();
-      if (!json.success) { showToast('⚠️ บันทึกไม่สำเร็จ: ' + (json.error||''), 'error'); return; }
+      if (!json.success) { showResultModal('บันทึกไม่สำเร็จ', 'error', json.error||''); return; }
       const idx = wpData.findIndex(r => String(r.rowIndex) === String(editRowIndex));
       if (idx >= 0) wpData[idx] = { ...item, rowIndex: Number(editRowIndex), no: wpData[idx].no };
     } else {
       const params = new URLSearchParams({ action:'addWorkplan', ...item });
       const res  = await fetch(WEB_APP_URL + '?' + params.toString());
       const json = await res.json();
-      if (!json.success) { showToast('⚠️ บันทึกไม่สำเร็จ: ' + (json.error||''), 'error'); return; }
+      if (!json.success) { showResultModal('บันทึกไม่สำเร็จ', 'error', json.error||''); return; }
       // กรณีเพิ่มใหม่ ต้องดึงข้อมูลซ้ำเพื่อรู้ rowIndex จริงจาก Sheet
       await wpLoadData();
     }
     closeWpModal();
     renderWorkplan();
-    showToast(editRowIndex ? '✅ แก้ไขแผนงานแล้ว' : '✅ เพิ่มแผนงานแล้ว', 'success');
+    showResultModal(editRowIndex ? 'แก้ไขแผนงานแล้ว' : 'เพิ่มแผนงานแล้ว', 'success');
   } catch(e) {
-    showToast('⚠️ เชื่อมต่อ Sheet ไม่สำเร็จ', 'error');
+    showResultModal('เชื่อมต่อ Sheet ไม่สำเร็จ', 'error');
   } finally {
     if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 บันทึก'; }
   }
@@ -7980,12 +8057,12 @@ async function deleteWpItem(rowIndex) {
   try {
     const res  = await fetch(WEB_APP_URL + '?action=delWorkplan&rowIndex=' + rowIndex);
     const json = await res.json();
-    if (!json.success) { showToast('⚠️ ลบไม่สำเร็จ: ' + (json.error||''), 'error'); return; }
-  } catch(e) { showToast('⚠️ เชื่อมต่อ Sheet ไม่สำเร็จ', 'error'); return; }
+    if (!json.success) { showResultModal('ลบไม่สำเร็จ', 'error', json.error||''); return; }
+  } catch(e) { showResultModal('เชื่อมต่อ Sheet ไม่สำเร็จ', 'error'); return; }
   // ลบออกจากข้อมูลในเครื่องทันที ไม่ต้องดึงทั้งชีตซ้ำ
   wpData = wpData.filter(r => String(r.rowIndex) !== String(rowIndex));
   renderWorkplan();
-  showToast('🗑️ ลบแผนงานแล้ว', 'info');
+  showResultModal('ลบแผนงานแล้ว', 'success');
 }
 
 // close workplan modal on overlay click
@@ -8793,17 +8870,17 @@ function prSaveUser(){
       u.photo=prNewPhoto; u.color=prNewColor; savedEmployee=u;
     }
     sendPin = keepExistingPin ? undefined : pin;
-    showToast(`✅ แก้ไข ${name} แล้ว`,'success');
+    showResultModal(`แก้ไข ${name} แล้ว`, 'success');
   } else {
     const newUser={id:prNextId++,empid,name,dept,position,phone,pin,photo:prNewPhoto,color:prNewColor,otRate:0,records:{}};
     prUsers.push(newUser);
     savedEmployee=newUser;
     sendPin = pin;
-    showToast(`✅ เพิ่ม ${name} แล้ว`,'success');
+    showResultModal(`เพิ่ม ${name} แล้ว`, 'success');
   }
   prSave(); prCloseAddUser(); prRenderGrid();
 
-  // sync ไป Google Sheet แบบไม่บล็อก UI — ถ้าพังก็แค่เตือนใน console, ข้อมูล local ยังอยู่
+  // sync ไป Google Sheet แบบไม่บล็อก UI — ถ้าพังจะแจ้งเตือนซ้ำด้วย modal เพราะข้อมูลอาจไม่ตรงกับ Sheet
   const employeePayload = {
     id: savedEmployee.id, empid: savedEmployee.empid, name: savedEmployee.name,
     dept: savedEmployee.dept, position: savedEmployee.position, phone: savedEmployee.phone,
@@ -8818,7 +8895,10 @@ function prSaveUser(){
       prNextId = Math.max(...prUsers.map(u=>u.id))+1;
       prSave(); prRenderGrid();
     }
-  }).catch(err=>console.warn('[payroll] saveEmployee ไป Sheet ไม่สำเร็จ:', err.message||err));
+  }).catch(err=>{
+    console.warn('[payroll] saveEmployee ไป Sheet ไม่สำเร็จ:', err.message||err);
+    showResultModal('ซิงค์ข้อมูลพนักงานไป Sheet ไม่สำเร็จ', 'error', 'บันทึกในเครื่องนี้แล้ว แต่ยังไม่ขึ้น Google Sheet กรุณาตรวจสอบอินเทอร์เน็ต');
+  });
 }
 let prDeletePendingId=null;
 function prDeleteUser(id){
@@ -8839,12 +8919,15 @@ function prConfirmDelete(){
   const deletedId=prDeletePendingId;
   prUsers=prUsers.filter(x=>x.id!==prDeletePendingId);
   prSave(); prRenderGrid();
-  showToast(`🗑️ ลบ ${u.name} แล้ว`,'info');
+  showResultModal(`ลบ ${u.name} แล้ว`, 'success');
   prDeletePendingId=null;
   document.getElementById('pr-del-modal').style.display='none';
 
   prApiPost('deleteEmployee', { id: deletedId })
-    .catch(err=>console.warn('[payroll] deleteEmployee ไป Sheet ไม่สำเร็จ:', err.message||err));
+    .catch(err=>{
+      console.warn('[payroll] deleteEmployee ไป Sheet ไม่สำเร็จ:', err.message||err);
+      showResultModal('ซิงค์การลบไป Sheet ไม่สำเร็จ', 'error', 'ลบในเครื่องนี้แล้ว แต่ข้อมูลอาจยังอยู่ใน Google Sheet กรุณาตรวจสอบอินเทอร์เน็ต');
+    });
 }
 
 /* ── RESET PERIOD (ล้างข้อมูล work/ot/note ทุกวันในรอบบิล/เดือนที่กำลังดูอยู่) ── */
@@ -8875,7 +8958,7 @@ function prConfirmResetPeriod(){
   datesToReset.forEach(dk => { delete prSelected.records[dk]; });
   prSave(); prRefreshDetail();
   document.getElementById('pr-reset-modal').style.display='none';
-  showToast(`🔄 รีเซ็ตข้อมูล ${datesToReset.length} วันแล้ว`,'info');
+  showResultModal(`รีเซ็ตข้อมูล ${datesToReset.length} วันแล้ว`, 'success');
 
   // sync ไป Sheet ทีละวัน (เขียนเป็น work=0,ot=0 ซึ่งฝั่ง Apps Script จะลบแถวออกให้เอง)
   datesToReset.forEach(dk => prSyncAttendanceToSheet(userId, dk, {work:0, ot:0, note:''}));
@@ -8892,11 +8975,14 @@ async function scSave(sid, arr) {
     try {
       const res  = await fetch(`${WEB_APP_URL}?action=setComments&rowIndex=${sid}&comments=${encodeURIComponent(JSON.stringify(arr))}`);
       const json = await res.json();
-      if (!json.success) showToast('⚠️ ซิงค์ Comment ไม่สำเร็จ: ' + (json.error||''), 'error');
+      if (!json.success) { showResultModal('ซิงค์ Comment ไม่สำเร็จ', 'error', json.error||''); return false; }
+      return true;
     } catch(e) {
-      showToast('⚠️ ซิงค์ Comment ไม่สำเร็จ: ' + e.message, 'error');
+      showResultModal('ซิงค์ Comment ไม่สำเร็จ', 'error', e.message);
+      return false;
     }
   }
+  return true;
 }
 // โหลด comment จาก Sheet แล้วเซ็ต localStorage (เรียกตอน Sync)
 async function scFetchFromSheet(sid) {
@@ -8954,12 +9040,12 @@ async function scAdd(sid) {
                now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
   const arr = scLoad(sid);
   arr.push({ author, text, tag, time });
-  await scSave(sid, arr);
+  const ok = await scSave(sid, arr);
   const ta = document.getElementById('sctext-'+sid);
   if (ta) ta.value = '';
   if (author) localStorage.setItem('prpo_username', author);
   scRender(sid);
-  showToast('✅ บันทึกแล้ว (ซิงค์ Sheet แล้ว)','success');
+  if (ok) showResultModal('บันทึกคอมเมนต์แล้ว', 'success');
 }
 
 async function scDelete(sid, idx) {
@@ -8979,11 +9065,14 @@ async function bcSave(rowIndex, arr) {
     try {
       const res  = await fetch(`${WEB_APP_URL}?action=setComments&rowIndex=${rowIndex}&comments=${encodeURIComponent(JSON.stringify(arr))}`);
       const json = await res.json();
-      if (!json.success) showToast('⚠️ ซิงค์ Comment ไม่สำเร็จ: ' + (json.error||''), 'error');
+      if (!json.success) { showResultModal('ซิงค์ Comment ไม่สำเร็จ', 'error', json.error||''); return false; }
+      return true;
     } catch(e) {
-      showToast('⚠️ ซิงค์ Comment ไม่สำเร็จ: ' + e.message, 'error');
+      showResultModal('ซิงค์ Comment ไม่สำเร็จ', 'error', e.message);
+      return false;
     }
   }
+  return true;
 }
 async function bcFetchFromSheet(rowIndex) {
   if (!WEB_APP_URL || !rowIndex) return;
@@ -9043,20 +9132,21 @@ async function bcAdd(rowIndex, event) {
                now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
   const arr = bcLoad(rowIndex);
   arr.push({ author, text, tag, time });
-  await bcSave(rowIndex, arr);
+  const ok = await bcSave(rowIndex, arr);
   const ta = document.getElementById('bct-'+rowIndex);
   if (ta) ta.value = '';
   if (author) localStorage.setItem('prpo_username', author);
   bcRender(rowIndex);
-  showToast('✅ บันทึกแล้ว (ซิงค์ Sheet แล้ว)','success');
+  if (ok) showResultModal('บันทึกคอมเมนต์แล้ว', 'success');
 }
 
 async function bcDelete(rowIndex, idx, event) {
   if (event) event.stopPropagation();
   const arr = bcLoad(rowIndex);
   arr.splice(idx, 1);
-  await bcSave(rowIndex, arr);
+  const ok = await bcSave(rowIndex, arr);
   bcRender(rowIndex);
+  if (ok) showResultModal('ลบคอมเมนต์แล้ว', 'success');
 }
 
 </script>
