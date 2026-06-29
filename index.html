@@ -5313,14 +5313,37 @@ function renderSummaryCards(mData, mLabel) {
   ];
   document.getElementById('statusBars').innerHTML = bars.map(b => {
     const p = total ? Math.round(b.count/total*100) : 0;
-    return `<div style="margin-bottom:0.6rem">
+    return `<div>
       <div style="display:flex;justify-content:space-between;font-size:0.75rem;margin-bottom:0.3rem">
         <span>${b.label}</span><span style="font-family:var(--mono);color:${b.color}">${b.count} (${p}%)</span>
       </div>
       <div style="height:6px;background:var(--surface2);border-radius:3px;overflow:hidden">
         <div style="height:100%;width:${p}%;background:${b.color};border-radius:3px;transition:width 0.6s ease"></div>
       </div>
-    </div>`;
+      <div class="sc-section">
+        <div class="sc-header" onclick="scToggle('${s.id}')">
+          <div class="sc-title">
+            💬 บันทึกทีม
+            <span class="sc-badge" id="scbadge-${s.id}" style="display:none"></span>
+          </div>
+          <span class="sc-toggle" id="sca-${s.id}">▾</span>
+        </div>
+        <div class="sc-body" id="scb-${s.id}">
+          <div class="sc-list" id="scl-${s.id}"><div class="sc-empty">ยังไม่มีบันทึก</div></div>
+          <div class="sc-input-row">
+            <input class="sc-name" id="scauthor-${s.id}" placeholder="ชื่อของคุณ" value="${localStorage.getItem('prpo_username')||''}">
+            <select class="sc-select" id="sctag-${s.id}">
+              <option value="update">🔄 อัปเดต</option>
+              <option value="info">💬 ทั่วไป</option>
+              <option value="issue">⚠️ ปัญหา</option>
+              <option value="done">✅ เสร็จ</option>
+            </select>
+          </div>
+          <textarea class="sc-textarea" id="sctext-${s.id}" rows="2" placeholder="บันทึกความคืบหน้า, ปัญหา, หรือหมายเหตุ..."></textarea>
+          <button class="sc-submit" onclick="scAdd('${s.id}')">+ บันทึก</button>
+        </div>
+      </div>
+    `;
   }).join('');
 
   // Maker chart
@@ -5614,7 +5637,10 @@ function openDetail(item) {
     <button class="btn btn-danger" onclick="deleteItem(${item.rowIndex});closeDetail(null)" style="flex:1">🗑️ ลบ</button>`;
   document.getElementById('detailOverlay').classList.add('open');
   currentDetailKey = getCommentKey(item);
-  renderComments(currentDetailKey, item.rowIndex);
+  // ดึง comment ล่าสุดจาก Sheet ก่อนแสดง (ให้ทุกคนเห็นข้อมูลเดียวกัน)
+  fetchCommentsFromSheet(currentDetailKey, item.rowIndex).then(() => {
+    renderComments(currentDetailKey, item.rowIndex);
+  });
 }
 function closeDetail(e) {
   if (!e || e.target === document.getElementById('detailOverlay')) document.getElementById('detailOverlay').classList.remove('open');
@@ -5649,6 +5675,21 @@ async function saveComments(key, comments, rowIndex) {
   }
 }
 
+// ดึง comment ล่าสุดจาก Sheet สำหรับ row นี้ แล้วอัปเดต localStorage ก่อนแสดง
+async function fetchCommentsFromSheet(key, rowIndex) {
+  if (!WEB_APP_URL || !rowIndex) return;
+  try {
+    const res  = await fetch(`${WEB_APP_URL}?action=getData`);
+    const json = await res.json();
+    if (json.success && Array.isArray(json.data)) {
+      const row = json.data.find(r => String(r.rowIndex) === String(rowIndex));
+      if (row && Array.isArray(row.comments)) {
+        localStorage.setItem(key, JSON.stringify(row.comments));
+      }
+    }
+  } catch(e) { /* silent — ใช้ข้อมูล localStorage เดิม */ }
+}
+
 function renderComments(key, rowIndex) {
   const comments = loadComments(key);
   const wrap = document.getElementById('d-comments');
@@ -5656,8 +5697,8 @@ function renderComments(key, rowIndex) {
 
   const TAG_LABELS = { update:'🔄 อัปเดต', issue:'⚠️ ปัญหา', done:'✅ เสร็จ', info:'💬 ทั่วไป' };
   const syncNote = WEB_APP_URL
-    ? `<span style="color:var(--success);font-size:0.62rem">● ซิงค์กับ Sheet</span>`
-    : `<span style="color:var(--warn);font-size:0.62rem">● เก็บในเครื่องนี้</span>`;
+    ? `<span style="color:var(--success);font-size:0.62rem;font-weight:600">● ซิงค์กับ Sheet — ทุกคนเห็นพร้อมกัน</span>`
+    : `<span style="color:var(--warn);font-size:0.62rem">● เก็บในเครื่องนี้เท่านั้น (ยังไม่ได้เชื่อม Sheet)</span>`;
 
   let listHtml = '';
   if (comments.length === 0) {
@@ -5718,6 +5759,7 @@ async function addComment(key, rowIndex) {
   comments.push({ author, text, tag, time });
   await saveComments(key, comments, rowIndex);
   renderComments(key, rowIndex);
+  if (!WEB_APP_URL) showToast('✅ บันทึกแล้ว (เก็บในเครื่องนี้)', 'info');
 }
 
 async function deleteComment(key, idx, rowIndex) {
@@ -8840,17 +8882,45 @@ function prConfirmResetPeriod(){
 }
 
 
-/* ── SUPPLIER INLINE COMMENTS ── */
+/* ── SUPPLIER INLINE COMMENTS (sync Sheet via setComments) ── */
 function scKey(sid) { return 'sc_' + sid; }
 function scLoad(sid) { try { return JSON.parse(localStorage.getItem(scKey(sid)) || '[]'); } catch { return []; } }
-function scSave(sid, arr) { localStorage.setItem(scKey(sid), JSON.stringify(arr)); }
+async function scSave(sid, arr) {
+  localStorage.setItem(scKey(sid), JSON.stringify(arr));
+  // sid ของ supplier คือ rowIndex ของ supply sheet — ส่งขึ้น Sheet ผ่าน setComments
+  if (WEB_APP_URL && sid) {
+    try {
+      const res  = await fetch(`${WEB_APP_URL}?action=setComments&rowIndex=${sid}&comments=${encodeURIComponent(JSON.stringify(arr))}`);
+      const json = await res.json();
+      if (!json.success) showToast('⚠️ ซิงค์ Comment ไม่สำเร็จ: ' + (json.error||''), 'error');
+    } catch(e) {
+      showToast('⚠️ ซิงค์ Comment ไม่สำเร็จ: ' + e.message, 'error');
+    }
+  }
+}
+// โหลด comment จาก Sheet แล้วเซ็ต localStorage (เรียกตอน Sync)
+async function scFetchFromSheet(sid) {
+  if (!WEB_APP_URL || !sid) return;
+  try {
+    const res  = await fetch(`${WEB_APP_URL}?action=getData`);
+    const json = await res.json();
+    if (json.success && Array.isArray(json.data)) {
+      const row = json.data.find(r => String(r.rowIndex) === String(sid));
+      if (row && Array.isArray(row.comments) && row.comments.length > 0) {
+        localStorage.setItem(scKey(sid), JSON.stringify(row.comments));
+      }
+    }
+  } catch(e) { /* silent */ }
+}
 
 function scToggle(sid) {
   const body  = document.getElementById('scb-' + sid);
   const arrow = document.getElementById('sca-' + sid);
   if (!body) return;
-  body.classList.toggle('open');
+  const isOpen = body.classList.toggle('open');
   arrow.classList.toggle('open');
+  // เมื่อเปิด panel ดึง comment ล่าสุดจาก Sheet ก่อนแสดง
+  if (isOpen) scFetchFromSheet(sid).then(() => scRender(sid));
 }
 
 function scRender(sid) {
@@ -8874,7 +8944,7 @@ function scRender(sid) {
   list.scrollTop = list.scrollHeight;
 }
 
-function scAdd(sid) {
+async function scAdd(sid) {
   const author = (document.getElementById('scauthor-'+sid)?.value || '').trim();
   const text   = (document.getElementById('sctext-'+sid)?.value   || '').trim();
   const tag    = document.getElementById('sctag-'+sid)?.value || 'update';
@@ -8884,26 +8954,50 @@ function scAdd(sid) {
                now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
   const arr = scLoad(sid);
   arr.push({ author, text, tag, time });
-  scSave(sid, arr);
+  await scSave(sid, arr);
   const ta = document.getElementById('sctext-'+sid);
   if (ta) ta.value = '';
   if (author) localStorage.setItem('prpo_username', author);
   scRender(sid);
-  showToast('✅ บันทึกแล้ว','success');
+  showToast('✅ บันทึกแล้ว (ซิงค์ Sheet แล้ว)','success');
 }
 
-function scDelete(sid, idx) {
+async function scDelete(sid, idx) {
   const arr = scLoad(sid);
   arr.splice(idx, 1);
-  scSave(sid, arr);
+  await scSave(sid, arr);
   scRender(sid);
 }
 
 
-/* ── BRIEFING INLINE COMMENT (bc) ── */
+/* ── BRIEFING INLINE COMMENT (bc) — sync Sheet ── */
 function bcKey(rowIndex) { return 'comments_' + rowIndex; }
 function bcLoad(rowIndex) { try { return JSON.parse(localStorage.getItem(bcKey(rowIndex)) || '[]'); } catch { return []; } }
-function bcSave(rowIndex, arr) { localStorage.setItem(bcKey(rowIndex), JSON.stringify(arr)); }
+async function bcSave(rowIndex, arr) {
+  localStorage.setItem(bcKey(rowIndex), JSON.stringify(arr));
+  if (WEB_APP_URL && rowIndex) {
+    try {
+      const res  = await fetch(`${WEB_APP_URL}?action=setComments&rowIndex=${rowIndex}&comments=${encodeURIComponent(JSON.stringify(arr))}`);
+      const json = await res.json();
+      if (!json.success) showToast('⚠️ ซิงค์ Comment ไม่สำเร็จ: ' + (json.error||''), 'error');
+    } catch(e) {
+      showToast('⚠️ ซิงค์ Comment ไม่สำเร็จ: ' + e.message, 'error');
+    }
+  }
+}
+async function bcFetchFromSheet(rowIndex) {
+  if (!WEB_APP_URL || !rowIndex) return;
+  try {
+    const res  = await fetch(`${WEB_APP_URL}?action=getData`);
+    const json = await res.json();
+    if (json.success && Array.isArray(json.data)) {
+      const row = json.data.find(r => String(r.rowIndex) === String(rowIndex));
+      if (row && Array.isArray(row.comments) && row.comments.length > 0) {
+        localStorage.setItem(bcKey(rowIndex), JSON.stringify(row.comments));
+      }
+    }
+  } catch(e) { /* silent */ }
+}
 
 function bcToggle(rowIndex, event) {
   if (event) event.stopPropagation();
@@ -8912,7 +9006,7 @@ function bcToggle(rowIndex, event) {
   if (!panel) return;
   const isOpen = panel.classList.toggle('open');
   if (btn) btn.classList.toggle('open', isOpen);
-  if (isOpen) { bcRender(rowIndex); }
+  if (isOpen) bcFetchFromSheet(rowIndex).then(() => bcRender(rowIndex));
 }
 
 function bcRender(rowIndex) {
@@ -8921,7 +9015,6 @@ function bcRender(rowIndex) {
   const btn   = document.getElementById('bcb-' + rowIndex);
   const cnt   = document.getElementById('bcc-' + rowIndex);
   if (!list) return;
-  // update badge count
   if (cnt) { cnt.textContent = arr.length || ''; cnt.style.display = arr.length ? '' : 'none'; }
   if (btn) { btn.classList.toggle('has-comment', arr.length > 0); }
   const TAG = { update:'🔄', issue:'⚠️', done:'✅', info:'💬' };
@@ -8939,7 +9032,7 @@ function bcRender(rowIndex) {
   list.scrollTop = list.scrollHeight;
 }
 
-function bcAdd(rowIndex, event) {
+async function bcAdd(rowIndex, event) {
   if (event) event.stopPropagation();
   const author = (document.getElementById('bca-'+rowIndex)?.value || '').trim();
   const text   = (document.getElementById('bct-'+rowIndex)?.value || '').trim();
@@ -8950,19 +9043,19 @@ function bcAdd(rowIndex, event) {
                now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
   const arr = bcLoad(rowIndex);
   arr.push({ author, text, tag, time });
-  bcSave(rowIndex, arr);
+  await bcSave(rowIndex, arr);
   const ta = document.getElementById('bct-'+rowIndex);
   if (ta) ta.value = '';
   if (author) localStorage.setItem('prpo_username', author);
   bcRender(rowIndex);
-  showToast('✅ บันทึกแล้ว','success');
+  showToast('✅ บันทึกแล้ว (ซิงค์ Sheet แล้ว)','success');
 }
 
-function bcDelete(rowIndex, idx, event) {
+async function bcDelete(rowIndex, idx, event) {
   if (event) event.stopPropagation();
   const arr = bcLoad(rowIndex);
   arr.splice(idx, 1);
-  bcSave(rowIndex, arr);
+  await bcSave(rowIndex, arr);
   bcRender(rowIndex);
 }
 
