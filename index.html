@@ -2562,6 +2562,51 @@
     .toast-container { bottom: 4.5rem; }
   }
 
+  /* ── WELCOME / LOGIN SCREEN — MOBILE (จัดให้อยู่กึ่งกลางและอ่านง่ายบนโทรศัพท์) ── */
+  @media (max-width: 768px) {
+    #welcomeScreen {
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-y: auto;
+      padding: 1.5rem 0;
+    }
+    .wl-left { display: none; }
+    .wl-right {
+      width: 100%;
+      max-width: 420px;
+      flex-shrink: 1;
+      border-left: none;
+      padding: 0 1.3rem;
+      margin: 0 auto;
+    }
+    .wl-right::before { display: none; }
+
+    .wl-logo {
+      flex-direction: column;
+      text-align: center;
+      gap: 0.7rem;
+      margin-bottom: 1.8rem;
+    }
+    .wl-logo-icon { width: 56px; height: 56px; font-size: 1.25rem; border-radius: 14px; }
+    .wl-logo-brand { font-size: 1.4rem; text-align: center; }
+    .wl-logo-sub { text-align: center; }
+
+    .wl-card { padding: 2rem 1.5rem; text-align: center; }
+    .wl-welcome { font-size: 1.3rem; }
+    .wl-welcome-sub { font-size: 0.86rem; margin-bottom: 1.6rem; }
+    .wl-btn { font-size: 1rem; padding: 0.85rem 1rem; }
+
+    .wl-status { width: fit-content; margin: 1.6rem auto 0; justify-content: center; }
+  }
+
+  @media (max-width: 420px) {
+    .wl-right { padding: 0 0.9rem; }
+    .wl-card { padding: 1.7rem 1.2rem; border-radius: 16px; }
+    .wl-welcome { font-size: 1.15rem; }
+    .wl-logo-brand { font-size: 1.25rem; }
+  }
+
 </style>
 </head>
 <body>
