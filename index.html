@@ -2331,6 +2331,236 @@
   .bc-submit { background: var(--accent2); border: none; color: #fff; font-family: var(--font); font-size: 0.7rem; font-weight: 700; padding: 0.32rem 0.8rem; border-radius: 6px; cursor: pointer; transition: opacity 0.12s; }
   .bc-submit:hover { opacity: 0.85; }
 
+  /* ══════════════════════════════════════════════
+     MOBILE-FIRST RESPONSIVE — เพิ่มใหม่
+  ══════════════════════════════════════════════ */
+
+  /* ── MOBILE OVERLAY (tap to close sidebar) ── */
+  .sidebar-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+    z-index: 199; backdrop-filter: blur(2px); transition: opacity 0.25s;
+  }
+  .sidebar-overlay.show { display: block; }
+
+  /* ── BOTTOM NAV (มือถือ) ── */
+  .bottom-nav {
+    display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 300;
+    background: var(--surface); border-top: 1px solid var(--border);
+    padding: 0.4rem 0 env(safe-area-inset-bottom, 0.4rem);
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.25);
+  }
+  .bottom-nav-items {
+    display: flex; align-items: center; justify-content: space-around;
+    max-width: 480px; margin: 0 auto; padding: 0 0.25rem;
+  }
+  .bn-item {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    padding: 0.32rem 0.6rem; border-radius: 10px; border: none; background: transparent;
+    color: var(--muted); font-size: 0.56rem; font-weight: 600; cursor: pointer;
+    transition: all 0.15s; font-family: var(--font); min-width: 52px; letter-spacing: 0.02em;
+    flex: 1;
+  }
+  .bn-item svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+  .bn-item.active { color: var(--accent); }
+  .bn-item.active svg { stroke: var(--accent); }
+  .bn-item:active { transform: scale(0.92); }
+  .bn-more-btn { position: relative; }
+  .bn-more-dot {
+    position: absolute; top: 3px; right: 8px; width: 7px; height: 7px;
+    background: var(--danger); border-radius: 50%; border: 1.5px solid var(--surface); display: none;
+  }
+  .bn-more-dot.show { display: block; }
+
+  /* ── MOBILE DRAWER (More menu) ── */
+  .mobile-drawer {
+    display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 400;
+    background: var(--surface); border-top: 1px solid var(--border); border-radius: 20px 20px 0 0;
+    padding: 0.65rem 1rem 1.5rem; box-shadow: 0 -8px 32px rgba(0,0,0,0.4);
+    transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+  .mobile-drawer.open { display: block; transform: translateY(0); }
+  .drawer-handle {
+    width: 36px; height: 4px; background: var(--border); border-radius: 2px;
+    margin: 0 auto 0.85rem; cursor: pointer;
+  }
+  .drawer-title { font-size: 0.72rem; font-weight: 700; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.7rem; padding: 0 0.25rem; }
+  .drawer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
+  .drawer-item {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    padding: 0.7rem 0.3rem; border-radius: 12px; border: 1px solid var(--border);
+    background: var(--surface2); color: var(--muted); font-size: 0.62rem; font-weight: 600;
+    cursor: pointer; transition: all 0.15s; font-family: var(--font); text-align: center;
+    line-height: 1.2;
+  }
+  .drawer-item svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .drawer-item:active, .drawer-item.active { background: var(--glow-accent); border-color: var(--accent); color: var(--accent); }
+  .drawer-item.active svg { stroke: var(--accent); }
+  .drawer-overlay { display: none; position: fixed; inset: 0; z-index: 390; }
+  .drawer-overlay.show { display: block; }
+
+  /* ── MOBILE FAB (เพิ่มรายการ quick button) ── */
+  .mobile-fab {
+    display: none; position: fixed; right: 1rem; z-index: 290;
+    width: 48px; height: 48px; border-radius: 50%;
+    background: var(--accent); border: none; color: #000;
+    font-size: 1.4rem; font-weight: 700; cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0,229,160,0.4);
+    align-items: center; justify-content: center;
+    transition: transform 0.15s, box-shadow 0.15s;
+    line-height: 1;
+  }
+  .mobile-fab:active { transform: scale(0.92); box-shadow: 0 2px 8px rgba(0,229,160,0.3); }
+
+  /* ── MOBILE TOPBAR ── */
+  @media (max-width: 768px) {
+    /* Hide sidebar, show mobile nav */
+    .sidebar { transform: translateX(-100%); transition: transform 0.28s cubic-bezier(0.4,0,0.2,1); width: var(--sw) !important; z-index: 201; }
+    .sidebar.mobile-open { transform: translateX(0); }
+    .main-wrap { margin-left: 0 !important; }
+    .main-wrap.collapsed { margin-left: 0 !important; }
+
+    /* Topbar */
+    .topbar { padding: 0 0.85rem; }
+    .topbar-chip { display: none; }
+    .topbar-title { font-size: 0.82rem; }
+    .topbar-sub { display: none; }
+    .sync-pill span:last-child { display: none; }
+    .sync-pill { padding: 0.28rem 0.6rem; }
+    .theme-pill span:last-child { display: none; }
+
+    /* Bottom nav visible */
+    .bottom-nav { display: block; }
+
+    /* Content padding for bottom nav */
+    main { padding: 0.85rem !important; padding-bottom: 5.5rem !important; }
+
+    /* Stat grid → 2 col */
+    .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 0.6rem; margin-bottom: 0.9rem; }
+    .stat-value { font-size: 1.55rem; }
+    .stat-card { padding: 0.9rem 1rem; }
+
+    /* Charts → single col */
+    .chart-row { grid-template-columns: 1fr !important; gap: 0.7rem; }
+    .summary-grid { grid-template-columns: 1fr !important; }
+    .kpi-row { grid-template-columns: 1fr 1fr; gap: 0.55rem; }
+
+    /* Table → horizontal scroll */
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 12px; }
+    .table-wrap table { min-width: 620px; }
+    .table-footer { flex-direction: column; align-items: flex-start; gap: 0.5rem; padding: 0.55rem 0.75rem; }
+
+    /* Modal → full-width bottom sheet */
+    .modal-overlay { align-items: flex-end; }
+    .modal {
+      width: 100% !important; max-width: 100% !important; border-radius: 18px 18px 0 0;
+      max-height: 92vh; transform: translateY(20px);
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+    .form-grid { grid-template-columns: 1fr !important; }
+    .form-group.full { grid-column: 1 !important; }
+
+    /* Detail panel → full bottom sheet */
+    .detail-overlay { padding: 0; align-items: flex-end; }
+    .detail-panel {
+      width: 100% !important; max-width: 100% !important; max-height: 94vh;
+      border-radius: 18px 18px 0 0 !important; padding: 1.2rem 1rem !important;
+      transform: translateY(20px);
+    }
+    .detail-overlay.open .detail-panel { transform: translateY(0); }
+    .detail-grid { grid-template-columns: 1fr 1fr !important; gap: 0.5rem; }
+
+    /* Toolbar → wrap, search full width */
+    .toolbar { gap: 0.4rem; }
+    .toolbar .search-box { flex: 1 1 100%; order: -1; }
+    .toolbar .filter-select { flex: 1; min-width: 100px; font-size: 0.73rem; }
+    .toolbar .btn-primary { flex: 1 1 100%; justify-content: center; }
+
+    /* Briefing */
+    .briefing-head { padding: 0.85rem 1rem; }
+    .briefing-body { padding: 0.85rem 1rem; }
+    .briefing-stats { gap: 0.6rem; }
+    .briefing-stat-value { font-size: 1.1rem; }
+
+    /* CER grid */
+    .cer-stat-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 0.55rem; }
+
+    /* Notification panel */
+    .notif-panel { right: 0.4rem; width: calc(100vw - 0.8rem); top: 60px; }
+
+    /* Workplan */
+    .wp-kpi-banner { grid-template-columns: repeat(2, 1fr) !important; gap: 0.55rem; }
+    .wp-chart-row { grid-template-columns: 1fr !important; }
+    .wp-toolbar-row { flex-direction: column; align-items: stretch; gap: 0.5rem; }
+
+    /* Payroll two-col → one col */
+    #pr-two-col { grid-template-columns: 1fr !important; }
+
+    /* Gantt */
+    .gantt-controls { gap: 0.4rem; }
+    .gantt-month-label { min-width: 80px; font-size: 0.8rem; }
+    .gantt-legend { gap: 0.5rem; }
+    .gantt-legend-item { font-size: 0.65rem; }
+
+    /* Toast position */
+    .toast-container { right: 0.6rem; left: 0.6rem; bottom: 5.5rem; }
+    .toast { min-width: unset; }
+
+    /* FAB */
+    .mobile-fab { display: flex; bottom: 5rem; }
+    #page-list.active ~ .mobile-fab,
+    #page-list.active + .mobile-fab { display: flex; }
+
+    /* Setup grid */
+    .setup-grid { grid-template-columns: 1fr !important; }
+
+    /* Collapse button hidden on mobile (replaced by swipe/overlay) */
+    .collapse-btn { display: none; }
+    .sidebar-footer .collapse-btn { display: none; }
+
+    /* Section margin reduction */
+    .stat-grid, .chart-row, .progress-section, .kpi-row, .table-wrap, .chart-card, .summary-grid { margin-bottom: 0.75rem; }
+  }
+
+  /* ── SMALL MOBILE (≤ 480px) ── */
+  @media (max-width: 480px) {
+    html { font-size: 12.5px; }
+    main { padding: 0.7rem !important; padding-bottom: 5.5rem !important; }
+
+    .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+    .stat-value { font-size: 1.4rem; }
+    .stat-card { padding: 0.75rem 0.85rem; }
+    .stat-label { font-size: 0.6rem; }
+
+    .kpi-row { grid-template-columns: 1fr; }
+    .kpi-card { padding: 0.7rem 0.85rem; }
+
+    .topbar { padding: 0 0.65rem; height: 54px; }
+    .topbar-title { font-size: 0.78rem; }
+    .logo-icon { width: 28px; height: 28px; }
+
+    .detail-grid { grid-template-columns: 1fr !important; }
+
+    .bn-item { min-width: 44px; font-size: 0.52rem; padding: 0.28rem 0.4rem; }
+    .bn-item svg { width: 18px; height: 18px; }
+
+    .drawer-grid { grid-template-columns: repeat(3, 1fr); }
+
+    .briefing-stats { flex-wrap: wrap; }
+    .briefing-stat { min-width: 50px; flex: 1; }
+
+    .cer-stat-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    .cer-stat-value { font-size: 1.4rem; }
+  }
+
+  /* ── LANDSCAPE MOBILE (height ≤ 500px) ── */
+  @media (max-height: 500px) and (max-width: 768px) {
+    main { padding-bottom: 4.5rem !important; }
+    .bottom-nav { padding: 0.25rem 0 0; }
+    .bn-item { padding: 0.2rem 0.5rem; gap: 1px; }
+    .bn-item svg { width: 17px; height: 17px; }
+    .mobile-fab { bottom: 4rem; }
+    .toast-container { bottom: 4.5rem; }
+  }
 
 </style>
 </head>
@@ -2413,6 +2643,9 @@
   </div>
 </div>
 <!-- /WELCOME SCREEN -->
+
+<!-- SIDEBAR OVERLAY (mobile tap-to-close) -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
 
 <!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
@@ -2532,6 +2765,9 @@
 <div class="main-wrap" id="mainWrap">
   <div class="topbar">
     <div class="topbar-left">
+      <button class="icon-action" id="mobileMenuBtn" onclick="toggleMobileSidebar()" style="display:none;flex-shrink:0" aria-label="เมนู">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
       <div style="display:flex; align-items:center; gap:0.4rem;">
         <div class="topbar-title" id="topbarTitle">🏠 หน้าหลัก</div>
       </div>
@@ -6737,6 +6973,242 @@ function renderLeadTime() {
     </div>
   </div>
 </div>
+
+<!-- ══════════════════════════════════════════════
+     MOBILE BOTTOM NAV
+══════════════════════════════════════════════ -->
+<nav class="bottom-nav" id="bottomNav" role="navigation" aria-label="เมนูหลัก">
+  <div class="bottom-nav-items">
+    <button class="bn-item active" id="bn-home" onclick="mobileNav('home',this)" aria-label="หน้าหลัก">
+      <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-5h4v5a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1V10"/></svg>
+      <span>หน้าหลัก</span>
+    </button>
+    <button class="bn-item" id="bn-dashboard" onclick="mobileNav('dashboard',this)" aria-label="Dashboard">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+      <span>Dashboard</span>
+    </button>
+    <button class="bn-item" id="bn-list" onclick="mobileNav('list',this)" aria-label="รายการ">
+      <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      <span>รายการ</span>
+    </button>
+    <button class="bn-item" id="bn-summary" onclick="mobileNav('summary',this)" aria-label="สรุป">
+      <svg viewBox="0 0 24 24"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>
+      <span>สรุป</span>
+    </button>
+    <button class="bn-item bn-more-btn" id="bn-more" onclick="toggleMobileDrawer()" aria-label="เพิ่มเติม">
+      <div class="bn-more-dot" id="bnMoreDot"></div>
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+      <span>เพิ่มเติม</span>
+    </button>
+  </div>
+</nav>
+
+<!-- MOBILE MORE DRAWER -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeMobileDrawer()"></div>
+<div class="mobile-drawer" id="mobileDrawer" role="dialog" aria-label="เมนูเพิ่มเติม">
+  <div class="drawer-handle" onclick="closeMobileDrawer()"></div>
+  <div class="drawer-title">เมนูทั้งหมด</div>
+  <div class="drawer-grid">
+    <button class="drawer-item" id="di-gantt" onclick="mobileDrawerNav('gantt',this)">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span>Gantt</span>
+    </button>
+    <button class="drawer-item" id="di-leadtime" onclick="mobileDrawerNav('leadtime',this)">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><polyline points="12 9 12 13 15 15"/><line x1="9" y1="2" x2="15" y2="2"/></svg>
+      <span>Lead Time</span>
+    </button>
+    <button class="drawer-item" id="di-cer" onclick="mobileDrawerNav('cer',this)">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
+      <span>CER</span>
+    </button>
+    <button class="drawer-item" id="di-modeltracker" onclick="mobileDrawerNav('modeltracker',this)">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Model</span>
+    </button>
+    <button class="drawer-item" id="di-workplan" onclick="mobileDrawerNav('workplan',this)">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="9 16 11 18 15 14"/></svg>
+      <span>แผนงาน</span>
+    </button>
+    <button class="drawer-item" id="di-payroll" onclick="mobileDrawerNav('payroll',this)">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14.01"/><line x1="12" y1="14" x2="12" y2="14.01"/></svg>
+      <span>เวลา</span>
+    </button>
+    <button class="drawer-item" id="di-supplier" onclick="mobileDrawerNav('supplier',this)">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 21h18"/><path d="M5 21V9l5-4 5 4v12"/><path d="M15 21V13l4-2v10"/></svg>
+      <span>Supplier</span>
+    </button>
+    <button class="drawer-item" id="di-setup" onclick="mobileDrawerNav('setup',this)">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9z"/></svg>
+      <span>ตั้งค่า</span>
+    </button>
+  </div>
+</div>
+
+<!-- MOBILE FAB -->
+<button class="mobile-fab" id="mobileFab" onclick="mobileFabAction()" aria-label="เพิ่มรายการ" title="เพิ่มรายการ">+</button>
+
+<script>
+/* ══════════════════════════════════════════════
+   MOBILE NAVIGATION JAVASCRIPT
+══════════════════════════════════════════════ */
+(function() {
+  const MOBILE_BREAKPOINT = 768;
+
+  /* ── ตรวจสอบ Mobile ── */
+  function isMobile() { return window.innerWidth <= MOBILE_BREAKPOINT; }
+
+  /* ── แสดง/ซ่อน elements ตามขนาดหน้าจอ ── */
+  function applyMobileLayout() {
+    const mobile = isMobile();
+    const menuBtn = document.getElementById('mobileMenuBtn');
+    const bottomNav = document.getElementById('bottomNav');
+    const fab = document.getElementById('mobileFab');
+    if (menuBtn) menuBtn.style.display = mobile ? 'flex' : 'none';
+    if (bottomNav) bottomNav.style.display = mobile ? 'block' : 'none';
+    // FAB แสดงเฉพาะหน้า list บนมือถือ
+    updateFabVisibility();
+    // Collapse sidebar on desktop if not collapsed; on mobile hide
+    const sidebar = document.getElementById('sidebar');
+    if (!mobile && sidebar) {
+      sidebar.classList.remove('mobile-open');
+      document.getElementById('sidebarOverlay').classList.remove('show');
+    }
+  }
+
+  /* ── Toggle Sidebar (mobile) ── */
+  window.toggleMobileSidebar = function() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    if (sidebar.classList.contains('mobile-open')) {
+      sidebar.classList.remove('mobile-open');
+      overlay.classList.remove('show');
+    } else {
+      sidebar.classList.add('mobile-open');
+      overlay.classList.add('show');
+    }
+  };
+  window.closeMobileSidebar = function() {
+    document.getElementById('sidebar').classList.remove('mobile-open');
+    document.getElementById('sidebarOverlay').classList.remove('show');
+  };
+
+  /* ── Bottom Nav item click ── */
+  window.mobileNav = function(page, btn) {
+    // ปิด drawer ถ้าเปิดอยู่
+    closeMobileDrawer();
+    // activate bottom nav item
+    document.querySelectorAll('.bn-item').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    // sync กับ sidebar nav
+    const sidebarBtn = document.getElementById('nav-' + page);
+    if (sidebarBtn) sidebarBtn.click();
+    else if (typeof showPage === 'function') {
+      showPage(page, document.getElementById('nav-' + page));
+    }
+    updateFabVisibility();
+  };
+
+  /* ── Drawer Nav ── */
+  window.mobileDrawerNav = function(page, btn) {
+    closeMobileDrawer();
+    // deactivate all bottom nav
+    document.querySelectorAll('.bn-item').forEach(b => b.classList.remove('active'));
+    document.getElementById('bn-more').classList.add('active');
+    // highlight drawer item
+    document.querySelectorAll('.drawer-item').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    const sidebarBtn = document.getElementById('nav-' + page);
+    if (sidebarBtn) sidebarBtn.click();
+    else if (typeof showPage === 'function') showPage(page, null);
+    updateFabVisibility();
+  };
+
+  /* ── Toggle Drawer ── */
+  window.toggleMobileDrawer = function() {
+    const drawer = document.getElementById('mobileDrawer');
+    const overlay = document.getElementById('drawerOverlay');
+    if (drawer.classList.contains('open')) {
+      closeMobileDrawer();
+    } else {
+      drawer.classList.add('open');
+      overlay.classList.add('show');
+    }
+  };
+  window.closeMobileDrawer = function() {
+    document.getElementById('mobileDrawer').classList.remove('open');
+    document.getElementById('drawerOverlay').classList.remove('show');
+  };
+
+  /* ── FAB action ── */
+  window.mobileFabAction = function() {
+    if (typeof openAddModal === 'function') openAddModal();
+  };
+  function updateFabVisibility() {
+    const fab = document.getElementById('mobileFab');
+    if (!fab) return;
+    const activePageEl = document.querySelector('.page.active');
+    const isListPage = activePageEl && activePageEl.id === 'page-list';
+    fab.style.display = (isMobile() && isListPage) ? 'flex' : 'none';
+  }
+
+  /* ── Sync bottom nav กับ sidebar navigation ── */
+  function syncBottomNav(pageId) {
+    if (!isMobile()) return;
+    const map = { 'home':'bn-home', 'dashboard':'bn-dashboard', 'list':'bn-list', 'summary':'bn-summary' };
+    const drawerMap = ['gantt','leadtime','cer','modeltracker','workplan','payroll','supplier','setup','history'];
+    document.querySelectorAll('.bn-item').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.drawer-item').forEach(b => b.classList.remove('active'));
+    if (map[pageId]) {
+      const el = document.getElementById(map[pageId]);
+      if (el) el.classList.add('active');
+    } else if (drawerMap.includes(pageId)) {
+      const el = document.getElementById('bn-more');
+      if (el) el.classList.add('active');
+      const di = document.getElementById('di-' + pageId);
+      if (di) di.classList.add('active');
+    }
+    updateFabVisibility();
+  }
+
+  /* ── Hook into showPage ── */
+  const _origShowPage = window.showPage;
+  window.showPage = function(page, btn) {
+    if (typeof _origShowPage === 'function') _origShowPage(page, btn);
+    syncBottomNav(page);
+    if (isMobile()) closeMobileSidebar();
+    updateFabVisibility();
+  };
+
+  /* ── Init ── */
+  function init() {
+    applyMobileLayout();
+    // Sync on load
+    const activePage = document.querySelector('.page.active');
+    if (activePage) syncBottomNav(activePage.id.replace('page-', ''));
+  }
+
+  window.addEventListener('resize', applyMobileLayout, { passive: true });
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  /* ── Swipe to open sidebar ── */
+  let touchStartX = 0;
+  document.addEventListener('touchstart', function(e) {
+    touchStartX = e.touches[0].clientX;
+  }, { passive: true });
+  document.addEventListener('touchend', function(e) {
+    if (!isMobile()) return;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (touchStartX < 30 && dx > 55) toggleMobileSidebar(); // swipe right from edge
+    if (dx < -55 && document.getElementById('sidebar').classList.contains('mobile-open')) closeMobileSidebar(); // swipe left to close
+  }, { passive: true });
+
+})();
+</script>
+
 </body>
 
 <script>
