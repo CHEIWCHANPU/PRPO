@@ -4724,13 +4724,51 @@ function renderDailyBriefing() {
 }
 
 /* ── DATA LOAD ── */
-async function loadData() {
+async function loadData(forceRefresh = false) {
   if (!WEB_APP_URL) { allData = DEMO; processData(); showToast('ℹ️ ใช้ข้อมูลตัวอย่าง — ตั้งค่า URL ใน Setup', 'info'); return; }
+
+  // ── แสดง cache ก่อนทันที (stale-while-revalidate) ──
+  const CACHE_KEY = 'prpo_data_cache';
+  const CACHE_TIME_KEY = 'prpo_data_cache_time';
+  const CACHE_TTL = 5 * 60 * 1000; // 5 นาที
+  const cached = localStorage.getItem(CACHE_KEY);
+  const cachedTime = parseInt(localStorage.getItem(CACHE_TIME_KEY) || '0');
+  const cacheAge = Date.now() - cachedTime;
+  const cacheValid = cached && cacheAge < CACHE_TTL;
+
+  if (cached && !forceRefresh) {
+    // แสดงข้อมูล cache ทันที
+    allData = JSON.parse(cached);
+    processData();
+    const ageMin = Math.round(cacheAge / 60000);
+    document.getElementById('lastSync').textContent = 'แคช' + (ageMin > 0 ? ' (' + ageMin + ' นาทีที่แล้ว)' : ' (เมื่อกี้)');
+
+    // ถ้า cache ยังใหม่อยู่ ไม่ต้อง fetch ใหม่
+    if (cacheValid) return;
+
+    // fetch ใหม่เงียบๆ ใน background
+    fetch(WEB_APP_URL + '?action=getData')
+      .then(r => r.json())
+      .then(json => {
+        if (json.success) {
+          allData = json.data;
+          localStorage.setItem(CACHE_KEY, JSON.stringify(json.data));
+          localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
+          document.getElementById('lastSync').textContent = 'ซิงค์ล่าสุด: ' + json.updated;
+          processData();
+        }
+      }).catch(() => {});
+    return;
+  }
+
+  // ── ไม่มี cache → fetch ปกติ ──
   try {
     const res = await fetch(WEB_APP_URL + '?action=getData');
     const json = await res.json();
     if (json.success) {
       allData = json.data;
+      localStorage.setItem(CACHE_KEY, JSON.stringify(json.data));
+      localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
       document.getElementById('lastSync').textContent = 'ซิงค์ล่าสุด: ' + json.updated;
       processData(); showToast('✅ Sync สำเร็จ', 'success');
     }
@@ -4742,7 +4780,7 @@ async function syncData() {
   const spin = '<span class="spinner" style="width:12px;height:12px;border-width:2px"></span>';
   icon.innerHTML = spin; if (sIcon) sIcon.innerHTML = spin;
   cerLoaded = false; // force CER to reload on next visit
-  await loadData();
+  await loadData(true); // force refresh เมื่อกด Sync
   // ถ้าอยู่หน้า CER อยู่แล้วให้ reload เลย
   if (document.getElementById('page-cer')?.classList.contains('active')) {
     await loadCerPage(true);
