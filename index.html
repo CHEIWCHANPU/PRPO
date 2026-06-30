@@ -188,9 +188,9 @@
   .nav-group-items { padding: 0.3rem 0.45rem 0.45rem; }
   .nav-group.collapsed .nav-group-items { display: none; }
   .nav-item {
-    display: flex; align-items: center; gap: 0.72rem; padding: 0.6rem 0.78rem; border-radius: 9px;
+    display: flex; align-items: center; gap: 0.72rem; padding: 0.6rem 0.85rem; border-radius: 9px;
     cursor: pointer; transition: all 0.15s; color: var(--muted); font-size: 0.83rem; font-weight: 500;
-    white-space: nowrap; overflow: hidden; position: relative; border: 1px solid transparent; background: transparent;
+    white-space: nowrap; overflow: visible; position: relative; border: 1px solid transparent; background: transparent;
     width: 100%; text-align: left; margin-bottom: 2px; font-family: var(--font);
   }
   .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--text); border-color: var(--border); }
@@ -207,7 +207,7 @@
   .nav-text { transition: opacity 0.2s; }
   .sidebar.collapsed .nav-text { opacity: 0; width: 0; }
   .nav-badge {
-    margin-left: auto; background: var(--danger); color: #fff; font-size: 0.59rem;
+    margin-left: auto; margin-right: 2px; background: var(--danger); color: #fff; font-size: 0.59rem;
     font-weight: 700; padding: 0.1rem 0.42rem; border-radius: 10px; min-width: 18px;
     text-align: center; flex-shrink: 0;
   }
