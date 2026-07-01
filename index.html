@@ -2940,7 +2940,7 @@
         <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-5h4v5a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1V10"/></svg></span><span class="nav-text">หน้าหลัก</span>
       </button>
       <button class="nav-item" id="nav-exec" onclick="showPage('exec',this)" data-tour="nav-exec">
-        <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-4-4L3 17"/></svg></span><span class="nav-text">ภาพรวมผู้บริหาร</span>
+        <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-4-4L3 17"/></svg></span><span class="nav-text">ภาพรวม KPI</span>
       </button>
       <button class="nav-item" id="nav-payroll" onclick="showPage('payroll',this)">
         <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14.01"/><line x1="12" y1="14" x2="12" y2="14.01"/></svg></span><span class="nav-text">ลงเวลาทำงาน</span>
@@ -4821,7 +4821,7 @@ function showPage(name, btn) {
   document.getElementById('page-' + name).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  const titles = { home:'🏠 หน้าหลัก', exec:'🎯 ภาพรวมผู้บริหาร', orgchart:'🧩 ผังองค์กร / RACI', dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', summary:'📈 สรุปภาพรวม', gantt:'📅 Timeline / Gantt', setup:'⚙️ ตั้งค่าระบบ', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis', cer:'📄 ติดตามใบ CER', modeltracker:'🗂️ Model Tracker', workplan:'📅 ตารางแผนงานข้างนอก', payroll:'⏱️ ลงเวลา & ค่าแรง' };
+  const titles = { home:'🏠 หน้าหลัก', exec:'🎯 ภาพรวม KPI', orgchart:'🧩 ผังองค์กร / RACI', dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', summary:'📈 สรุปภาพรวม', gantt:'📅 Timeline / Gantt', setup:'⚙️ ตั้งค่าระบบ', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis', cer:'📄 ติดตามใบ CER', modeltracker:'🗂️ Model Tracker', workplan:'📅 ตารางแผนงานข้างนอก', payroll:'⏱️ ลงเวลา & ค่าแรง' };
   document.getElementById('topbarTitle').textContent = titles[name] || name;
   if (name === 'home') renderDailyBriefing();
   if (name === 'exec') renderExecDashboard();
@@ -10262,7 +10262,7 @@ async function bcDelete(rowIndex, idx, event) {
 const TOUR_STEPS = [
   {
     target: 'nav-exec',
-    title: '🎯 ภาพรวมผู้บริหาร',
+    title: '🎯 ภาพรวม KPI',
     body: 'หน้านี้รวม KPI สำคัญ กราฟสถานะงาน และ AI Insight สรุปสถานการณ์ทั้งหมดในที่เดียว เปิดดูตอน Presentation ได้เลย',
     position: 'right'
   },
