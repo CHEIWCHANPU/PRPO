@@ -2674,7 +2674,7 @@
   }
   .exec-health-label { font-size: 0.65rem; color: var(--muted); text-align: center; max-width: 90px; }
   .exec-kpi-grid {
-    display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.9rem;
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.9rem;
     margin-bottom: 1.2rem;
   }
   .exec-kpi-card {
@@ -3013,16 +3013,6 @@
       </div>
     </div>
 
-    <div class="nav-group" id="navGroup-org">
-      <div class="nav-label" onclick="toggleNavGroup('org')">
-        <span>โครงสร้างองค์กร</span><span class="nav-label-chevron">▾</span>
-      </div>
-      <div class="nav-group-items">
-        <button class="nav-item" id="nav-orgchart" onclick="showPage('orgchart',this)">
-          <span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.5"/><circle cx="5" cy="19" r="2.5"/><circle cx="19" cy="19" r="2.5"/><path d="M12 7.5V13M12 13L5 16.7M12 13l7 3.7"/></svg></span><span class="nav-text">ผังองค์กร / RACI</span>
-        </button>
-      </div>
-    </div>
 
     <div class="nav-group" id="navGroup-manage">
       <div class="nav-label" onclick="toggleNavGroup('manage')">
@@ -3182,12 +3172,6 @@
           <div class="exec-kpi-value" id="exec-overdue">—</div>
           <div class="exec-kpi-label">เลยกำหนดส่งแล้ว</div>
           <div class="exec-kpi-trend">ความเสี่ยงสูง</div>
-        </div>
-        <div class="exec-kpi-card">
-          <div class="exec-kpi-icon" style="background:rgba(0,229,160,0.12);color:var(--accent)">💰</div>
-          <div class="exec-kpi-value" id="exec-volume">—</div>
-          <div class="exec-kpi-label">มูลค่ารวม (Volume)</div>
-          <div class="exec-kpi-trend">รวมทุกสถานะ</div>
         </div>
         <div class="exec-kpi-card">
           <div class="exec-kpi-icon" style="background:rgba(99,102,241,0.12);color:var(--accent2)">🏭</div>
