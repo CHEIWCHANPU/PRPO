@@ -1143,6 +1143,57 @@
   .wl-back-link { display: block; text-align: center; font-size: 0.78rem; color: var(--muted); margin-top: 1.1rem; cursor: pointer; transition: color 0.15s; text-decoration: none; position: relative; z-index: 1; }
   .wl-back-link:hover { color: var(--accent); }
 
+  /* ── LOGIN FORM FIELDS ── */
+  .wl-form-group { margin-bottom: 1.05rem; position: relative; z-index: 1; }
+  .wl-form-label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--text); margin-bottom: 0.45rem; }
+  .wl-input-wrap { position: relative; display: flex; align-items: center; }
+  .wl-input-icon { position: absolute; left: 0.9rem; width: 16px; height: 16px; color: var(--muted); pointer-events: none; }
+  .wl-input {
+    width: 100%; padding: 0.8rem 1rem 0.8rem 2.65rem; border-radius: 11px;
+    border: 1px solid var(--border); background: var(--surface2); color: var(--text);
+    font-size: 0.92rem; font-family: var(--font);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .wl-input::placeholder { color: var(--muted); }
+  .wl-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--glow-accent); }
+  .wl-input-wrap.wl-has-eye .wl-input { padding-right: 2.65rem; }
+  .wl-input-eye {
+    position: absolute; right: 0.6rem; background: none; border: none; padding: 0.35rem; cursor: pointer;
+    color: var(--muted); display: flex; align-items: center; justify-content: center;
+  }
+  .wl-input-eye:hover { color: var(--accent); }
+  .wl-input-eye svg { width: 16px; height: 16px; }
+  .wl-input-wrap.wl-input-error .wl-input { border-color: var(--danger); }
+
+  .wl-remember-row { display: flex; align-items: center; margin-bottom: 1.15rem; position: relative; z-index: 1; }
+  .wl-checkbox-label { display: flex; align-items: center; gap: 0.55rem; font-size: 0.8rem; color: var(--muted); cursor: pointer; user-select: none; }
+  .wl-checkbox { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
+
+  .wl-error-msg {
+    display: flex; align-items: center; gap: 0.45rem; font-size: 0.78rem; color: var(--danger);
+    background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25); border-radius: 9px;
+    padding: 0.6rem 0.8rem; margin-bottom: 1.1rem; position: relative; z-index: 1;
+  }
+  .wl-error-msg svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+  /* ── WHITE THEME (login panel forced to light regardless of app theme) ── */
+  .wl-right {
+    --bg: #ffffff;
+    --sidebar: #ffffff;
+    --surface: #ffffff;
+    --surface2: #f4f6f9;
+    --border: #e4e8ef;
+    --accent: #0f9d68;
+    --accent2: #5446c4;
+    --danger: #dc4a3d;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --glow-accent: rgba(15,157,104,0.09);
+  }
+  .wl-right .wl-btn { background: linear-gradient(135deg,#12b76a,#0e9f66); color: #ffffff; box-shadow: 0 6px 22px rgba(15,157,104,0.28); }
+  .wl-right .wl-btn:hover { box-shadow: 0 10px 30px rgba(15,157,104,0.36); }
+  .wl-right .wl-card { box-shadow: 0 12px 44px rgba(30,41,59,0.10); }
+
   /* trust row */
   .wl-trust-row { display: flex; flex-direction: column; gap: 0.55rem; margin-top: 1.3rem; width: 100%; }
   .wl-trust-item { display: flex; align-items: center; gap: 0.65rem; font-size: 0.76rem; color: var(--muted); }
@@ -2962,12 +3013,44 @@
 
     <div class="wl-card wl-entering" style="animation-delay:.15s">
       <div class="wl-eyebrow-chip">Management System</div>
-      <div class="wl-welcome">ยินดีต้อนรับสู่ระบบ<br>จัดการ PU/EN</div>
-      <div class="wl-welcome-sub">กดปุ่มด้านล่างเพื่อเข้าสู่ระบบติดตาม PR PART Chiewchan Industry</div>
+      <div class="wl-welcome">เข้าสู่ระบบ<br>จัดการ PU/EN</div>
+      <div class="wl-welcome-sub">กรอกรหัสผู้ใช้และรหัสผ่านเพื่อเข้าสู่ระบบติดตาม PR PART Chiewchan Industry</div>
+
+      <div class="wl-form-group">
+        <label class="wl-form-label" for="wlUserId">รหัสผู้ใช้ (ID)</label>
+        <div class="wl-input-wrap">
+          <svg class="wl-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <input type="text" id="wlUserId" class="wl-input" placeholder="กรอกรหัสผู้ใช้" autocomplete="username">
+        </div>
+      </div>
+
+      <div class="wl-form-group">
+        <label class="wl-form-label" for="wlPassword">รหัสผ่าน (Password)</label>
+        <div class="wl-input-wrap wl-has-eye">
+          <svg class="wl-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          <input type="password" id="wlPassword" class="wl-input" placeholder="กรอกรหัสผ่าน" autocomplete="current-password">
+          <button type="button" class="wl-input-eye" id="wlEyeBtn" onclick="wlTogglePassword()" aria-label="แสดง/ซ่อนรหัสผ่าน">
+            <svg id="wlEyeIconShow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg id="wlEyeIconHide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.94 10.94 0 0112 20c-7 0-11-8-11-8a21.8 21.8 0 015.06-6.06M9.9 4.24A10.94 10.94 0 0112 4c7 0 11 8 11 8a21.8 21.8 0 01-3.22 4.36M14.12 14.12a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="wl-remember-row">
+        <label class="wl-checkbox-label">
+          <input type="checkbox" id="wlRemember" class="wl-checkbox">
+          <span>จดจำรหัสผู้ใช้และรหัสผ่าน</span>
+        </label>
+      </div>
+
+      <div class="wl-error-msg" id="wlErrorMsg" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>รหัสผู้ใช้หรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง</span>
+      </div>
 
       <button class="wl-btn" id="wlLoginBtn" onclick="wlLogin()">
-        เข้าสู่ระบบ
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        <span id="wlLoginBtnText">เข้าสู่ระบบ</span>
+        <svg id="wlLoginBtnIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
       </button>
       <a class="wl-back-link" href="#">← กลับหน้าแนะนำระบบ</a>
 
@@ -8005,34 +8088,125 @@ function renderLeadTime() {
 </body>
 
 <script>
-/* ── WELCOME SCREEN ── */
+/* ── WELCOME SCREEN / LOGIN FORM ── */
 const LOGIN_KEY = 'prpo_logged_in';
+const REMEMBER_KEY = 'prpo_remember_creds';
+
+// รหัสผู้ใช้และรหัสผ่านที่กำหนดไว้ในระบบ
+const WL_CREDENTIALS = { id: 'puen12345', password: '12345' };
+
+function wlResetLoginBtn() {
+  const btn = document.getElementById('wlLoginBtn');
+  const btnText = document.getElementById('wlLoginBtnText');
+  const btnIcon = document.getElementById('wlLoginBtnIcon');
+  if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+  if (btnText) { btnText.textContent = 'เข้าสู่ระบบ'; }
+  if (btnIcon) { btnIcon.style.display = ''; }
+}
+
+function wlClearError() {
+  const errorMsg = document.getElementById('wlErrorMsg');
+  const idWrap = document.getElementById('wlUserId')?.closest('.wl-input-wrap');
+  const passWrap = document.getElementById('wlPassword')?.closest('.wl-input-wrap');
+  if (errorMsg) errorMsg.style.display = 'none';
+  if (idWrap) idWrap.classList.remove('wl-input-error');
+  if (passWrap) passWrap.classList.remove('wl-input-error');
+}
+
+function wlShowError() {
+  const errorMsg = document.getElementById('wlErrorMsg');
+  const idWrap = document.getElementById('wlUserId')?.closest('.wl-input-wrap');
+  const passWrap = document.getElementById('wlPassword')?.closest('.wl-input-wrap');
+  if (errorMsg) errorMsg.style.display = 'flex';
+  if (idWrap) idWrap.classList.add('wl-input-error');
+  if (passWrap) passWrap.classList.add('wl-input-error');
+}
+
+function wlLoadRememberedCreds() {
+  try {
+    const saved = localStorage.getItem(REMEMBER_KEY);
+    if (!saved) return;
+    const { id, password } = JSON.parse(saved);
+    const idInput = document.getElementById('wlUserId');
+    const passInput = document.getElementById('wlPassword');
+    const rememberCheckbox = document.getElementById('wlRemember');
+    if (idInput) idInput.value = id || '';
+    if (passInput) passInput.value = password || '';
+    if (rememberCheckbox) rememberCheckbox.checked = true;
+  } catch (e) { /* ignore malformed saved data */ }
+}
+
+function wlTogglePassword() {
+  const passInput = document.getElementById('wlPassword');
+  const showIcon = document.getElementById('wlEyeIconShow');
+  const hideIcon = document.getElementById('wlEyeIconHide');
+  if (!passInput) return;
+  if (passInput.type === 'password') {
+    passInput.type = 'text';
+    if (showIcon) showIcon.style.display = 'none';
+    if (hideIcon) hideIcon.style.display = '';
+  } else {
+    passInput.type = 'password';
+    if (showIcon) showIcon.style.display = '';
+    if (hideIcon) hideIcon.style.display = 'none';
+  }
+}
 
 function doLogout() {
   localStorage.removeItem(LOGIN_KEY);
   sessionStorage.removeItem('prpo_session_active');
   const ws = document.getElementById('welcomeScreen');
-  // reset button
-  const btn = document.getElementById('wlLoginBtn');
-  if (btn) { btn.textContent = 'เข้าสู่ระบบ →'; btn.disabled = false; btn.style.opacity = '1'; }
+  wlResetLoginBtn();
+  wlClearError();
   // show welcome screen
   ws.style.display = 'flex';
   setTimeout(() => ws.classList.remove('hide'), 10);
 }
 
 function wlLogin() {
+  const idInput = document.getElementById('wlUserId');
+  const passInput = document.getElementById('wlPassword');
+  const rememberCheckbox = document.getElementById('wlRemember');
   const btn = document.getElementById('wlLoginBtn');
-  btn.textContent = 'กำลังเข้าสู่ระบบ...';
-  btn.disabled = true;
-  btn.style.opacity = '0.7';
+  const btnText = document.getElementById('wlLoginBtnText');
+  const btnIcon = document.getElementById('wlLoginBtnIcon');
+
+  const idVal = (idInput?.value || '').trim();
+  const passVal = passInput?.value || '';
+
+  if (idVal !== WL_CREDENTIALS.id || passVal !== WL_CREDENTIALS.password) {
+    wlShowError();
+    return;
+  }
+  wlClearError();
+
+  if (rememberCheckbox && rememberCheckbox.checked) {
+    localStorage.setItem(REMEMBER_KEY, JSON.stringify({ id: idVal, password: passVal }));
+  } else {
+    localStorage.removeItem(REMEMBER_KEY);
+  }
+
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.7'; }
+  if (btnText) { btnText.textContent = 'กำลังเข้าสู่ระบบ...'; }
+  if (btnIcon) { btnIcon.style.display = 'none'; }
+
   setTimeout(() => {
     localStorage.setItem(LOGIN_KEY, 'true');
     sessionStorage.setItem('prpo_session_active', 'true');
     const ws = document.getElementById('welcomeScreen');
     ws.classList.add('hide');
     setTimeout(() => { ws.style.display = 'none'; }, 520);
-  }, 800);
+  }, 600);
 }
+
+// โหลดข้อมูลที่จดจำไว้ (ถ้ามี) ทันทีที่หน้าโหลดเสร็จ
+wlLoadRememberedCreds();
+
+// ล้างข้อความ error เมื่อผู้ใช้เริ่มพิมพ์ใหม่
+['wlUserId', 'wlPassword'].forEach(function (id) {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', wlClearError);
+});
 
 document.addEventListener('keydown', function(e) {
   const ws = document.getElementById('welcomeScreen');
