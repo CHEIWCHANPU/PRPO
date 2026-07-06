@@ -2513,6 +2513,8 @@
     margin: 0 auto 0.85rem; cursor: pointer;
   }
   .drawer-title { font-size: 0.72rem; font-weight: 700; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.7rem; padding: 0 0.25rem; }
+  .drawer-section-label { grid-column: 1 / -1; font-size: 0.62rem; font-weight: 700; color: var(--muted); letter-spacing: 0.07em; text-transform: uppercase; margin: 0.5rem 0 -0.05rem; padding: 0 0.15rem; }
+  .drawer-section-label:first-child { margin-top: 0; }
   .drawer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
   .drawer-item {
     display: flex; flex-direction: column; align-items: center; gap: 5px;
@@ -2630,8 +2632,14 @@
     .gantt-legend { gap: 0.5rem; }
     .gantt-legend-item { font-size: 0.65rem; }
 
-    /* Toast position */
-    .toast-container { right: 0.6rem; left: 0.6rem; bottom: 5.5rem; }
+    /* Toast position — ย้ายขึ้นด้านบน (ใต้ topbar) แทนด้านล่าง เพื่อไม่บังเนื้อหา/บัง bottom-nav */
+    .toast-container {
+      top: calc(54px + env(safe-area-inset-top, 0px) + 0.5rem);
+      bottom: auto;
+      right: 0.6rem; left: 0.6rem;
+      max-height: 55vh; overflow-y: auto;
+      padding-bottom: 0.2rem;
+    }
     .toast { min-width: unset; }
 
     /* FAB */
@@ -2688,7 +2696,7 @@
     .bn-item { padding: 0.2rem 0.5rem; gap: 1px; }
     .bn-item svg { width: 17px; height: 17px; }
     .mobile-fab { bottom: 4rem; }
-    .toast-container { bottom: 4.5rem; }
+    .toast-container { top: calc(46px + env(safe-area-inset-top, 0px) + 0.4rem); max-height: 45vh; }
   }
 
   /* ── WELCOME / LOGIN SCREEN — MOBILE (จัดให้อยู่กึ่งกลางและอ่านง่ายบนโทรศัพท์) ── */
@@ -3086,7 +3094,7 @@
           <span class="nav-icon"><svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></span><span class="nav-text">รายการทั้งหมด</span>
         </button>
         <button class="nav-item" id="nav-partmodel" onclick="showPage('partmodel',this)">
-          <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><span class="nav-text">PART MODEL</span>
+          <span class="nav-icon"><svg viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></span><span class="nav-text">PART MODEL</span>
         </button>
         <button class="nav-item" id="nav-summary" onclick="showPage('summary',this)">
           <span class="nav-icon"><svg viewBox="0 0 24 24"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg></span><span class="nav-text">สรุปภาพรวม</span>
@@ -7210,6 +7218,11 @@ function initToastMuteBtn() {
 /* ── TOAST ── */
 function showToast(msg, type = 'info', duration = 3200) {
   const container = document.getElementById('toastContainer');
+  /* จำกัดจำนวน toast ที่แสดงพร้อมกัน — ถ้าเกินให้ปิดอันเก่าสุดออกก่อน (กันจอมือถือรก) */
+  const MAX_TOASTS = 3;
+  while (container.children.length >= MAX_TOASTS) {
+    container.removeChild(container.firstElementChild);
+  }
   const el = document.createElement('div');
   el.className = `toast ${type}`;
   const closeBtn = `<button class="toast-close" onclick="this.closest('.toast').remove()" title="ปิด">✕</button>`;
@@ -8082,6 +8095,13 @@ function renderLeadTime() {
   <div class="drawer-handle" onclick="closeMobileDrawer()"></div>
   <div class="drawer-title">เมนูทั้งหมด</div>
   <div class="drawer-grid">
+    <div class="drawer-section-label">ภาพรวม</div>
+    <button class="drawer-item" id="di-exec" onclick="mobileDrawerNav('exec',this)">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-4-4L3 17"/></svg>
+      <span>ภาพรวม KPI</span>
+    </button>
+
+    <div class="drawer-section-label">ติดตาม PART PR</div>
     <button class="drawer-item" id="di-gantt" onclick="mobileDrawerNav('gantt',this)">
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       <span>Gantt</span>
@@ -8090,6 +8110,12 @@ function renderLeadTime() {
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><polyline points="12 9 12 13 15 15"/><line x1="9" y1="2" x2="15" y2="2"/></svg>
       <span>Lead Time</span>
     </button>
+    <button class="drawer-item" id="di-partmodel" onclick="mobileDrawerNav('partmodel',this)">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+      <span>PART MODEL</span>
+    </button>
+
+    <div class="drawer-section-label">ใบ CER / Model</div>
     <button class="drawer-item" id="di-cer" onclick="mobileDrawerNav('cer',this)">
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
       <span>CER</span>
@@ -8098,6 +8124,8 @@ function renderLeadTime() {
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
       <span>Model</span>
     </button>
+
+    <div class="drawer-section-label">แผนงาน / เวลา</div>
     <button class="drawer-item" id="di-workplan" onclick="mobileDrawerNav('workplan',this)">
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="9 16 11 18 15 14"/></svg>
       <span>แผนงาน</span>
@@ -8106,9 +8134,15 @@ function renderLeadTime() {
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14.01"/><line x1="12" y1="14" x2="12" y2="14.01"/></svg>
       <span>เวลา</span>
     </button>
+
+    <div class="drawer-section-label">อื่นๆ</div>
     <button class="drawer-item" id="di-supplier" onclick="mobileDrawerNav('supplier',this)">
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 21h18"/><path d="M5 21V9l5-4 5 4v12"/><path d="M15 21V13l4-2v10"/></svg>
       <span>Supplier</span>
+    </button>
+    <button class="drawer-item" id="di-history" onclick="mobileDrawerNav('history',this)">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>
+      <span>History</span>
     </button>
     <button class="drawer-item" id="di-setup" onclick="mobileDrawerNav('setup',this)">
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9z"/></svg>
