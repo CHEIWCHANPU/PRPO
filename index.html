@@ -3085,6 +3085,9 @@
         <button class="nav-item" id="nav-list" onclick="showPage('list',this)">
           <span class="nav-icon"><svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></span><span class="nav-text">รายการทั้งหมด</span>
         </button>
+        <button class="nav-item" id="nav-partmodel" onclick="showPage('partmodel',this)">
+          <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><span class="nav-text">PART MODEL</span>
+        </button>
         <button class="nav-item" id="nav-summary" onclick="showPage('summary',this)">
           <span class="nav-icon"><svg viewBox="0 0 24 24"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg></span><span class="nav-text">สรุปภาพรวม</span>
         </button>
@@ -3537,6 +3540,57 @@
             <div class="pagination" id="pagination"></div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- PART MODEL -->
+    <div class="page" id="page-partmodel">
+      <div class="stat-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="stat-card total" style="cursor:default">
+          <div class="stat-top"><div class="stat-icon-wrap">🧩</div></div>
+          <div class="stat-label">PART ทั้งหมด</div>
+          <div class="stat-value" id="pm-cnt-parts">—</div>
+          <div class="stat-meta">จำนวน PART NO. ไม่ซ้ำกัน</div>
+        </div>
+        <div class="stat-card progress" style="cursor:default">
+          <div class="stat-top"><div class="stat-icon-wrap">🗂️</div></div>
+          <div class="stat-label">MODEL ทั้งหมด</div>
+          <div class="stat-value" id="pm-cnt-models">—</div>
+          <div class="stat-meta">จำนวน MODEL ที่พบ</div>
+        </div>
+        <div class="stat-card incomplete" style="cursor:default">
+          <div class="stat-top"><div class="stat-icon-wrap">🔁</div></div>
+          <div class="stat-label">จำนวนครั้งที่เรียก PR</div>
+          <div class="stat-value" id="pm-cnt-calls">—</div>
+          <div class="stat-meta">รวมทุก PART / ทุก MODEL</div>
+        </div>
+      </div>
+
+      <div class="toolbar" id="pmToolbar-model">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="pmModelSearchInput" placeholder="ค้นหา Model..." oninput="renderPartModelByModel()">
+        </div>
+        <select class="filter-select" id="pmModelSortSelect" onchange="renderPartModelByModel()">
+          <option value="calls">เรียงตาม: จำนวนครั้งที่เรียก (มาก→น้อย)</option>
+          <option value="volume">เรียงตาม: Volume รวม (มาก→น้อย)</option>
+          <option value="model">เรียงตาม: Model (A→Z)</option>
+        </select>
+      </div>
+
+      <div class="table-wrap" id="pmTableWrap-model">
+        <table>
+          <thead><tr>
+            <th style="width:36px">#</th>
+            <th>MODEL</th>
+            <th style="text-align:center">จำนวน PART</th>
+            <th style="text-align:center">จำนวนครั้งที่เรียก PR</th>
+            <th style="width:170px">ความคืบหน้าการส่งของ</th>
+            <th>สถานะ</th>
+            <th style="width:36px"></th>
+          </tr></thead>
+          <tbody id="partModelByModelTableBody"><tr><td colspan="7" class="empty"><div class="spinner"></div></td></tr></tbody>
+        </table>
       </div>
     </div>
 
@@ -4949,11 +5003,12 @@ function showPage(name, btn) {
   document.getElementById('page-' + name).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  const titles = { home:'🏠 หน้าหลัก', exec:'🎯 ภาพรวม KPI', orgchart:'🧩 ผังองค์กร / RACI', dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', summary:'📈 สรุปภาพรวม', gantt:'📅 Timeline / Gantt', setup:'⚙️ ตั้งค่าระบบ', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis', cer:'📄 ติดตามใบ CER', modeltracker:'🗂️ Model Tracker', workplan:'📅 ตารางแผนงานข้างนอก', payroll:'⏱️ ลงเวลา & ค่าแรง' };
+  const titles = { home:'🏠 หน้าหลัก', exec:'🎯 ภาพรวม KPI', orgchart:'🧩 ผังองค์กร / RACI', dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', partmodel:'🧩 PART MODEL', summary:'📈 สรุปภาพรวม', gantt:'📅 Timeline / Gantt', setup:'⚙️ ตั้งค่าระบบ', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis', cer:'📄 ติดตามใบ CER', modeltracker:'🗂️ Model Tracker', workplan:'📅 ตารางแผนงานข้างนอก', payroll:'⏱️ ลงเวลา & ค่าแรง' };
   document.getElementById('topbarTitle').textContent = titles[name] || name;
   if (name === 'home') renderDailyBriefing();
   if (name === 'exec') renderExecDashboard();
   if (name === 'summary') renderSummary();
+  if (name === 'partmodel') { renderPmSummaryStats(); renderPartModelByModel(); }
   if (name === 'supplier') loadSuppliers();
   if (name === 'leadtime') renderLeadTime();
   if (name === 'history') loadHistoryFromSheet();
@@ -5565,6 +5620,147 @@ async function toggleStar(key, btnEl) {
     showToast(nowStarred ? '⭐ ทำเครื่องหมายงานสำคัญแล้ว' : '☆ ยกเลิกงานสำคัญแล้ว', nowStarred ? 'success' : 'info');
   }
 }
+
+/* ── PART MODEL: สรุปสถิติรวม (ใช้ร่วมกับตาราง MODEL) ── */
+function getPartModelGroups() {
+  const groups = {};
+  allData.forEach(r => {
+    const key = (r.partNo || '').trim();
+    if (!key) return;
+    if (!groups[key]) groups[key] = { partNo: key, partName: r.partName || '', models: new Set(), totalVolume: 0, records: [] };
+    const g = groups[key];
+    if (r.model) g.models.add(r.model);
+    if (!g.partName && r.partName) g.partName = r.partName;
+    g.totalVolume += Number(r.volume) || 0;
+    g.records.push(r);
+  });
+  return Object.values(groups);
+}
+function renderPmSummaryStats() {
+  if (!Array.isArray(allData) || !allData.length) return;
+  const groups = getPartModelGroups();
+  const allModels = new Set();
+  let grandCalls = 0;
+  groups.forEach(g => { g.models.forEach(m => allModels.add(m)); grandCalls += g.records.length; });
+  document.getElementById('pm-cnt-parts').textContent = groups.length;
+  document.getElementById('pm-cnt-models').textContent = allModels.size;
+  document.getElementById('pm-cnt-calls').textContent = grandCalls.toLocaleString();
+}
+
+function pmStatusBadge(st) {
+  if (!st) return '<span style="color:var(--muted)">—</span>';
+  if (st.includes('เสร็จแล้ว')) return '<span class="badge badge-done">✅ เสร็จแล้ว</span>';
+  if (st.includes('กำลังดำเนินการ')) return '<span class="badge badge-progress">♻ กำลังดำเนินการ</span>';
+  if (st.includes('ยังไม่ครบ')) return '<span class="badge badge-incomplete">❌ ส่งยังไม่ครบ</span>';
+  return `<span class="badge">${st}</span>`;
+}
+
+function getModelGroups() {
+  const groups = {};
+  allData.forEach(r => {
+    const key = (r.model || '').trim();
+    if (!key) return;
+    if (!groups[key]) groups[key] = { model: key, parts: new Set(), totalVolume: 0, records: [], done: 0, progress: 0, incomplete: 0 };
+    const g = groups[key];
+    if (r.partNo) g.parts.add(r.partNo);
+    g.totalVolume += Number(r.volume) || 0;
+    g.records.push(r);
+    const st = r.status || '';
+    if (st.includes('เสร็จแล้ว')) g.done++;
+    else if (st.includes('ยังไม่ครบ')) g.incomplete++;
+    else if (st.includes('กำลังดำเนินการ')) g.progress++;
+  });
+  return Object.values(groups);
+}
+
+function renderPartModelByModel() {
+  if (!Array.isArray(allData) || !allData.length) return;
+  const searchEl = document.getElementById('pmModelSearchInput');
+  const sortEl = document.getElementById('pmModelSortSelect');
+  const q = (searchEl && searchEl.value || '').toLowerCase();
+  const sortBy = sortEl ? sortEl.value : 'calls';
+
+  let groups = getModelGroups();
+  if (q) groups = groups.filter(g => g.model.toLowerCase().includes(q));
+
+  if (sortBy === 'volume') groups.sort((a, b) => b.totalVolume - a.totalVolume);
+  else if (sortBy === 'model') groups.sort((a, b) => a.model.localeCompare(b.model));
+  else groups.sort((a, b) => b.records.length - a.records.length);
+
+  const tbody = document.getElementById('partModelByModelTableBody');
+  if (!groups.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty">ไม่พบข้อมูล</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = groups.map((g, i) => {
+    const statusChips = [
+      g.done ? `<span class="badge badge-done">✅ ${g.done}</span>` : '',
+      g.progress ? `<span class="badge badge-progress">♻ ${g.progress}</span>` : '',
+      g.incomplete ? `<span class="badge badge-incomplete">❌ ${g.incomplete}</span>` : ''
+    ].filter(Boolean).join(' ') || '<span style="color:var(--muted)">—</span>';
+
+    const pct = g.records.length ? Math.round((g.done / g.records.length) * 100) : 0;
+    const barColor = pct === 100 ? 'var(--success)' : (pct === 0 ? 'var(--danger)' : 'var(--warn)');
+
+    return `<tr style="cursor:pointer" onclick="openPmModelModal('${g.model.replace(/'/g, "\\'")}')">
+      <td>${i + 1}</td>
+      <td class="part-no">${g.model}</td>
+      <td style="text-align:center;font-weight:700">${g.parts.size}</td>
+      <td style="text-align:center;font-weight:700;color:var(--accent2)">${g.records.length}</td>
+      <td>
+        <div class="qty-progress-wrap" style="min-width:150px;text-align:left">
+          <span class="qty-progress-text">${g.done}/${g.records.length} เสร็จ (${pct}%)</span>
+          <div class="qty-progress-track" style="height:6px"><div class="qty-progress-fill" style="width:${pct}%;background:${barColor}"></div></div>
+        </div>
+      </td>
+
+      <td>${statusChips}</td>
+      <td style="text-align:center;color:var(--muted)">▸</td>
+    </tr>`;
+  }).join('');
+}
+
+function openPmModelModal(modelName) {
+  const groups = getModelGroups();
+  const g = groups.find(x => x.model === modelName);
+  if (!g) return;
+  document.getElementById('pmModelModalTitle').textContent = `🗂️ MODEL: ${g.model}`;
+
+  document.getElementById('pmModelModalStats').innerHTML = `
+    <div class="stat-card total" style="cursor:default;padding:0.75rem 0.9rem">
+      <div class="stat-label" style="font-size:0.66rem">จำนวน PART</div>
+      <div class="stat-value" style="font-size:1.3rem">${g.parts.size}</div>
+    </div>
+    <div class="stat-card progress" style="cursor:default;padding:0.75rem 0.9rem">
+      <div class="stat-label" style="font-size:0.66rem">จำนวนครั้งที่เรียก</div>
+      <div class="stat-value" style="font-size:1.3rem">${g.records.length}</div>
+    </div>
+    <div class="stat-card done" style="cursor:default;padding:0.75rem 0.9rem">
+      <div class="stat-label" style="font-size:0.66rem">VOLUME รวม</div>
+      <div class="stat-value" style="font-size:1.3rem">${g.totalVolume.toLocaleString()}</div>
+    </div>
+    <div class="stat-card incomplete" style="cursor:default;padding:0.75rem 0.9rem">
+      <div class="stat-label" style="font-size:0.66rem">ส่งครบ / ทั้งหมด</div>
+      <div class="stat-value" style="font-size:1.3rem">${g.done} / ${g.records.length}</div>
+    </div>`;
+
+  const rows = [...g.records].sort((a, b) => (a.partNo || '').localeCompare(b.partNo || ''));
+  document.getElementById('pmModelModalTableBody').innerHTML = rows.map(r => `
+    <tr>
+      <td class="part-no">${r.partNo || '—'}</td>
+      <td class="part-name">${r.partName || '—'}</td>
+      <td style="text-align:right">${(Number(r.volume) || 0).toLocaleString()}</td>
+      <td style="font-family:var(--mono);font-size:0.7rem">${r.poNo || '—'}</td>
+      <td style="font-size:0.72rem;color:var(--muted)">${r.prDate || '—'}</td>
+      <td style="font-size:0.72rem;color:var(--muted)">${r.dueDate || '—'}</td>
+      <td>${pmStatusBadge(r.status)}</td>
+      <td style="font-size:0.72rem;color:var(--muted)">${r.maker || '—'}</td>
+    </tr>`).join('');
+
+  document.getElementById('pmModelModalOverlay').classList.add('open');
+}
+function closePmModelModal() { document.getElementById('pmModelModalOverlay').classList.remove('open'); }
 
 /* ── MAIN TABLE ── */
 function getFiltered() {
@@ -7771,6 +7967,34 @@ function renderLeadTime() {
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeSupplierModal()">ยกเลิก</button>
       <button class="btn btn-primary" onclick="saveSupplier()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- PART MODEL: MODEL DETAIL MODAL -->
+<div class="modal-overlay" id="pmModelModalOverlay" onclick="if(event.target===this)closePmModelModal()">
+  <div class="modal" style="max-width:900px;width:95vw">
+    <div class="modal-header">
+      <div class="modal-title" id="pmModelModalTitle">🗂️ MODEL</div>
+      <button class="modal-close" onclick="closePmModelModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="stat-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:1rem" id="pmModelModalStats"></div>
+      <div class="table-wrap" style="border:1px solid var(--border)">
+        <table>
+          <thead><tr>
+            <th>PART NO.</th>
+            <th>PART NAME</th>
+            <th style="text-align:right">VOLUME</th>
+            <th>PO/ORDER</th>
+            <th>เปิด P/R</th>
+            <th>วันนัดส่ง</th>
+            <th>สถานะ</th>
+            <th>MAKER</th>
+          </tr></thead>
+          <tbody id="pmModelModalTableBody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
