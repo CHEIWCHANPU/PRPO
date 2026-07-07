@@ -3061,13 +3061,22 @@
         function splitLetters(el){
           var text = el.textContent;
           el.textContent = '';
-          for (var i = 0; i < text.length; i++) {
-            var ch = text[i];
-            var span = document.createElement('span');
-            span.className = 'wl-letter';
-            span.innerHTML = (ch === ' ') ? '&nbsp;' : ch;
-            el.appendChild(span);
-          }
+          var words = text.split(' ');
+          words.forEach(function(word, wi){
+            var wordSpan = document.createElement('span');
+            wordSpan.style.display = 'inline-block';
+            wordSpan.style.whiteSpace = 'nowrap';
+            for (var i = 0; i < word.length; i++) {
+              var span = document.createElement('span');
+              span.className = 'wl-letter';
+              span.textContent = word[i];
+              wordSpan.appendChild(span);
+            }
+            el.appendChild(wordSpan);
+            if (wi < words.length - 1) {
+              el.appendChild(document.createTextNode(' '));
+            }
+          });
         }
         var line1 = document.currentScript.previousElementSibling.querySelector('.wl-hero-line1');
         var line2 = document.currentScript.previousElementSibling.querySelector('.wl-hero-line2');
