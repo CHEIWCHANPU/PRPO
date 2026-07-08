@@ -63,6 +63,14 @@
     --mt-month-border: rgba(255,255,255,0.10);
     --mt-year-border: rgba(62,106,225,0.45);
     --mt-connector-color: rgba(255,255,255,0.18);
+
+    /* ── Design tokens: radius scale (unify inconsistent 9/10/12/14/16/18/20px values) ── */
+    --r-xs: 8px;   /* inputs, small chips */
+    --r-sm: 10px;  /* buttons, small controls */
+    --r-md: 14px;  /* section cards, panels */
+    --r-lg: 16px;  /* stat cards, table wraps */
+    --r-xl: 20px;  /* modals, large surfaces */
+    --r-pill: 999px; /* badges, pills */
   }
   .light-theme {
     --bg: #F3F5FA;
@@ -414,12 +422,12 @@
   /* STAT CARDS */
   .stat-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem; margin-bottom: 1.3rem; }
   .stat-card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg);
     padding: 1.2rem 1.3rem; position: relative; overflow: hidden; cursor: pointer;
     transition: border-color 0.2s, transform 0.18s, box-shadow 0.2s;
   }
   .stat-card:hover { transform: translateY(-3px); }
-  .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 16px 16px 0 0; }
+  .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: var(--r-lg) var(--r-lg) 0 0; }
   .stat-card.total::before { background: linear-gradient(90deg, var(--accent2), #818cf8); }
   .stat-card.done::before { background: linear-gradient(90deg, var(--success), #34d399); }
   .stat-card.progress::before { background: linear-gradient(90deg, var(--warn), #fcd34d); }
@@ -445,6 +453,19 @@
   .stat-card.done .stat-value { color: var(--success); }
   .stat-card.progress .stat-value { color: var(--warn); }
   .stat-card.incomplete .stat-value { color: var(--danger); }
+
+  /* ── Stat trend (เทียบกับครั้งก่อนหน้าที่โหลดข้อมูล) ── */
+  .stat-top { display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; }
+  .stat-trend {
+    display: inline-flex; align-items: center; gap: 0.2rem; font-family: var(--mono);
+    font-size: 0.68rem; font-weight: 700; padding: 0.14rem 0.45rem; border-radius: var(--r-pill);
+    line-height: 1; opacity: 0; transform: translateY(-2px); transition: opacity 0.3s ease, transform 0.3s ease;
+    white-space: nowrap;
+  }
+  .stat-trend.shown { opacity: 1; transform: translateY(0); }
+  .stat-trend.up { background: rgba(16,185,129,0.12); color: var(--success); }
+  .stat-trend.down { background: rgba(239,68,68,0.12); color: var(--danger); }
+  .stat-trend.flat { background: var(--surface2); color: var(--muted); }
 
   /* PROGRESS */
   .progress-section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1rem 1.2rem; margin-bottom: 1.3rem; }
@@ -498,7 +519,7 @@
 
   /* CHARTS */
   .chart-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1.3rem; }
-  .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.1rem; transition: box-shadow 0.2s; }
+  .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 1.1rem; transition: box-shadow 0.2s; }
   .chart-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.12); }
   .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.9rem; }
   .chart-title { font-size: 0.714rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); }
@@ -534,7 +555,7 @@
   .perpage-select option { background: var(--surface2); }
 
   /* BUTTONS */
-  .btn { padding: 0.5rem 1rem; border-radius: 9px; font-family: var(--font); font-size: 0.83rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.18s; display: flex; align-items: center; gap: 0.38rem; }
+  .btn { padding: 0.5rem 1rem; border-radius: var(--r-sm); font-family: var(--font); font-size: 0.83rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.18s; display: flex; align-items: center; gap: 0.38rem; }
   .btn-primary { background: var(--accent); color: #fff; }
   .btn-primary:hover { background: #345FD1; box-shadow: 0 0 0 3px var(--glow-accent); }
   .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
@@ -545,7 +566,7 @@
   .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
 
   /* TABLE */
-  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; transition: box-shadow 0.2s; }
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; transition: box-shadow 0.2s; }
   @media (max-width: 900px) {
     .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .table-wrap table { min-width: 640px; }
@@ -582,7 +603,7 @@
   .qty-progress-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
   .qty-progress-text { font-family: var(--mono); font-size: 0.693rem; color: var(--text); white-space: nowrap; font-weight: 600; }
 
-  .badge { display: inline-flex; align-items: center; gap: 0.22rem; padding: 0.18rem 0.55rem; border-radius: 20px; font-size: 0.704rem; font-weight: 600; white-space: nowrap; }
+  .badge { display: inline-flex; align-items: center; gap: 0.22rem; padding: 0.18rem 0.55rem; border-radius: var(--r-pill); font-size: 0.704rem; font-weight: 600; white-space: nowrap; }
   .badge-done { background: rgba(16,185,129,0.12); color: var(--success); border: 1px solid rgba(16,185,129,0.2); }
   .badge-progress { background: rgba(245,158,11,0.12); color: var(--warn); border: 1px solid rgba(245,158,11,0.2); }
   .badge-incomplete { background: rgba(239,68,68,0.12); color: var(--danger); border: 1px solid rgba(239,68,68,0.2); }
@@ -627,7 +648,7 @@
     padding: 0.95rem 1.05rem; position: relative; overflow: hidden;
     transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
   }
-  .cer-stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 14px 14px 0 0; background: linear-gradient(90deg, var(--muted), var(--border)); }
+  .cer-stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: var(--r-md) var(--r-md) 0 0; background: linear-gradient(90deg, var(--muted), var(--border)); }
   .cer-stat-card.accent::before { background: linear-gradient(90deg, var(--accent), var(--accent2)); }
   .cer-stat-card.warn::before { background: linear-gradient(90deg, var(--warn), #fcd34d); }
   .cer-stat-card.danger::before { background: linear-gradient(90deg, var(--danger), #f87171); }
@@ -656,7 +677,7 @@
   /* MODAL */
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
   .modal-overlay.open { opacity: 1; pointer-events: all; }
-  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; width: 620px; max-width: 95vw; max-height: 90vh; overflow-y: auto; transform: scale(0.96); transition: transform 0.2s; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-xl); width: 620px; max-width: 95vw; max-height: 90vh; overflow-y: auto; transform: scale(0.96); transition: transform 0.2s; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
   .modal-overlay.open .modal { transform: scale(1); }
   .modal-header { padding: 1.25rem 1.5rem 1rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
   .modal-title { font-size: 0.997rem; font-weight: 700; }
@@ -2031,12 +2052,12 @@
     background: linear-gradient(180deg, rgba(62,106,225,0.05), rgba(0,0,0,0.012) 60%) !important;
   }
   .nav-label {
-    font-size: 0.735rem !important;
+    font-size: 0.665rem !important;
     font-weight: 800 !important;
-    letter-spacing: 0.06em !important;
+    letter-spacing: 0.03em !important;
     text-transform: uppercase !important;
     color: var(--text) !important;
-    padding: 0.52rem 0.7rem !important;
+    padding: 0.52rem 0.65rem !important;
     background: transparent !important;
     border-bottom: 1px solid rgba(255,255,255,0.04) !important;
     opacity: 0.95 !important;
@@ -2051,16 +2072,16 @@
   .nav-label-text {
     display: flex !important;
     align-items: center !important;
-    gap: 0.45rem !important;
+    gap: 0.4rem !important;
   }
   .nav-label-icon {
-    width: 20px !important;
-    height: 20px !important;
+    width: 18px !important;
+    height: 18px !important;
     border-radius: 6px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    font-size: 0.77rem !important;
+    font-size: 0.7rem !important;
     flex-shrink: 0 !important;
     background: var(--glow-accent) !important;
     line-height: 1 !important;
@@ -2087,10 +2108,10 @@
   .sidebar.collapsed .nav-section-divider { display: none !important; }
   .nav-item {
     border-radius: 8px !important;
-    font-size: 0.861rem !important;
+    font-size: 0.79rem !important;
     font-weight: 500 !important;
-    padding: 0.55rem 0.75rem !important;
-    gap: 0.65rem !important;
+    padding: 0.55rem 0.7rem !important;
+    gap: 0.55rem !important;
     color: var(--muted) !important;
     border: 1px solid transparent !important;
     transition: all 0.15s cubic-bezier(0.4,0,0.2,1) !important;
@@ -3712,25 +3733,25 @@
     <div class="page" id="page-dashboard">
       <div class="stat-grid">
         <div class="stat-card total" onclick="filterByStatus('')">
-          <div class="stat-top"><div class="stat-icon-wrap">📦</div></div>
+          <div class="stat-top"><div class="stat-icon-wrap">📦</div><span class="stat-trend" id="trend-total"></span></div>
           <div class="stat-label">ทั้งหมด</div>
           <div class="stat-value" id="cnt-total">—</div>
           <div class="stat-meta">รายการทั้งหมดในระบบ</div>
         </div>
         <div class="stat-card done" onclick="filterByStatus('เสร็จแล้ว')">
-          <div class="stat-top"><div class="stat-icon-wrap">✅</div></div>
+          <div class="stat-top"><div class="stat-icon-wrap">✅</div><span class="stat-trend" id="trend-done"></span></div>
           <div class="stat-label">เสร็จสมบูรณ์</div>
           <div class="stat-value" id="cnt-done">—</div>
           <div class="stat-meta">ส่งของครบแล้ว</div>
         </div>
         <div class="stat-card progress" onclick="filterByStatus('กำลังดำเนินการ')">
-          <div class="stat-top"><div class="stat-icon-wrap">♻️</div></div>
+          <div class="stat-top"><div class="stat-icon-wrap">♻️</div><span class="stat-trend" id="trend-progress"></span></div>
           <div class="stat-label">กำลังดำเนินการ</div>
           <div class="stat-value" id="cnt-progress">—</div>
           <div class="stat-meta">อยู่ระหว่างดำเนินการ</div>
         </div>
         <div class="stat-card incomplete" onclick="filterByStatus('ส่งยังไม่ครบ')">
-          <div class="stat-top"><div class="stat-icon-wrap">❌</div></div>
+          <div class="stat-top"><div class="stat-icon-wrap">❌</div><span class="stat-trend" id="trend-incomplete"></span></div>
           <div class="stat-label">ส่งยังไม่ครบ</div>
           <div class="stat-value" id="cnt-incomplete">—</div>
           <div class="stat-meta">ต้องติดตามด่วน</div>
@@ -5791,6 +5812,45 @@ function sanitizeDateStr(val) {
 }
 let dueAlertsShown = false;
 
+// ── Animated count-up สำหรับตัวเลข KPI (ทำให้ตัวเลขไล่นับขึ้นแทนการเปลี่ยนแบบกระตุก) ──
+function animateCountUp(el, endVal, duration = 650) {
+  if (!el) return;
+  const startVal = Number(el.dataset.rawValue || 0);
+  const end = Number(endVal) || 0;
+  if (startVal === end) { el.textContent = end; el.dataset.rawValue = end; return; }
+  const startTime = performance.now();
+  function tick(now) {
+    const p = Math.min((now - startTime) / duration, 1);
+    const eased = 1 - Math.pow(1 - p, 3); // ease-out cubic
+    const current = Math.round(startVal + (end - startVal) * eased);
+    el.textContent = current;
+    if (p < 1) requestAnimationFrame(tick);
+    else { el.textContent = end; el.dataset.rawValue = end; }
+  }
+  requestAnimationFrame(tick);
+}
+
+// ── แสดงเทรนด์เทียบกับข้อมูลครั้งก่อนที่เคยโหลด (เก็บสถานะจริงใน localStorage ไม่ใช่ข้อมูลสมมติ) ──
+function updateStatDelta(key, currentValue) {
+  const el = document.getElementById('trend-' + key);
+  if (!el) return;
+  const storeKey = 'kpi_prev_' + key;
+  const prevRaw = localStorage.getItem(storeKey);
+  const prev = prevRaw !== null ? Number(prevRaw) : null;
+  if (prev !== null && prev !== currentValue) {
+    const diff = currentValue - prev;
+    el.className = 'stat-trend ' + (diff > 0 ? 'up' : 'down');
+    el.textContent = (diff > 0 ? '▲ +' : '▼ ') + diff;
+    el.classList.add('shown');
+  } else if (prev === currentValue) {
+    el.className = 'stat-trend flat shown';
+    el.textContent = '— เท่าเดิม';
+  } else {
+    el.classList.remove('shown');
+  }
+  localStorage.setItem(storeKey, currentValue);
+}
+
 function processData() {
   const today = new Date(); today.setHours(0,0,0,0);
   allData.forEach((r, i) => {
@@ -5828,12 +5888,16 @@ function processData() {
   const incomplete = allData.filter(r => r.status && r.status.includes('ยังไม่ครบ')).length;
   const total = allData.length;
   const pct = total ? Math.round(done / total * 100) : 0;
-  document.getElementById('cnt-total').textContent = total;
-  document.getElementById('cnt-done').textContent = done;
-  document.getElementById('cnt-progress').textContent = progress;
-  document.getElementById('cnt-incomplete').textContent = incomplete;
   document.getElementById('pct-value').textContent = pct + '%';
   setTimeout(() => { document.getElementById('progressBar').style.width = pct + '%'; }, 100);
+  animateCountUp(document.getElementById('cnt-total'), total);
+  animateCountUp(document.getElementById('cnt-done'), done);
+  animateCountUp(document.getElementById('cnt-progress'), progress);
+  animateCountUp(document.getElementById('cnt-incomplete'), incomplete);
+  updateStatDelta('total', total);
+  updateStatDelta('done', done);
+  updateStatDelta('progress', progress);
+  updateStatDelta('incomplete', incomplete);
 
   // KPI
   const overdue = allData.filter(r => !r.status.includes('เสร็จแล้ว') && typeof r.daysLeft === 'number' && r.daysLeft <= 0).length;
