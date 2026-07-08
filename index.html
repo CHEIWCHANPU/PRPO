@@ -255,9 +255,11 @@
   .nav-label-badge {
     background: var(--danger); color: #fff; font-size: 0.619rem;
     font-weight: 700; padding: 0.1rem 0.42rem; border-radius: 10px; min-width: 18px;
-    text-align: center; flex-shrink: 0; margin-left: 0.35rem;
+    text-align: center; flex-shrink: 0;
   }
   .sidebar.collapsed .nav-label-badge { display: none; }
+  .nav-label-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .nav-label-right { display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0; margin-left: 0.4rem; }
   .sidebar-footer { padding: 0.7rem 0.55rem; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 0.35rem;
     background: linear-gradient(0deg, rgba(0,0,0,0.05), transparent);
   }
@@ -3182,7 +3184,7 @@
     </div>
     <div class="nav-group" id="navGroup-track">
       <div class="nav-label" onclick="toggleNavGroup('track')">
-        <span style="display:flex;align-items:center">ติดตาม PART PR<span class="nav-label-badge" id="navGroupBadge-track" style="display:none">0</span></span><span class="nav-label-chevron">▾</span>
+        <span class="nav-label-text">ติดตาม PART PR</span><span class="nav-label-right"><span class="nav-label-badge" id="navGroupBadge-track" style="display:none">0</span><span class="nav-label-chevron">▾</span></span>
       </div>
       <div class="nav-group-items">
         <button class="nav-item" id="nav-dashboard" onclick="showPage('dashboard',this)">
@@ -3208,7 +3210,7 @@
 
     <div class="nav-group" id="navGroup-cer">
       <div class="nav-label" onclick="toggleNavGroup('cer')">
-        <span style="display:flex;align-items:center">ติดตามใบ CER<span class="nav-label-badge" id="navGroupBadge-cer" style="display:none">0</span></span><span class="nav-label-chevron">▾</span>
+        <span class="nav-label-text">ติดตามใบ CER</span><span class="nav-label-right"><span class="nav-label-badge" id="navGroupBadge-cer" style="display:none">0</span><span class="nav-label-chevron">▾</span></span>
       </div>
       <div class="nav-group-items">
         <button class="nav-item" id="nav-cer" onclick="showPage('cer',this)">
