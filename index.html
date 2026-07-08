@@ -2449,6 +2449,39 @@
     border-color: rgba(255,255,255,0.055) !important;
   }
 
+  /* ── GENERAL CARD GRADIENT + SHADOW (ให้กล่องทุกใบดูมีมิติ) ── */
+  .stat-card, .kpi-card, .exec-kpi-card, .chart-card, .cer-stat-card,
+  .mt-kpi-card, .mt-detail-card, .supplier-card, .wp-kpi-card,
+  .briefing-panel, .detail-panel, .notif-panel, .orgchart-panel,
+  .exec-panel, .instruction-card, .gantt-kpi, .progress-section,
+  .wl-card, .tour-card, .bc-panel {
+    background-image: linear-gradient(180deg, rgba(62,106,225,0.06), rgba(62,106,225,0) 55%) !important;
+    transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s !important;
+  }
+  .stat-card, .kpi-card, .exec-kpi-card, .chart-card, .cer-stat-card,
+  .mt-kpi-card, .mt-detail-card, .supplier-card, .wp-kpi-card,
+  .briefing-panel, .detail-panel, .notif-panel, .orgchart-panel,
+  .exec-panel, .instruction-card, .gantt-kpi, .progress-section, .bc-panel {
+    box-shadow: 0 2px 10px rgba(0,0,0,0.12) !important;
+  }
+  .light-theme .stat-card, .light-theme .kpi-card, .light-theme .exec-kpi-card,
+  .light-theme .chart-card, .light-theme .cer-stat-card, .light-theme .mt-kpi-card,
+  .light-theme .mt-detail-card, .light-theme .supplier-card, .light-theme .wp-kpi-card,
+  .light-theme .briefing-panel, .light-theme .detail-panel, .light-theme .notif-panel,
+  .light-theme .orgchart-panel, .light-theme .exec-panel, .light-theme .instruction-card,
+  .light-theme .gantt-kpi, .light-theme .progress-section, .light-theme .wl-card,
+  .light-theme .tour-card, .light-theme .bc-panel {
+    background-image: linear-gradient(180deg, rgba(62,106,225,0.035), rgba(62,106,225,0) 55%) !important;
+  }
+  .light-theme .stat-card, .light-theme .kpi-card, .light-theme .exec-kpi-card,
+  .light-theme .chart-card, .light-theme .cer-stat-card, .light-theme .mt-kpi-card,
+  .light-theme .mt-detail-card, .light-theme .supplier-card, .light-theme .wp-kpi-card,
+  .light-theme .briefing-panel, .light-theme .detail-panel, .light-theme .notif-panel,
+  .light-theme .orgchart-panel, .light-theme .exec-panel, .light-theme .instruction-card,
+  .light-theme .gantt-kpi, .light-theme .progress-section, .light-theme .bc-panel {
+    box-shadow: 0 2px 10px rgba(37,84,199,0.06) !important;
+  }
+
   /* ── SUBTLE GRADIENT ON BODY ── */
   body:not(.light-theme) {
     background:
@@ -3091,6 +3124,110 @@
     .org-row::before, .org-row::after { display: none; }
   }
   @media (max-width: 480px) { .exec-kpi-grid { grid-template-columns: 1fr 1fr; } }
+
+  /* ════════════════════════════════════
+     MODERN POLISH PACK
+  ════════════════════════════════════ */
+
+  /* ── 1. HOVER LIFT / MICRO-INTERACTIONS ── */
+  .kpi-card, .chart-card, .cer-stat-card, .mt-kpi-card, .mt-detail-card,
+  .briefing-panel, .notif-panel, .orgchart-panel, .gantt-kpi,
+  .progress-section, .bc-panel, .wp-kpi-card {
+    transition: transform 0.22s cubic-bezier(.4,0,.2,1), box-shadow 0.22s cubic-bezier(.4,0,.2,1), border-color 0.2s !important;
+  }
+  .kpi-card:hover, .chart-card:hover, .cer-stat-card:hover, .mt-kpi-card:hover,
+  .gantt-kpi:hover, .wp-kpi-card:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.16) !important;
+    border-color: rgba(62,106,225,0.3) !important;
+  }
+  .light-theme .kpi-card:hover, .light-theme .chart-card:hover, .light-theme .cer-stat-card:hover,
+  .light-theme .mt-kpi-card:hover, .light-theme .gantt-kpi:hover, .light-theme .wp-kpi-card:hover {
+    box-shadow: 0 10px 28px rgba(37,84,199,0.1) !important;
+  }
+  .instruction-card, .supplier-card { transform: translateZ(0); }
+  .btn { transition: all 0.18s cubic-bezier(.4,0,.2,1) !important; }
+  .btn:not(:disabled):hover { transform: translateY(-2px) !important; }
+  .btn:not(:disabled):active { transform: translateY(0) scale(0.97) !important; }
+  .nav-item { transition: background 0.15s, color 0.15s, transform 0.15s !important; }
+  .nav-item:hover { transform: translateX(3px) !important; }
+  .nav-item.active:hover { transform: translateX(0) !important; }
+  .icon-action, .collapse-btn, .theme-pill { transition: all 0.2s cubic-bezier(.4,0,.2,1) !important; }
+  .icon-action:hover { transform: translateY(-1px) !important; }
+
+  /* ── 2. ACTIVE MENU ACCENT BAR ── */
+  .nav-item.active {
+    position: relative !important;
+    padding-left: 1rem !important;
+  }
+  .nav-item.active::before {
+    content: '' !important;
+    position: absolute !important; left: 3px; top: 50%; transform: translateY(-50%);
+    width: 4px; height: 60%; min-height: 14px;
+    border-radius: 4px;
+    background: linear-gradient(180deg, var(--accent), var(--accent2)) !important;
+    box-shadow: 0 0 8px rgba(62,106,225,0.5) !important;
+  }
+  .sidebar.collapsed .nav-item.active { padding-left: 0 !important; }
+  .sidebar.collapsed .nav-item.active::before { display: none; }
+
+  /* ── 3. MODERN GRADIENT BUTTONS ── */
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2)) !important;
+    background-size: 160% 160% !important;
+    background-position: 0% 50% !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+  }
+  .btn-primary:hover {
+    background-position: 100% 50% !important;
+    box-shadow: 0 6px 20px rgba(62,106,225,0.35) !important;
+  }
+  .modal-foot .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2)) !important;
+  }
+  .modal-foot .btn-primary:hover {
+    box-shadow: 0 6px 20px rgba(62,106,225,0.35) !important;
+  }
+  .btn-danger {
+    background: linear-gradient(135deg, var(--danger), #f87171) !important;
+    color: #fff !important;
+  }
+  .btn-danger:hover {
+    box-shadow: 0 6px 20px rgba(239,68,68,0.3) !important;
+  }
+
+  /* ── 4. GLASS BLUR EFFECTS ── */
+  .modal {
+    backdrop-filter: blur(20px) saturate(1.3) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(1.3) !important;
+  }
+  body:not(.light-theme) .modal {
+    background: rgba(17,22,32,0.88) !important;
+  }
+  .light-theme .modal {
+    background: rgba(255,255,255,0.85) !important;
+  }
+  .notif-panel {
+    backdrop-filter: blur(20px) saturate(1.3) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(1.3) !important;
+  }
+  body:not(.light-theme) .notif-panel {
+    background: rgba(17,22,32,0.88) !important;
+  }
+  .light-theme .notif-panel {
+    background: rgba(255,255,255,0.85) !important;
+  }
+  .sidebar {
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+  }
+  body:not(.light-theme) .sidebar {
+    background: rgba(13,17,23,0.94) !important;
+  }
+  .mobile-drawer, .bottom-nav {
+    backdrop-filter: blur(20px) saturate(1.4) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(1.4) !important;
+  }
 
 </style>
 </head>
