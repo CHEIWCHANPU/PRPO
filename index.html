@@ -207,23 +207,37 @@
 
   .nav-section { flex: 1; padding: 0.75rem 0.55rem; overflow-y: auto; overflow-x: hidden; }
   .nav-group {
-    border: 1px solid var(--border); border-radius: 12px; margin-bottom: 0.65rem; overflow: hidden;
-    background: var(--surface2); transition: all 0.2s;
+    border: 1px solid var(--border); border-radius: 12px; margin-bottom: 0.6rem; overflow: hidden;
+    background: linear-gradient(180deg, rgba(62,106,225,0.05), var(--surface2) 55%); transition: all 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
   }
-  .nav-group:hover { border-color: rgba(62,106,225,0.15); }
-  .nav-group-plain { border: none; background: transparent; }
-  .nav-group-plain:hover { border-color: transparent; }
-  .sidebar.collapsed .nav-group { border: none; background: transparent; margin-bottom: 0.25rem; }
+  .nav-group:hover { border-color: rgba(62,106,225,0.28); box-shadow: 0 2px 8px rgba(62,106,225,0.1); }
+  .nav-group-plain { padding: 0.3rem 0.45rem 0.45rem; }
+  .sidebar.collapsed .nav-group { border: none; background: transparent; margin-bottom: 0.25rem; box-shadow: none; }
+  .sidebar.collapsed .nav-group-plain { padding: 0; }
+  .nav-section-divider {
+    display: flex; align-items: center; gap: 0.5rem; margin: 0.2rem 0.15rem 0.55rem;
+    font-size: 0.63rem; font-weight: 700; letter-spacing: 0.06em; color: var(--muted); opacity: 0.65;
+    text-transform: uppercase; white-space: nowrap;
+  }
+  .nav-section-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .nav-section-divider-icon { font-size: 0.77rem; opacity: 0.85; line-height: 1; }
+  .sidebar.collapsed .nav-section-divider { display: none; }
   .nav-label {
-    font-size: 0.756rem; font-weight: 700; letter-spacing: 0.02em;
-    color: var(--muted); padding: 0.52rem 0.72rem; white-space: nowrap; overflow: hidden;
-    transition: opacity 0.2s, background 0.15s; opacity: 0.85; display: flex; align-items: center;
+    font-size: 0.77rem; font-weight: 700; letter-spacing: 0.015em;
+    color: var(--text); padding: 0.58rem 0.72rem; white-space: nowrap; overflow: hidden;
+    transition: opacity 0.2s, background 0.15s; opacity: 0.92; display: flex; align-items: center;
     justify-content: space-between; cursor: pointer; user-select: none; gap: 0.4rem;
     border-bottom: 1px solid var(--border);
   }
-  .nav-label:hover { background: rgba(255,255,255,0.03); color: var(--text); opacity: 1; }
+  .nav-label:hover { background: rgba(62,106,225,0.06); color: var(--accent); opacity: 1; }
   .sidebar.collapsed .nav-label { opacity: 0; pointer-events: none; }
-  .nav-label-chevron { transition: transform 0.2s; font-size: 0.63rem; flex-shrink: 0; }
+  .nav-label-text { display: flex; align-items: center; gap: 0.5rem; }
+  .nav-label-icon {
+    width: 22px; height: 22px; border-radius: 7px; display: flex; align-items: center; justify-content: center;
+    font-size: 0.84rem; flex-shrink: 0; background: var(--glow-accent); line-height: 1;
+  }
+  .nav-label-chevron { transition: transform 0.2s; font-size: 0.63rem; flex-shrink: 0; opacity: 0.6; }
   .nav-group.collapsed .nav-label-chevron { transform: rotate(-90deg); }
   .nav-group-items { padding: 0.3rem 0.45rem 0.45rem; }
   .nav-group.collapsed .nav-group-items { display: none; }
@@ -255,11 +269,9 @@
   .nav-label-badge {
     background: var(--danger); color: #fff; font-size: 0.619rem;
     font-weight: 700; padding: 0.1rem 0.42rem; border-radius: 10px; min-width: 18px;
-    text-align: center; flex-shrink: 0;
+    text-align: center; flex-shrink: 0; margin-left: 0.35rem;
   }
   .sidebar.collapsed .nav-label-badge { display: none; }
-  .nav-label-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-  .nav-label-right { display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0; margin-left: 0.4rem; }
   .sidebar-footer { padding: 0.7rem 0.55rem; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 0.35rem;
     background: linear-gradient(0deg, rgba(0,0,0,0.05), transparent);
   }
@@ -1995,30 +2007,84 @@
   .nav-group {
     border-radius: 12px !important;
     overflow: hidden !important;
-    border: 1px solid rgba(255,255,255,0.05) !important;
-    background: rgba(255,255,255,0.015) !important;
+    border: 1px solid rgba(62,106,225,0.12) !important;
+    background: linear-gradient(180deg, rgba(62,106,225,0.07), rgba(255,255,255,0.015) 60%) !important;
     margin-bottom: 0.5rem !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
   }
+  .nav-group:hover {
+    border-color: rgba(62,106,225,0.3) !important;
+  }
+  .nav-group-plain {
+    border: 1px solid rgba(62,106,225,0.12) !important;
+    background: linear-gradient(180deg, rgba(62,106,225,0.07), rgba(255,255,255,0.015) 60%) !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
+    padding: 0.3rem 0.45rem 0.45rem !important;
+  }
+  .sidebar.collapsed .nav-group-plain { padding: 0 !important; }
   .light-theme .nav-group {
-    border: 1px solid var(--border) !important;
-    background: rgba(0,0,0,0.018) !important;
+    border: 1px solid rgba(62,106,225,0.18) !important;
+    background: linear-gradient(180deg, rgba(62,106,225,0.05), rgba(0,0,0,0.012) 60%) !important;
+  }
+  .light-theme .nav-group-plain {
+    border: 1px solid rgba(62,106,225,0.18) !important;
+    background: linear-gradient(180deg, rgba(62,106,225,0.05), rgba(0,0,0,0.012) 60%) !important;
   }
   .nav-label {
-    font-size: 0.756rem !important;
+    font-size: 0.735rem !important;
     font-weight: 800 !important;
-    letter-spacing: 0.1em !important;
+    letter-spacing: 0.06em !important;
     text-transform: uppercase !important;
-    color: var(--muted) !important;
-    padding: 0.5rem 0.75rem !important;
+    color: var(--text) !important;
+    padding: 0.52rem 0.7rem !important;
     background: transparent !important;
     border-bottom: 1px solid rgba(255,255,255,0.04) !important;
+    opacity: 0.95 !important;
   }
   .light-theme .nav-label {
     border-bottom: 1px solid var(--border) !important;
   }
   .nav-label:hover {
-    background: rgba(255,255,255,0.025) !important;
+    background: rgba(62,106,225,0.08) !important;
+    color: var(--accent) !important;
   }
+  .nav-label-text {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.45rem !important;
+  }
+  .nav-label-icon {
+    width: 20px !important;
+    height: 20px !important;
+    border-radius: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 0.77rem !important;
+    flex-shrink: 0 !important;
+    background: var(--glow-accent) !important;
+    line-height: 1 !important;
+  }
+  .nav-section-divider {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    margin: 0.15rem 0.2rem 0.5rem !important;
+    font-size: 0.6rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.1em !important;
+    color: var(--muted) !important;
+    opacity: 0.55 !important;
+    text-transform: uppercase !important;
+  }
+  .nav-section-divider::after {
+    content: '' !important;
+    flex: 1 !important;
+    height: 1px !important;
+    background: var(--border) !important;
+  }
+  .nav-section-divider-icon { font-size: 0.75rem !important; opacity: 0.85 !important; line-height: 1 !important; }
+  .sidebar.collapsed .nav-section-divider { display: none !important; }
   .nav-item {
     border-radius: 8px !important;
     font-size: 0.861rem !important;
@@ -3171,20 +3237,26 @@
     </div>
   </div>
   <nav class="nav-section">
-    <div class="nav-group nav-group-plain" id="navGroup-main">
-      <button class="nav-item active" id="nav-home" onclick="showPage('home',this)">
-        <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-5h4v5a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1V10"/></svg></span><span class="nav-text">หน้าหลัก</span>
-      </button>
-      <button class="nav-item" id="nav-exec" onclick="showPage('exec',this)" data-tour="nav-exec">
-        <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-4-4L3 17"/></svg></span><span class="nav-text">ภาพรวม KPI</span>
-      </button>
-      <button class="nav-item" id="nav-payroll" onclick="showPage('payroll',this)">
-        <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14.01"/><line x1="12" y1="14" x2="12" y2="14.01"/></svg></span><span class="nav-text">ลงเวลาทำงาน</span>
-      </button>
+    <div class="nav-group" id="navGroup-main">
+      <div class="nav-label" onclick="toggleNavGroup('main')">
+        <span class="nav-label-text"><span class="nav-label-icon">🏠</span>เมนูหลัก</span><span class="nav-label-chevron">▾</span>
+      </div>
+      <div class="nav-group-items">
+        <button class="nav-item active" id="nav-home" onclick="showPage('home',this)">
+          <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-5h4v5a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1V10"/></svg></span><span class="nav-text">หน้าหลัก</span>
+        </button>
+        <button class="nav-item" id="nav-exec" onclick="showPage('exec',this)" data-tour="nav-exec">
+          <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-4-4L3 17"/></svg></span><span class="nav-text">ภาพรวม KPI</span>
+        </button>
+        <button class="nav-item" id="nav-payroll" onclick="showPage('payroll',this)">
+          <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14.01"/><line x1="12" y1="14" x2="12" y2="14.01"/></svg></span><span class="nav-text">ลงเวลาทำงาน</span>
+        </button>
+      </div>
     </div>
+    <div class="nav-section-divider"><span class="nav-section-divider-icon">🗂️</span>หมวดหมู่</div>
     <div class="nav-group" id="navGroup-track">
       <div class="nav-label" onclick="toggleNavGroup('track')">
-        <span class="nav-label-text">ติดตาม PART PR</span><span class="nav-label-right"><span class="nav-label-badge" id="navGroupBadge-track" style="display:none">0</span><span class="nav-label-chevron">▾</span></span>
+        <span class="nav-label-text"><span class="nav-label-icon">📦</span>ติดตาม PART PR<span class="nav-label-badge" id="navGroupBadge-track" style="display:none">0</span></span><span class="nav-label-chevron">▾</span>
       </div>
       <div class="nav-group-items">
         <button class="nav-item" id="nav-dashboard" onclick="showPage('dashboard',this)">
@@ -3210,7 +3282,7 @@
 
     <div class="nav-group" id="navGroup-cer">
       <div class="nav-label" onclick="toggleNavGroup('cer')">
-        <span class="nav-label-text">ติดตามใบ CER</span><span class="nav-label-right"><span class="nav-label-badge" id="navGroupBadge-cer" style="display:none">0</span><span class="nav-label-chevron">▾</span></span>
+        <span class="nav-label-text"><span class="nav-label-icon">📄</span>ติดตามใบ CER<span class="nav-label-badge" id="navGroupBadge-cer" style="display:none">0</span></span><span class="nav-label-chevron">▾</span>
       </div>
       <div class="nav-group-items">
         <button class="nav-item" id="nav-cer" onclick="showPage('cer',this)">
@@ -3221,7 +3293,7 @@
 
     <div class="nav-group" id="navGroup-modeltracker">
       <div class="nav-label" onclick="toggleNavGroup('modeltracker')">
-        <span>แผนการผลิต MODEL</span><span class="nav-label-chevron">▾</span>
+        <span class="nav-label-text"><span class="nav-label-icon">🧩</span>แผนการผลิต MODEL</span><span class="nav-label-chevron">▾</span>
       </div>
       <div class="nav-group-items">
         <button class="nav-item" id="nav-modeltracker" onclick="showPage('modeltracker',this)">
@@ -3232,7 +3304,7 @@
 
     <div class="nav-group" id="navGroup-workplan">
       <div class="nav-label" onclick="toggleNavGroup('workplan')">
-        <span>ตารางแผนงานข้างนอก</span><span class="nav-label-chevron">▾</span>
+        <span class="nav-label-text"><span class="nav-label-icon">🗓️</span>ตารางแผนงานข้างนอก</span><span class="nav-label-chevron">▾</span>
       </div>
       <div class="nav-group-items">
         <button class="nav-item" id="nav-workplan" onclick="showPage('workplan',this)">
@@ -3243,7 +3315,7 @@
 
     <div class="nav-group" id="navGroup-other">
       <div class="nav-label" onclick="toggleNavGroup('other')">
-        <span>ข้อมูล MAKER</span><span class="nav-label-chevron">▾</span>
+        <span class="nav-label-text"><span class="nav-label-icon">🏭</span>ข้อมูล MAKER</span><span class="nav-label-chevron">▾</span>
       </div>
       <div class="nav-group-items">
         <button class="nav-item" id="nav-supplier" onclick="showPage('supplier',this)">
@@ -3252,10 +3324,9 @@
       </div>
     </div>
 
-
     <div class="nav-group" id="navGroup-manage">
       <div class="nav-label" onclick="toggleNavGroup('manage')">
-        <span>จัดการ</span><span class="nav-label-chevron">▾</span>
+        <span class="nav-label-text"><span class="nav-label-icon">⚙️</span>จัดการ</span><span class="nav-label-chevron">▾</span>
       </div>
       <div class="nav-group-items">
         <button class="nav-item" onclick="syncData()">
@@ -3269,6 +3340,7 @@
         </button>
       </div>
     </div>
+
   </nav>
   <div class="sidebar-footer">
     <button class="logout-btn" onclick="doLogout()">
@@ -5006,14 +5078,11 @@ function isFullscreenActive() {
 function toggleFullscreen() {
   const el = document.documentElement;
   if (!isFullscreenActive()) {
-    setTimeout(() => {
-      if (isFullscreenActive()) return;
-      const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
-      if (req) {
-        const p = req.call(el);
-        if (p && p.catch) p.catch(() => {});
-      }
-    }, 300);
+    const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+    if (req) {
+      const p = req.call(el);
+      if (p && p.catch) p.catch(() => {});
+    }
   } else {
     const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
     if (exit) exit.call(document);
@@ -5030,7 +5099,7 @@ function updateFullscreenIcon() {
   document.addEventListener(evt, () => {
     updateFullscreenIcon();
     if (isFullscreenActive()) {
-      document.documentElement.style.zoom = '0.95';
+      document.documentElement.style.zoom = '1';
     } else {
       document.documentElement.style.zoom = '';
     }
