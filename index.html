@@ -2962,21 +2962,34 @@
 
   /* ── LATEST COMMENT PREVIEW (แสดงคอมเมนต์ล่าสุดแบบเรียลไทม์ ใต้แต่ละรายการ) ── */
   .bc-latest {
-    flex: 1 1 260px; min-width: 0; display: flex; align-items: center; gap: 0.45rem;
-    padding: 0.35rem 0.6rem; background: var(--surface2);
-    border: 1px solid var(--border); border-left: 3px solid var(--accent2);
-    border-radius: 6px; font-size: 0.735rem; cursor: pointer; transition: background 0.12s;
+    flex: 1 1 260px; min-width: 0; display: flex; align-items: flex-start; gap: 0.55rem;
+    padding: 0.5rem 0.7rem 0.5rem 0.65rem; background: linear-gradient(135deg, rgba(99,102,241,0.07), var(--surface2) 60%);
+    border: 1px solid var(--border); border-radius: 10px; position: relative; overflow: hidden;
+    cursor: pointer; transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
   }
-  .bc-latest:hover { background: rgba(99,102,241,0.08); }
-  .bc-latest.bc-latest-issue { border-left-color: var(--danger); }
-  .bc-latest-time { color: var(--muted); font-family: var(--mono); font-size: 0.651rem; white-space: nowrap; flex-shrink: 0; }
+  .bc-latest::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--accent2); border-radius: 3px 0 0 3px;
+  }
+  .bc-latest:hover { background: linear-gradient(135deg, rgba(99,102,241,0.13), var(--surface2) 60%); transform: translateY(-1px); box-shadow: 0 6px 16px -6px rgba(0,0,0,0.35); }
+  .bc-latest.bc-latest-issue::before { background: var(--danger); }
+  .bc-latest-icon {
+    width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.798rem; background: rgba(99,102,241,0.14);
+  }
+  .bc-latest.bc-latest-issue .bc-latest-icon { background: rgba(239,68,68,0.14); }
+  .bc-latest-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.2rem; }
+  .bc-latest-top { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+  .bc-latest-time { color: var(--muted); font-family: var(--mono); font-size: 0.63rem; white-space: nowrap; margin-left: auto; flex-shrink: 0; }
   .bc-latest-author { color: var(--accent); font-weight: 700; font-size: 0.693rem; white-space: nowrap; flex-shrink: 0; }
   .bc-latest-text {
-    color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    flex: 1; min-width: 0;
+    color: var(--text); font-size: 0.735rem; line-height: 1.4;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden; word-break: break-word;
   }
   @media (max-width: 768px) {
-    .bc-latest-text { white-space: normal; }
+    .bc-latest-text { -webkit-line-clamp: 3; }
   }
   .bc-del:hover { color: var(--danger); }
   .bc-empty { text-align: center; padding: 0.5rem; color: var(--muted); font-size: 0.735rem; }
@@ -6116,7 +6129,7 @@ function renderDailyBriefing() {
         const bcArr = bcLoad(r.rowIndex);
         const latest = bcArr.length ? bcArr[bcArr.length - 1] : null;
         const latestMeta = latest ? bcTagMeta(latest.tag) : null;
-        const latestHtml = `<div class="bc-latest ${latest && latest.tag==='issue' ? 'bc-latest-issue' : ''}" id="bcLatest-${r.rowIndex}" style="display:${latest ? 'flex' : 'none'}" onclick="bcToggle(${r.rowIndex},event)">${latest ? `<span class="bc-latest-time">📌 ${latest.time}</span><span class="bc-tag ${latest.tag}">${latestMeta.icon} ${latestMeta.label}</span><span class="bc-latest-author">👤 ${latest.author||'-'}</span><span class="bc-latest-text">${(latest.text||'').replace(/\n/g,' ')}</span>` : ''}</div>`;
+        const latestHtml = `<div class="bc-latest ${latest && latest.tag==='issue' ? 'bc-latest-issue' : ''}" id="bcLatest-${r.rowIndex}" style="display:${latest ? 'flex' : 'none'}" onclick="bcToggle(${r.rowIndex},event)">${latest ? `<div class="bc-latest-icon">${latestMeta.icon}</div><div class="bc-latest-body"><div class="bc-latest-top"><span class="bc-latest-author">${latest.author||'-'}</span><span class="bc-tag ${latest.tag}">${latestMeta.label}</span><span class="bc-latest-time">${latest.time}</span></div><div class="bc-latest-text">${(latest.text||'').replace(/\n/g,' ')}</div></div>` : ''}</div>`;
         return `<div class="briefing-item" onclick="openDetail(${JSON.stringify(r).replace(/"/g,'&quot;')});" style="cursor:pointer;transition:background 0.15s" onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background=''">
           <div style="flex:1 1 200px;min-width:0">
             <div class="briefing-item-name">${r.partName} <span style="color:var(--muted);font-size: 0.714rem">(${r.partNo})</span></div>
@@ -11627,7 +11640,7 @@ function bcRender(rowIndex) {
       const meta = bcTagMeta(latest.tag);
       latestEl.style.display = 'flex';
       latestEl.classList.toggle('bc-latest-issue', latest.tag === 'issue');
-      latestEl.innerHTML = `<span class="bc-latest-time">📌 ${latest.time}</span><span class="bc-tag ${latest.tag}">${meta.icon} ${meta.label}</span><span class="bc-latest-author">👤 ${latest.author||'-'}</span><span class="bc-latest-text">${(latest.text||'').replace(/\n/g,' ')}</span>`;
+      latestEl.innerHTML = `<div class="bc-latest-icon">${meta.icon}</div><div class="bc-latest-body"><div class="bc-latest-top"><span class="bc-latest-author">${latest.author||'-'}</span><span class="bc-tag ${latest.tag}">${meta.label}</span><span class="bc-latest-time">${latest.time}</span></div><div class="bc-latest-text">${(latest.text||'').replace(/\n/g,' ')}</div></div>`;
     } else {
       latestEl.style.display = 'none';
       latestEl.innerHTML = '';
