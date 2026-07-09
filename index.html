@@ -3080,13 +3080,16 @@
     .main-wrap.collapsed { margin-left: 0 !important; }
 
     /* Topbar */
-    .topbar { padding: 0 0.85rem; }
+    .topbar { padding: 0.5rem 0.85rem; height: auto; min-height: 62px; flex-wrap: wrap; row-gap: 0.5rem; }
     .topbar-chip { display: none; }
     .topbar-title { font-size: 0.861rem; }
     .topbar-sub { display: none; }
     .sync-pill span:last-child { display: none; }
     .sync-pill { padding: 0.28rem 0.6rem; }
     .theme-pill span:last-child { display: none; }
+    .mute-pill span:last-child { display: none; }
+    .mute-pill { padding: 0 0.5rem; }
+    .topbar-right { flex-wrap: wrap; justify-content: flex-end; row-gap: 0.5rem; width: 100%; }
 
     /* Bottom nav visible */
     .bottom-nav { display: block; }
@@ -3203,7 +3206,7 @@
     .kpi-row { grid-template-columns: 1fr; }
     .kpi-card { padding: 0.7rem 0.85rem; }
 
-    .topbar { padding: 0 0.65rem; height: 54px; }
+    .topbar { padding: 0.45rem 0.65rem; height: auto; min-height: 54px; }
     .topbar-title { font-size: 0.819rem; }
     .logo-icon { width: 28px; height: 28px; }
 
@@ -6120,12 +6123,8 @@ function renderDailyBriefing() {
             <div class="briefing-item-sub">วันนัดส่ง ${r.dueDate || '—'} · ${statusBadge(r.status)}</div>
           </div>
           ${latestHtml}
-          <div style="display:flex;align-items:center;gap:0.5rem;flex-shrink:0">
+          <div style="display:flex;align-items:center;gap:0.5rem;flex-shrink:0;margin-left:auto">
             <span class="briefing-tag" style="color:${tag.color};border-color:${tag.color}">${tag.text}</span>
-            <div class="bc-btn" id="bcb-${r.rowIndex}" onclick="bcToggle(${r.rowIndex},event)" title="บันทึก / ความคืบหน้า">
-              💬
-              <span class="bc-count" id="bcc-${r.rowIndex}" style="display:${bcArr.length ? '' : 'none'}">${bcArr.length || ''}</span>
-            </div>
           </div>
         </div>
         <div class="bc-panel" id="bcp-${r.rowIndex}" onclick="event.stopPropagation()">
