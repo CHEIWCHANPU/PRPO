@@ -51,7 +51,7 @@
     --muted: #64748b;
     --font: 'Sarabun', sans-serif;
     --mono: 'IBM Plex Mono', monospace;
-    --sw: 200px;
+    --sw: 180px;
     --swc: 62px;
     --chart-text: #64748b;
     --glow-accent: rgba(62,106,225,0.12);
@@ -162,13 +162,13 @@
   html {
     scroll-behavior: smooth;
     /* ── ปรับสเกล UI อัตโนมัติตามความกว้างจอ (ทุกอย่างเป็น rem จึงย่อ/ขยายพร้อมกันทั้งหน้า) ── */
-    font-size: clamp(13.65px, 0.819vw + 7.35px, 16.8px);
+    font-size: clamp(12.285px, 0.7371vw + 6.615px, 15.12px);
   }
   @media (max-width: 1024px) {
-    html { font-size: clamp(13.12px, 1.155vw + 4.2px, 15.75px); }
+    html { font-size: clamp(11.808px, 1.0395vw + 3.78px, 14.175px); }
   }
   @media (max-width: 480px) {
-    html { font-size: 13.65px; }
+    html { font-size: 12.285px; }
   }
   body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; display: flex; overflow: auto; }
 
@@ -985,8 +985,8 @@
     .kpi-row { grid-template-columns: 1fr 1fr; }
   }
   @media (max-width: 1024px) {
-    :root { --sw: 190px; }
-    .sidebar { width: 190px; }
+    :root { --sw: 171px; }
+    .sidebar { width: 171px; }
     .main-wrap { margin-left: 190px; }
     main { padding: 1rem; }
   }
@@ -3079,7 +3079,7 @@
 
   /* ── SMALL MOBILE (≤ 480px) ── */
   @media (max-width: 480px) {
-    html { font-size: 13.12px; }
+    html { font-size: 11.808px; }
     main { padding: 0.7rem !important; padding-bottom: 5.5rem !important; }
 
     .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
