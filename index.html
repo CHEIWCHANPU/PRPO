@@ -4156,7 +4156,18 @@
           <div class="chart-wrap" style="height:200px;overflow-y:auto"><canvas id="chartMaker2"></canvas></div>
         </div>
         <div class="chart-card">
-          <div class="chart-title" id="s-maker-rank-title">Maker Rankings</div>
+          <div class="chart-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.3rem">
+            <div class="chart-title" id="s-maker-rank-title">Maker Rankings</div>
+            <select id="makerRankTopN" onchange="renderSummary()" style="
+              background:var(--surface2);border:1px solid var(--border);border-radius:7px;
+              color:var(--text);font-size: 0.714rem;padding:0.2rem 0.45rem;
+              font-family:var(--mono);cursor:pointer;outline:none;">
+              <option value="5">Top 5</option>
+              <option value="10" selected>Top 10</option>
+              <option value="15">Top 15</option>
+              <option value="999">ทั้งหมด</option>
+            </select>
+          </div>
           <div class="maker-list" id="makerList">—</div>
         </div>
         <div class="chart-card">
@@ -4342,6 +4353,15 @@
       <div class="table-wrap">
         <div class="table-title-bar">
           <span class="table-title-label">📊 รายงาน Lead Time แต่ละ Maker</span>
+          <select id="leadtimeTableTopN" onchange="renderLeadTime()" style="
+            background:var(--surface2);border:1px solid var(--border);border-radius:7px;
+            color:var(--text);font-size: 0.714rem;padding:0.2rem 0.45rem;
+            font-family:var(--mono);cursor:pointer;outline:none;">
+            <option value="5">Top 5</option>
+            <option value="10">Top 10</option>
+            <option value="15">Top 15</option>
+            <option value="999" selected>ทั้งหมด</option>
+          </select>
         </div>
         <table>
           <thead><tr>
@@ -7225,10 +7245,12 @@ function renderSummaryCards(mData, mLabel) {
     });
   }
 
-  // Maker list
-  const maxVol = makers.length ? makers[0][1] : 1;
+  // Maker list (จำกัดด้วย Top N กันรายการยาวเกินตอนมี Maker เยอะ)
+  const makerRankTopN = getTopNValue('makerRankTopN', 10);
+  const makersRanked = makers.slice(0, makerRankTopN);
+  const maxVol = makersRanked.length ? makersRanked[0][1] : 1;
   document.getElementById('s-maker-rank-title').textContent = `Maker Rankings: ${label}`;
-  document.getElementById('makerList').innerHTML = makers.length ? makers.map((m,i) => `
+  document.getElementById('makerList').innerHTML = makersRanked.length ? makersRanked.map((m,i) => `
     <div class="maker-row">
       <span style="font-size: 0.714rem;color:var(--muted);font-family:var(--mono);width:16px">${i+1}</span>
       <span class="maker-row-name">${m[0]}</span>
@@ -8569,6 +8591,8 @@ function renderLeadTime() {
     return ltSortDir === 'asc' ? (va > vb ? 1 : va < vb ? -1 : 0) : (va < vb ? 1 : va > vb ? -1 : 0);
   });
   const maxLead = Math.max(...rows.map(r => r.avgLead||0), 1);
+  const ltTableTopN = getTopNValue('leadtimeTableTopN', 999);
+  rows = rows.slice(0, ltTableTopN);
   document.getElementById('leadTimeBody').innerHTML = rows.length ? rows.map(r => {
     const barW   = Math.round((r.avgLead||0)/maxLead*80);
     const barCol = !r.avgLead ? 'var(--border)' : r.avgLead > 20 ? 'var(--danger)' : r.avgLead > 10 ? 'var(--warn)' : 'var(--success)';
