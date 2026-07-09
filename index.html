@@ -71,6 +71,13 @@
     --r-lg: 16px;  /* stat cards, table wraps */
     --r-xl: 20px;  /* modals, large surfaces */
     --r-pill: 999px; /* badges, pills */
+
+    /* ── Design tokens: layered shadows for depth/dimension ── */
+    --shadow-xs: 0 1px 2px rgba(0,0,0,0.35);
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.3), 0 6px 16px -4px rgba(0,0,0,0.42);
+    --shadow-md: 0 2px 6px rgba(0,0,0,0.32), 0 16px 34px -10px rgba(0,0,0,0.55);
+    --shadow-lg: 0 4px 12px rgba(0,0,0,0.36), 0 28px 60px -14px rgba(0,0,0,0.6);
+    --shadow-inset-hl: inset 0 1px 0 rgba(255,255,255,0.05);
   }
   .light-theme {
     --bg: #F3F5FA;
@@ -95,6 +102,12 @@
     --mt-month-border: #DCE2ED;
     --mt-year-border: rgba(37,84,199,0.5);
     --mt-connector-color: rgba(0,0,0,0.18);
+
+    --shadow-xs: 0 1px 2px rgba(30,41,59,0.07);
+    --shadow-sm: 0 1px 2px rgba(30,41,59,0.05), 0 6px 16px -4px rgba(30,41,59,0.10);
+    --shadow-md: 0 2px 6px rgba(30,41,59,0.06), 0 16px 34px -10px rgba(30,41,59,0.13);
+    --shadow-lg: 0 4px 12px rgba(30,41,59,0.07), 0 28px 60px -14px rgba(30,41,59,0.16);
+    --shadow-inset-hl: inset 0 1px 0 rgba(255,255,255,0.65);
   }
 
   /* ── OS-level auto light mode (no saved preference) ── */
@@ -122,6 +135,11 @@
       --mt-month-border: #DCE2ED;
       --mt-year-border: rgba(37,84,199,0.5);
       --mt-connector-color: rgba(0,0,0,0.18);
+      --shadow-xs: 0 1px 2px rgba(30,41,59,0.07);
+      --shadow-sm: 0 1px 2px rgba(30,41,59,0.05), 0 6px 16px -4px rgba(30,41,59,0.10);
+      --shadow-md: 0 2px 6px rgba(30,41,59,0.06), 0 16px 34px -10px rgba(30,41,59,0.13);
+      --shadow-lg: 0 4px 12px rgba(30,41,59,0.07), 0 28px 60px -14px rgba(30,41,59,0.16);
+      --shadow-inset-hl: inset 0 1px 0 rgba(255,255,255,0.65);
     }
   }
   /* override OS when user picks dark explicitly */
@@ -148,6 +166,11 @@
     --mt-month-border: rgba(255,255,255,0.10);
     --mt-year-border: rgba(62,106,225,0.45);
     --mt-connector-color: rgba(255,255,255,0.18);
+    --shadow-xs: 0 1px 2px rgba(0,0,0,0.35);
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.3), 0 6px 16px -4px rgba(0,0,0,0.42);
+    --shadow-md: 0 2px 6px rgba(0,0,0,0.32), 0 16px 34px -10px rgba(0,0,0,0.55);
+    --shadow-lg: 0 4px 12px rgba(0,0,0,0.36), 0 28px 60px -14px rgba(0,0,0,0.6);
+    --shadow-inset-hl: inset 0 1px 0 rgba(255,255,255,0.05);
   }
 
   /* ── CUSTOM SCROLLBAR ── */
@@ -349,7 +372,7 @@
   }
   .topbar-left { display: flex; align-items: center; gap: 0.85rem; }
   .topbar-divider { width: 1px; height: 22px; background: linear-gradient(180deg, transparent, var(--border) 30%, var(--border) 70%, transparent); }
-  .topbar-title { font-size: 0.945rem; font-weight: 700; color: var(--text); }
+  .topbar-title { font-size: 0.945rem; font-weight: 700; color: var(--text); white-space: nowrap; flex-shrink: 0; }
   .topbar-sub {
     display: inline-flex; align-items: center; gap: 0.4rem;
     font-size: 0.714rem; color: var(--muted);
@@ -517,6 +540,69 @@
   .briefing-category-title { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 0.892rem; color: var(--text); }
   .briefing-category-badge { background: var(--glow-accent); color: var(--accent); font-size: 0.63rem; font-weight: 700; padding: 0.1rem 0.5rem; border-radius: 10px; font-family: var(--mono); }
   .briefing-flat-items { display: flex; flex-direction: column; gap: 0.35rem; }
+
+  /* ══════════════════════════════════════
+     หน้าหลัก (Daily Briefing) — DEPTH & DIMENSION
+     ทำให้ทุกชั้นของหน้านี้ดูนูน มีเงาเป็นลำดับชั้น (elevation)
+  ══════════════════════════════════════ */
+  #page-home { position: relative; }
+  #page-home::before {
+    content: ''; position: absolute; top: -1.4rem; left: -1.4rem; right: -1.4rem; height: 280px;
+    background: radial-gradient(60% 100% at 28% 0%, var(--glow-accent), transparent 72%);
+    pointer-events: none; z-index: 0;
+  }
+  #page-home .briefing-panel { position: relative; z-index: 1; }
+
+  .briefing-panel {
+    box-shadow: var(--shadow-lg), var(--shadow-inset-hl);
+    background: linear-gradient(180deg, var(--surface) 0%, var(--surface) 100%);
+  }
+  .briefing-head {
+    position: relative; overflow: hidden;
+    background: linear-gradient(135deg, var(--glow-warn) 0%, var(--glow-accent) 100%);
+  }
+  .briefing-head::after {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--danger), var(--warn), var(--accent2), var(--accent));
+    opacity: 0.85;
+  }
+
+  .briefing-stats { gap: 0.6rem; }
+  .briefing-stat {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-sm);
+    padding: 0.5rem 0.85rem; box-shadow: var(--shadow-sm), var(--shadow-inset-hl);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+  }
+  .briefing-stat:hover { transform: translateY(-2px); box-shadow: var(--shadow-md), var(--shadow-inset-hl); }
+
+  .briefing-group {
+    box-shadow: var(--shadow-sm), var(--shadow-inset-hl);
+    background: linear-gradient(180deg, var(--surface2) 0%, var(--surface2) 100%);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  .briefing-group:hover { box-shadow: var(--shadow-md), var(--shadow-inset-hl); }
+  .briefing-maker {
+    display: flex; align-items: center; gap: 0.55rem;
+    padding-bottom: 0.35rem;
+  }
+  .briefing-badge {
+    box-shadow: var(--shadow-xs);
+  }
+  .briefing-items { gap: 0.5rem; }
+  .briefing-item {
+    box-shadow: var(--shadow-xs), var(--shadow-inset-hl);
+    transition: box-shadow 0.15s ease, transform 0.15s ease, background 0.15s ease;
+  }
+  .briefing-item:hover {
+    box-shadow: var(--shadow-sm), var(--shadow-inset-hl);
+    transform: translateY(-1px);
+  }
+  .briefing-tag { box-shadow: var(--shadow-xs); }
+  .bc-btn { box-shadow: var(--shadow-xs); }
+  .bc-count { box-shadow: 0 1px 4px rgba(0,0,0,0.35); }
+  .bc-latest { box-shadow: var(--shadow-xs), var(--shadow-inset-hl); }
+  .bc-panel { box-shadow: var(--shadow-sm), var(--shadow-inset-hl); }
+  .briefing-category-badge { box-shadow: var(--shadow-xs); }
   @media (max-width: 700px) {
     .briefing-head { flex-direction: column; align-items: flex-start; }
     .briefing-stats { width: 100%; justify-content: space-between; gap: 0.5rem; }
@@ -763,6 +849,7 @@
   .cmdk-trigger-text { font-size: 0.78rem; white-space: nowrap; }
   .cmdk-trigger-kbd { font-family: var(--mono); font-size: 0.63rem; border: 1px solid var(--border); border-radius: 5px; padding: 0.05rem 0.35rem; white-space: nowrap; }
   @media (max-width: 900px) { .cmdk-trigger-text, .cmdk-trigger-kbd { display: none; } }
+  @media (max-width: 1180px) { .topbar-sub { display: none; } .topbar-left .topbar-divider { display: none; } }
   .modal-body { padding: 1.25rem 1.5rem; }
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
   .form-group { display: flex; flex-direction: column; gap: 0.32rem; }
@@ -2083,6 +2170,10 @@
     letter-spacing: -0.01em !important;
     color: var(--text) !important;
     padding: 0.36rem 0.85rem !important;
+    height: 2.05rem !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
     background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0)), var(--surface2) !important;
     border: 1px solid var(--border) !important;
     border-radius: 12px !important;
@@ -2871,14 +2962,15 @@
 
   /* ── LATEST COMMENT PREVIEW (แสดงคอมเมนต์ล่าสุดแบบเรียลไทม์ ใต้แต่ละรายการ) ── */
   .bc-latest {
-    flex-basis: 100%; order: 3; display: flex; align-items: center; gap: 0.45rem;
-    margin-top: 0.3rem; padding: 0.35rem 0.6rem; background: var(--surface2);
+    flex: 1 1 260px; min-width: 0; display: flex; align-items: center; gap: 0.45rem;
+    padding: 0.35rem 0.6rem; background: var(--surface2);
     border: 1px solid var(--border); border-left: 3px solid var(--accent2);
     border-radius: 6px; font-size: 0.735rem; cursor: pointer; transition: background 0.12s;
   }
   .bc-latest:hover { background: rgba(99,102,241,0.08); }
   .bc-latest.bc-latest-issue { border-left-color: var(--danger); }
   .bc-latest-time { color: var(--muted); font-family: var(--mono); font-size: 0.651rem; white-space: nowrap; flex-shrink: 0; }
+  .bc-latest-author { color: var(--accent); font-weight: 700; font-size: 0.693rem; white-space: nowrap; flex-shrink: 0; }
   .bc-latest-text {
     color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     flex: 1; min-width: 0;
@@ -3093,6 +3185,9 @@
 
     /* Section margin reduction */
     .stat-grid, .chart-row, .progress-section, .kpi-row, .table-wrap, .chart-card, .summary-grid { margin-bottom: 0.75rem; }
+
+    /* Latest comment preview — full width on its own line on mobile */
+    .bc-latest { flex-basis: 100%; margin-top: 0.3rem; }
   }
 
   /* ── SMALL MOBILE (≤ 480px) ── */
@@ -6018,12 +6113,13 @@ function renderDailyBriefing() {
         const bcArr = bcLoad(r.rowIndex);
         const latest = bcArr.length ? bcArr[bcArr.length - 1] : null;
         const latestMeta = latest ? bcTagMeta(latest.tag) : null;
-        const latestHtml = `<div class="bc-latest ${latest && latest.tag==='issue' ? 'bc-latest-issue' : ''}" id="bcLatest-${r.rowIndex}" style="display:${latest ? 'flex' : 'none'}" onclick="bcToggle(${r.rowIndex},event)">${latest ? `<span class="bc-latest-time">📌 ${latest.time}</span><span class="bc-tag ${latest.tag}">${latestMeta.icon} ${latestMeta.label}</span><span class="bc-latest-text">${(latest.text||'').replace(/\n/g,' ')}</span>` : ''}</div>`;
+        const latestHtml = `<div class="bc-latest ${latest && latest.tag==='issue' ? 'bc-latest-issue' : ''}" id="bcLatest-${r.rowIndex}" style="display:${latest ? 'flex' : 'none'}" onclick="bcToggle(${r.rowIndex},event)">${latest ? `<span class="bc-latest-time">📌 ${latest.time}</span><span class="bc-tag ${latest.tag}">${latestMeta.icon} ${latestMeta.label}</span><span class="bc-latest-author">👤 ${latest.author||'-'}</span><span class="bc-latest-text">${(latest.text||'').replace(/\n/g,' ')}</span>` : ''}</div>`;
         return `<div class="briefing-item" onclick="openDetail(${JSON.stringify(r).replace(/"/g,'&quot;')});" style="cursor:pointer;transition:background 0.15s" onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background=''">
-          <div style="flex:1;min-width:0">
+          <div style="flex:1 1 200px;min-width:0">
             <div class="briefing-item-name">${r.partName} <span style="color:var(--muted);font-size: 0.714rem">(${r.partNo})</span></div>
             <div class="briefing-item-sub">วันนัดส่ง ${r.dueDate || '—'} · ${statusBadge(r.status)}</div>
           </div>
+          ${latestHtml}
           <div style="display:flex;align-items:center;gap:0.5rem;flex-shrink:0">
             <span class="briefing-tag" style="color:${tag.color};border-color:${tag.color}">${tag.text}</span>
             <div class="bc-btn" id="bcb-${r.rowIndex}" onclick="bcToggle(${r.rowIndex},event)" title="บันทึก / ความคืบหน้า">
@@ -6031,7 +6127,6 @@ function renderDailyBriefing() {
               <span class="bc-count" id="bcc-${r.rowIndex}" style="display:${bcArr.length ? '' : 'none'}">${bcArr.length || ''}</span>
             </div>
           </div>
-          ${latestHtml}
         </div>
         <div class="bc-panel" id="bcp-${r.rowIndex}" onclick="event.stopPropagation()">
           <div class="bc-list" id="bcl-${r.rowIndex}"></div>
@@ -11533,7 +11628,7 @@ function bcRender(rowIndex) {
       const meta = bcTagMeta(latest.tag);
       latestEl.style.display = 'flex';
       latestEl.classList.toggle('bc-latest-issue', latest.tag === 'issue');
-      latestEl.innerHTML = `<span class="bc-latest-time">📌 ${latest.time}</span><span class="bc-tag ${latest.tag}">${meta.icon} ${meta.label}</span><span class="bc-latest-text">${(latest.text||'').replace(/\n/g,' ')}</span>`;
+      latestEl.innerHTML = `<span class="bc-latest-time">📌 ${latest.time}</span><span class="bc-tag ${latest.tag}">${meta.icon} ${meta.label}</span><span class="bc-latest-author">👤 ${latest.author||'-'}</span><span class="bc-latest-text">${(latest.text||'').replace(/\n/g,' ')}</span>`;
     } else {
       latestEl.style.display = 'none';
       latestEl.innerHTML = '';
