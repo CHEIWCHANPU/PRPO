@@ -570,8 +570,18 @@
   .briefing-stats { gap: 0.6rem; }
   .briefing-stat {
     background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-sm);
-    padding: 0.5rem 0.85rem; box-shadow: var(--shadow-sm), var(--shadow-inset-hl);
+    padding: 0.5rem 0.85rem 0.5rem 0.7rem; box-shadow: var(--shadow-sm), var(--shadow-inset-hl);
     transition: transform 0.18s ease, box-shadow 0.18s ease;
+    display: flex; align-items: center; gap: 0.55rem; position: relative; overflow: hidden;
+  }
+  .briefing-stat::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--stat-color, var(--border)); opacity: 0.9;
+  }
+  .briefing-stat-icon {
+    width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 0.93rem;
+    background: var(--stat-bg, var(--surface)); color: var(--stat-color, var(--text));
   }
   .briefing-stat:hover { transform: translateY(-2px); box-shadow: var(--shadow-md), var(--shadow-inset-hl); }
 
@@ -583,7 +593,13 @@
   .briefing-group:hover { box-shadow: var(--shadow-md), var(--shadow-inset-hl); }
   .briefing-maker {
     display: flex; align-items: center; gap: 0.55rem;
-    padding-bottom: 0.35rem;
+    padding-bottom: 0.55rem; margin-bottom: 0.55rem;
+    border-bottom: 1px dashed var(--border);
+  }
+  .briefing-maker-icon {
+    width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 0.84rem;
+    background: var(--glow-accent); color: var(--accent);
   }
   .briefing-badge {
     box-shadow: var(--shadow-xs);
@@ -592,6 +608,11 @@
   .briefing-item {
     box-shadow: var(--shadow-xs), var(--shadow-inset-hl);
     transition: box-shadow 0.15s ease, transform 0.15s ease, background 0.15s ease;
+    position: relative; overflow: hidden; padding-left: 0.85rem;
+  }
+  .briefing-item::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--item-accent, var(--border));
   }
   .briefing-item:hover {
     box-shadow: var(--shadow-sm), var(--shadow-inset-hl);
@@ -603,6 +624,16 @@
   .bc-latest { box-shadow: var(--shadow-xs), var(--shadow-inset-hl); }
   .bc-panel { box-shadow: var(--shadow-sm), var(--shadow-inset-hl); }
   .briefing-category-badge { box-shadow: var(--shadow-xs); }
+  .briefing-category-title { position: relative; padding-left: 0.65rem; }
+  .briefing-category-title::before {
+    content: ''; position: absolute; left: 0; top: 1px; bottom: 1px; width: 3px;
+    border-radius: 2px; background: linear-gradient(180deg, var(--accent), var(--accent2));
+  }
+  .briefing-contact {
+    display: inline-flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 0.25rem 0.6rem; margin-bottom: 0.55rem !important;
+  }
   @media (max-width: 700px) {
     .briefing-head { flex-direction: column; align-items: flex-start; }
     .briefing-stats { width: 100%; justify-content: space-between; gap: 0.5rem; }
@@ -4023,21 +4054,33 @@
             <div class="briefing-date" style="margin-top:1px">รวมทุกหมวดหมู่ · แจ้งเตือนล่วงหน้า 3 วันก่อนครบกำหนด</div>
           </div>
           <div class="briefing-stats">
-            <div class="briefing-stat">
-              <div class="briefing-stat-value" id="brief-overdue" style="color:var(--danger)">—</div>
-              <div class="briefing-stat-label">เลยกำหนดแล้ว</div>
+            <div class="briefing-stat" style="--stat-color:var(--danger);--stat-bg:rgba(239,68,68,0.14)">
+              <div class="briefing-stat-icon">⏰</div>
+              <div>
+                <div class="briefing-stat-value" id="brief-overdue" style="color:var(--danger)">—</div>
+                <div class="briefing-stat-label">เลยกำหนดแล้ว</div>
+              </div>
             </div>
-            <div class="briefing-stat">
-              <div class="briefing-stat-value" id="brief-duetoday" style="color:var(--warn)">—</div>
-              <div class="briefing-stat-label">ครบกำหนดวันนี้</div>
+            <div class="briefing-stat" style="--stat-color:var(--warn);--stat-bg:rgba(245,158,11,0.14)">
+              <div class="briefing-stat-icon">📅</div>
+              <div>
+                <div class="briefing-stat-value" id="brief-duetoday" style="color:var(--warn)">—</div>
+                <div class="briefing-stat-label">ครบกำหนดวันนี้</div>
+              </div>
             </div>
-            <div class="briefing-stat">
-              <div class="briefing-stat-value" id="brief-soon" style="color:var(--accent2)">—</div>
-              <div class="briefing-stat-label">ใกล้ครบกำหนด (≤3 วัน)</div>
+            <div class="briefing-stat" style="--stat-color:var(--accent2);--stat-bg:rgba(99,102,241,0.14)">
+              <div class="briefing-stat-icon">⌛</div>
+              <div>
+                <div class="briefing-stat-value" id="brief-soon" style="color:var(--accent2)">—</div>
+                <div class="briefing-stat-label">ใกล้ครบกำหนด (≤3 วัน)</div>
+              </div>
             </div>
-            <div class="briefing-stat">
-              <div class="briefing-stat-value" id="brief-total" style="color:var(--accent)">—</div>
-              <div class="briefing-stat-label">รวมทุกหมวดหมู่</div>
+            <div class="briefing-stat" style="--stat-color:var(--accent);--stat-bg:rgba(62,106,225,0.14)">
+              <div class="briefing-stat-icon">📊</div>
+              <div>
+                <div class="briefing-stat-value" id="brief-total" style="color:var(--accent)">—</div>
+                <div class="briefing-stat-label">รวมทุกหมวดหมู่</div>
+              </div>
             </div>
           </div>
         </div>
@@ -6130,7 +6173,7 @@ function renderDailyBriefing() {
         const latest = bcArr.length ? bcArr[bcArr.length - 1] : null;
         const latestMeta = latest ? bcTagMeta(latest.tag) : null;
         const latestHtml = `<div class="bc-latest ${latest && latest.tag==='issue' ? 'bc-latest-issue' : ''}" id="bcLatest-${r.rowIndex}" style="display:${latest ? 'flex' : 'none'}" onclick="bcToggle(${r.rowIndex},event)">${latest ? `<div class="bc-latest-icon">${latestMeta.icon}</div><div class="bc-latest-body"><div class="bc-latest-top"><span class="bc-latest-author">${latest.author||'-'}</span><span class="bc-tag ${latest.tag}">${latestMeta.label}</span><span class="bc-latest-time">${latest.time}</span></div><div class="bc-latest-text">${(latest.text||'').replace(/\n/g,' ')}</div></div>` : ''}</div>`;
-        return `<div class="briefing-item" onclick="openDetail(${JSON.stringify(r).replace(/"/g,'&quot;')});" style="cursor:pointer;transition:background 0.15s" onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background=''">
+        return `<div class="briefing-item" onclick="openDetail(${JSON.stringify(r).replace(/"/g,'&quot;')});" style="cursor:pointer;transition:background 0.15s;--item-accent:${tag.color}" onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background=''">
           <div style="flex:1 1 200px;min-width:0">
             <div class="briefing-item-name">${r.partName} <span style="color:var(--muted);font-size: 0.714rem">(${r.partNo})</span></div>
             <div class="briefing-item-sub">วันนัดส่ง ${r.dueDate || '—'} · ${statusBadge(r.status)}</div>
@@ -6156,7 +6199,7 @@ function renderDailyBriefing() {
         </div>`;
       }).join('');
       return `<div class="briefing-group">
-        <div class="briefing-maker">🏭 ${maker} <span class="briefing-badge">${items.length} งาน</span></div>
+        <div class="briefing-maker"><span class="briefing-maker-icon">🏭</span> ${maker} <span class="briefing-badge">${items.length} งาน</span></div>
         ${contactHtml}
         <div class="briefing-items">${itemsHtml}</div>
       </div>`;
@@ -6181,7 +6224,7 @@ function renderDailyBriefing() {
     const groupsHtml = groupEntries.map(([name, items]) => {
       const itemsHtml = [...items].sort((a,b) => a.daysLeft - b.daysLeft).map(c => {
         const tag = briefingTag(c.daysLeft);
-        return `<div class="briefing-item">
+        return `<div class="briefing-item" style="--item-accent:${tag.color}">
           <div>
             <div class="briefing-item-name">${c.certLabel}</div>
             <div class="briefing-item-sub">วันหมดอายุ ${c.dateStr}</div>
@@ -6190,7 +6233,7 @@ function renderDailyBriefing() {
         </div>`;
       }).join('');
       return `<div class="briefing-group">
-        <div class="briefing-maker">🏢 ${name} <span class="briefing-badge">${items.length} ใบ</span></div>
+        <div class="briefing-maker"><span class="briefing-maker-icon">🏢</span> ${name} <span class="briefing-badge">${items.length} ใบ</span></div>
         <div class="briefing-items">${itemsHtml}</div>
       </div>`;
     }).join('');
@@ -6207,7 +6250,7 @@ function renderDailyBriefing() {
     const itemsHtml = sorted.map(w => {
       const r = w.item;
       const tag = briefingTag(w.daysLeft);
-      return `<div class="briefing-item">
+      return `<div class="briefing-item" style="--item-accent:${tag.color}">
         <div>
           <div class="briefing-item-name">${wpTypeEmoji(r.type)} ${r.name || '(ไม่มีชื่องาน)'} ${r.location ? `<span style="color:var(--muted);font-size: 0.714rem">(${r.location})</span>` : ''}</div>
           <div class="briefing-item-sub">วันที่ ${r.date || '—'} · ${wpStatusHtml(r.status)}</div>
