@@ -503,11 +503,6 @@
   .briefing-item-name { font-size: 0.819rem; font-weight: 500; }
   .briefing-item-sub { font-family: var(--mono); font-size: 0.672rem; color: var(--muted); margin-top: 2px; }
   .briefing-tag { font-family: var(--mono); font-size: 0.693rem; font-weight: 700; padding: 0.12rem 0.5rem; border-radius: 5px; white-space: nowrap; border: 1px solid; background: transparent; }
-  .briefing-item-latest { display: flex; align-items: baseline; gap: 0.35rem; margin-top: 4px; font-size: 0.714rem; line-height: 1.4; padding: 0.28rem 0.55rem; background: rgba(99,102,241,0.07); border-left: 2px solid var(--accent2); border-radius: 0 6px 6px 0; }
-  .briefing-item-latest .bil-tag { flex-shrink: 0; }
-  .briefing-item-latest .bil-text { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
-  .briefing-item-latest .bil-time { flex-shrink: 0; font-family: var(--mono); color: var(--muted); font-size: 0.651rem; }
-  .briefing-item-latest.bil-issue { border-left-color: var(--danger); background: rgba(239,68,68,0.07); }
   .briefing-category { display: flex; flex-direction: column; gap: 0.6rem; }
   .briefing-category + .briefing-category { margin-top: 0.3rem; padding-top: 0.9rem; border-top: 1px dashed var(--border); }
   .briefing-category-title { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 0.892rem; color: var(--text); }
@@ -571,7 +566,17 @@
   .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
 
   /* TABLE */
-  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; transition: box-shadow 0.2s; }
+  .table-wrap {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg);
+    overflow: hidden; transition: box-shadow 0.25s, transform 0.25s; position: relative;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2), 0 20px 44px -22px rgba(0,0,0,0.6);
+  }
+  .table-wrap::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.14), transparent); pointer-events: none;
+  }
+  .light-theme .table-wrap { box-shadow: 0 2px 4px rgba(20,30,55,0.06), 0 20px 44px -22px rgba(20,30,55,0.2); }
+  .light-theme .table-wrap::before { background: linear-gradient(90deg, transparent, rgba(20,30,55,0.08), transparent); }
   @media (max-width: 900px) {
     .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .table-wrap table { min-width: 640px; }
@@ -580,16 +585,19 @@
   .table-title-label { font-size: 0.714rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
   table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
   thead th {
-    background: var(--surface2); padding: 0.62rem 0.9rem; text-align: left; font-size: 0.662rem;
+    background: var(--surface2); padding: 0.7rem 0.9rem; text-align: left; font-size: 0.662rem;
     font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
-    border-bottom: 1px solid var(--border); cursor: pointer; white-space: nowrap; user-select: none;
+    border-bottom: 1px solid var(--border); box-shadow: inset 0 -2px 0 -1px rgba(0,0,0,0.12);
+    cursor: pointer; white-space: nowrap; user-select: none; transition: color 0.12s, background 0.12s;
   }
-  thead th:hover { color: var(--text); }
+  thead th:hover { color: var(--text); background: var(--surface2); filter: brightness(1.15); }
   thead th.sort-asc::after { content: ' ↑'; color: var(--accent); }
   thead th.sort-desc::after { content: ' ↓'; color: var(--accent); }
-  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; cursor: pointer; }
-  tbody tr:hover { background: var(--surface2); }
-  tbody td { padding: 0.65rem 0.9rem; vertical-align: middle; }
+  tbody tr { position: relative; border-bottom: 1px solid var(--border); transition: background 0.12s ease, box-shadow 0.12s ease; cursor: pointer; }
+  tbody tr:nth-child(even) { background: var(--mt-stripe-even); }
+  tbody tr:nth-child(5n) { border-bottom-color: var(--mt-month-border); }
+  tbody tr:hover { background: var(--surface2); box-shadow: inset 3px 0 0 var(--accent); }
+  tbody td { padding: 0.72rem 0.9rem; vertical-align: middle; }
   .no-num { font-family: var(--mono); font-size: 0.714rem; color: var(--muted); }
   .part-no { font-family: var(--mono); font-size: 0.777rem; color: var(--accent); font-weight: 500; }
   .part-name { font-weight: 600; font-size: 0.861rem; }
@@ -597,9 +605,10 @@
   .date-cell { font-family: var(--mono); font-size: 0.745rem; color: var(--muted); }
   .maker-cell { font-size: 0.798rem; }
   .location-chip {
-    display: inline-flex; padding: 0.1rem 0.48rem; background: var(--surface2);
-    border: 1px solid var(--border); border-radius: 5px; font-size: 0.683rem;
+    display: inline-flex; padding: 0.12rem 0.5rem; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 6px; font-size: 0.683rem;
     font-family: var(--mono); font-weight: 600; color: var(--muted);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
   }
 
   /* PARTIAL DELIVERY PROGRESS (qty received vs ordered) */
@@ -608,16 +617,25 @@
   .qty-progress-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
   .qty-progress-text { font-family: var(--mono); font-size: 0.693rem; color: var(--text); white-space: nowrap; font-weight: 600; }
 
-  .badge { display: inline-flex; align-items: center; gap: 0.22rem; padding: 0.18rem 0.55rem; border-radius: var(--r-pill); font-size: 0.704rem; font-weight: 600; white-space: nowrap; }
-  .badge-done { background: rgba(16,185,129,0.12); color: var(--success); border: 1px solid rgba(16,185,129,0.2); }
-  .badge-progress { background: rgba(245,158,11,0.12); color: var(--warn); border: 1px solid rgba(245,158,11,0.2); }
-  .badge-incomplete { background: rgba(239,68,68,0.12); color: var(--danger); border: 1px solid rgba(239,68,68,0.2); }
+  .badge { display: inline-flex; align-items: center; gap: 0.28rem; padding: 0.2rem 0.62rem; border-radius: var(--r-pill); font-size: 0.704rem; font-weight: 600; white-space: nowrap; box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 5px -1px rgba(0,0,0,0.18); transition: transform 0.12s ease, box-shadow 0.12s ease; }
+  .badge-done { background: rgba(16,185,129,0.13); color: var(--success); border: 1px solid rgba(16,185,129,0.28); }
+  .badge-progress { background: rgba(245,158,11,0.13); color: var(--warn); border: 1px solid rgba(245,158,11,0.28); }
+  .badge-incomplete { background: rgba(239,68,68,0.13); color: var(--danger); border: 1px solid rgba(239,68,68,0.28); }
+  tbody tr:hover .badge-done { box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 3px 8px -1px rgba(16,185,129,0.35); }
+  tbody tr:hover .badge-progress { box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 3px 8px -1px rgba(245,158,11,0.35); }
+  tbody tr:hover .badge-incomplete { box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 3px 8px -1px rgba(239,68,68,0.35); }
 
-  .days-left { font-family: var(--mono); font-size: 0.745rem; padding: 0.14rem 0.5rem; border-radius: 5px; font-weight: 700; }
-  .days-urgent { background: rgba(239,68,68,0.12); color: var(--danger); border: 1px solid rgba(239,68,68,0.2); }
-  .days-warn { background: rgba(245,158,11,0.12); color: var(--warn); border: 1px solid rgba(245,158,11,0.2); }
-  .days-ok { background: rgba(16,185,129,0.08); color: var(--success); border: 1px solid rgba(16,185,129,0.15); }
-  .days-done { background: rgba(100,116,139,0.1); color: var(--muted); border: 1px solid rgba(100,116,139,0.15); }
+  .days-left {
+    font-family: var(--mono); font-size: 0.735rem; padding: 0.2rem 0.62rem 0.2rem 0.55rem; border-radius: 7px; font-weight: 700;
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.32rem; white-space: nowrap; min-width: 60px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 5px -1px rgba(0,0,0,0.15);
+  }
+  .days-left::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; opacity: 0.85; }
+  .days-urgent { background: rgba(239,68,68,0.13); color: var(--danger); border: 1px solid rgba(239,68,68,0.28); }
+  .days-warn { background: rgba(245,158,11,0.13); color: var(--warn); border: 1px solid rgba(245,158,11,0.28); }
+  .days-ok { background: rgba(16,185,129,0.09); color: var(--success); border: 1px solid rgba(16,185,129,0.18); }
+  .days-done { background: rgba(100,116,139,0.12); color: var(--muted); border: 1px solid rgba(100,116,139,0.22); }
+  .days-done::before { display: none; }
 
   .row-actions { display: flex; gap: 0.3rem; opacity: 0; transition: opacity 0.12s; min-width: 64px; }
 
@@ -625,25 +643,27 @@
   .table-wrap { padding-right: 0.5rem; }
   .icon-btn {
     width: 27px; height: 27px; border: 1px solid var(--border); border-radius: 7px; background: var(--surface);
-    color: var(--muted); font-size: 0.735rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.12s;
+    color: var(--muted); font-size: 0.735rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.12s; box-shadow: 0 1px 3px rgba(0,0,0,0.15);
   }
-  .icon-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--glow-accent); }
-  .icon-btn.del:hover { border-color: var(--danger); color: var(--danger); background: var(--glow-danger); }
+  .icon-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--glow-accent); transform: translateY(-1px); box-shadow: 0 4px 10px -2px rgba(62,106,225,0.4); }
+  .icon-btn:active { transform: translateY(0); }
+  .icon-btn.del:hover { border-color: var(--danger); color: var(--danger); background: var(--glow-danger); box-shadow: 0 4px 10px -2px rgba(239,68,68,0.4); }
   .star-btn {
     background: none; border: none; cursor: pointer; font-size: 1.103rem; padding: 0.1rem 0.2rem;
-    line-height: 1; transition: transform 0.15s; display: flex; align-items: center; justify-content: center;
+    line-height: 1; transition: transform 0.15s, filter 0.15s; display: flex; align-items: center; justify-content: center;
     filter: grayscale(1); opacity: 0.35;
   }
   .star-btn:hover { transform: scale(1.3); filter: grayscale(0); opacity: 1; }
-  .star-btn.starred { filter: grayscale(0); opacity: 1; }
+  .star-btn.starred { filter: grayscale(0) drop-shadow(0 2px 4px rgba(245,158,11,0.5)); opacity: 1; }
   .filter-star-active { border-color: var(--warn) !important; color: var(--warn) !important; background: var(--glow-warn) !important; }
 
   .table-footer { display: flex; align-items: center; justify-content: space-between; padding: 0.65rem 0.9rem; border-top: 1px solid var(--border); background: var(--surface2); font-size: 0.724rem; color: var(--muted); }
   .pagination { display: flex; gap: 0.2rem; }
-  .page-btn { min-width: 28px; height: 28px; border: 1px solid var(--border); border-radius: 7px; background: var(--surface); color: var(--muted); font-size: 0.745rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.12s; font-family: var(--mono); padding: 0 0.4rem; }
-  .page-btn:hover, .page-btn.active { border-color: var(--accent); color: var(--accent); }
-  .page-btn.active { background: var(--glow-accent); }
-  .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .page-btn { min-width: 28px; height: 28px; border: 1px solid var(--border); border-radius: 7px; background: var(--surface); color: var(--muted); font-size: 0.745rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.12s; font-family: var(--mono); padding: 0 0.4rem; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+  .page-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); box-shadow: 0 3px 8px -1px rgba(62,106,225,0.3); }
+  .page-btn.active { border-color: var(--accent); color: var(--accent); background: var(--glow-accent); box-shadow: 0 2px 8px -1px rgba(62,106,225,0.4); }
+  .page-btn:disabled { opacity: 0.35; cursor: not-allowed; box-shadow: none; }
 
   /* CER PAGE */
   .cer-stat-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: 0.85rem; margin-bottom: 1.1rem; }
@@ -882,9 +902,16 @@
   .empty-title { font-size: 0.945rem; font-weight: 600; margin-bottom: 0.3rem; color: var(--text); }
   .empty-sub { font-size: 0.798rem; }
 
-  /* ROW HIGHLIGHT */
-  tbody tr.row-urgent { background: rgba(239,68,68,0.04); }
-  tbody tr.row-warn { background: rgba(245,158,11,0.03); }
+  /* ROW HIGHLIGHT — a colored accent bar on the left edge makes status scannable at a glance,
+     even in long lists, without relying only on the badge text in the STATUS column. */
+  tbody tr.row-urgent { background: rgba(239,68,68,0.05); box-shadow: inset 3px 0 0 var(--danger); }
+  tbody tr.row-urgent:nth-child(even) { background: rgba(239,68,68,0.07); }
+  tbody tr.row-urgent:hover { background: rgba(239,68,68,0.1); box-shadow: inset 3px 0 0 var(--danger); }
+  tbody tr.row-warn { background: rgba(245,158,11,0.04); box-shadow: inset 3px 0 0 var(--warn); }
+  tbody tr.row-warn:nth-child(even) { background: rgba(245,158,11,0.06); }
+  tbody tr.row-warn:hover { background: rgba(245,158,11,0.08); box-shadow: inset 3px 0 0 var(--warn); }
+  tbody tr.row-done { box-shadow: inset 3px 0 0 rgba(16,185,129,0.3); }
+  tbody tr.row-done:hover { background: var(--surface2); box-shadow: inset 3px 0 0 var(--success); }
 
   /* SETUP */
   .instruction-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.3rem; margin-bottom: 0.9rem; }
@@ -5224,7 +5251,6 @@ window.addEventListener('DOMContentLoaded', () => {
   initToastMuteBtn();
   initPerPage();
   initAutoSync();
-  initBcLivePoll();
   initKeyboardShortcuts();
   initNavGroups();
   document.addEventListener('click', (e) => {
@@ -5591,7 +5617,7 @@ function showPage(name, btn) {
   if (btn) btn.classList.add('active');
   const titles = { home:'🏠 หน้าหลัก', exec:'🎯 ภาพรวม KPI', dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', partmodel:'🧩 PART MODEL', summary:'📈 สรุปภาพรวม', gantt:'📅 Timeline / Gantt', setup:'⚙️ ตั้งค่าระบบ', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis', cer:'📄 ติดตามใบ CER', modeltracker:'🗂️ Model Tracker', workplan:'📅 ตารางแผนงานข้างนอก', payroll:'⏱️ ลงเวลา & ค่าแรง' };
   document.getElementById('topbarTitle').textContent = titles[name] || name;
-  if (name === 'home') { renderDailyBriefing(); bcRefreshAllLatest(); }
+  if (name === 'home') renderDailyBriefing();
   if (name === 'exec') renderExecDashboard();
   if (name === 'summary') renderSummary();
   if (name === 'partmodel') { renderPmSummaryStats(); renderPartModelByModel(); }
@@ -5871,7 +5897,6 @@ function renderDailyBriefing() {
           <div style="flex:1;min-width:0">
             <div class="briefing-item-name">${r.partName} <span style="color:var(--muted);font-size: 0.714rem">(${r.partNo})</span></div>
             <div class="briefing-item-sub">วันนัดส่ง ${r.dueDate || '—'} · ${statusBadge(r.status)}</div>
-            <div id="bcLatest-${r.rowIndex}">${bcLatestHtml(r.rowIndex)}</div>
           </div>
           <div style="display:flex;align-items:center;gap:0.5rem;flex-shrink:0">
             <span class="briefing-tag" style="color:${tag.color};border-color:${tag.color}">${tag.text}</span>
@@ -6431,7 +6456,7 @@ function renderTable() {
   document.getElementById('mainTableBody').innerHTML = pageData.length ? pageData.map((r,i) => {
     const isDone = r.status.includes('เสร็จแล้ว');
     const dl = Number(r.daysLeft);
-    const rowCls = isDone ? '' : (!isNaN(dl) && dl <= 3) ? 'row-urgent' : (!isNaN(dl) && dl <= 7) ? 'row-warn' : '';
+    const rowCls = isDone ? 'row-done' : (!isNaN(dl) && dl <= 3) ? 'row-urgent' : (!isNaN(dl) && dl <= 7) ? 'row-warn' : '';
     const itemKey = r.rowIndex || r.partNo;
     const isStarred = starredItems.includes(String(itemKey));
     const commentCount = loadComments(getCommentKey(r)).length;
@@ -7743,22 +7768,6 @@ function initAutoSync() {
       }
     } catch(e) { /* เงียบ — ไม่รบกวน user */ }
   }, AUTO_SYNC_MS);
-}
-
-/* ══════════════════════════════════════════════════════
-   #3b LIVE COMMENT POLL — รีเฟรชคอมเมนต์ล่าสุดในหน้า Daily Briefing
-   ให้ใกล้เคียง real-time (ทุก 20 วินาที) โดยไม่รอรอบ auto-sync 5 นาที
-══════════════════════════════════════════════════════ */
-const BC_LIVE_POLL_MS = 20 * 1000; // 20 วินาที
-let bcLivePollInterval = null;
-function initBcLivePoll() {
-  if (bcLivePollInterval) clearInterval(bcLivePollInterval);
-  bcLivePollInterval = setInterval(() => {
-    // ทำงานเฉพาะตอนแท็บ/หน้าต่างเปิดอยู่ และอยู่หน้า Daily Briefing เท่านั้น เพื่อประหยัด request
-    const homePage = document.getElementById('page-home');
-    if (document.hidden || !homePage || !homePage.classList.contains('active')) return;
-    bcRefreshAllLatest();
-  }, BC_LIVE_POLL_MS);
 }
 
 /* ══════════════════════════════════════════════════════
@@ -11329,45 +11338,6 @@ async function scDelete(sid, idx) {
 /* ── BRIEFING INLINE COMMENT (bc) — sync Sheet ── */
 function bcKey(rowIndex) { return 'comments_' + rowIndex; }
 function bcLoad(rowIndex) { try { return JSON.parse(localStorage.getItem(bcKey(rowIndex)) || '[]'); } catch { return []; } }
-function bcEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
-const BC_LATEST_TAG_ICON = { update:'🔄', issue:'⚠️', done:'✅', info:'💬' };
-// สร้าง HTML แสดงคอมเมนต์/สถานะล่าสุดของแถวนี้ (ใช้เติมพื้นที่ว่างในการ์ด Briefing แบบ real-time)
-function bcLatestHtml(rowIndex) {
-  const arr = bcLoad(rowIndex);
-  if (!arr.length) return '';
-  const c = arr[arr.length - 1];
-  const icon = BC_LATEST_TAG_ICON[c.tag] || '💬';
-  const issueClass = c.tag === 'issue' ? ' bil-issue' : '';
-  return `<div class="briefing-item-latest${issueClass}" title="${bcEsc((c.text||'').replace(/\n/g,' '))}">
-    <span class="bil-tag">${icon}</span>
-    <span class="bil-text">${bcEsc((c.text||'').replace(/\n/g,' '))}</span>
-    <span class="bil-time">${bcEsc(c.time)}</span>
-  </div>`;
-}
-// อัปเดต DOM ของแถวนี้ให้แสดงคอมเมนต์ล่าสุด (เรียกหลัง sync ข้อมูลจาก Sheet)
-function bcLatestRender(rowIndex) {
-  const el = document.getElementById('bcLatest-' + rowIndex);
-  if (el) el.innerHTML = bcLatestHtml(rowIndex);
-}
-// รีเฟรชคอมเมนต์ล่าสุดของทุกงานที่กำลังติดตามในหน้า Daily Briefing จาก Sheet โดยตรง (real-time)
-async function bcRefreshAllLatest() {
-  if (!WEB_APP_URL) return;
-  try {
-    const res  = await fetch(WEB_APP_URL + '?action=getData');
-    const json = await res.json();
-    if (json.success && Array.isArray(json.data)) {
-      json.data.forEach(r => {
-        if (r.rowIndex && Array.isArray(r.comments) && r.comments.length > 0) {
-          localStorage.setItem(bcKey(r.rowIndex), JSON.stringify(r.comments));
-        }
-      });
-      document.querySelectorAll('[id^="bcLatest-"]').forEach(el => {
-        const rowIndex = el.id.replace('bcLatest-', '');
-        bcLatestRender(rowIndex);
-      });
-    }
-  } catch(e) { /* เงียบ — ไม่รบกวน user */ }
-}
 async function bcSave(rowIndex, arr) {
   localStorage.setItem(bcKey(rowIndex), JSON.stringify(arr));
   if (WEB_APP_URL && rowIndex) {
@@ -11446,7 +11416,6 @@ async function bcAdd(rowIndex, event) {
   if (ta) ta.value = '';
   if (author) localStorage.setItem('prpo_username', author);
   bcRender(rowIndex);
-  bcLatestRender(rowIndex);
   if (ok) showResultModal('บันทึกคอมเมนต์แล้ว', 'success');
 }
 
@@ -11456,7 +11425,6 @@ async function bcDelete(rowIndex, idx, event) {
   arr.splice(idx, 1);
   const ok = await bcSave(rowIndex, arr);
   bcRender(rowIndex);
-  bcLatestRender(rowIndex);
   if (ok) showResultModal('ลบคอมเมนต์แล้ว', 'success');
 }
 
