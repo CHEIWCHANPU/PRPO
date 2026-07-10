@@ -8788,13 +8788,25 @@ function renderFileLib() {
       </div>
       <div class="supplier-field">🗓️ เพิ่มเมื่อ <span class="supplier-field-val">${dateStr}</span></div>
       ${f.note ? `<div class="supplier-field">📋 <span style="color:var(--muted);font-size: 0.777rem">${f.note}</span></div>` : ''}
-      <div class="supplier-field" style="border-bottom:none;padding-top:0.4rem">
+      <div class="supplier-field" style="border-bottom:none;padding-top:0.4rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
         <a href="${f.link}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:0.4rem;color:var(--accent);text-decoration:none;font-size: 0.819rem">
           ${meta.icon} เปิดไฟล์ ↗
+        </a>
+        <a href="${getDriveDownloadUrl(f.link)}" target="_blank" rel="noopener" download="${f.name || ''}" style="display:flex;align-items:center;gap:0.4rem;color:var(--muted);text-decoration:none;font-size: 0.819rem" title="ดาวน์โหลดไฟล์">
+          ⬇️ ดาวน์โหลด
         </a>
       </div>
     </div>`;
   }).join('');
+}
+
+/* แปลงลิงก์ Google Drive (view) ให้เป็นลิงก์ดาวน์โหลดตรง */
+function getDriveDownloadUrl(link) {
+  if (!link) return '';
+  let m = String(link).match(/\/d\/([a-zA-Z0-9_-]{10,})/);
+  if (!m) m = String(link).match(/[?&]id=([a-zA-Z0-9_-]{10,})/);
+  const fileId = m ? m[1] : '';
+  return fileId ? `https://drive.google.com/uc?export=download&id=${fileId}` : link;
 }
 
 /* แปลงลิงก์ Google Maps ให้เป็น embed URL (รองรับเฉพาะลิงก์แบบเต็มที่มีพิกัด/คำค้นใน query)
