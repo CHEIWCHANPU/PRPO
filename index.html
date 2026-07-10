@@ -5400,7 +5400,7 @@
 <!-- /WORKPLAN MODAL -->
 
 <!-- DETAIL PANEL -->
-<div class="detail-overlay" id="detailOverlay" onclick="closeDetail(event)">
+<div class="detail-overlay" id="detailOverlay">
   <div class="detail-panel">
     <button class="detail-close-btn" onclick="closeDetail(null)">✕</button>
     <div class="detail-part-no" id="d-partNo"></div>
@@ -6312,7 +6312,7 @@ async function loadData(forceRefresh = false) {
           allData = json.data;
           localStorage.setItem(CACHE_KEY, JSON.stringify(json.data));
           localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
-          document.getElementById('lastSync').textContent = 'ซิงค์ล่าสุด: ' + json.updated;
+          document.getElementById('lastSync').textContent = 'ซิงค์ล่าสุด: ' + String(json.updated).split(' ')[0];
           processData();
         }
       }).catch(() => {});
@@ -6327,7 +6327,7 @@ async function loadData(forceRefresh = false) {
       allData = json.data;
       localStorage.setItem(CACHE_KEY, JSON.stringify(json.data));
       localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
-      document.getElementById('lastSync').textContent = 'ซิงค์ล่าสุด: ' + json.updated;
+      document.getElementById('lastSync').textContent = 'ซิงค์ล่าสุด: ' + String(json.updated).split(' ')[0];
       processData(); showToast('✅ Sync สำเร็จ', 'success');
     }
   } catch(e) { allData = DEMO; processData(); showToast('⚠️ ไม่สามารถเชื่อมต่อ — ใช้ข้อมูล Demo', 'error'); }
@@ -6344,7 +6344,7 @@ async function syncData() {
     await loadCerPage(true);
   }
   icon.textContent = '⟳'; if (sIcon) sIcon.textContent = '⟳';
-  document.getElementById('lastSync').textContent = 'ซิงค์ล่าสุด: ' + new Date().toLocaleTimeString('th-TH');
+  document.getElementById('lastSync').textContent = 'ซิงค์ล่าสุด: ' + new Date().toLocaleDateString('th-TH');
 }
 
 /* ── PROCESS DATA ── */
@@ -8052,7 +8052,7 @@ function initAutoSync() {
       const json = await res.json();
       if (json.success) {
         allData = json.data;
-        document.getElementById('lastSync').textContent = 'ซิงค์ล่าสุด: ' + new Date().toLocaleTimeString('th-TH') + ' (auto)';
+        document.getElementById('lastSync').textContent = 'ซิงค์ล่าสุด: ' + new Date().toLocaleDateString('th-TH') + ' (auto)';
         processData();
         // ไม่ showToast เพราะเป็น background sync
       }
@@ -8888,7 +8888,7 @@ function renderLeadTime() {
 </script>
 
 <!-- SUPPLIER MODAL -->
-<div class="modal-overlay" id="supplierModalOverlay" onclick="if(event.target===this)closeSupplierModal()">
+<div class="modal-overlay" id="supplierModalOverlay">
   <div class="modal" style="max-width:520px">
     <div class="modal-header">
       <div class="modal-title" id="supplierModalTitle">🏭 เพิ่ม Supplier</div>
@@ -8924,7 +8924,7 @@ function renderLeadTime() {
 </div>
 
 <!-- PART MODEL: MODEL DETAIL MODAL -->
-<div class="modal-overlay" id="pmModelModalOverlay" onclick="if(event.target===this)closePmModelModal()">
+<div class="modal-overlay" id="pmModelModalOverlay">
   <div class="modal" style="max-width:945px;width:95vw">
     <div class="modal-header">
       <div class="modal-title" id="pmModelModalTitle">🗂️ MODEL</div>
@@ -8952,7 +8952,7 @@ function renderLeadTime() {
 </div>
 
 <!-- CER MODAL -->
-<div class="modal-overlay" id="cerModalOverlay" onclick="if(event.target===this)closeCerModal()">
+<div class="modal-overlay" id="cerModalOverlay">
   <div class="modal" style="max-width:520px">
     <div class="modal-header">
       <div class="modal-title" id="cerModalTitle">📄 เพิ่มบริษัท</div>
@@ -10316,10 +10316,8 @@ document.addEventListener('DOMContentLoaded', ()=>{
   document.getElementById('mt-filterCustomer').addEventListener('change', mtRenderGantt);
   document.getElementById('mt-filterStatus').addEventListener('change', mtRenderGantt);
 
-  // close modals on overlay click
-  ['mt-modelModal','mt-msModal'].forEach(id=>{
-    document.getElementById(id).addEventListener('click',(e)=>{ if(e.target===document.getElementById(id)) mtCloseModal(id); });
-  });
+  // Model Tracker modals: closes only via the X / cancel button, not by clicking the overlay
+
 });
 
 /* ══════════════════════════════════════════════════
@@ -10634,10 +10632,8 @@ async function deleteWpItem(rowIndex) {
   showResultModal('ลบแผนงานแล้ว', 'success');
 }
 
-// close workplan modal on overlay click
-document.getElementById('wpModalOverlay').addEventListener('click', (e) => {
-  if (e.target === document.getElementById('wpModalOverlay')) closeWpModal();
-});
+// workplan modal: closes only via the X / cancel button, not by clicking the overlay
+
 
 /* ══════════════════════════════════════════════════
    ⏱️ PAYROLL / ATTENDANCE MODULE
