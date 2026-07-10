@@ -376,8 +376,9 @@
   .topbar-sub {
     display: inline-flex; align-items: center; gap: 0.4rem;
     font-size: 0.714rem; color: var(--muted);
-    padding: 0.24rem 0.65rem; background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 20px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 1px 2px rgba(0,0,0,0.15);
+    padding: 0 0.65rem; height: 34px; box-sizing: border-box;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 1px 2px rgba(0,0,0,0.15);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; flex-shrink: 0;
   }
   .topbar-sub::before {
@@ -867,8 +868,9 @@
   .cmdk-item.active .cmdk-item-enter { opacity: 1; }
   .cmdk-empty { padding: 1.5rem; text-align: center; color: var(--muted); font-size: 0.85rem; }
   .cmdk-trigger {
-    display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.6rem 0.4rem 0.7rem;
-    border: 1px solid var(--border); border-radius: var(--r-pill);
+    display: flex; align-items: center; gap: 0.5rem; padding: 0 0.6rem 0 0.7rem;
+    height: 34px; box-sizing: border-box;
+    border: 1px solid var(--border); border-radius: 10px;
     background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0)), var(--surface2);
     color: var(--muted); cursor: pointer; transition: border-color 0.15s, color 0.15s, box-shadow 0.2s, transform 0.2s;
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 2px rgba(0,0,0,0.2), 0 6px 14px -8px rgba(0,0,0,0.5);
@@ -2197,18 +2199,18 @@
   .topbar-title {
     display: inline-flex !important;
     align-items: center !important;
-    font-size: 0.966rem !important;
+    font-size: 0.9rem !important;
     font-weight: 700 !important;
     letter-spacing: -0.01em !important;
     color: var(--text) !important;
-    padding: 0.36rem 0.85rem !important;
-    height: 2.05rem !important;
+    padding: 0 0.85rem !important;
+    height: 34px !important;
     white-space: nowrap !important;
     flex-shrink: 0 !important;
     box-sizing: border-box !important;
     background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0)), var(--surface2) !important;
     border: 1px solid var(--border) !important;
-    border-radius: 12px !important;
+    border-radius: 10px !important;
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 2px rgba(0,0,0,0.2), 0 6px 14px -8px rgba(0,0,0,0.5) !important;
     transition: box-shadow 0.2s, transform 0.2s !important;
   }
@@ -2220,10 +2222,12 @@
     display: inline-flex !important;
     align-items: center !important;
     gap: 0.5rem !important;
-    padding: 0.32rem 0.9rem 0.32rem 0.7rem !important;
+    padding: 0 0.9rem 0 0.7rem !important;
+    height: 34px !important;
+    box-sizing: border-box !important;
     background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0)), var(--surface2) !important;
     border: 1px solid var(--border) !important;
-    border-radius: 20px !important;
+    border-radius: 10px !important;
     font-size: 0.735rem !important;
     font-family: var(--mono) !important;
     color: var(--muted) !important;
@@ -2265,10 +2269,12 @@
 
   /* ── SYNC PILL ── */
   .sync-pill {
-    padding: 0.3rem 1rem !important;
+    padding: 0 1rem !important;
+    height: 34px !important;
+    box-sizing: border-box !important;
     background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0)), var(--glow-accent) !important;
     border: 1px solid rgba(62,106,225,0.25) !important;
-    border-radius: 20px !important;
+    border-radius: 10px !important;
     font-size: 0.788rem !important;
     font-weight: 700 !important;
     color: var(--accent) !important;
@@ -2289,7 +2295,8 @@
   .icon-action {
     width: 34px !important;
     height: 34px !important;
-    border-radius: 9px !important;
+    box-sizing: border-box !important;
+    border-radius: 10px !important;
     background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0)), var(--surface2) !important;
     border: 1px solid var(--border) !important;
     transition: all 0.18s cubic-bezier(0.4,0,0.2,1) !important;
@@ -2310,7 +2317,10 @@
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 10px 20px -10px rgba(245,158,11,0.4) !important;
   }
   .theme-pill {
-    border-radius: 20px !important;
+    height: 34px !important;
+    box-sizing: border-box !important;
+    padding: 0 0.9rem !important;
+    border-radius: 10px !important;
     font-size: 0.777rem !important;
     font-weight: 600 !important;
     border: 1px solid var(--border) !important;
@@ -2903,9 +2913,9 @@
   /* ── MUTE PILL ── */
   .mute-pill {
     display: flex; align-items: center; gap: 0.35rem;
-    padding: 0.28rem 0.75rem;
+    padding: 0 0.75rem; height: 34px; box-sizing: border-box;
     background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0)), var(--surface2);
-    border: 1px solid var(--border); border-radius: 20px;
+    border: 1px solid var(--border); border-radius: 10px;
     font-size: 0.756rem; font-weight: 600; cursor: pointer; color: var(--muted);
     transition: all 0.18s; font-family: var(--font); white-space: nowrap; line-height: 1;
     user-select: none;
