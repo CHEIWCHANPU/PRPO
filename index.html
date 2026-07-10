@@ -3956,6 +3956,17 @@
       </div>
     </div>
 
+    <div class="nav-group" id="navGroup-filelib">
+      <div class="nav-label" onclick="toggleNavGroup('filelib')">
+        <span class="nav-label-text"><span class="nav-label-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg></span>แบบฟอร์ม Excel/PPT<span class="nav-label-badge" id="navGroupBadge-filelib" style="display:none">0</span></span><span class="nav-label-chevron">▾</span>
+      </div>
+      <div class="nav-group-items">
+        <button class="nav-item" id="nav-filelib" onclick="showPage('filelib',this)">
+          <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg></span><span class="nav-text">แบบฟอร์ม Excel/PPT</span>
+        </button>
+      </div>
+    </div>
+
     <div class="nav-group" id="navGroup-other">
       <div class="nav-label" onclick="toggleNavGroup('other')">
         <span class="nav-label-text"><span class="nav-label-icon"><svg viewBox="0 0 24 24"><path d="M3 21V10l5 3.5V10l5 3.5V10l6 3v8H3z"/><path d="M3 21h18"/><line x1="8" y1="17" x2="8" y2="17.01"/><line x1="13" y1="17" x2="13" y2="17.01"/></svg></span>ข้อมูล MAKER</span><span class="nav-label-chevron">▾</span>
@@ -4554,6 +4565,23 @@
         <button class="btn btn-primary" onclick="openSupplierModal()" style="margin-left:auto">+ เพิ่ม Supplier</button>
       </div>
       <div id="supplierGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem"></div>
+    </div>
+
+    <!-- FILE LIBRARY: Excel / PowerPoint links -->
+    <div class="page" id="page-filelib">
+      <div class="toolbar" style="margin-bottom:0.9rem">
+        <div class="search-box" style="max-width:340px">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="fileLibSearch" placeholder="ค้นหาชื่อไฟล์, หมวดหมู่..." oninput="renderFileLib()">
+        </div>
+        <select class="filter-select" id="fileLibFilterType" onchange="renderFileLib()">
+          <option value="">ทุกประเภท</option>
+          <option value="excel">📊 Excel</option>
+          <option value="powerpoint">📽️ PowerPoint</option>
+        </select>
+        <button class="btn btn-primary" onclick="openFileLibModal()" style="margin-left:auto">+ แนบไฟล์</button>
+      </div>
+      <div id="fileLibGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem"></div>
     </div>
 
     <!-- HISTORY LOG -->
@@ -5821,6 +5849,7 @@ const CMDK_ITEMS = [
   { key: 'modeltracker', label: 'Model Tracker', group: 'แผนการผลิต MODEL', icon: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>' },
   { key: 'workplan', label: 'ตารางแผนงานข้างนอก', group: 'ตารางแผนงานข้างนอก', icon: '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' },
   { key: 'supplier', label: 'Supplier Database', group: 'ข้อมูล MAKER', icon: '<svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V9l5-4 5 4v12"/><path d="M15 21V13l4-2v10"/></svg>' },
+  { key: 'filelib', label: 'แบบฟอร์ม Excel/PPT', group: 'แบบฟอร์ม Excel/PPT', icon: '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>' },
   { key: 'history', label: 'History Log', group: 'จัดการ', icon: '<svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>' },
   { key: 'setup', label: 'ตั้งค่าระบบ', group: 'จัดการ', icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>' },
 ];
@@ -5902,7 +5931,7 @@ function showPage(name, btn) {
   document.getElementById('page-' + name).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  const titles = { home:'🏠 หน้าหลัก', exec:'🎯 ภาพรวม KPI', dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', partmodel:'🧩 PART MODEL', summary:'📈 สรุปภาพรวม', gantt:'📅 Timeline / Gantt', setup:'⚙️ ตั้งค่าระบบ', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis', cer:'📄 ติดตามใบ CER', modeltracker:'🗂️ Model Tracker', workplan:'📅 ตารางแผนงานข้างนอก', payroll:'⏱️ ลงเวลา & ค่าแรง' };
+  const titles = { home:'🏠 หน้าหลัก', exec:'🎯 ภาพรวม KPI', dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', partmodel:'🧩 PART MODEL', summary:'📈 สรุปภาพรวม', gantt:'📅 Timeline / Gantt', setup:'⚙️ ตั้งค่าระบบ', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis', cer:'📄 ติดตามใบ CER', modeltracker:'🗂️ Model Tracker', workplan:'📅 ตารางแผนงานข้างนอก', payroll:'⏱️ ลงเวลา & ค่าแรง', filelib:'📁 แบบฟอร์ม Excel/PPT' };
   document.getElementById('topbarTitle').textContent = titles[name] || name;
   if (name === 'home') renderDailyBriefing();
   if (name === 'exec') renderExecDashboard();
@@ -5916,6 +5945,7 @@ function showPage(name, btn) {
   if (name === 'modeltracker') renderModelTracker();
   if (name === 'workplan') renderWorkplan();
   if (name === 'payroll') payrollInit();
+  if (name === 'filelib') loadFileLib();
 }
 
 /* ── NOTIFICATIONS ── */
@@ -8553,6 +8583,220 @@ function renderSuppliers() {
   list.forEach(s => setTimeout(() => scRender(s.id), 0));
 }
 
+/* ══════════════════════════════════════
+   แบบฟอร์ม Excel/PPT — แนบไฟล์ขึ้น Google Drive
+   ใช้ระบบอัปโหลดเดียวกับกล่องเก็บเอกสาร PR (action: uploadFile / deleteFile)
+══════════════════════════════════════ */
+let fileLibData = [];
+const FILELIB_ALLOWED_EXT = ['xlsx','xls','csv','pptx','ppt'];
+
+function loadFileLib() {
+  fileLibData = JSON.parse(localStorage.getItem('prpo_filelib') || '[]');
+  renderFileLib();
+}
+
+function fileLibMeta(type) {
+  return type === 'powerpoint'
+    ? { icon: '📽️', label: 'PowerPoint', color: 'var(--warn)' }
+    : { icon: '📊', label: 'Excel', color: 'var(--success)' };
+}
+
+function openFileLibModal(id) {
+  document.getElementById('fl-id').value = id || '';
+  const clearBtn = document.getElementById('fl-file-clearBtn');
+  const statusEl = document.getElementById('fl-file-status');
+  document.getElementById('fl-file').value = '';
+  if (id) {
+    const f = fileLibData.find(x => String(x.id) === String(id));
+    if (!f) return;
+    document.getElementById('fileLibModalTitle').textContent = '✏️ แก้ไขแบบฟอร์ม Excel/PPT';
+    document.getElementById('fl-name').value     = f.name     || '';
+    document.getElementById('fl-type').value     = f.type     || 'excel';
+    document.getElementById('fl-category').value = f.category || '';
+    document.getElementById('fl-link').value     = f.link     || '';
+    document.getElementById('fl-fileName').value = f.fileName || '';
+    document.getElementById('fl-note').value     = f.note     || '';
+    if (f.link) {
+      clearBtn.style.display = '';
+      statusEl.innerHTML = `✅ ไฟล์ปัจจุบัน — "${f.fileName || f.name}" <a href="${f.link}" target="_blank" style="color:var(--accent);text-decoration:none">เปิดดูไฟล์ →</a>`;
+    } else {
+      clearBtn.style.display = 'none';
+      statusEl.textContent = 'ยังไม่มีไฟล์ — เลือกไฟล์เพื่ออัปโหลดขึ้น Google Drive อัตโนมัติ (XLSX/XLS/CSV/PPTX/PPT ไม่เกิน 5MB)';
+    }
+  } else {
+    document.getElementById('fileLibModalTitle').textContent = '📁 แบบฟอร์ม Excel/PPT';
+    ['name','category','link','fileName','note'].forEach(f => { document.getElementById('fl-'+f).value = ''; });
+    document.getElementById('fl-type').value = 'excel';
+    clearBtn.style.display = 'none';
+    statusEl.textContent = 'ยังไม่มีไฟล์ — เลือกไฟล์เพื่ออัปโหลดขึ้น Google Drive อัตโนมัติ (XLSX/XLS/CSV/PPTX/PPT ไม่เกิน 5MB)';
+  }
+  document.getElementById('fileLibModalOverlay').classList.add('open');
+}
+
+function closeFileLibModal() {
+  document.getElementById('fileLibModalOverlay').classList.remove('open');
+}
+
+async function handleFileLibUpload(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+  const statusEl = document.getElementById('fl-file-status');
+
+  if (FILELIB_ALLOWED_EXT.indexOf(ext) === -1) {
+    showToast('❌ รองรับไฟล์ XLSX, XLS, CSV, PPTX, PPT เท่านั้น', 'error');
+    event.target.value = '';
+    return;
+  }
+  if (file.size > PR_FILE_MAX_BYTES) {
+    showToast('❌ ไฟล์ใหญ่เกินไป (จำกัด 5MB)', 'error');
+    event.target.value = '';
+    return;
+  }
+  if (!WEB_APP_URL) {
+    showToast('⚠️ ยังไม่ได้ตั้งค่า Web App URL — อัปโหลดไฟล์ไม่ได้ (ตั้งค่าใน Setup ก่อน)', 'error');
+    event.target.value = '';
+    return;
+  }
+
+  statusEl.innerHTML = `<span class="spinner" style="width:12px;height:12px;border-width:2px"></span> กำลังอัปโหลด "${file.name}" ขึ้น Google Drive...`;
+
+  try {
+    const base64     = await fileToBase64(file);
+    const oldFileUrl = document.getElementById('fl-link').value || '';
+    const res = await fetch(WEB_APP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'uploadFile', fileName: file.name, mimeType: file.type || 'application/octet-stream', base64, oldFileUrl })
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || 'อัปโหลดไม่สำเร็จ');
+    document.getElementById('fl-link').value = json.url;
+    document.getElementById('fl-fileName').value = json.fileName || file.name;
+    // เดาประเภทไฟล์จากนามสกุลให้อัตโนมัติ
+    document.getElementById('fl-type').value = ['pptx','ppt'].includes(ext) ? 'powerpoint' : 'excel';
+    document.getElementById('fl-file-clearBtn').style.display = '';
+    statusEl.innerHTML = `✅ อัปโหลดสำเร็จ — "${json.fileName || file.name}" <a href="${json.url}" target="_blank" style="color:var(--accent);text-decoration:none">เปิดดูไฟล์ →</a>`;
+    showResultModal('อัปโหลดไฟล์ขึ้น Drive สำเร็จ', 'success');
+  } catch (err) {
+    statusEl.textContent = '❌ อัปโหลดไม่สำเร็จ: ' + err.message + ' — ลองใหม่อีกครั้ง';
+    showResultModal('อัปโหลดไฟล์ไม่สำเร็จ', 'error', err.message);
+    event.target.value = '';
+  }
+}
+
+async function clearFileLibFile() {
+  const currentUrl = document.getElementById('fl-link').value || '';
+  const statusEl    = document.getElementById('fl-file-status');
+  const clearBtn    = document.getElementById('fl-file-clearBtn');
+
+  if (currentUrl && WEB_APP_URL) {
+    clearBtn.disabled = true;
+    clearBtn.textContent = 'กำลังลบ...';
+    statusEl.innerHTML = `<span class="spinner" style="width:12px;height:12px;border-width:2px"></span> กำลังลบไฟล์จาก Google Drive...`;
+    try {
+      const res  = await fetch(WEB_APP_URL, {
+        method : 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body   : JSON.stringify({ action: 'deleteFile', fileUrl: currentUrl })
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || 'ลบไม่สำเร็จ');
+      showResultModal('ลบไฟล์จาก Drive สำเร็จ', 'success');
+    } catch (err) {
+      showResultModal('ลบไฟล์จาก Drive ไม่สำเร็จ', 'error', err.message);
+    } finally {
+      clearBtn.disabled = false;
+      clearBtn.textContent = 'ลบไฟล์';
+    }
+  }
+
+  document.getElementById('fl-link').value     = '';
+  document.getElementById('fl-fileName').value = '';
+  document.getElementById('fl-file').value     = '';
+  clearBtn.style.display = 'none';
+  statusEl.textContent   = 'ยังไม่มีไฟล์ — เลือกไฟล์เพื่ออัปโหลดขึ้น Google Drive อัตโนมัติ (XLSX/XLS/CSV/PPTX/PPT ไม่เกิน 5MB)';
+}
+
+function saveFileLib() {
+  const name = document.getElementById('fl-name').value.trim();
+  const link = document.getElementById('fl-link').value.trim();
+  if (!name) { showToast('❌ กรุณากรอกชื่อไฟล์', 'error'); return; }
+  if (!link) { showToast('❌ กรุณาอัปโหลดไฟล์ก่อนบันทึก', 'error'); return; }
+  const id = document.getElementById('fl-id').value;
+  const isEdit = !!id;
+  const payload = {
+    id: id || String(Date.now()),
+    name,
+    type:     document.getElementById('fl-type').value,
+    category: document.getElementById('fl-category').value.trim(),
+    link,
+    fileName: document.getElementById('fl-fileName').value,
+    note:     document.getElementById('fl-note').value.trim(),
+    addedAt:  isEdit ? (fileLibData.find(x => String(x.id) === String(id))?.addedAt || new Date().toISOString()) : new Date().toISOString()
+  };
+  const idx = fileLibData.findIndex(f => String(f.id) === String(payload.id));
+  if (idx >= 0) fileLibData[idx] = payload; else fileLibData.push(payload);
+  localStorage.setItem('prpo_filelib', JSON.stringify(fileLibData));
+  addHistoryLog(isEdit ? 'edit' : 'add', name, payload.category || '-', 'แบบฟอร์ม Excel/PPT: ' + (isEdit ? 'แก้ไขไฟล์' : 'แนบไฟล์ใหม่'));
+  closeFileLibModal();
+  renderFileLib();
+  showResultModal(isEdit ? 'แก้ไขไฟล์สำเร็จ' : 'แนบไฟล์สำเร็จ', 'success');
+}
+
+function deleteFileLib(id) {
+  if (!confirm('ต้องการลบไฟล์นี้ออกจากระบบ? (ไฟล์บน Google Drive จะไม่ถูกลบอัตโนมัติ)')) return;
+  const item = fileLibData.find(f => String(f.id) === String(id));
+  fileLibData = fileLibData.filter(f => String(f.id) !== String(id));
+  localStorage.setItem('prpo_filelib', JSON.stringify(fileLibData));
+  addHistoryLog('del', item?.name || '-', item?.category || '', 'แบบฟอร์ม Excel/PPT: ลบไฟล์');
+  renderFileLib();
+  showResultModal('ลบไฟล์สำเร็จ', 'success');
+}
+
+function renderFileLib() {
+  const grid = document.getElementById('fileLibGrid');
+  if (!grid) return;
+  const q    = (document.getElementById('fileLibSearch')?.value || '').toLowerCase();
+  const type = document.getElementById('fileLibFilterType')?.value || '';
+  const list = fileLibData.filter(f =>
+    (!type || f.type === type) &&
+    (!q || (f.name||'').toLowerCase().includes(q) || (f.category||'').toLowerCase().includes(q))
+  ).sort((a,b) => (b.addedAt||'').localeCompare(a.addedAt||''));
+
+  if (!list.length) {
+    grid.innerHTML = '<div style="color:var(--muted);font-size: 0.892rem;padding:2rem 0;text-align:center;grid-column:1/-1">' +
+      (fileLibData.length ? '🔍 ไม่พบไฟล์ที่ค้นหา' : '📁 ยังไม่มีไฟล์ — กด + แนบไฟล์ เพื่ออัปโหลด Excel / PowerPoint ขึ้น Google Drive') + '</div>';
+    return;
+  }
+  grid.innerHTML = list.map(f => {
+    const meta = fileLibMeta(f.type);
+    const dateStr = f.addedAt ? new Date(f.addedAt).toLocaleDateString('th-TH') : '—';
+    return `<div class="supplier-card">
+      <div class="supplier-header">
+        <div style="display:flex;align-items:center;gap:0.7rem;min-width:0">
+          <div class="supplier-avatar" style="background:${meta.color};flex-shrink:0">${meta.icon}</div>
+          <div style="min-width:0">
+            <div class="supplier-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.name}</div>
+            <div class="supplier-category">${meta.label}${f.category ? ' · ' + f.category : ''}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:0.3rem;flex-shrink:0">
+          <button class="icon-btn" onclick="openFileLibModal('${f.id}')" title="แก้ไข">✏️</button>
+          <button class="icon-btn del" onclick="deleteFileLib('${f.id}')" title="ลบ">🗑️</button>
+        </div>
+      </div>
+      <div class="supplier-field">🗓️ เพิ่มเมื่อ <span class="supplier-field-val">${dateStr}</span></div>
+      ${f.note ? `<div class="supplier-field">📋 <span style="color:var(--muted);font-size: 0.777rem">${f.note}</span></div>` : ''}
+      <div class="supplier-field" style="border-bottom:none;padding-top:0.4rem">
+        <a href="${f.link}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:0.4rem;color:var(--accent);text-decoration:none;font-size: 0.819rem">
+          ${meta.icon} เปิดไฟล์ ↗
+        </a>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 /* แปลงลิงก์ Google Maps ให้เป็น embed URL (รองรับเฉพาะลิงก์แบบเต็มที่มีพิกัด/คำค้นใน query)
    ลิงก์แบบย่อ (maps.app.goo.gl) จะไม่สามารถ embed ตรงได้ จะแสดงแค่ปุ่มลิงก์ */
 function getMapEmbedUrl(link) {
@@ -8921,6 +9165,44 @@ function renderLeadTime() {
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeSupplierModal()">ยกเลิก</button>
       <button class="btn btn-primary" onclick="saveSupplier()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- FILE LIBRARY MODAL -->
+<div class="modal-overlay" id="fileLibModalOverlay">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <div class="modal-title" id="fileLibModalTitle">📁 แบบฟอร์ม Excel/PPT</div>
+      <button class="modal-close" onclick="closeFileLibModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="fl-id">
+      <input type="hidden" id="fl-link">
+      <input type="hidden" id="fl-fileName">
+      <div class="form-grid">
+        <div class="form-group full"><label class="form-label">ชื่อไฟล์ *</label><input type="text" class="form-input" id="fl-name" placeholder=""></div>
+        <div class="form-group"><label class="form-label">ประเภทไฟล์ *</label>
+          <select class="form-input" id="fl-type">
+            <option value="excel">📊 Excel</option>
+            <option value="powerpoint">📽️ PowerPoint</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">หมวดหมู่ / แผนก</label><input type="text" class="form-input" id="fl-category" placeholder=""></div>
+        <div class="form-group full">
+          <label class="form-label">📎 ไฟล์ Excel / PowerPoint</label>
+          <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap">
+            <input type="file" id="fl-file" class="form-input" style="flex:1;min-width:200px;padding:0.5rem" accept=".xlsx,.xls,.csv,.pptx,.ppt" onchange="handleFileLibUpload(event)">
+            <button type="button" class="btn btn-ghost" id="fl-file-clearBtn" style="display:none;padding:0.4rem 0.8rem;font-size: 0.819rem" onclick="clearFileLibFile()">ลบไฟล์</button>
+          </div>
+          <div id="fl-file-status" style="margin-top:0.473rem;font-size: 0.777rem;color:var(--muted)">ยังไม่มีไฟล์ — เลือกไฟล์เพื่ออัปโหลดขึ้น Google Drive อัตโนมัติ (XLSX/XLS/CSV/PPTX/PPT ไม่เกิน 5MB)</div>
+        </div>
+        <div class="form-group full"><label class="form-label">หมายเหตุ</label><input type="text" class="form-input" id="fl-note" placeholder=""></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeFileLibModal()">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveFileLib()">💾 บันทึก</button>
     </div>
   </div>
 </div>
