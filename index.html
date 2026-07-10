@@ -6157,6 +6157,27 @@ function renderDailyBriefing() {
 
   const sections = [];
 
+  /* — ส่วนที่ 0: ตารางแผนงาน/นัดหมาย (แสดงเป็นรายการเรียงตามวัน) — ย้ายขึ้นมาไว้บนสุด */
+  if (wpFollow.length) {
+    const sorted = [...wpFollow].sort((a,b) => a.daysLeft - b.daysLeft);
+    const itemsHtml = sorted.map(w => {
+      const r = w.item;
+      const tag = briefingTag(w.daysLeft);
+      return `<div class="briefing-item" style="--item-accent:${tag.color}">
+        <div>
+          <div class="briefing-item-name">${wpTypeEmoji(r.type)} ${r.name || '(ไม่มีชื่องาน)'} ${r.location ? `<span style="color:var(--muted);font-size: 0.714rem">(${r.location})</span>` : ''}</div>
+          <div class="briefing-item-sub">วันที่ ${r.date || '—'} · ${wpStatusHtml(r.status)}</div>
+        </div>
+        <span class="briefing-tag" style="color:${tag.color};border-color:${tag.color}">${tag.text}</span>
+      </div>`;
+    }).join('');
+
+    sections.push(`<div class="briefing-category">
+      <div class="briefing-category-title">🗓️ แผนงานข้างนอก / นัดหมาย <span class="briefing-category-badge">${wpFollow.length} รายการ</span></div>
+      <div class="briefing-flat-items">${itemsHtml}</div>
+    </div>`);
+  }
+
   /* — ส่วนที่ 1: ชิ้นงาน/PO กลุ่มตาม Maker (คงรูปแบบเดิม พร้อมข้อมูลผู้ติดต่อ) — */
   if (partsFollow.length) {
     const supplierMap = {};
@@ -6255,26 +6276,7 @@ function renderDailyBriefing() {
     </div>`);
   }
 
-  /* — ส่วนที่ 3: ตารางแผนงาน/นัดหมาย (แสดงเป็นรายการเรียงตามวัน) — */
-  if (wpFollow.length) {
-    const sorted = [...wpFollow].sort((a,b) => a.daysLeft - b.daysLeft);
-    const itemsHtml = sorted.map(w => {
-      const r = w.item;
-      const tag = briefingTag(w.daysLeft);
-      return `<div class="briefing-item" style="--item-accent:${tag.color}">
-        <div>
-          <div class="briefing-item-name">${wpTypeEmoji(r.type)} ${r.name || '(ไม่มีชื่องาน)'} ${r.location ? `<span style="color:var(--muted);font-size: 0.714rem">(${r.location})</span>` : ''}</div>
-          <div class="briefing-item-sub">วันที่ ${r.date || '—'} · ${wpStatusHtml(r.status)}</div>
-        </div>
-        <span class="briefing-tag" style="color:${tag.color};border-color:${tag.color}">${tag.text}</span>
-      </div>`;
-    }).join('');
-
-    sections.push(`<div class="briefing-category">
-      <div class="briefing-category-title">🗓️ แผนงานข้างนอก / นัดหมาย <span class="briefing-category-badge">${wpFollow.length} รายการ</span></div>
-      <div class="briefing-flat-items">${itemsHtml}</div>
-    </div>`);
-  }
+  /* — ส่วนที่ 3: (ย้ายขึ้นไปเป็นส่วนแรกด้านบนแล้ว) — */
 
   body.innerHTML = sections.join('');
   // init comment badges for all briefing items
