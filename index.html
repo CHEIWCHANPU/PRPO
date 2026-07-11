@@ -8588,14 +8588,30 @@ function renderSuppliers() {
    ใช้ระบบอัปโหลดเดียวกับกล่องเก็บเอกสาร PR (action: uploadFile / deleteFile)
 ══════════════════════════════════════ */
 let fileLibData = [];
+let fileLibLoaded = false;
 const FILELIB_ALLOWED_EXT = ['xlsx','xls','csv','pptx','ppt'];
 
 async function loadFileLib() {
   if (!WEB_APP_URL) {
     fileLibData = JSON.parse(localStorage.getItem('prpo_filelib') || '[]');
+    fileLibLoaded = true;
     renderFileLib();
     return;
   }
+
+  // มีข้อมูลแคชอยู่แล้ว (เคยโหลดในเซสชันนี้มาก่อน) → แสดงทันทีแบบไม่มี loading
+  // แล้วค่อยรีเฟรชข้อมูลจาก Sheet เงียบๆ อยู่เบื้องหลัง
+  if (fileLibLoaded) {
+    renderFileLib();
+    try {
+      const res  = await fetch(WEB_APP_URL + '?action=getFileLib');
+      const json = await res.json();
+      if (json.success) { fileLibData = json.data || []; renderFileLib(); }
+    } catch (err) { /* เงียบไว้ ใช้ข้อมูลแคชเดิมต่อไป */ }
+    return;
+  }
+
+  // โหลดครั้งแรก — แสดง loading เพราะยังไม่มีแคช
   const grid = document.getElementById('fileLibGrid');
   if (grid) grid.innerHTML = '<div style="color:var(--muted);font-size: 0.892rem;padding:2rem 0;text-align:center;grid-column:1/-1"><span class="spinner" style="width:14px;height:14px;border-width:2px"></span> กำลังโหลดรายการไฟล์...</div>';
   try {
@@ -8605,6 +8621,7 @@ async function loadFileLib() {
   } catch (err) {
     fileLibData = [];
   }
+  fileLibLoaded = true;
   renderFileLib();
 }
 
