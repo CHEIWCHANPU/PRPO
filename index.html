@@ -8590,8 +8590,21 @@ function renderSuppliers() {
 let fileLibData = [];
 const FILELIB_ALLOWED_EXT = ['xlsx','xls','csv','pptx','ppt'];
 
-function loadFileLib() {
-  fileLibData = JSON.parse(localStorage.getItem('prpo_filelib') || '[]');
+async function loadFileLib() {
+  if (!WEB_APP_URL) {
+    fileLibData = JSON.parse(localStorage.getItem('prpo_filelib') || '[]');
+    renderFileLib();
+    return;
+  }
+  const grid = document.getElementById('fileLibGrid');
+  if (grid) grid.innerHTML = '<div style="color:var(--muted);font-size: 0.892rem;padding:2rem 0;text-align:center;grid-column:1/-1"><span class="spinner" style="width:14px;height:14px;border-width:2px"></span> กำลังโหลดรายการไฟล์...</div>';
+  try {
+    const res  = await fetch(WEB_APP_URL + '?action=getFileLib');
+    const json = await res.json();
+    fileLibData = json.success ? (json.data || []) : [];
+  } catch (err) {
+    fileLibData = [];
+  }
   renderFileLib();
 }
 
@@ -8611,13 +8624,13 @@ function fileLibMeta(type) {
     : { icon: excelSvg, label: 'Excel', color: 'linear-gradient(135deg,#1d6f42,#0e5c33)' };
 }
 
-function openFileLibModal(id) {
-  document.getElementById('fl-id').value = id || '';
+function openFileLibModal(rowIndex) {
+  document.getElementById('fl-id').value = rowIndex || '';
   const clearBtn = document.getElementById('fl-file-clearBtn');
   const statusEl = document.getElementById('fl-file-status');
   document.getElementById('fl-file').value = '';
-  if (id) {
-    const f = fileLibData.find(x => String(x.id) === String(id));
+  if (rowIndex) {
+    const f = fileLibData.find(x => String(x.rowIndex) === String(rowIndex));
     if (!f) return;
     document.getElementById('fileLibModalTitle').textContent = '✏️ แก้ไขแบบฟอร์ม Excel/PPT';
     document.getElementById('fl-name').value     = f.name     || '';
@@ -8728,40 +8741,69 @@ async function clearFileLibFile() {
   statusEl.textContent   = 'ยังไม่มีไฟล์ — เลือกไฟล์เพื่ออัปโหลดขึ้น Google Drive อัตโนมัติ (XLSX/XLS/CSV/PPTX/PPT ไม่เกิน 5MB)';
 }
 
-function saveFileLib() {
+async function saveFileLib() {
   const name = document.getElementById('fl-name').value.trim();
   const link = document.getElementById('fl-link').value.trim();
   if (!name) { showToast('❌ กรุณากรอกชื่อไฟล์', 'error'); return; }
   if (!link) { showToast('❌ กรุณาอัปโหลดไฟล์ก่อนบันทึก', 'error'); return; }
-  const id = document.getElementById('fl-id').value;
-  const isEdit = !!id;
+  const rowIndex = document.getElementById('fl-id').value;
+  const isEdit = !!rowIndex;
   const payload = {
-    id: id || String(Date.now()),
     name,
     type:     document.getElementById('fl-type').value,
     category: document.getElementById('fl-category').value.trim(),
     link,
     fileName: document.getElementById('fl-fileName').value,
     note:     document.getElementById('fl-note').value.trim(),
-    addedAt:  isEdit ? (fileLibData.find(x => String(x.id) === String(id))?.addedAt || new Date().toISOString()) : new Date().toISOString()
   };
-  const idx = fileLibData.findIndex(f => String(f.id) === String(payload.id));
-  if (idx >= 0) fileLibData[idx] = payload; else fileLibData.push(payload);
-  localStorage.setItem('prpo_filelib', JSON.stringify(fileLibData));
-  addHistoryLog(isEdit ? 'edit' : 'add', name, payload.category || '-', 'แบบฟอร์ม Excel/PPT: ' + (isEdit ? 'แก้ไขไฟล์' : 'แนบไฟล์ใหม่'));
-  closeFileLibModal();
-  renderFileLib();
-  showResultModal(isEdit ? 'แก้ไขไฟล์สำเร็จ' : 'แนบไฟล์สำเร็จ', 'success');
+
+  if (!WEB_APP_URL) {
+    showResultModal('บันทึกไม่สำเร็จ', 'error', 'ยังไม่ได้ตั้งค่า Web App URL — กรุณาตั้งค่าใน Setup ก่อน');
+    return;
+  }
+
+  const saveBtn = document.getElementById('fl-saveBtn');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'กำลังบันทึก...'; }
+
+  try {
+    const params = new URLSearchParams({
+      action: isEdit ? 'editFileLib' : 'addFileLib',
+      ...(isEdit ? { rowIndex } : {}),
+      ...payload
+    });
+    const res  = await fetch(WEB_APP_URL + '?' + params.toString());
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || 'บันทึกไม่สำเร็จ');
+    addHistoryLog(isEdit ? 'edit' : 'add', name, payload.category || '-', 'แบบฟอร์ม Excel/PPT: ' + (isEdit ? 'แก้ไขไฟล์' : 'แนบไฟล์ใหม่'));
+    closeFileLibModal();
+    await loadFileLib();
+    showResultModal(isEdit ? 'แก้ไขไฟล์สำเร็จ' : 'แนบไฟล์สำเร็จ', 'success');
+  } catch (err) {
+    showResultModal(isEdit ? 'แก้ไขไฟล์ไม่สำเร็จ' : 'แนบไฟล์ไม่สำเร็จ', 'error', err.message);
+  } finally {
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 บันทึก'; }
+  }
 }
 
-function deleteFileLib(id) {
+async function deleteFileLib(rowIndex) {
   if (!confirm('ต้องการลบไฟล์นี้ออกจากระบบ? (ไฟล์บน Google Drive จะไม่ถูกลบอัตโนมัติ)')) return;
-  const item = fileLibData.find(f => String(f.id) === String(id));
-  fileLibData = fileLibData.filter(f => String(f.id) !== String(id));
-  localStorage.setItem('prpo_filelib', JSON.stringify(fileLibData));
-  addHistoryLog('del', item?.name || '-', item?.category || '', 'แบบฟอร์ม Excel/PPT: ลบไฟล์');
-  renderFileLib();
-  showResultModal('ลบไฟล์สำเร็จ', 'success');
+  const item = fileLibData.find(f => String(f.rowIndex) === String(rowIndex));
+
+  if (!WEB_APP_URL) {
+    showResultModal('ลบไม่สำเร็จ', 'error', 'ยังไม่ได้ตั้งค่า Web App URL — กรุณาตั้งค่าใน Setup ก่อน');
+    return;
+  }
+
+  try {
+    const res  = await fetch(WEB_APP_URL + '?action=delFileLib&rowIndex=' + rowIndex);
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || 'ลบไม่สำเร็จ');
+    addHistoryLog('del', item?.name || '-', item?.category || '', 'แบบฟอร์ม Excel/PPT: ลบไฟล์');
+    await loadFileLib();
+    showResultModal('ลบไฟล์สำเร็จ', 'success');
+  } catch (err) {
+    showResultModal('ลบไฟล์ไม่สำเร็จ', 'error', err.message);
+  }
 }
 
 function renderFileLib() {
@@ -8792,8 +8834,8 @@ function renderFileLib() {
           </div>
         </div>
         <div style="display:flex;gap:0.3rem;flex-shrink:0">
-          <button class="icon-btn" onclick="openFileLibModal('${f.id}')" title="แก้ไข">✏️</button>
-          <button class="icon-btn del" onclick="deleteFileLib('${f.id}')" title="ลบ">🗑️</button>
+          <button class="icon-btn" onclick="openFileLibModal('${f.rowIndex}')" title="แก้ไข">✏️</button>
+          <button class="icon-btn del" onclick="deleteFileLib('${f.rowIndex}')" title="ลบ">🗑️</button>
         </div>
       </div>
       <div class="supplier-field">🗓️ เพิ่มเมื่อ <span class="supplier-field-val">${dateStr}</span></div>
@@ -9224,7 +9266,7 @@ function renderLeadTime() {
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeFileLibModal()">ยกเลิก</button>
-      <button class="btn btn-primary" onclick="saveFileLib()">💾 บันทึก</button>
+      <button class="btn btn-primary" id="fl-saveBtn" onclick="saveFileLib()">💾 บันทึก</button>
     </div>
   </div>
 </div>
