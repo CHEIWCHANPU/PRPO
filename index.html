@@ -8596,9 +8596,19 @@ function loadFileLib() {
 }
 
 function fileLibMeta(type) {
+  const excelSvg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="2" y="2" width="20" height="20" rx="4" fill="#ffffff" fill-opacity="0.15"/>
+    <path d="M7 6h6l4 4v8a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z" fill="#ffffff" fill-opacity="0.25"/>
+    <text x="12" y="16.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#ffffff">X</text>
+  </svg>`;
+  const pptSvg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="9" fill="#ffffff" fill-opacity="0.2"/>
+    <rect x="4" y="9" width="8" height="6" fill="#ffffff" fill-opacity="0.25"/>
+    <text x="12" y="16" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#ffffff">P</text>
+  </svg>`;
   return type === 'powerpoint'
-    ? { icon: '📽️', label: 'PowerPoint', color: 'var(--warn)' }
-    : { icon: '📊', label: 'Excel', color: 'var(--success)' };
+    ? { icon: pptSvg, label: 'PowerPoint', color: 'linear-gradient(135deg,#d24726,#a4373a)' }
+    : { icon: excelSvg, label: 'Excel', color: 'linear-gradient(135deg,#1d6f42,#0e5c33)' };
 }
 
 function openFileLibModal(id) {
@@ -8790,7 +8800,7 @@ function renderFileLib() {
       ${f.note ? `<div class="supplier-field">📋 <span style="color:var(--muted);font-size: 0.777rem">${f.note}</span></div>` : ''}
       <div class="supplier-field" style="border-bottom:none;padding-top:0.4rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
         <a href="${f.link}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:0.4rem;color:var(--accent);text-decoration:none;font-size: 0.819rem">
-          ${meta.icon} เปิดไฟล์ ↗
+          📎 เปิดไฟล์ ↗
         </a>
         <a href="${getDriveDownloadUrl(f.link)}" target="_blank" rel="noopener" download="${f.name || ''}" style="display:flex;align-items:center;gap:0.4rem;color:var(--muted);text-decoration:none;font-size: 0.819rem" title="ดาวน์โหลดไฟล์">
           ⬇️ ดาวน์โหลด
