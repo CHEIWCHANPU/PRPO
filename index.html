@@ -8606,8 +8606,15 @@ async function loadFileLib() {
     try {
       const res  = await fetch(WEB_APP_URL + '?action=getFileLib');
       const json = await res.json();
-      if (json.success) { fileLibData = json.data || []; renderFileLib(); }
-    } catch (err) { /* เงียบไว้ ใช้ข้อมูลแคชเดิมต่อไป */ }
+      if (json.success) {
+        fileLibData = json.data || [];
+        renderFileLib();
+      } else {
+        showToast('⚠️ รีเฟรชรายการไฟล์ไม่สำเร็จ: ' + (json.error || 'ไม่ทราบสาเหตุ'), 'error');
+      }
+    } catch (err) {
+      showToast('⚠️ เชื่อมต่อ Google Sheet ไม่ได้ (' + err.message + ') — แสดงข้อมูลเดิมที่มีอยู่', 'error');
+    }
     return;
   }
 
@@ -8617,9 +8624,23 @@ async function loadFileLib() {
   try {
     const res  = await fetch(WEB_APP_URL + '?action=getFileLib');
     const json = await res.json();
-    fileLibData = json.success ? (json.data || []) : [];
+    if (json.success) {
+      fileLibData = json.data || [];
+    } else {
+      fileLibData = [];
+      if (grid) grid.innerHTML = `<div style="color:var(--danger,#e74c3c);font-size: 0.892rem;padding:2rem 0;text-align:center;grid-column:1/-1">
+        ❌ โหลดรายการไฟล์ไม่สำเร็จ<br><span style="color:var(--muted);font-size:0.8rem">${json.error || 'ไม่ทราบสาเหตุ'}</span><br>
+        <button onclick="loadFileLib()" style="margin-top:0.75rem;padding:0.4rem 1rem;border-radius:6px;border:1px solid var(--border);background:var(--card-bg,transparent);color:var(--fg,inherit);cursor:pointer">🔄 ลองใหม่</button>
+      </div>`;
+      return;
+    }
   } catch (err) {
     fileLibData = [];
+    if (grid) grid.innerHTML = `<div style="color:var(--danger,#e74c3c);font-size: 0.892rem;padding:2rem 0;text-align:center;grid-column:1/-1">
+      ❌ เชื่อมต่อ Google Sheet ไม่ได้<br><span style="color:var(--muted);font-size:0.8rem">${err.message}</span><br>
+      <button onclick="loadFileLib()" style="margin-top:0.75rem;padding:0.4rem 1rem;border-radius:6px;border:1px solid var(--border);background:var(--card-bg,transparent);color:var(--fg,inherit);cursor:pointer">🔄 ลองใหม่</button>
+    </div>`;
+    return;
   }
   fileLibLoaded = true;
   renderFileLib();
