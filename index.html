@@ -8591,6 +8591,22 @@ let fileLibData = [];
 let fileLibLoaded = false;
 const FILELIB_ALLOWED_EXT = ['xlsx','xls','csv','pptx','ppt'];
 
+// เครื่อง/เบราว์เซอร์บางตัวอาจมี Web App URL เก่าค้างอยู่ใน localStorage (ตั้งไว้ก่อนหน้านี้)
+// ปุ่มนี้บังคับเซ็ตกลับเป็นค่าเริ่มต้นที่ถูกต้อง (ฝังอยู่ในไฟล์นี้) แล้วโหลดใหม่ทันที
+function resetFileLibWebAppUrl() {
+  if (!DEFAULT_WEB_APP_URL || DEFAULT_WEB_APP_URL.startsWith('วาง_')) {
+    showToast('❌ ไฟล์นี้ยังไม่ได้ฝัง Web App URL เริ่มต้นไว้', 'error');
+    return;
+  }
+  localStorage.setItem('prpo_url', DEFAULT_WEB_APP_URL);
+  WEB_APP_URL = DEFAULT_WEB_APP_URL;
+  const urlInput = document.getElementById('webAppUrl');
+  if (urlInput) urlInput.value = DEFAULT_WEB_APP_URL;
+  fileLibLoaded = false;
+  showToast('✅ รีเซ็ต Web App URL เป็นค่าเริ่มต้นแล้ว กำลังโหลดข้อมูลใหม่...', 'success');
+  loadFileLib();
+}
+
 async function loadFileLib() {
   if (!WEB_APP_URL) {
     fileLibData = JSON.parse(localStorage.getItem('prpo_filelib') || '[]');
@@ -8630,7 +8646,9 @@ async function loadFileLib() {
       fileLibData = [];
       if (grid) grid.innerHTML = `<div style="color:var(--danger,#e74c3c);font-size: 0.892rem;padding:2rem 0;text-align:center;grid-column:1/-1">
         ❌ โหลดรายการไฟล์ไม่สำเร็จ<br><span style="color:var(--muted);font-size:0.8rem">${json.error || 'ไม่ทราบสาเหตุ'}</span><br>
+        <span style="color:var(--muted);font-size:0.72rem;word-break:break-all">URL ที่ใช้อยู่: ...${(WEB_APP_URL||'').slice(-40)}</span><br>
         <button onclick="loadFileLib()" style="margin-top:0.75rem;padding:0.4rem 1rem;border-radius:6px;border:1px solid var(--border);background:var(--card-bg,transparent);color:var(--fg,inherit);cursor:pointer">🔄 ลองใหม่</button>
+        <button onclick="resetFileLibWebAppUrl()" style="margin-top:0.75rem;margin-left:0.5rem;padding:0.4rem 1rem;border-radius:6px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer">🔧 ใช้ URL เริ่มต้น (แก้อัตโนมัติ)</button>
       </div>`;
       return;
     }
@@ -8638,7 +8656,9 @@ async function loadFileLib() {
     fileLibData = [];
     if (grid) grid.innerHTML = `<div style="color:var(--danger,#e74c3c);font-size: 0.892rem;padding:2rem 0;text-align:center;grid-column:1/-1">
       ❌ เชื่อมต่อ Google Sheet ไม่ได้<br><span style="color:var(--muted);font-size:0.8rem">${err.message}</span><br>
+      <span style="color:var(--muted);font-size:0.72rem;word-break:break-all">URL ที่ใช้อยู่: ...${(WEB_APP_URL||'').slice(-40)}</span><br>
       <button onclick="loadFileLib()" style="margin-top:0.75rem;padding:0.4rem 1rem;border-radius:6px;border:1px solid var(--border);background:var(--card-bg,transparent);color:var(--fg,inherit);cursor:pointer">🔄 ลองใหม่</button>
+      <button onclick="resetFileLibWebAppUrl()" style="margin-top:0.75rem;margin-left:0.5rem;padding:0.4rem 1rem;border-radius:6px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer">🔧 ใช้ URL เริ่มต้น (แก้อัตโนมัติ)</button>
     </div>`;
     return;
   }
