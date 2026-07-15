@@ -6480,10 +6480,16 @@ function processData() {
   buildNotifications();
   renderDailyBriefing();
   renderExecDashboard();
-  if (!dueAlertsShown) {
+  if (!dueAlertsShown && isPastLoginScreen()) {
     dueAlertsShown = true;
     setTimeout(showDueAlerts, 800);
   }
+}
+
+// เช็คว่าผู้ใช้ผ่านหน้า login ไปแล้วหรือยัง (ใช้กันไม่ให้ toast แจ้งเตือนโผล่ทับหน้า login)
+function isPastLoginScreen() {
+  const ws = document.getElementById('welcomeScreen');
+  return !ws || ws.style.display === 'none';
 }
 
 function populateFilters() {
@@ -9411,7 +9417,13 @@ function wlLogin() {
     sessionStorage.setItem('prpo_session_active', 'true');
     const ws = document.getElementById('welcomeScreen');
     ws.classList.add('hide');
-    setTimeout(() => { ws.style.display = 'none'; }, 520);
+    setTimeout(() => {
+      ws.style.display = 'none';
+      if (!dueAlertsShown) {
+        dueAlertsShown = true;
+        setTimeout(showDueAlerts, 800);
+      }
+    }, 520);
   }, 600);
 }
 
