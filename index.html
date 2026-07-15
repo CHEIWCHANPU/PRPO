@@ -638,11 +638,15 @@
   }
   @media (max-width: 700px) {
     .briefing-head { flex-direction: column; align-items: flex-start; }
-    .briefing-stats { width: 100%; justify-content: space-between; gap: 0.5rem; }
+    .briefing-stats { display: grid; grid-template-columns: repeat(2, 1fr); width: 100%; gap: 0.5rem; }
+    .briefing-stat { min-width: 0; }
+    .briefing-stat-label { white-space: normal; line-height: 1.25; }
   }
   @media (max-width: 480px) {
     .briefing-stats { gap: 0.4rem; }
-    .briefing-stat { min-width: 0; flex: 1; }
+    .briefing-stat { padding: 0.45rem 0.6rem; }
+    .briefing-stat-value { font-size: 1.15rem; }
+    .briefing-stat-label { font-size: 0.58rem; }
   }
 
   /* CHARTS */
@@ -2088,6 +2092,7 @@
   .wp-kpi-icon { font-size: 1.575rem; flex-shrink:0; }
   .wp-kpi-body { display:flex; flex-direction:column; gap:0.1rem; }
   .wp-kpi-label { font-size: 0.651rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); white-space:nowrap; }
+  @media (max-width: 700px) { .wp-kpi-label { white-space: normal; line-height: 1.25; } }
   .wp-kpi-value { font-family:var(--mono); font-size: 1.68rem; font-weight:600; line-height:1; color:var(--text); }
   .wp-kpi-done   .wp-kpi-value { color:var(--success); }
   .wp-kpi-inprog .wp-kpi-value { color:var(--warn); }
@@ -3135,16 +3140,23 @@
     .main-wrap.collapsed { margin-left: 0 !important; }
 
     /* Topbar */
-    .topbar { padding: 0.5rem 0.85rem; height: auto; min-height: 62px; flex-wrap: wrap; row-gap: 0.5rem; }
-    .topbar-chip { display: none; }
-    .topbar-title { font-size: 0.861rem; }
+    .topbar { padding: 0.5rem 0.7rem; height: auto; min-height: 56px; flex-wrap: wrap; row-gap: 0.5rem; align-items: center; }
+    .topbar-chip { display: none !important; }
+    .topbar-title { font-size: 0.83rem; }
     .topbar-sub { display: none; }
+    .topbar-divider { display: none; }
     .sync-pill span:last-child { display: none; }
-    .sync-pill { padding: 0.28rem 0.6rem; }
+    .sync-pill { padding: 0.28rem 0.5rem; }
     .theme-pill span:last-child { display: none; }
+    .theme-pill { padding: 0; width: 30px; height: 30px; justify-content: center; }
     .mute-pill span:last-child { display: none; }
-    .mute-pill { padding: 0 0.5rem; }
-    .topbar-right { flex-wrap: wrap; justify-content: flex-end; row-gap: 0.5rem; width: 100%; }
+    .mute-pill { padding: 0; width: 30px; height: 30px; justify-content: center; }
+    .topbar-right { flex-wrap: nowrap; justify-content: flex-end; gap: 0.4rem !important; width: auto; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .topbar-right::-webkit-scrollbar { display: none; }
+    .topbar-right > div[style*="width:1px"] { display: none; }
+    .icon-action { width: 30px; height: 30px; flex-shrink: 0; }
+    .cmdk-trigger { padding: 0 0.55rem; height: 30px; flex-shrink: 0; }
+    .accent-popover-wrap { flex-shrink: 0; }
 
     /* Bottom nav visible */
     .bottom-nav { display: block; }
@@ -3271,9 +3283,6 @@
     .bn-item svg { width: 18px; height: 18px; }
 
     .drawer-grid { grid-template-columns: repeat(3, 1fr); }
-
-    .briefing-stats { flex-wrap: wrap; }
-    .briefing-stat { min-width: 50px; flex: 1; }
 
     .cer-stat-grid { grid-template-columns: repeat(2, 1fr) !important; }
     .cer-stat-value { font-size: 1.47rem; }
