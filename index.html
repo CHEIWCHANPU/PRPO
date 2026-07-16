@@ -3736,6 +3736,93 @@
   /* Table: gentle elevation so it reads as a distinct surface, not a flat block */
   .table-wrap { box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 10px 26px -14px rgba(0,0,0,0.3) !important; }
   .light-theme .table-wrap { box-shadow: 0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 20px -14px rgba(30,41,59,0.1) !important; }
+
+  /* ════════════════════════════════════════════════════════════
+     MODERN POLISH PACK v3 — signature ambience & refinement
+     (blueprint-grid backdrop · gradient typography · tactile
+      details) — additive only, no existing rule is overridden
+     structurally, everything below is new surface polish.
+  ════════════════════════════════════════════════════════════ */
+
+  /* ── Signature: engineering-blueprint grid + soft ambient glow,
+     fixed behind everything (negative z-index, no stacking-context
+     side effects on existing components). Reads as "precision
+     industry" rather than a generic AI gradient blob. ── */
+  body { position: relative; }
+  body::before, body::after {
+    content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  }
+  body::before {
+    background-image:
+      linear-gradient(var(--border2) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border2) 1px, transparent 1px);
+    background-size: 44px 44px;
+    opacity: 0.55;
+    -webkit-mask-image: radial-gradient(ellipse 85% 65% at 50% 0%, #000 0%, transparent 78%);
+    mask-image: radial-gradient(ellipse 85% 65% at 50% 0%, #000 0%, transparent 78%);
+  }
+  body::after {
+    background:
+      radial-gradient(760px 460px at 6% -8%, var(--glow-accent), transparent 62%),
+      radial-gradient(620px 400px at 106% 10%, rgba(99,102,241,0.10), transparent 64%),
+      radial-gradient(520px 360px at 50% 115%, var(--glow-accent), transparent 68%);
+    animation: ambientDrift 26s ease-in-out infinite alternate;
+  }
+  @keyframes ambientDrift {
+    from { transform: translate3d(0,0,0) scale(1); }
+    to   { transform: translate3d(-1.2%, 1%, 0) scale(1.04); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    body::after { animation: none !important; }
+  }
+
+  /* ── Gradient typography for hero / brand headings — used sparingly
+     on the few genuinely "hero" moments, not blanket-applied ── */
+  .exec-hero-title {
+    background: linear-gradient(100deg, var(--text) 35%, var(--accent) 65%, var(--accent2) 100%);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: var(--text);
+  }
+  .exec-hero-label { letter-spacing: 0.14em !important; }
+
+  /* ── Refined conic-gradient spinner (was a flat border-spin) ── */
+  .spinner {
+    border: 2px solid transparent !important;
+    background: conic-gradient(from 0deg, var(--accent), var(--accent2), transparent 72%) border-box;
+    -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+  }
+
+  /* ── Gradient scrollbar thumb, matches accent system ── */
+  ::-webkit-scrollbar-thumb { background: linear-gradient(var(--muted), var(--muted)); }
+  ::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, var(--accent), var(--accent2)); }
+
+  /* ── Primary-button light-sweep on hover: one deliberate flourish,
+     not scattered shimmer everywhere ── */
+  .btn-primary { position: relative; overflow: hidden; }
+  .btn-primary::after {
+    content: ''; position: absolute; top: 0; left: -60%; width: 40%; height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,0.28), transparent);
+    transform: skewX(-18deg); transition: left 0.55s cubic-bezier(.4,0,.2,1);
+    pointer-events: none;
+  }
+  .btn-primary:hover::after { left: 130%; }
+  @media (prefers-reduced-motion: reduce) {
+    .btn-primary::after { display: none; }
+  }
+
+  /* ── Nav / brand mark: subtle idle glow so the app feels "alive" ── */
+  .logo-icon { animation: logoBreathe 5s ease-in-out infinite; }
+  @keyframes logoBreathe {
+    0%, 100% { box-shadow: 0 1px 0 rgba(255,255,255,0.28) inset, 0 4px 14px rgba(62,106,225,0.4); }
+    50%      { box-shadow: 0 1px 0 rgba(255,255,255,0.32) inset, 0 6px 20px rgba(62,106,225,0.6); }
+  }
+  @media (prefers-reduced-motion: reduce) { .logo-icon { animation: none; } }
+
+  /* ── Table rows: crisper hover feedback ── */
+  tbody tr { transition: background 0.15s ease; }
+
+  /* ── Selection color matches brand instead of default browser blue ── */
+  ::selection { background: var(--accent); color: #fff; }
 </style>
 </head>
 <body>
@@ -7277,6 +7364,59 @@ function setBarChartHeight(canvasId, count, perBar = 30, minH = 160) {
   }
 }
 
+/* ── PROFESSIONAL CHART STYLING KIT ──
+   Shared tooltip / legend presets + a center-total plugin, so every
+   chart in the app (dashboard, exec, summary, lead time, workplan)
+   reads consistently: crisp tooltips, point-style legends, and a
+   labelled total in the middle of every doughnut. ── */
+function chartTooltipCfg(cs) {
+  const surface = cs.getPropertyValue('--surface').trim() || '#111620';
+  const border  = cs.getPropertyValue('--border').trim()  || '#1e2a3a';
+  const text    = cs.getPropertyValue('--text').trim()    || '#e2e8f0';
+  return {
+    enabled: true, backgroundColor: surface, titleColor: text, bodyColor: text,
+    borderColor: border, borderWidth: 1, cornerRadius: 10, padding: 10,
+    boxPadding: 6, displayColors: true, usePointStyle: true, boxWidth: 8, boxHeight: 8,
+    caretSize: 6,
+    titleFont: { family: "'Prompt','Sarabun',sans-serif", size: 12, weight: '600' },
+    bodyFont:  { family: "'Sarabun',sans-serif", size: 11.5 }
+  };
+}
+function chartLegendCfg(chartText, fontSize) {
+  return {
+    position: 'bottom',
+    labels: {
+      color: chartText, padding: 14, usePointStyle: true, pointStyle: 'circle',
+      boxWidth: 8, boxHeight: 8, font: { size: fontSize || 10.5, family: "'Sarabun',sans-serif" }
+    }
+  };
+}
+const CHART_EASE = { duration: 650, easing: 'easeOutQuart' };
+if (window.Chart) {
+  Chart.register({
+    id: 'centerText',
+    beforeDraw(chart) {
+      const opt = chart.config.options && chart.config.options.plugins && chart.config.options.plugins.centerText;
+      if (!opt || opt.text === undefined || opt.text === null) return;
+      const { ctx, chartArea } = chart;
+      if (!chartArea) return;
+      const cx = (chartArea.left + chartArea.right) / 2;
+      const cy = (chartArea.top + chartArea.bottom) / 2;
+      ctx.save();
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = `700 ${opt.valueSize || 21}px 'IBM Plex Mono', monospace`;
+      ctx.fillStyle = opt.color || '#e2e8f0';
+      ctx.fillText(String(opt.text), cx, cy - (opt.label ? 9 : 0));
+      if (opt.label) {
+        ctx.font = `600 ${opt.labelSize || 9.5}px 'Sarabun', sans-serif`;
+        ctx.fillStyle = opt.labelColor || '#64748b';
+        ctx.fillText(opt.label, cx, cy + 12);
+      }
+      ctx.restore();
+    }
+  });
+}
+
 function renderCharts() {
   const cs = getComputedStyle(document.documentElement);
   const chartText = cs.getPropertyValue('--chart-text').trim() || '#64748b';
@@ -7288,10 +7428,13 @@ function renderCharts() {
 
   destroyChart('status');
   if (document.getElementById('chartStatus')) {
+    const statusTotal = done + progress + incomplete;
     charts.status = new Chart(document.getElementById('chartStatus'), {
       type:'doughnut',
-      data:{ labels:['เสร็จแล้ว','กำลังดำเนินการ','ยังไม่ครบ'], datasets:[{ data:[done,progress,incomplete], backgroundColor:['#10b981','#f59e0b','#ef4444'], borderWidth:0, hoverOffset:7 }] },
-      options:{ responsive:true, maintainAspectRatio:false, cutout:'65%', plugins:{ legend:{ position:'bottom', labels:{ color:chartText, font:{size:10}, padding:12 } } } }
+      data:{ labels:['เสร็จแล้ว','กำลังดำเนินการ','ยังไม่ครบ'], datasets:[{ data:[done,progress,incomplete], backgroundColor:['#10b981','#f59e0b','#ef4444'], borderWidth:0, borderRadius:4, spacing:3, hoverOffset:8 }] },
+      options:{ responsive:true, maintainAspectRatio:false, cutout:'68%', animation: CHART_EASE,
+        plugins:{ legend: chartLegendCfg(chartText), tooltip: chartTooltipCfg(cs),
+          centerText: { text: statusTotal.toLocaleString(), label: 'รวม', color: cs.getPropertyValue('--text').trim(), labelColor: chartText } } }
     });
   }
 
@@ -7309,12 +7452,12 @@ function renderCharts() {
   if (makerCanvas) {
     charts.maker = new Chart(makerCanvas, {
       type:'bar',
-      data:{ labels:makersSorted.map(m=>m[0]), datasets:[{ data:makersSorted.map(m=>m[1]), backgroundColor: makersSorted.map((_,i)=>PALETTE[i % PALETTE.length]), borderRadius:5, borderSkipped:false }] },
-      options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y',
-        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx => ` ${ctx.raw} รายการ` } } },
+      data:{ labels:makersSorted.map(m=>m[0]), datasets:[{ data:makersSorted.map(m=>m[1]), backgroundColor: makersSorted.map((_,i)=>PALETTE[i % PALETTE.length]), borderRadius:6, borderSkipped:false, maxBarThickness:24 }] },
+      options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y', animation: CHART_EASE,
+        plugins:{ legend:{display:false}, tooltip: Object.assign(chartTooltipCfg(cs), { callbacks:{ label: ctx => ` ${ctx.raw.toLocaleString()} รายการ` } }) },
         scales:{
-          x:{ ticks:{color:chartText,font:{size:9}}, grid:{color:gridColor} },
-          y:{ ticks:{color:chartText,font:{size:9}, maxRotation:0}, grid:{display:false} }
+          x:{ ticks:{color:chartText,font:{size:9,family:"'IBM Plex Mono',monospace"}}, grid:{color:gridColor, drawTicks:false}, border:{display:false} },
+          y:{ ticks:{color:chartText,font:{size:9.5,family:"'Sarabun',sans-serif",weight:'500'}, maxRotation:0}, grid:{display:false}, border:{display:false} }
         }
       }
     });
@@ -7339,12 +7482,16 @@ function renderCharts() {
         datasets:[{
           data: monthCounts,
           backgroundColor: monthCounts.map(v => v === peakCount && peakCount > 0 ? '#3E6AE1' : 'rgba(62,106,225,0.35)'),
-          borderRadius: 6, maxBarThickness: 46
+          hoverBackgroundColor: monthCounts.map(() => '#3E6AE1'),
+          borderRadius: 6, maxBarThickness: 40
         }]
       },
-      options:{ responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx => ` เปิด PR ${ctx.raw} รายการ` } } },
-        scales:{ x:{ticks:{color:chartText,font:{size:8}},grid:{display:false}}, y:{ticks:{color:chartText,font:{size:8},precision:0},grid:{color:gridColor},beginAtZero:true} }
+      options:{ responsive:true, maintainAspectRatio:false, animation: CHART_EASE,
+        plugins:{ legend:{display:false}, tooltip: Object.assign(chartTooltipCfg(cs), { callbacks:{ label: ctx => ` เปิด PR ${ctx.raw.toLocaleString()} รายการ` } }) },
+        scales:{
+          x:{ ticks:{color:chartText,font:{size:9,family:"'Sarabun',sans-serif"}}, grid:{display:false}, border:{display:false} },
+          y:{ ticks:{color:chartText,font:{size:9,family:"'IBM Plex Mono',monospace"},precision:0}, grid:{color:gridColor, drawTicks:false}, border:{display:false}, beginAtZero:true }
+        }
       }
     });
   }
@@ -7396,8 +7543,10 @@ function renderExecDashboard() {
   if (statusCanvas) {
     charts.execStatus = new Chart(statusCanvas, {
       type: 'doughnut',
-      data: { labels: ['เสร็จแล้ว', 'กำลังดำเนินการ', 'ยังไม่ครบ'], datasets: [{ data: [done, progress, incomplete], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderWidth: 0, hoverOffset: 6 }] },
-      options: { responsive: true, maintainAspectRatio: false, cutout: '68%', plugins: { legend: { position: 'bottom', labels: { color: chartText, font: { size: 10 }, padding: 10 } } } }
+      data: { labels: ['เสร็จแล้ว', 'กำลังดำเนินการ', 'ยังไม่ครบ'], datasets: [{ data: [done, progress, incomplete], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderWidth: 0, borderRadius: 4, spacing: 3, hoverOffset: 7 }] },
+      options: { responsive: true, maintainAspectRatio: false, cutout: '70%', animation: CHART_EASE,
+        plugins: { legend: chartLegendCfg(chartText), tooltip: chartTooltipCfg(cs),
+          centerText: { text: total.toLocaleString(), label: 'รวม', color: cs.getPropertyValue('--text').trim(), labelColor: chartText } } }
     });
   }
 
@@ -7409,8 +7558,13 @@ function renderExecDashboard() {
   if (makerCanvas) {
     charts.execMaker = new Chart(makerCanvas, {
       type: 'bar',
-      data: { labels: topMakers.map(m => m[0]), datasets: [{ data: topMakers.map(m => m[1]), backgroundColor: topMakers.map((_, i) => PALETTE[i % PALETTE.length]), borderRadius: 6, borderSkipped: false }] },
-      options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { ticks: { color: chartText, font: { size: 9 } } }, y: { ticks: { color: chartText, font: { size: 9 } }, grid: { display: false } } } }
+      data: { labels: topMakers.map(m => m[0]), datasets: [{ data: topMakers.map(m => m[1]), backgroundColor: topMakers.map((_, i) => PALETTE[i % PALETTE.length]), borderRadius: 6, borderSkipped: false, maxBarThickness: 26 }] },
+      options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', animation: CHART_EASE,
+        plugins: { legend: { display: false }, tooltip: Object.assign(chartTooltipCfg(cs), { callbacks: { label: ctx => ` ${ctx.raw.toLocaleString()} รายการ` } }) },
+        scales: {
+          x: { ticks: { color: chartText, font: { size: 9, family: "'IBM Plex Mono',monospace" } }, grid: { color: cs.getPropertyValue('--surface2').trim(), drawTicks:false }, border:{display:false} },
+          y: { ticks: { color: chartText, font: { size: 9.5, family: "'Sarabun',sans-serif", weight:'500' } }, grid: { display: false }, border:{display:false} }
+        } }
     });
   }
 
@@ -7518,8 +7672,12 @@ function renderSummaryCards(mData, mLabel) {
   if (document.getElementById('chartMaker2')) {
     charts.maker2 = new Chart(document.getElementById('chartMaker2'), {
       type:'bar',
-      data:{ labels:makers2Chart.map(m=>m[0]), datasets:[{ data:makers2Chart.map(m=>m[1]), backgroundColor:makers2Chart.map((_,i)=>PALETTE[i % PALETTE.length]), borderRadius:5 }] },
-      options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y', plugins:{legend:{display:false}, tooltip:{ callbacks:{ label: ctx => ` ${ctx.raw} รายการ` } }}, scales:{ x:{ticks:{color:chartText,font:{size:8}},grid:{color:cs.getPropertyValue('--surface2').trim()}}, y:{ticks:{color:chartText,font:{size:8}, maxRotation:0},grid:{display:false}} } }
+      data:{ labels:makers2Chart.map(m=>m[0]), datasets:[{ data:makers2Chart.map(m=>m[1]), backgroundColor:makers2Chart.map((_,i)=>PALETTE[i % PALETTE.length]), borderRadius:6, maxBarThickness:22 }] },
+      options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y', animation: CHART_EASE,
+        plugins:{legend:{display:false}, tooltip: Object.assign(chartTooltipCfg(cs), { callbacks:{ label: ctx => ` ${ctx.raw.toLocaleString()} รายการ` } })},
+        scales:{
+          x:{ticks:{color:chartText,font:{size:9,family:"'IBM Plex Mono',monospace"}},grid:{color:cs.getPropertyValue('--surface2').trim(), drawTicks:false}, border:{display:false}},
+          y:{ticks:{color:chartText,font:{size:9,family:"'Sarabun',sans-serif",weight:'500'}, maxRotation:0},grid:{display:false}, border:{display:false}} } }
     });
   }
 
@@ -7549,10 +7707,13 @@ function renderSummaryCards(mData, mLabel) {
   document.getElementById('s-location-title').textContent = `สถานที่ส่ง: ${label}`;
   destroyChart('location');
   if (document.getElementById('chartLocation')) {
+    const locTotal = locsChart.reduce((s,l) => s + l[1], 0);
     charts.location = new Chart(document.getElementById('chartLocation'), {
       type:'doughnut',
-      data:{ labels:locsChart.map(l=>l[0]), datasets:[{ data:locsChart.map(l=>l[1]), backgroundColor:PALETTE, borderWidth:0, hoverOffset:5 }] },
-      options:{ responsive:true, maintainAspectRatio:false, cutout:'55%', plugins:{ legend:{ position:'bottom', labels:{ color:chartText, font:{size:10}, padding:10 } } } }
+      data:{ labels:locsChart.map(l=>l[0]), datasets:[{ data:locsChart.map(l=>l[1]), backgroundColor:PALETTE, borderWidth:0, borderRadius:4, spacing:3, hoverOffset:6 }] },
+      options:{ responsive:true, maintainAspectRatio:false, cutout:'62%', animation: CHART_EASE,
+        plugins:{ legend: chartLegendCfg(chartText), tooltip: chartTooltipCfg(cs),
+          centerText: { text: locTotal.toLocaleString(), label: 'รวม', color: cs.getPropertyValue('--text').trim(), labelColor: chartText } } }
     });
   }
 
@@ -8845,15 +9006,15 @@ function renderLeadTime() {
           data:  sorted.map(s => s.avgLead),
           backgroundColor: sorted.map(s =>
             s.avgLead > 20 ? '#ef4444' : s.avgLead > 10 ? '#f59e0b' : '#10b981'),
-          borderRadius: 5, borderSkipped: false
+          borderRadius: 6, borderSkipped: false, maxBarThickness: 24
         }]
       },
       options: {
-        responsive: true, maintainAspectRatio: false, indexAxis: 'y',
-        plugins: { legend: { display: false }, tooltip:{ callbacks:{ label: ctx => ` เฉลี่ย ${ctx.raw} วัน` } } },
+        responsive: true, maintainAspectRatio: false, indexAxis: 'y', animation: CHART_EASE,
+        plugins: { legend: { display: false }, tooltip: Object.assign(chartTooltipCfg(cs), { callbacks:{ label: ctx => ` เฉลี่ย ${ctx.raw} วัน` } }) },
         scales: {
-          x: { ticks:{color:chartText,font:{size:9}}, grid:{color:gridColor}, beginAtZero:true },
-          y: { ticks:{color:chartText,font:{size:9}, maxRotation:0}, grid:{display:false} }
+          x: { ticks:{color:chartText,font:{size:9,family:"'IBM Plex Mono',monospace"}}, grid:{color:gridColor, drawTicks:false}, border:{display:false}, beginAtZero:true },
+          y: { ticks:{color:chartText,font:{size:9.5,family:"'Sarabun',sans-serif",weight:'500'}, maxRotation:0}, grid:{display:false}, border:{display:false} }
         }
       }
     });
@@ -10529,10 +10690,13 @@ function renderWpCharts() {
   const typeCanvas = document.getElementById('wpChartType');
   if (typeCanvas) {
     const entries = Object.entries(typeMap);
+    const typeTotal = entries.reduce((s,e) => s + e[1], 0);
     wpCharts.type = new Chart(typeCanvas, {
       type:'doughnut',
-      data:{ labels:entries.map(e=>e[0]), datasets:[{ data:entries.map(e=>e[1]), backgroundColor:PALETTE, borderWidth:0, hoverOffset:6 }] },
-      options:{ responsive:true, maintainAspectRatio:false, cutout:'60%', plugins:{ legend:{ position:'bottom', labels:{ color:chartText, font:{size:9}, padding:10 } } } }
+      data:{ labels:entries.map(e=>e[0]), datasets:[{ data:entries.map(e=>e[1]), backgroundColor:PALETTE, borderWidth:0, borderRadius:4, spacing:3, hoverOffset:7 }] },
+      options:{ responsive:true, maintainAspectRatio:false, cutout:'66%', animation: CHART_EASE,
+        plugins:{ legend: chartLegendCfg(chartText, 9.5), tooltip: chartTooltipCfg(cs),
+          centerText: { text: typeTotal.toLocaleString(), label: 'รวม', color: cs.getPropertyValue('--text').trim(), labelColor: chartText, valueSize: 18 } } }
     });
   }
 
@@ -10543,10 +10707,13 @@ function renderWpCharts() {
   if (wpCharts.status) { wpCharts.status.destroy(); delete wpCharts.status; }
   const statCanvas = document.getElementById('wpChartStatus');
   if (statCanvas) {
+    const wpStatusTotal = done + inprog + todo;
     wpCharts.status = new Chart(statCanvas, {
       type:'doughnut',
-      data:{ labels:['เสร็จสิ้น','กำลังดำเนินการ','ยังไม่เริ่ม'], datasets:[{ data:[done,inprog,todo], backgroundColor:['#10b981','#f59e0b','#64748b'], borderWidth:0, hoverOffset:6 }] },
-      options:{ responsive:true, maintainAspectRatio:false, cutout:'60%', plugins:{ legend:{ position:'bottom', labels:{ color:chartText, font:{size:9}, padding:10 } } } }
+      data:{ labels:['เสร็จสิ้น','กำลังดำเนินการ','ยังไม่เริ่ม'], datasets:[{ data:[done,inprog,todo], backgroundColor:['#10b981','#f59e0b','#64748b'], borderWidth:0, borderRadius:4, spacing:3, hoverOffset:7 }] },
+      options:{ responsive:true, maintainAspectRatio:false, cutout:'66%', animation: CHART_EASE,
+        plugins:{ legend: chartLegendCfg(chartText, 9.5), tooltip: chartTooltipCfg(cs),
+          centerText: { text: wpStatusTotal.toLocaleString(), label: 'รวม', color: cs.getPropertyValue('--text').trim(), labelColor: chartText, valueSize: 18 } } }
     });
   }
 
@@ -10562,9 +10729,12 @@ function renderWpCharts() {
   if (locCanvas) {
     wpCharts.location = new Chart(locCanvas, {
       type:'bar',
-      data:{ labels:locEntries.map(e=>e[0]), datasets:[{ data:locEntries.map(e=>e[1]), backgroundColor:locEntries.map((_,i)=>PALETTE[i % PALETTE.length]), borderRadius:5 }] },
-      options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y', plugins:{legend:{display:false}},
-        scales:{ x:{ticks:{color:chartText,font:{size:8}},grid:{color:cs.getPropertyValue('--surface2').trim()},beginAtZero:true}, y:{ticks:{color:chartText,font:{size:8}, maxRotation:0},grid:{display:false}} } }
+      data:{ labels:locEntries.map(e=>e[0]), datasets:[{ data:locEntries.map(e=>e[1]), backgroundColor:locEntries.map((_,i)=>PALETTE[i % PALETTE.length]), borderRadius:6, maxBarThickness:22 }] },
+      options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y', animation: CHART_EASE,
+        plugins:{legend:{display:false}, tooltip: Object.assign(chartTooltipCfg(cs), { callbacks:{ label: ctx => ` ${ctx.raw.toLocaleString()} รายการ` } })},
+        scales:{
+          x:{ticks:{color:chartText,font:{size:9,family:"'IBM Plex Mono',monospace"}},grid:{color:cs.getPropertyValue('--surface2').trim(), drawTicks:false}, border:{display:false}, beginAtZero:true},
+          y:{ticks:{color:chartText,font:{size:9,family:"'Sarabun',sans-serif",weight:'500'}, maxRotation:0},grid:{display:false}, border:{display:false}} } }
     });
   }
 }
