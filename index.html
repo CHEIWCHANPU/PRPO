@@ -592,11 +592,11 @@
   }
   .briefing-head {
     position: relative; overflow: hidden;
-    background: linear-gradient(135deg, var(--glow-warn) 0%, var(--glow-accent) 100%);
+    background: linear-gradient(135deg, var(--glow-accent) 0%, transparent 100%);
   }
   .briefing-head::after {
     content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-    background: linear-gradient(90deg, var(--danger), var(--warn), var(--accent2), var(--accent));
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
     opacity: 0.85;
   }
 
@@ -4351,17 +4351,17 @@
                 <div class="briefing-stat-label">ครบกำหนดวันนี้</div>
               </div>
             </div>
-            <div class="briefing-stat" style="--stat-color:var(--accent2);--stat-bg:rgba(99,102,241,0.14)">
+            <div class="briefing-stat" style="--stat-color:var(--accent);--stat-bg:rgba(62,106,225,0.14)">
               <div class="briefing-stat-icon">⌛</div>
               <div>
-                <div class="briefing-stat-value" id="brief-soon" style="color:var(--accent2)">—</div>
+                <div class="briefing-stat-value" id="brief-soon" style="color:var(--accent)">—</div>
                 <div class="briefing-stat-label">ใกล้ครบกำหนด (≤3 วัน)</div>
               </div>
             </div>
-            <div class="briefing-stat" style="--stat-color:var(--accent);--stat-bg:rgba(62,106,225,0.14)">
+            <div class="briefing-stat" style="--stat-color:var(--muted);--stat-bg:rgba(100,116,139,0.14)">
               <div class="briefing-stat-icon">📊</div>
               <div>
-                <div class="briefing-stat-value" id="brief-total" style="color:var(--accent)">—</div>
+                <div class="briefing-stat-value" id="brief-total" style="color:var(--text)">—</div>
                 <div class="briefing-stat-label">รวมทุกหมวดหมู่</div>
               </div>
             </div>
@@ -6430,7 +6430,7 @@ const BRIEFING_LEAD_DAYS = 3;
 function briefingTag(daysLeft) {
   if (daysLeft < 0)  return { text: `⏰ เลยกำหนด ${Math.abs(daysLeft)} วัน`, color: 'var(--danger)', urgent: true };
   if (daysLeft === 0) return { text: '🔥 ครบกำหนดวันนี้', color: 'var(--warn)', urgent: true };
-  return { text: `🕒 อีก ${daysLeft} วัน`, color: 'var(--accent2)', urgent: false };
+  return { text: `🕒 อีก ${daysLeft} วัน`, color: 'var(--accent)', urgent: false };
 }
 function cerCommentId(c) {
   return 'cer-' + String(c.supplier.id || c.supplier.name || 'x').replace(/[^a-zA-Z0-9ก-๙]/g,'') + '-' + String(c.certLabel).replace(/[^a-zA-Z0-9ก-๙]/g,'');
