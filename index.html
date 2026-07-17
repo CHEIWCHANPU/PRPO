@@ -6344,6 +6344,9 @@ function briefingTag(daysLeft) {
   if (daysLeft === 0) return { text: '🔥 ครบกำหนดวันนี้', color: 'var(--warn)', urgent: true };
   return { text: `🕒 อีก ${daysLeft} วัน`, color: 'var(--accent2)', urgent: false };
 }
+function cerCommentId(c) {
+  return 'cer-' + String(c.supplier.id || c.supplier.name || 'x').replace(/[^a-zA-Z0-9ก-๙]/g,'') + '-' + String(c.certLabel).replace(/[^a-zA-Z0-9ก-๙]/g,'');
+}
 
 function renderDailyBriefing() {
   const dateEl = document.getElementById('briefingDate');
@@ -6417,12 +6420,15 @@ function renderDailyBriefing() {
     const itemsHtml = sorted.map(w => {
       const r = w.item;
       const tag = briefingTag(w.daysLeft);
-      return `<div class="briefing-item" style="--item-accent:${tag.color}">
-        <div>
+      return `<div class="briefing-item${tag.urgent ? ' briefing-item-urgent' : ''}" style="--item-accent:${tag.color}">
+        <div class="briefing-item-top">
           <div class="briefing-item-name">${wpTypeEmoji(r.type)} ${r.name || '(ไม่มีชื่องาน)'} ${r.location ? `<span style="color:var(--muted);font-size: 0.714rem">(${r.location})</span>` : ''}</div>
-          <div class="briefing-item-sub">วันที่ ${r.date || '—'} · ${wpStatusHtml(r.status)}</div>
+          <span class="briefing-tag${tag.urgent ? ' briefing-tag-urgent' : ''}" style="color:${tag.color};border-color:${tag.color}">${tag.text}</span>
         </div>
-        <span class="briefing-tag" style="color:${tag.color};border-color:${tag.color}">${tag.text}</span>
+        <div class="briefing-item-sub">
+          <span class="briefing-item-due">📅 ${r.date || '—'}</span>
+          ${wpStatusHtml(r.status)}
+        </div>
       </div>`;
     }).join('');
 
@@ -6518,12 +6524,41 @@ function renderDailyBriefing() {
     const groupsHtml = groupEntries.map(([name, items]) => {
       const itemsHtml = [...items].sort((a,b) => a.daysLeft - b.daysLeft).map(c => {
         const tag = briefingTag(c.daysLeft);
-        return `<div class="briefing-item" style="--item-accent:${tag.color}">
-          <div>
+        const certId = 'cer-' + String(c.supplier.id || c.supplier.name || 'x').replace(/[^a-zA-Z0-9ก-๙]/g,'') + '-' + String(c.certLabel).replace(/[^a-zA-Z0-9ก-๙]/g,'');
+        const bcArr = bcLoad(certId);
+        const latest = bcArr.length ? bcArr[bcArr.length - 1] : null;
+        const latestMeta = latest ? bcTagMeta(latest.tag) : null;
+        const latestHtml = `<div class="bc-latest ${latest && latest.tag==='issue' ? 'bc-latest-issue' : ''}" id="bcLatest-${certId}" style="display:${latest ? 'flex' : 'none'}" onclick="bcToggle('${certId}',event)">${latest ? `<div class="bc-latest-icon">${latestMeta.icon}</div><div class="bc-latest-body"><div class="bc-latest-top"><span class="bc-latest-author">${latest.author||'-'}</span><span class="bc-tag ${latest.tag}">${latestMeta.label}</span><span class="bc-latest-time">${latest.time}</span></div><div class="bc-latest-text">${(latest.text||'').replace(/\n/g,' ')}</div></div>` : ''}</div>`;
+        return `<div class="briefing-item${tag.urgent ? ' briefing-item-urgent' : ''}" style="cursor:pointer;--item-accent:${tag.color}" onclick="bcToggle('${certId}',event)">
+          <div class="briefing-item-top">
             <div class="briefing-item-name">${c.certLabel}</div>
-            <div class="briefing-item-sub">วันหมดอายุ ${c.dateStr}</div>
+            <span class="briefing-tag${tag.urgent ? ' briefing-tag-urgent' : ''}" style="color:${tag.color};border-color:${tag.color}">${tag.text}</span>
           </div>
-          <span class="briefing-tag" style="color:${tag.color};border-color:${tag.color}">${tag.text}</span>
+          <div class="briefing-item-sub">
+            <span class="briefing-item-due">📅 วันหมดอายุ ${c.dateStr}</span>
+          </div>
+          ${latestHtml}
+        </div>
+        <div class="bc-panel" id="bcp-${certId}" onclick="event.stopPropagation()">
+          <div class="bc-panel-head">
+            <span class="bc-panel-title">💬 ประวัติการติดตาม<span class="bc-panel-count" id="bcpc-${certId}"></span></span>
+            <button class="bc-panel-close" onclick="bcToggle('${certId}',event)" title="ปิด">✕</button>
+          </div>
+          <div class="bc-list" id="bcl-${certId}"></div>
+          <div class="bc-compose">
+            <div class="bc-compose-label">✍️ เพิ่มบันทึกใหม่</div>
+            <div class="bc-form-row">
+              <input class="bc-name" id="bca-${certId}" placeholder="ชื่อของคุณ" value="${localStorage.getItem('prpo_username')||''}">
+              <select class="bc-sel" id="bcs-${certId}">
+                <option value="update">🔄 อัปเดต</option>
+                <option value="info">💬 ทั่วไป</option>
+                <option value="issue">⚠️ ปัญหา</option>
+                <option value="done">✅ เสร็จ</option>
+              </select>
+            </div>
+            <textarea class="bc-ta" id="bct-${certId}" rows="2" placeholder="เช่น ติดต่อ Supplier แล้ว อยู่ระหว่างต่ออายุ..."></textarea>
+            <button class="bc-submit" onclick="bcAdd('${certId}',event)">📨 บันทึก</button>
+          </div>
         </div>`;
       }).join('');
       return `<div class="briefing-group">
@@ -6534,7 +6569,7 @@ function renderDailyBriefing() {
 
     sections.push(`<div class="briefing-category">
       <div class="briefing-category-title">📄 ใบรับรอง (CER) <span class="briefing-category-badge">${cerFollow.length} ใบ</span></div>
-      ${groupsHtml}
+      <div class="briefing-maker-grid">${groupsHtml}</div>
     </div>`);
   }
 
