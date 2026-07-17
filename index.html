@@ -732,6 +732,45 @@
   }
   .filter-select:focus { border-color: var(--accent); }
   .filter-select option { background: var(--surface2); }
+
+  /* ── Multi-select maker dropdown ── */
+  .ms-dropdown { position: relative; padding: 0 !important; display: inline-block; }
+  .ms-toggle {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;
+    background: transparent; border: none; color: var(--text); font-family: var(--font);
+    font-size: 0.819rem; padding: 0.5rem 0.85rem; cursor: pointer; width: 100%; min-width: 130px; text-align: left;
+  }
+  .ms-toggle span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ms-chevron { flex-shrink: 0; color: var(--muted); transition: transform 0.2s ease; }
+  .ms-dropdown.open .ms-chevron { transform: rotate(180deg); }
+  .ms-dropdown.open .ms-toggle { color: var(--accent); }
+  .ms-dropdown.has-selection .ms-toggle { color: var(--accent); font-weight: 600; }
+  .ms-panel {
+    display: none; position: absolute; top: calc(100% + 6px); left: 0; min-width: 220px; max-width: 280px;
+    background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-md, 10px);
+    box-shadow: var(--shadow-md); z-index: 60; overflow: hidden; flex-direction: column;
+  }
+  .ms-dropdown.open .ms-panel { display: flex; }
+  .ms-search { padding: 0.5rem; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .ms-search input {
+    width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 7px;
+    padding: 0.38rem 0.6rem; color: var(--text); font-family: var(--font); font-size: 0.77rem; outline: none;
+  }
+  .ms-search input:focus { border-color: var(--accent); }
+  .ms-option {
+    display: flex; align-items: center; gap: 0.55rem; padding: 0.5rem 0.8rem; cursor: pointer;
+    font-size: 0.798rem; color: var(--text); transition: background 0.14s ease; user-select: none;
+  }
+  .ms-option:hover { background: var(--surface); }
+  .ms-option input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; }
+  .ms-option-all { border-bottom: 1px dashed var(--border); font-weight: 600; flex-shrink: 0; }
+  .ms-list { max-height: 230px; overflow-y: auto; overscroll-behavior: contain; }
+  .ms-list-empty { padding: 0.7rem 0.8rem; color: var(--muted); font-size: 0.77rem; text-align: center; }
+  .ms-option-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ms-option-count {
+    margin-left: auto; font-family: var(--mono); font-size: 0.65rem; color: var(--muted);
+    background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 0.02rem 0.4rem; flex-shrink: 0;
+  }
   .form-input.error { border-color: var(--danger) !important; box-shadow: 0 0 0 3px var(--glow-danger) !important; }
   .form-error-msg { font-size: 0.683rem; color: var(--danger); margin-top: 0.2rem; display: none; }
   .form-error-msg.show { display: block; }
@@ -4515,7 +4554,20 @@
           <option value="กำลังดำเนินการ">♻ กำลังดำเนินการ</option>
           <option value="ส่งยังไม่ครบ">❌ ส่งยังไม่ครบ</option>
         </select>
-        <select class="filter-select" id="filterMaker" onchange="currentPage=1;renderTable()"><option value="">Maker ทั้งหมด</option></select>
+        <div class="ms-dropdown filter-select" id="filterMakerWrap">
+          <button type="button" class="ms-toggle" id="filterMakerToggle" onclick="toggleMakerDropdown(event)">
+            <span id="filterMakerLabel">Maker ทั้งหมด</span>
+            <svg class="ms-chevron" width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="ms-panel" id="filterMakerPanel">
+            <div class="ms-search"><input type="text" id="filterMakerSearch" placeholder="ค้นหา Maker..." oninput="renderMakerOptions()"></div>
+            <label class="ms-option ms-option-all">
+              <input type="checkbox" id="filterMakerAllChk" onchange="toggleAllMakers(this.checked)">
+              <span>Maker ทั้งหมด</span>
+            </label>
+            <div class="ms-list" id="filterMakerList"></div>
+          </div>
+        </div>
         <select class="filter-select" id="filterLocation" onchange="currentPage=1;renderTable()"><option value="">สถานที่ทั้งหมด</option></select>
         <button class="btn btn-ghost" id="filterStarBtn" onclick="toggleStarFilter()" style="font-size: 0.892rem;padding:0.38rem 0.9rem;gap:0.3rem">⭐ งานสำคัญ</button>
         <div class="view-toggle" id="listViewToggle">
@@ -6837,11 +6889,10 @@ function isPastLoginScreen() {
 function populateFilters() {
   const makers = [...new Set(allData.map(r => r.maker).filter(Boolean))].sort();
   const locations = [...new Set(allData.map(r => r.location).filter(Boolean))].sort();
-  const selM = document.getElementById('filterMaker');
-  const curM = selM.value;
-  selM.innerHTML = '<option value="">Maker ทั้งหมด</option>';
-  makers.forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m; selM.appendChild(o); });
-  selM.value = curM;
+  allMakersList = makers;
+  selectedMakers = selectedMakers.filter(m => makers.includes(m));
+  renderMakerOptions();
+  updateMakerFilterUI();
   const selL = document.getElementById('filterLocation');
   const curL = selL.value;
   selL.innerHTML = '<option value="">สถานที่ทั้งหมด</option>';
@@ -6882,6 +6933,76 @@ function toggleStarFilter() {
   else btn.classList.remove('filter-star-active');
   currentPage = 1; renderTable();
 }
+
+/* ── MULTI-SELECT MAKER FILTER (list page) ── */
+let selectedMakers = [];
+let allMakersList = [];
+
+function renderMakerOptions() {
+  const q = (document.getElementById('filterMakerSearch').value || '').trim().toLowerCase();
+  const list = document.getElementById('filterMakerList');
+  const counts = {};
+  allData.forEach(r => { if (r.maker) counts[r.maker] = (counts[r.maker] || 0) + 1; });
+  const shown = allMakersList.filter(m => !q || m.toLowerCase().includes(q));
+  list.innerHTML = shown.length ? shown.map(m => `
+    <label class="ms-option">
+      <input type="checkbox" value="${m.replace(/"/g,'&quot;')}" onchange="onMakerCheck('${m.replace(/'/g,"\\'")}', this.checked)" ${selectedMakers.includes(m) ? 'checked' : ''}>
+      <span class="ms-option-name">${m}</span>
+      <span class="ms-option-count">${counts[m] || 0}</span>
+    </label>`).join('') : `<div class="ms-list-empty">ไม่พบ Maker ที่ค้นหา</div>`;
+}
+
+function updateMakerFilterUI() {
+  const wrap = document.getElementById('filterMakerWrap');
+  const label = document.getElementById('filterMakerLabel');
+  const allChk = document.getElementById('filterMakerAllChk');
+  if (selectedMakers.length === 0) {
+    label.textContent = 'Maker ทั้งหมด';
+    wrap.classList.remove('has-selection');
+    allChk.checked = true; allChk.indeterminate = false;
+  } else if (selectedMakers.length === 1) {
+    label.textContent = selectedMakers[0];
+    wrap.classList.add('has-selection');
+    allChk.checked = false; allChk.indeterminate = false;
+  } else {
+    label.textContent = `เลือกแล้ว ${selectedMakers.length} ราย`;
+    wrap.classList.add('has-selection');
+    allChk.checked = false; allChk.indeterminate = true;
+  }
+}
+
+function onMakerCheck(maker, checked) {
+  if (checked) { if (!selectedMakers.includes(maker)) selectedMakers.push(maker); }
+  else { selectedMakers = selectedMakers.filter(m => m !== maker); }
+  updateMakerFilterUI();
+  currentPage = 1; renderTable();
+}
+
+function toggleAllMakers(checked) {
+  selectedMakers = [];
+  updateMakerFilterUI();
+  renderMakerOptions();
+  currentPage = 1; renderTable();
+}
+
+function toggleMakerDropdown(e) {
+  if (e) e.stopPropagation();
+  const wrap = document.getElementById('filterMakerWrap');
+  const willOpen = !wrap.classList.contains('open');
+  wrap.classList.toggle('open', willOpen);
+  if (willOpen) {
+    document.getElementById('filterMakerSearch').value = '';
+    renderMakerOptions();
+    setTimeout(() => document.getElementById('filterMakerSearch').focus(), 30);
+  }
+}
+
+document.addEventListener('click', (e) => {
+  const wrap = document.getElementById('filterMakerWrap');
+  if (wrap && wrap.classList.contains('open') && !wrap.contains(e.target)) {
+    wrap.classList.remove('open');
+  }
+});
 
 async function toggleStar(key, btnEl) {
   key = String(key);
@@ -7061,12 +7182,11 @@ function closePmModelModal() { document.getElementById('pmModelModalOverlay').cl
 function getFiltered() {
   const q = (document.getElementById('searchInput').value || '').toLowerCase();
   const status = document.getElementById('filterStatus').value;
-  const maker = document.getElementById('filterMaker').value;
   const location = document.getElementById('filterLocation').value;
   return allData.filter(r => {
     const matchQ = !q || [r.partNo,r.partName,r.maker,r.model,r.poNo,r.note].some(v => (v||'').toLowerCase().includes(q));
     const matchS = !status || (r.status||'').includes(status);
-    const matchM = !maker || r.maker === maker;
+    const matchM = selectedMakers.length === 0 || selectedMakers.includes(r.maker);
     const matchL = !location || r.location === location;
     const matchStar = !filterStar || starredItems.includes(String(r.rowIndex || r.partNo));
     return matchQ && matchS && matchM && matchL && matchStar;
