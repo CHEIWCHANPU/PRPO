@@ -5204,13 +5204,13 @@
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:0.6rem 1rem;margin-bottom:1rem;display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap">
           <span style="font-size: 0.84rem;color:var(--accent)">💰</span>
           <label style="font-size: 0.819rem;color:var(--muted);white-space:nowrap;font-weight:600">ค่าแรง OT/ชม.</label>
-          <input type="number" id="pr-ot-rate" class="form-input" placeholder="เช่น 50" min="0" step="1"
+          <input type="number" id="pr-ot-rate" class="form-input" min="0" step="1"
             style="width:90px;font-size: 0.861rem;padding:0.3rem 0.55rem"
             oninput="prRefreshDetail()">
           <div style="width:1px;height:20px;background:var(--border);margin:0 0.2rem"></div>
           <span style="font-size: 0.84rem;color:#f59e0b">✂️</span>
           <label style="font-size: 0.819rem;color:var(--muted);white-space:nowrap;font-weight:600">วันตัดรอบ</label>
-          <input type="number" id="pr-cutoff-day" class="form-input" placeholder="เช่น 21" min="1" max="31" step="1"
+          <input type="number" id="pr-cutoff-day" class="form-input" min="1" max="31" step="1"
             style="width:70px;font-size: 0.861rem;padding:0.3rem 0.55rem"
             oninput="prRefreshDetail()">
           <span style="font-size: 0.756rem;color:var(--muted)" id="pr-cutoff-range-label"></span>
@@ -5435,14 +5435,14 @@
     <div class="modal-body">
       <input type="hidden" id="editRowIndex">
       <div class="form-grid">
-        <div class="form-group"><label class="form-label">PART NO. *</label><input type="text" class="form-input" id="f-partNo" placeholder="เช่น 11057-1778B"><span class="form-error-msg" id="err-partNo"></span></div>
-        <div class="form-group"><label class="form-label">PART NAME *</label><input type="text" class="form-input" id="f-partName" placeholder="เช่น BRACKET"><span class="form-error-msg" id="err-partName"></span></div>
-        <div class="form-group"><label class="form-label">MODEL</label><input type="text" class="form-input" id="f-model" placeholder="เช่น VD00"></div>
-        <div class="form-group"><label class="form-label">VOLUME</label><input type="number" class="form-input" id="f-volume" placeholder="250" min="0"></div>
-        <div class="form-group"><label class="form-label">ส่งแล้ว (Received Qty)</label><input type="number" class="form-input" id="f-receivedQty" placeholder="เช่น 200" min="0"></div>
-        <div class="form-group"><label class="form-label">เปิด P/R</label><input type="text" class="form-input" id="f-prDate" placeholder="7/6/2026"><span class="form-error-msg" id="err-prDate"></span></div>
-        <div class="form-group"><label class="form-label">วันนัดส่ง</label><input type="text" class="form-input" id="f-dueDate" placeholder="13/6/2026"><span class="form-error-msg" id="err-dueDate"></span></div>
-        <div class="form-group"><label class="form-label">วันเข้าส่งจริง</label><input type="text" class="form-input" id="f-actualDate" placeholder="13/6/2026"><span class="form-error-msg" id="err-actualDate"></span></div>
+        <div class="form-group"><label class="form-label">PART NO. *</label><input type="text" class="form-input" id="f-partNo"><span class="form-error-msg" id="err-partNo"></span></div>
+        <div class="form-group"><label class="form-label">PART NAME *</label><input type="text" class="form-input" id="f-partName"><span class="form-error-msg" id="err-partName"></span></div>
+        <div class="form-group"><label class="form-label">MODEL</label><input type="text" class="form-input" id="f-model"></div>
+        <div class="form-group"><label class="form-label">VOLUME</label><input type="number" class="form-input" id="f-volume" min="0"></div>
+        <div class="form-group"><label class="form-label">ส่งแล้ว (Received Qty)</label><input type="number" class="form-input" id="f-receivedQty" min="0"></div>
+        <div class="form-group"><label class="form-label">เปิด P/R</label><input type="text" class="form-input" id="f-prDate"><span class="form-error-msg" id="err-prDate"></span></div>
+        <div class="form-group"><label class="form-label">วันนัดส่ง</label><input type="text" class="form-input" id="f-dueDate"><span class="form-error-msg" id="err-dueDate"></span></div>
+        <div class="form-group"><label class="form-label">วันเข้าส่งจริง</label><input type="text" class="form-input" id="f-actualDate"><span class="form-error-msg" id="err-actualDate"></span></div>
         <div class="form-group"><label class="form-label">สถานที่ส่ง</label>
           <select class="form-input" id="f-location">
             <option>CCIR</option><option>CCIS</option><option>CCI</option>
@@ -5455,7 +5455,7 @@
             <option value="ส่งยังไม่ครบ ❌">ส่งยังไม่ครบ ❌</option>
           </select>
         </div>
-        <div class="form-group"><label class="form-label">MAKER</label><input type="text" class="form-input" id="f-maker" placeholder="เช่น KOBAYU"></div>
+        <div class="form-group"><label class="form-label">MAKER</label><input type="text" class="form-input" id="f-maker"></div>
         <div class="form-group"><label class="form-label">PO / ORDER NO.</label><input type="text" class="form-input" id="f-poNo"></div>
         <div class="form-group"><label class="form-label">หมายเหตุ</label><input type="text" class="form-input" id="f-note"></div>
         <div class="form-group full">
@@ -5570,7 +5570,7 @@
   <div class="cmdk-box">
     <div class="cmdk-input-row">
       <svg viewBox="0 0 24 24" class="cmdk-search-icon"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" id="cmdkInput" class="cmdk-input" placeholder="พิมพ์ชื่อเมนูที่ต้องการไป... (เช่น Lead Time, CER, Supplier)" autocomplete="off" oninput="cmdkFilter()" onkeydown="cmdkKeydown(event)">
+      <input type="text" id="cmdkInput" class="cmdk-input" placeholder="พิมพ์ชื่อเมนูที่ต้องการไป..." autocomplete="off" oninput="cmdkFilter()" onkeydown="cmdkKeydown(event)">
       <span class="cmdk-esc">Esc</span>
     </div>
     <div class="cmdk-list" id="cmdkList"></div>
@@ -8296,7 +8296,7 @@ function renderComments(key, rowIndex) {
           <option value="done">✅ เสร็จ</option>
         </select>
       </div>
-      <textarea class="comment-textarea" id="c-text" rows="3" placeholder="เช่น โทรแล้ว Maker ยืนยันส่ง  / ติดปัญหาการส่ง..."></textarea>
+      <textarea class="comment-textarea" id="c-text" rows="3" placeholder="อัปเดตสถานะ, ปัญหา, หรือหมายเหตุ..."></textarea>
       <div class="comment-submit-row">
         <button class="comment-submit" onclick="addComment('${key}',${rowIndex||'null'})">+ บันทึก</button>
         <span style="font-size: 0.724rem;color:var(--muted)">${comments.length} รายการ</span>
@@ -9304,13 +9304,13 @@ function renderLeadTime() {
             <button type="button" class="btn btn-ghost" style="padding:0.4rem 0.8rem;font-size: 0.819rem" onclick="clearSupplierImage()">ลบรูป</button>
           </div>
         </div>
-        <div class="form-group full"><label class="form-label">ชื่อบริษัท / Maker *</label><input type="text" class="form-input" id="s-name" placeholder="เช่น KOBAYU CO.,LTD."></div>
-        <div class="form-group"><label class="form-label">ชื่อผู้ติดต่อ</label><input type="text" class="form-input" id="s-contact" placeholder="คุณ สมชาย"></div>
-        <div class="form-group"><label class="form-label">เบอร์โทร</label><input type="text" class="form-input" id="s-phone" placeholder="02-xxx-xxxx"></div>
-        <div class="form-group"><label class="form-label">Email</label><input type="text" class="form-input" id="s-email" placeholder="contact@company.com"></div>
-        <div class="form-group"><label class="form-label">หมวดหมู่สินค้า</label><input type="text" class="form-input" id="s-category" placeholder="เช่น NUT, BOLT, BRACKET"></div>
-        <div class="form-group"><label class="form-label">Lead Time ปกติ (วัน)</label><input type="number" class="form-input" id="s-leadtime" placeholder="14" min="1"></div>
-        <div class="form-group full"><label class="form-label">🗺️ ลิงก์ Google Map (ที่อยู่/ที่ตั้งโรงงาน)</label><input type="text" class="form-input" id="s-maplink" placeholder="วาง URL จาก Google Maps เช่น https://maps.app.goo.gl/xxxx หรือ https://www.google.com/maps?q=..."></div>
+        <div class="form-group full"><label class="form-label">ชื่อบริษัท / Maker *</label><input type="text" class="form-input" id="s-name"></div>
+        <div class="form-group"><label class="form-label">ชื่อผู้ติดต่อ</label><input type="text" class="form-input" id="s-contact"></div>
+        <div class="form-group"><label class="form-label">เบอร์โทร</label><input type="text" class="form-input" id="s-phone"></div>
+        <div class="form-group"><label class="form-label">Email</label><input type="text" class="form-input" id="s-email"></div>
+        <div class="form-group"><label class="form-label">หมวดหมู่สินค้า</label><input type="text" class="form-input" id="s-category"></div>
+        <div class="form-group"><label class="form-label">Lead Time ปกติ (วัน)</label><input type="number" class="form-input" id="s-leadtime" min="1"></div>
+        <div class="form-group full"><label class="form-label">🗺️ ลิงก์ Google Map (ที่อยู่/ที่ตั้งโรงงาน)</label><input type="text" class="form-input" id="s-maplink" placeholder="วาง URL จาก Google Maps"></div>
         <div class="form-group full"><label class="form-label">หมายเหตุ</label><input type="text" class="form-input" id="s-note" placeholder="ข้อมูลเพิ่มเติม"></div>
       </div>
     </div>
@@ -9359,8 +9359,8 @@ function renderLeadTime() {
     <div class="modal-body">
       <input type="hidden" id="cer-rowIndex">
       <div class="form-grid">
-        <div class="form-group"><label class="form-label">ID</label><input type="text" class="form-input" id="cer-id" placeholder="เช่น CC-006"></div>
-        <div class="form-group full"><label class="form-label">ชื่อบริษัท *</label><input type="text" class="form-input" id="cer-name" placeholder="เช่น KOBAYU (THAILAND)"></div>
+        <div class="form-group"><label class="form-label">ID</label><input type="text" class="form-input" id="cer-id"></div>
+        <div class="form-group full"><label class="form-label">ชื่อบริษัท *</label><input type="text" class="form-input" id="cer-name"></div>
 
         <div class="form-group"><label class="form-label">ISO 9001 สถานะ</label>
           <select class="form-input" id="cer-iso9001Has">
@@ -9369,7 +9369,7 @@ function renderLeadTime() {
             <option value="กำลังติดตาม">🔄 กำลังติดตาม</option>
           </select>
         </div>
-        <div class="form-group"><label class="form-label">ISO 9001 วันหมดอายุ</label><input type="text" class="form-input" id="cer-iso9001Date" placeholder="วว/ดด/ปปปป เช่น 28/7/2026"></div>
+        <div class="form-group"><label class="form-label">ISO 9001 วันหมดอายุ</label><input type="text" class="form-input" id="cer-iso9001Date" placeholder="วว/ดด/ปปปป"></div>
 
         <div class="form-group"><label class="form-label">ISO 14001 สถานะ</label>
           <select class="form-input" id="cer-iso14001Has">
@@ -9849,16 +9849,16 @@ document.addEventListener('keydown', function(e) {
         <div class="mt-modal-section-label">📦 ข้อมูล Model</div>
         <div class="mt-field-row">
           <label>Model <span class="mt-field-required">*</span></label>
-          <input type="text" id="mt-f-model" placeholder="เช่น P700, 9751, MMAA">
+          <input type="text" id="mt-f-model">
         </div>
         <div class="mt-two-col-fields">
           <div class="mt-field-row">
             <label>Customer <span class="mt-field-required">*</span></label>
-            <input type="text" id="mt-f-customer" placeholder="เช่น ISUZU, KMT">
+            <input type="text" id="mt-f-customer">
           </div>
           <div class="mt-field-row">
             <label>Volume</label>
-            <input type="text" id="mt-f-volume" placeholder="เช่น 12,000">
+            <input type="text" id="mt-f-volume">
             <div class="mt-field-hint">จำนวนชิ้น/ปี (ไม่บังคับ)</div>
           </div>
         </div>
@@ -9919,7 +9919,7 @@ document.addEventListener('keydown', function(e) {
           </div>
           <div class="mt-field-row" style="margin-bottom:0" id="mt-f-msnote-row">
             <label>โน้ต <span style="color:var(--muted);font-weight:400">(เฉพาะ CCI Order)</span></label>
-            <input type="text" id="mt-f-msnote" placeholder="เช่น Lot 1">
+            <input type="text" id="mt-f-msnote">
           </div>
         </div>
       </div>
