@@ -4044,14 +4044,16 @@
 
   /* ── Enterprise tier mark under the logo ── */
   .logo-tier-badge {
-    display: inline-flex; align-items: center; gap: 0.32rem; margin-top: 4px;
-    font-size: 0.567rem; font-weight: 700; letter-spacing: 0.11em; white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 0.24rem; margin-top: 4px;
+    font-size: 0.46rem; font-weight: 700; letter-spacing: 0.04em; white-space: nowrap;
     color: #d8b25c;
     background: linear-gradient(135deg, rgba(216,178,92,0.14), rgba(216,178,92,0.04));
     border: 1px solid rgba(216,178,92,0.35);
-    border-radius: var(--r-pill); padding: 0.09rem 0.5rem 0.09rem 0.4rem;
-    position: relative; overflow: hidden; width: fit-content;
+    border-radius: var(--r-pill); padding: 0.08rem 0.36rem 0.08rem 0.3rem;
+    position: relative; overflow: hidden; width: fit-content; max-width: 100%;
+    box-sizing: border-box;
   }
+  .logo-tier-badge-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
   .logo-tier-badge::after {
     content: ''; position: absolute; top: 0; left: -60%; width: 40%; height: 100%;
     background: linear-gradient(120deg, transparent, rgba(255,255,255,0.35), transparent);
@@ -4060,8 +4062,8 @@
   @keyframes tierBadgeSweep { 0%,60%,100% { left: -60%; } 80% { left: 130%; } }
   @media (prefers-reduced-motion: reduce) { .logo-tier-badge::after { display: none; } }
   .logo-tier-dot {
-    width: 5px; height: 5px; border-radius: 50%; background: #d8b25c; flex-shrink: 0;
-    box-shadow: 0 0 5px rgba(216,178,92,0.8);
+    width: 4px; height: 4px; border-radius: 50%; background: #d8b25c; flex-shrink: 0;
+    box-shadow: 0 0 4px rgba(216,178,92,0.8);
   }
   .sidebar.collapsed .logo-tier-badge { display: none; }
 
@@ -4226,7 +4228,6 @@
     <div class="logo-texts">
       <div class="logo-title"><span class="logo-marquee-track">ระบบจัดการ PU/EN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ระบบจัดการ PU/EN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>
       <div class="logo-sub">PURCHASE-EN-CCIP</div>
-      <div class="logo-tier-badge"><span class="logo-tier-dot"></span>ENTERPRISE EDITION</div>
     </div>
   </div>
   <nav class="nav-section">
