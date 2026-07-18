@@ -4034,6 +4034,56 @@
   .podium-slot.rank-3 .podium-base { height:52px; background:linear-gradient(180deg,#d08a52,#a8683b); }
   .lb-rank-cell { font-family:var(--mono); font-weight:800; font-size:0.9rem; }
   .lb-fire { color:var(--warn); font-size:0.77rem; font-family:var(--mono); font-weight:700; white-space:nowrap; }
+
+  /* ════════════════════════════════════════════════════════════
+     MODERN POLISH PACK v4 — enterprise-grade finishing touches
+     (tier mark · tabular data alignment · confident headings ·
+      metallic accent used sparingly for a "large-company" read)
+     — additive only, nothing structural is removed.
+  ════════════════════════════════════════════════════════════ */
+
+  /* ── Enterprise tier mark under the logo ── */
+  .logo-tier-badge {
+    display: inline-flex; align-items: center; gap: 0.32rem; margin-top: 4px;
+    font-size: 0.567rem; font-weight: 700; letter-spacing: 0.11em; white-space: nowrap;
+    color: #d8b25c;
+    background: linear-gradient(135deg, rgba(216,178,92,0.14), rgba(216,178,92,0.04));
+    border: 1px solid rgba(216,178,92,0.35);
+    border-radius: var(--r-pill); padding: 0.09rem 0.5rem 0.09rem 0.4rem;
+    position: relative; overflow: hidden; width: fit-content;
+  }
+  .logo-tier-badge::after {
+    content: ''; position: absolute; top: 0; left: -60%; width: 40%; height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,0.35), transparent);
+    transform: skewX(-18deg); animation: tierBadgeSweep 4.5s ease-in-out infinite;
+  }
+  @keyframes tierBadgeSweep { 0%,60%,100% { left: -60%; } 80% { left: 130%; } }
+  @media (prefers-reduced-motion: reduce) { .logo-tier-badge::after { display: none; } }
+  .logo-tier-dot {
+    width: 5px; height: 5px; border-radius: 50%; background: #d8b25c; flex-shrink: 0;
+    box-shadow: 0 0 5px rgba(216,178,92,0.8);
+  }
+  .sidebar.collapsed .logo-tier-badge { display: none; }
+
+  /* ── Tabular numerals: crisp column alignment for financial/quantity data,
+     the detail that reads as "built by people who work with numbers all day" ── */
+  table, .stat-value, .no-num, .vol, .date-cell, .qty-progress-text,
+  .lb-rank-cell, .streak-flame-num, .podium-rate, .cmdk-data-badge {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Confident page heading: tighter tracking, heavier weight ── */
+  .topbar-title {
+    font-weight: 800; letter-spacing: -0.015em;
+  }
+
+  /* ── Sidebar logo: slim metallic top hairline ties the tier mark to
+     the whole rail without competing with the accent brand color ── */
+  .sidebar-logo { position: relative; }
+  .sidebar-logo::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(216,178,92,0.45) 35%, rgba(216,178,92,0.45) 65%, transparent);
+  }
 </style>
 </head>
 <body>
@@ -4176,6 +4226,7 @@
     <div class="logo-texts">
       <div class="logo-title"><span class="logo-marquee-track">ระบบจัดการ PU/EN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ระบบจัดการ PU/EN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>
       <div class="logo-sub">PURCHASE-EN-CCIP</div>
+      <div class="logo-tier-badge"><span class="logo-tier-dot"></span>ENTERPRISE EDITION</div>
     </div>
   </div>
   <nav class="nav-section">
