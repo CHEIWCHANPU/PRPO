@@ -4643,9 +4643,9 @@
       <div class="toolbar" id="pmToolbar-model">
         <div class="search-box">
           <span class="search-icon">🔍</span>
-          <input type="text" id="pmModelSearchInput" placeholder="ค้นหา Model..." oninput="renderPartModelByModel()">
+          <input type="text" id="pmModelSearchInput" placeholder="ค้นหา Model..." oninput="pmModelPage=1;renderPartModelByModel()">
         </div>
-        <select class="filter-select" id="pmModelSortSelect" onchange="renderPartModelByModel()">
+        <select class="filter-select" id="pmModelSortSelect" onchange="pmModelPage=1;renderPartModelByModel()">
           <option value="calls">เรียงตาม: จำนวนครั้งที่เรียก (มาก→น้อย)</option>
           <option value="volume">เรียงตาม: Volume รวม (มาก→น้อย)</option>
           <option value="model">เรียงตาม: Model (A→Z)</option>
@@ -4665,6 +4665,9 @@
           </tr></thead>
           <tbody id="partModelByModelTableBody"><tr><td colspan="7" class="empty"><div class="spinner"></div></td></tr></tbody>
         </table>
+        <div class="table-footer" style="display:flex;align-items:center;justify-content:flex-end;padding:0.6rem 0.2rem 0">
+          <div class="pagination" id="pmModelPagination"></div>
+        </div>
       </div>
     </div>
 
@@ -4872,6 +4875,9 @@
             <tr><td colspan="5" class="empty"><div class="empty-icon">📋</div><div class="empty-title">ยังไม่มีประวัติ</div><div class="empty-sub">เมื่อเพิ่ม แก้ไข หรือลบรายการ จะบันทึกที่นี่</div></td></tr>
           </tbody>
         </table>
+        <div class="table-footer" style="display:flex;align-items:center;justify-content:flex-end;padding:0.6rem 0.2rem 0">
+          <div class="pagination" id="historyPagination"></div>
+        </div>
       </div>
     </div>
 
@@ -4917,7 +4923,7 @@
       <div class="table-wrap">
         <div class="table-title-bar">
           <span class="table-title-label">📊 รายงาน Lead Time แต่ละ Maker</span>
-          <select id="leadtimeTableTopN" onchange="renderLeadTime()" style="
+          <select id="leadtimeTableTopN" onchange="leadTimePage=1;renderLeadTime()" style="
             background:var(--surface2);border:1px solid var(--border);border-radius:7px;
             color:var(--text);font-size: 0.714rem;padding:0.2rem 0.45rem;
             font-family:var(--mono);cursor:pointer;outline:none;">
@@ -4939,6 +4945,9 @@
           </tr></thead>
           <tbody id="leadTimeBody"></tbody>
         </table>
+        <div class="table-footer" style="display:flex;align-items:center;justify-content:flex-end;padding:0.6rem 0.2rem 0">
+          <div class="pagination" id="leadTimePagination"></div>
+        </div>
       </div>
     </div>
 
@@ -5290,7 +5299,7 @@
           <div style="display:flex;gap:0.5rem;align-items:center">
             <div class="search-box" style="min-width:220px">
               <span class="search-icon">🔍</span>
-              <input type="text" id="wpSearch" placeholder="ค้นหางาน, สถานที่, หมายเหตุ..." oninput="renderWorkplan()">
+              <input type="text" id="wpSearch" placeholder="ค้นหางาน, สถานที่, หมายเหตุ..." oninput="wpPage=1;renderWorkplan()">
             </div>
           </div>
         </div>
@@ -5314,6 +5323,9 @@
             <tr><td colspan="11" class="empty"><div class="spinner"></div></td></tr>
           </tbody>
         </table>
+        <div class="table-footer" style="display:flex;align-items:center;justify-content:flex-end;padding:0.6rem 0.2rem 0">
+          <div class="pagination" id="wpPagination"></div>
+        </div>
       </div>
     </div>
     <!-- /WORKPLAN PAGE -->
@@ -5778,6 +5790,33 @@ let sortCol = 'no';
 let sortDir = 'asc';
 let currentPage = 1;
 let perPage = parseInt(localStorage.getItem('prpo_perpage') || '20');
+const SMALL_PAGE_SIZE = 10; // จำนวนรายการต่อหน้า สำหรับตารางที่แบ่งหน้าแบบง่าย
+let pmModelPage = 1;
+let historyPage = 1;
+let leadTimePage = 1;
+let wpPage = 1;
+
+// ── ตัวช่วยแบ่งหน้าแบบใช้ซ้ำได้ (สำหรับตารางที่ไม่ใช่ตารางหลัก) ──
+function renderSimplePagination(containerId, page, totalPages, onPage) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = '';
+  if (totalPages <= 1) return;
+  const addBtn = (label, p, disabled, active) => {
+    const btn = document.createElement('button');
+    btn.className = 'page-btn' + (active ? ' active' : '');
+    btn.textContent = label; btn.disabled = disabled;
+    if (!disabled) btn.onclick = () => onPage(p);
+    el.appendChild(btn);
+  };
+  addBtn('«', 1, page === 1, false);
+  addBtn('‹', page - 1, page === 1, false);
+  for (let i = Math.max(1, page - 2); i <= Math.min(totalPages, page + 2); i++) {
+    addBtn(i, i, false, i === page);
+  }
+  addBtn('›', page + 1, page === totalPages, false);
+  addBtn('»', totalPages, page === totalPages, false);
+}
 let autoSyncInterval = null;
 let charts = {};
 let editingItem = null;
@@ -7106,10 +7145,16 @@ function renderPartModelByModel() {
   const tbody = document.getElementById('partModelByModelTableBody');
   if (!groups.length) {
     tbody.innerHTML = '<tr><td colspan="7" class="empty">ไม่พบข้อมูล</td></tr>';
+    renderSimplePagination('pmModelPagination', 1, 1, () => {});
     return;
   }
 
-  tbody.innerHTML = groups.map((g, i) => {
+  const pmTotalPages = Math.ceil(groups.length / SMALL_PAGE_SIZE);
+  pmModelPage = Math.min(pmModelPage, pmTotalPages || 1);
+  const pmStart = (pmModelPage - 1) * SMALL_PAGE_SIZE;
+  const pageGroups = groups.slice(pmStart, pmStart + SMALL_PAGE_SIZE);
+
+  tbody.innerHTML = pageGroups.map((g, i) => {
     const statusChips = [
       g.done ? `<span class="badge badge-done">✅ ${g.done}</span>` : '',
       g.progress ? `<span class="badge badge-progress">♻ ${g.progress}</span>` : '',
@@ -7120,7 +7165,7 @@ function renderPartModelByModel() {
     const barColor = pct === 100 ? 'var(--success)' : (pct === 0 ? 'var(--danger)' : 'var(--warn)');
 
     return `<tr style="cursor:pointer" onclick="openPmModelModal('${g.model.replace(/'/g, "\\'")}')">
-      <td>${i + 1}</td>
+      <td>${pmStart + i + 1}</td>
       <td class="part-no">${g.model}</td>
       <td style="text-align:center;font-weight:700">${g.parts.size}</td>
       <td style="text-align:center;font-weight:700;color:var(--accent2)">${g.records.length}</td>
@@ -7135,6 +7180,8 @@ function renderPartModelByModel() {
       <td style="text-align:center;color:var(--muted)">▸</td>
     </tr>`;
   }).join('');
+
+  renderSimplePagination('pmModelPagination', pmModelPage, pmTotalPages, (p) => { pmModelPage = p; renderPartModelByModel(); });
 }
 
 function openPmModelModal(modelName) {
@@ -8959,11 +9006,18 @@ function renderHistory() {
   const tbody = document.getElementById('historyBody');
   if (!historyLog.length) {
     tbody.innerHTML = '<tr><td colspan="5" class="empty"><div class="empty-icon">📋</div><div class="empty-title">ยังไม่มีประวัติ</div><div class="empty-sub">เมื่อเพิ่ม แก้ไข หรือลบรายการ จะบันทึกที่นี่</div></td></tr>';
+    renderSimplePagination('historyPagination', 1, 1, () => {});
     return;
   }
   const labels = { add:'➕ เพิ่ม', edit:'✏️ แก้ไข', del:'🗑️ ลบ' };
   const cls    = { add:'add', edit:'edit', del:'del' };
-  tbody.innerHTML = historyLog.map(e => `
+
+  const historyTotalPages = Math.ceil(historyLog.length / SMALL_PAGE_SIZE);
+  historyPage = Math.min(historyPage, historyTotalPages || 1);
+  const hStart = (historyPage - 1) * SMALL_PAGE_SIZE;
+  const pageLog = historyLog.slice(hStart, hStart + SMALL_PAGE_SIZE);
+
+  tbody.innerHTML = pageLog.map(e => `
     <tr>
       <td class="date-cell">${e.time}</td>
       <td><span class="log-badge ${cls[e.action]||'edit'}">${labels[e.action]||e.action}</span></td>
@@ -8971,6 +9025,8 @@ function renderHistory() {
       <td class="part-name">${e.partName}</td>
       <td style="font-size: 0.798rem;color:var(--muted)">${e.detail}</td>
     </tr>`).join('');
+
+  renderSimplePagination('historyPagination', historyPage, historyTotalPages, (p) => { historyPage = p; renderHistory(); });
 }
 async function clearHistory() {
   if (!confirm('ต้องการล้างประวัติทั้งหมด?')) return;
@@ -9465,6 +9521,7 @@ function calcLeadTimeStats() {
 function sortLT(col) {
   if (ltSortCol === col) ltSortDir = ltSortDir === 'asc' ? 'desc' : 'asc';
   else { ltSortCol = col; ltSortDir = 'desc'; }
+  leadTimePage = 1;
   renderLeadTime();
 }
 function renderLeadTime() {
@@ -9530,7 +9587,13 @@ function renderLeadTime() {
   const maxLead = Math.max(...rows.map(r => r.avgLead||0), 1);
   const ltTableTopN = getTopNValue('leadtimeTableTopN', 999);
   rows = rows.slice(0, ltTableTopN);
-  document.getElementById('leadTimeBody').innerHTML = rows.length ? rows.map(r => {
+
+  const ltTotalPages = Math.ceil(rows.length / SMALL_PAGE_SIZE) || 1;
+  leadTimePage = Math.min(leadTimePage, ltTotalPages);
+  const ltStart = (leadTimePage - 1) * SMALL_PAGE_SIZE;
+  const pageRows = rows.slice(ltStart, ltStart + SMALL_PAGE_SIZE);
+
+  document.getElementById('leadTimeBody').innerHTML = pageRows.length ? pageRows.map(r => {
     const barW   = Math.round((r.avgLead||0)/maxLead*80);
     const barCol = !r.avgLead ? 'var(--border)' : r.avgLead > 20 ? 'var(--danger)' : r.avgLead > 10 ? 'var(--warn)' : 'var(--success)';
     const rateCol = r.ontimeRate === null ? 'var(--muted)' : r.ontimeRate >= 80 ? 'var(--success)' : r.ontimeRate >= 60 ? 'var(--warn)' : 'var(--danger)';
@@ -9553,6 +9616,8 @@ function renderLeadTime() {
       </td>
     </tr>`;
   }).join('') : '<tr><td colspan="7" class="empty">ไม่มีข้อมูล</td></tr>';
+
+  renderSimplePagination('leadTimePagination', leadTimePage, ltTotalPages, (p) => { leadTimePage = p; renderLeadTime(); });
 }
 </script>
 
@@ -11127,9 +11192,9 @@ function wpUpdateYearLabel(){
   const el = document.getElementById('wp-yearLabel');
   if (el) el.textContent = wpYear;
 }
-function wpYearPrev(){ wpYear--; wpActiveMonth=null; renderWorkplan(); }
-function wpYearNext(){ wpYear++; wpActiveMonth=null; renderWorkplan(); }
-function wpYearToday(){ wpYear=new Date().getFullYear(); wpActiveMonth=null; renderWorkplan(); }
+function wpYearPrev(){ wpYear--; wpActiveMonth=null; wpPage=1; renderWorkplan(); }
+function wpYearNext(){ wpYear++; wpActiveMonth=null; wpPage=1; renderWorkplan(); }
+function wpYearToday(){ wpYear=new Date().getFullYear(); wpActiveMonth=null; wpPage=1; renderWorkplan(); }
 function renderWpMonthTabs() {
   wpUpdateYearLabel();
   // เดือนที่มีข้อมูล (ใช้แค่เช็ค has-data ไม่เอามาผสมข้ามปี)
@@ -11145,18 +11210,25 @@ function renderWpMonthTabs() {
       return `<button class="wp-month-tab ${active ? 'active' : ''} ${has ? 'has-data' : ''}" onclick="wpSetMonth('${m}')">${wpMonthLabel(m)}</button>`;
     }).join('');
 }
-function wpSetMonth(m) { wpActiveMonth = m; renderWorkplan(); }
+function wpSetMonth(m) { wpActiveMonth = m; wpPage = 1; renderWorkplan(); }
 
 function renderWpTable() {
   const data = wpGetFiltered();
   const body = document.getElementById('wpTableBody');
   if (!data.length) {
     body.innerHTML = `<tr><td colspan="11" class="empty"><div class="empty-icon">📅</div><div class="empty-title">ไม่มีแผนงาน</div><div class="empty-sub">กด "+ เพิ่มแผนงาน" เพื่อเริ่มต้น</div></td></tr>`;
+    renderSimplePagination('wpPagination', 1, 1, () => {});
     return;
   }
-  body.innerHTML = data.map((r,i) => `
+
+  const wpTotalPages = Math.ceil(data.length / SMALL_PAGE_SIZE);
+  wpPage = Math.min(wpPage, wpTotalPages || 1);
+  const wpStart = (wpPage - 1) * SMALL_PAGE_SIZE;
+  const pageData = data.slice(wpStart, wpStart + SMALL_PAGE_SIZE);
+
+  body.innerHTML = pageData.map((r,i) => `
     <tr>
-      <td class="no-num">${i+1}</td>
+      <td class="no-num">${wpStart + i + 1}</td>
       <td class="wp-date-cell">${r.date || '—'}</td>
       <td style="font-size: 0.851rem;font-weight:600;max-width:260px">${r.name || '—'}</td>
       <td><span class="wp-type-badge ${wpTypeClass(r.type)}">${wpTypeEmoji(r.type)} ${r.type || '—'}</span></td>
@@ -11173,6 +11245,8 @@ function renderWpTable() {
         </div>
       </td>
     </tr>`).join('');
+
+  renderSimplePagination('wpPagination', wpPage, wpTotalPages, (p) => { wpPage = p; renderWpTable(); });
 }
 
 function renderWpCharts() {
