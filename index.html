@@ -6400,7 +6400,7 @@ function showPage(name, btn) {
   document.getElementById('page-' + name).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  const titles = { home:'🏠 หน้าหลัก', exec:'🎯 ภาพรวม KPI', dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', partmodel:'🧩 PART MODEL', summary:'📈 สรุปภาพรวม', gantt:'📅 Timeline / Gantt', setup:'⚙️ ตั้งค่าระบบ', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis', leaderboard:'🏆 Maker Leaderboard', cer:'📄 ติดตามใบ CER', modeltracker:'🗂️ Model Tracker', workplan:'📅 ตารางแผนงานข้างนอก', payroll:'⏱️ ลงเวลา & ค่าแรง' };
+  const titles = { home:'🏠 หน้าหลัก', exec:'🎯 ภาพรวม KPI', dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', partmodel:'🧩 PART MODEL', summary:'📈 สรุปภาพรวม', gantt:'📅 Timeline / Gantt', setup:'⚙️ ตั้งค่าระบบ', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis', leaderboard:' Maker Leaderboard', cer:'📄 ติดตามใบ CER', modeltracker:'🗂️ Model Tracker', workplan:'📅 ตารางแผนงานข้างนอก', payroll:'⏱️ ลงเวลา & ค่าแรง' };
   document.getElementById('topbarTitle').textContent = titles[name] || name;
   if (name === 'home') renderDailyBriefing();
   if (name === 'exec') renderExecDashboard();
