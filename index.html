@@ -4008,6 +4008,32 @@
   .cmdk-item.cmdk-data-item { gap: 0.65rem; }
   .cmdk-data-badge { font-family: var(--mono); font-size: 0.63rem; color: var(--muted); background: var(--surface2); padding: 0.05rem 0.4rem; border-radius: 6px; flex-shrink: 0; }
   .cmdk-data-sub { color: var(--muted); font-size: 0.7rem; font-weight: 400; margin-left: 0.4rem; }
+
+  /* ── LEADERBOARD / STREAK / BADGES ── */
+  .streak-flame-card { display:flex; align-items:center; gap:0.9rem; background:var(--surface2); border:1px solid var(--border); border-radius:14px; padding:0.9rem 1.2rem; min-width:220px; }
+  .streak-flame-emoji { font-size:2.2rem; line-height:1; filter: drop-shadow(0 2px 6px rgba(245,158,11,0.35)); }
+  .streak-flame-num { font-family:var(--mono); font-size:1.8rem; font-weight:800; color:var(--warn); line-height:1; }
+  .streak-flame-label { font-size:0.7rem; color:var(--muted); margin-top:2px; }
+  .badge-chip { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.3rem; background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:0.7rem 0.5rem; text-align:center; transition: transform 0.15s, box-shadow 0.15s; }
+  .badge-chip.unlocked { border-color: var(--warn); background: linear-gradient(145deg, rgba(245,158,11,0.12), rgba(245,158,11,0.03)); box-shadow: 0 3px 10px -3px rgba(245,158,11,0.4); }
+  .badge-chip.unlocked:hover { transform: translateY(-2px); }
+  .badge-chip.locked { opacity:0.45; filter:grayscale(0.6); }
+  .badge-chip-icon { font-size:1.6rem; line-height:1; }
+  .badge-chip-name { font-size:0.672rem; font-weight:700; color:var(--text); }
+  .badge-chip-req { font-size:0.6rem; color:var(--muted); font-family:var(--mono); }
+  .podium-slot { display:flex; flex-direction:column; align-items:center; gap:0.4rem; }
+  .podium-avatar { width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.4rem; font-weight:800; background:var(--surface2); border:2px solid var(--border); }
+  .podium-slot.rank-1 .podium-avatar { width:72px; height:72px; font-size:1.7rem; border-color:#f5c542; box-shadow:0 4px 16px -4px rgba(245,197,66,0.5); }
+  .podium-slot.rank-2 .podium-avatar { border-color:#c7cdd6; }
+  .podium-slot.rank-3 .podium-avatar { border-color:#d08a52; }
+  .podium-name { font-size:0.777rem; font-weight:700; color:var(--text); max-width:110px; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .podium-rate { font-family:var(--mono); font-size:1.05rem; font-weight:800; }
+  .podium-base { width:100px; border-radius:10px 10px 0 0; display:flex; align-items:flex-start; justify-content:center; padding-top:0.5rem; font-family:var(--mono); font-weight:800; font-size:1.1rem; color:#fff; }
+  .podium-slot.rank-1 .podium-base { height:92px; background:linear-gradient(180deg,#f5c542,#c9992a); order:-1; }
+  .podium-slot.rank-2 .podium-base { height:68px; background:linear-gradient(180deg,#c7cdd6,#9aa1ac); }
+  .podium-slot.rank-3 .podium-base { height:52px; background:linear-gradient(180deg,#d08a52,#a8683b); }
+  .lb-rank-cell { font-family:var(--mono); font-weight:800; font-size:0.9rem; }
+  .lb-fire { color:var(--warn); font-size:0.77rem; font-family:var(--mono); font-weight:700; white-space:nowrap; }
 </style>
 </head>
 <body>
@@ -4192,6 +4218,9 @@
         </button>
         <button class="nav-item" id="nav-leadtime" onclick="showPage('leadtime',this)">
           <span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><polyline points="12 9 12 13 15 15"/><line x1="9" y1="2" x2="15" y2="2"/></svg></span><span class="nav-text">Lead Time</span>
+        </button>
+        <button class="nav-item" id="nav-leaderboard" onclick="showPage('leaderboard',this)">
+          <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v6a5 5 0 0 1-10 0z"/><path d="M17 5h3a2 2 0 0 1-2 4"/><path d="M7 5H4a2 2 0 0 0 2 4"/></svg></span><span class="nav-text">🏆 Leaderboard</span>
         </button>
       </div>
     </div>
@@ -4947,6 +4976,43 @@
         </table>
         <div class="table-footer" style="display:flex;align-items:center;justify-content:flex-end;padding:0.6rem 0.2rem 0">
           <div class="pagination" id="leadTimePagination"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEADERBOARD / STREAK / BADGES PAGE -->
+    <div class="page" id="page-leaderboard">
+      <div class="chart-card" style="margin-bottom:1rem">
+        <div class="chart-header">
+          <div class="chart-title">🔥 Streak ทีมจัดซื้อ — ปิดงานตรงเวลาต่อเนื่อง</div>
+        </div>
+        <div id="teamStreakWrap" style="display:flex;flex-wrap:wrap;gap:1rem;align-items:center;padding:0.3rem 0 1.1rem"></div>
+        <div id="badgeGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:0.7rem"></div>
+      </div>
+
+      <div class="chart-card" style="margin-bottom:1rem">
+        <div class="chart-header" style="flex-wrap:wrap;gap:0.4rem">
+          <div class="chart-title">🏆 Maker Leaderboard — ตรงเวลาที่สุด</div>
+          <div style="font-size: 0.7rem;color:var(--muted)">จัดอันดับจาก % ตรงเวลา (ต้องมีงานปิดแล้วอย่างน้อย 3 รายการ)</div>
+        </div>
+        <div id="leaderboardPodium" style="display:flex;justify-content:center;align-items:flex-end;gap:1.4rem;padding:1.2rem 0 0.4rem;flex-wrap:wrap;min-height:170px"></div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th style="width:50px">อันดับ</th>
+            <th>MAKER</th>
+            <th style="text-align:center">งานที่ปิดแล้ว</th>
+            <th style="text-align:center">ตรงเวลา</th>
+            <th style="text-align:center">% ตรงเวลา</th>
+            <th style="text-align:center">🔥 Streak ปัจจุบัน</th>
+            <th style="text-align:center">Best Streak</th>
+          </tr></thead>
+          <tbody id="leaderboardTableBody"><tr><td colspan="7" class="empty"><div class="spinner"></div></td></tr></tbody>
+        </table>
+        <div class="table-footer" style="display:flex;align-items:center;justify-content:flex-end;padding:0.6rem 0.2rem 0">
+          <div class="pagination" id="leaderboardPagination"></div>
         </div>
       </div>
     </div>
@@ -6283,7 +6349,7 @@ function showPage(name, btn) {
   document.getElementById('page-' + name).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  const titles = { home:'🏠 หน้าหลัก', exec:'🎯 ภาพรวม KPI', dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', partmodel:'🧩 PART MODEL', summary:'📈 สรุปภาพรวม', gantt:'📅 Timeline / Gantt', setup:'⚙️ ตั้งค่าระบบ', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis', cer:'📄 ติดตามใบ CER', modeltracker:'🗂️ Model Tracker', workplan:'📅 ตารางแผนงานข้างนอก', payroll:'⏱️ ลงเวลา & ค่าแรง' };
+  const titles = { home:'🏠 หน้าหลัก', exec:'🎯 ภาพรวม KPI', dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', partmodel:'🧩 PART MODEL', summary:'📈 สรุปภาพรวม', gantt:'📅 Timeline / Gantt', setup:'⚙️ ตั้งค่าระบบ', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis', leaderboard:'🏆 Maker Leaderboard', cer:'📄 ติดตามใบ CER', modeltracker:'🗂️ Model Tracker', workplan:'📅 ตารางแผนงานข้างนอก', payroll:'⏱️ ลงเวลา & ค่าแรง' };
   document.getElementById('topbarTitle').textContent = titles[name] || name;
   if (name === 'home') renderDailyBriefing();
   if (name === 'exec') renderExecDashboard();
@@ -6291,6 +6357,7 @@ function showPage(name, btn) {
   if (name === 'partmodel') { renderPmSummaryStats(); renderPartModelByModel(); }
   if (name === 'supplier') loadSuppliers();
   if (name === 'leadtime') renderLeadTime();
+  if (name === 'leaderboard') renderLeaderboard();
   if (name === 'history') loadHistoryFromSheet();
   if (name === 'gantt') renderGantt();
   if (name === 'cer') loadCerPage();
@@ -9618,6 +9685,161 @@ function renderLeadTime() {
   }).join('') : '<tr><td colspan="7" class="empty">ไม่มีข้อมูล</td></tr>';
 
   renderSimplePagination('leadTimePagination', leadTimePage, ltTotalPages, (p) => { leadTimePage = p; renderLeadTime(); });
+}
+
+/* ══════════════════════════════════════════════════════
+   MAKER LEADERBOARD + TEAM STREAK / BADGES
+══════════════════════════════════════════════════════ */
+const STREAK_BADGES = [
+  { req: 5,   icon: '🥉', name: 'มือใหม่ไฟแรง' },
+  { req: 10,  icon: '🥈', name: 'มือโปร' },
+  { req: 25,  icon: '🥇', name: 'มือฉมัง' },
+  { req: 50,  icon: '💎', name: 'เทพจัดซื้อ' },
+  { req: 100, icon: '👑', name: 'ตำนานจัดซื้อ' }
+];
+let leaderboardPage = 1;
+
+function streaksFromBooleans(arr) {
+  let best = 0, run = 0;
+  arr.forEach(b => { if (b) { run++; best = Math.max(best, run); } else run = 0; });
+  let current = 0;
+  for (let i = arr.length - 1; i >= 0; i--) { if (arr[i]) current++; else break; }
+  return { current, best };
+}
+
+// รายการที่ปิดงานแล้วและมีวันที่ครบ เรียงตามวันที่ส่งจริงจากเก่า → ใหม่
+function getCompletedOnTimeRecords() {
+  return allData
+    .filter(r => r.status && r.status.includes('เสร็จแล้ว') && r.actualDate && r.dueDate)
+    .map(r => {
+      const ac = parseThaiDate(r.actualDate), due = parseThaiDate(r.dueDate);
+      if (!ac || !due) return null;
+      return { maker: r.maker || 'ไม่ระบุ', actualDate: ac, onTime: ac <= due };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.actualDate - b.actualDate);
+}
+
+function computeTeamStreak() {
+  return streaksFromBooleans(getCompletedOnTimeRecords().map(r => r.onTime));
+}
+
+function computeMakerLeaderboard() {
+  const records = getCompletedOnTimeRecords();
+  const byMaker = {};
+  records.forEach(r => { (byMaker[r.maker] = byMaker[r.maker] || []).push(r.onTime); });
+  const ltMap = {};
+  calcLeadTimeStats().forEach(s => { ltMap[s.maker] = s; });
+
+  return Object.keys(byMaker).map(maker => {
+    const bools = byMaker[maker];
+    const { current, best } = streaksFromBooleans(bools);
+    const stat = ltMap[maker] || {};
+    const total = bools.length;
+    const ontime = bools.filter(Boolean).length;
+    return {
+      maker,
+      total,
+      ontime,
+      late: total - ontime,
+      ontimeRate: total ? Math.round(ontime / total * 100) : null,
+      avgLead: stat.avgLead ?? null,
+      streakCurrent: current,
+      streakBest: best
+    };
+  })
+    .filter(m => m.total >= 3) // ต้องมีข้อมูลพอสมควรถึงจะจัดอันดับอย่างเป็นธรรม
+    .sort((a, b) => (b.ontimeRate - a.ontimeRate) || (b.total - a.total));
+}
+
+function renderLeaderboard() {
+  if (!Array.isArray(allData) || !allData.length) return;
+
+  /* ── Streak & Badges ของทีมจัดซื้อ ── */
+  const team = computeTeamStreak();
+  const nextBadge = STREAK_BADGES.find(b => b.req > team.best);
+  const progressPct = nextBadge ? Math.min(100, Math.round(team.current / nextBadge.req * 100)) : 100;
+
+  document.getElementById('teamStreakWrap').innerHTML = `
+    <div class="streak-flame-card">
+      <div class="streak-flame-emoji">${team.current > 0 ? '🔥' : '💤'}</div>
+      <div>
+        <div class="streak-flame-num">${team.current}</div>
+        <div class="streak-flame-label">Streak ปัจจุบัน (ปิดงานตรงเวลาติดต่อกัน)</div>
+      </div>
+    </div>
+    <div class="streak-flame-card">
+      <div class="streak-flame-emoji">🏅</div>
+      <div>
+        <div class="streak-flame-num" style="color:var(--accent)">${team.best}</div>
+        <div class="streak-flame-label">สถิติสูงสุดตลอดกาล</div>
+      </div>
+    </div>
+    <div style="flex:1;min-width:220px">
+      ${nextBadge ? `
+        <div style="font-size: 0.777rem;color:var(--muted);margin-bottom:0.35rem">
+          อีก <strong style="color:var(--text)">${Math.max(0, nextBadge.req - team.current)}</strong> ครั้งติดต่อกัน จะได้ badge ${nextBadge.icon} <strong>${nextBadge.name}</strong>
+        </div>
+        <div class="qty-progress-track" style="height:8px">
+          <div class="qty-progress-fill" style="width:${progressPct}%;background:var(--warn)"></div>
+        </div>` :
+        `<div style="font-size: 0.84rem;color:var(--success);font-weight:700">🎉 ปลดล็อก Badge ครบทุกระดับแล้ว!</div>`}
+    </div>`;
+
+  document.getElementById('badgeGrid').innerHTML = STREAK_BADGES.map(b => {
+    const unlocked = team.best >= b.req;
+    return `<div class="badge-chip ${unlocked ? 'unlocked' : 'locked'}" title="${unlocked ? 'ปลดล็อกแล้ว' : `ต้องปิดงานตรงเวลาติดต่อกัน ${b.req} ครั้ง`}">
+      <div class="badge-chip-icon">${b.icon}</div>
+      <div class="badge-chip-name">${b.name}</div>
+      <div class="badge-chip-req">${unlocked ? '✓ ปลดล็อกแล้ว' : `${b.req} ครั้งติด`}</div>
+    </div>`;
+  }).join('');
+
+  /* ── Maker Leaderboard ── */
+  const ranked = computeMakerLeaderboard();
+
+  const podiumEl = document.getElementById('leaderboardPodium');
+  if (!ranked.length) {
+    podiumEl.innerHTML = `<div class="empty" style="padding:1rem"><div class="empty-icon">🏆</div><div class="empty-title">ยังไม่มีข้อมูลพอจัดอันดับ</div><div class="empty-sub">ต้องมี Maker ที่ปิดงานแล้วอย่างน้อย 3 รายการ</div></div>`;
+  } else {
+    const top3 = ranked.slice(0, 3);
+    const medalColor = ['#f5c542', '#c7cdd6', '#d08a52'];
+    const medalIcon = ['🥇', '🥈', '🥉'];
+    const order = [1, 0, 2].filter(i => top3[i]); // เรียง 2-1-3 เพื่อให้อันดับ 1 อยู่ตรงกลางแบบโพเดียม
+    podiumEl.innerHTML = order.map(i => {
+      const m = top3[i];
+      const rank = i + 1;
+      return `<div class="podium-slot rank-${rank}">
+        <div class="podium-avatar" style="color:${medalColor[i]}">${medalIcon[i]}</div>
+        <div class="podium-name" title="${m.maker}">${m.maker}</div>
+        <div class="podium-rate" style="color:${medalColor[i]}">${m.ontimeRate}%</div>
+        <div style="font-size: 0.672rem;color:var(--muted)">${m.ontime}/${m.total} ตรงเวลา</div>
+        <div class="podium-base">#${rank}</div>
+      </div>`;
+    }).join('');
+  }
+
+  const rankedTotalPages = Math.ceil(ranked.length / SMALL_PAGE_SIZE) || 1;
+  leaderboardPage = Math.min(leaderboardPage, rankedTotalPages);
+  const lbStart = (leaderboardPage - 1) * SMALL_PAGE_SIZE;
+  const pageRanked = ranked.slice(lbStart, lbStart + SMALL_PAGE_SIZE);
+
+  document.getElementById('leaderboardTableBody').innerHTML = pageRanked.length ? pageRanked.map((m, i) => {
+    const rank = lbStart + i + 1;
+    const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '';
+    const rateColor = m.ontimeRate >= 80 ? 'var(--success)' : m.ontimeRate >= 60 ? 'var(--warn)' : 'var(--danger)';
+    return `<tr>
+      <td class="lb-rank-cell">${medal || rank}</td>
+      <td class="maker-cell"><strong>${m.maker}</strong></td>
+      <td style="text-align:center;font-family:var(--mono)">${m.total}</td>
+      <td style="text-align:center;font-family:var(--mono);color:var(--success)">${m.ontime}</td>
+      <td style="text-align:center;font-family:var(--mono);font-weight:700;color:${rateColor}">${m.ontimeRate}%</td>
+      <td style="text-align:center" class="lb-fire">${m.streakCurrent > 0 ? `🔥 ${m.streakCurrent}` : '—'}</td>
+      <td style="text-align:center;font-family:var(--mono);color:var(--muted)">${m.streakBest}</td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="7" class="empty">ยังไม่มีข้อมูลพอจัดอันดับ (ต้องมีงานปิดแล้วอย่างน้อย 3 รายการต่อ Maker)</td></tr>`;
+
+  renderSimplePagination('leaderboardPagination', leaderboardPage, rankedTotalPages, (p) => { leaderboardPage = p; renderLeaderboard(); });
 }
 </script>
 
