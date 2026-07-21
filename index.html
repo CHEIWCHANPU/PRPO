@@ -5824,11 +5824,12 @@
         </div>
         <div class="wp-form-group">
           <label class="wp-form-label">เวลาเริ่ม</label>
-          <input type="time" class="wp-form-input" id="wpf-timeStart">
+          <input type="text" class="wp-form-input" id="wpf-timeStart" placeholder="เช่น 09:00 หรือ เช้า">
+
         </div>
         <div class="wp-form-group">
           <label class="wp-form-label">เวลาจบ</label>
-          <input type="time" class="wp-form-input" id="wpf-timeEnd">
+          <input type="text" class="wp-form-input" id="wpf-timeEnd" placeholder="เช่น 17:00 หรือ บ่าย">
         </div>
         <div class="wp-form-group wp-form-full">
           <label class="wp-form-label">หมายเหตุ / เป้าหมาย</label>
@@ -11445,45 +11446,20 @@ function wpStatusHtml(s) {
   if (s === 'กำลังดำเนินการ')  return `<span class="wp-status-badge wp-status-inprog">🔄 ดำเนินการ</span>`;
   return `<span class="wp-status-badge wp-status-todo">🕐 ยังไม่เริ่ม</span>`;
 }
-/* แปลงเวลารูปแบบเก่าจาก Google Sheet (เช่น "9" -> "09:00", "13.3" -> "13:30") ให้เป็น HH:MM มาตรฐาน */
+/* ฟิลด์เวลาเป็น TEXT อิสระ (พิมพ์เองได้ เช่น "09:00", "เช้า", "บ่ายๆ") — ไม่แปลง/ไม่จัดรูปแบบใดๆ ทั้งสิ้น
+   เก็บฟังก์ชันนี้ไว้เผื่อมีข้อมูลเก่าที่หลุดมาเป็น Date object จาก Google Sheets (bug เดิมของ "เวลาอย่างเดียว" ที่กลายเป็นวันที่ 30 ธ.ค. 1899) */
 function wpNormalizeTime(v) {
   if (v === null || v === undefined) return '';
-  // Google Sheets บางครั้งส่งค่าฟิลด์ "เวลาอย่างเดียว" มาเป็น Date object ที่มี
-  // ส่วนวันที่เพี้ยนเป็น 30 ธ.ค. 1899 — อ่านชั่วโมง/นาทีตรงจากตัว object แทนการแปลงทั้งก้อนเป็น string
   if (v instanceof Date && !isNaN(v)) {
     const h = String(v.getHours()).padStart(2,'0');
     const mi = String(v.getMinutes()).padStart(2,'0');
     return `${h}:${mi}`;
   }
-  v = String(v).trim();
-  if (!v || v === '—') return '';
-  // รูปแบบ HH:MM หรือ H:MM อยู่แล้ว
-  let m = v.match(/^(\d{1,2}):(\d{1,2})$/);
-  if (m) return `${m[1].padStart(2,'0')}:${m[2].padStart(2,'0')}`;
-  // รูปแบบทศนิยม เช่น 13.3 (หมายถึง 13:30), 9.45
-  m = v.match(/^(\d{1,2})\.(\d{1,2})$/);
-  if (m) {
-    let h = m[1].padStart(2,'0');
-    let mm = m[2].length === 1 ? m[2] + '0' : m[2].slice(0,2);
-    return `${h}:${mm}`;
-  }
-  // แค่ตัวเลขชั่วโมง เช่น 9, 13
-  m = v.match(/^(\d{1,2})$/);
-  if (m) return `${m[1].padStart(2,'0')}:00`;
-  // รูปแบบ ISO datetime เช่น 1899-12-30T19:42:04.000Z หรือ 2026-07-24T19:42:04
-  m = v.match(/^\d{4}-\d{2}-\d{2}T(\d{2}):(\d{2})/);
-  if (m) return `${m[1]}:${m[2]}`;
-  // รูปแบบ Date.toString() เต็มรูปแบบ เช่น "Sat Dec 30 1899 19:42:04 GMT+0642 (Indochina Time)"
-  // (เกิดจาก Google Sheets เก็บค่า "เวลาอย่างเดียว" เป็นวันที่ 30 ธ.ค. 1899 แล้วถูกแปลงเป็น string ก่อนส่งมา)
-  m = v.match(/\d{4}\s+(\d{1,2}):(\d{2}):\d{2}\s+GMT/);
-  if (m) return `${m[1].padStart(2,'0')}:${m[2]}`;
-  return v; // จำไม่ได้ ให้แสดงค่าดิบไว้ก่อน
+  return String(v).trim();
 }
-/* แปลงเวลาเป็นข้อความแบบไทยอ่านง่าย เช่น 09:00 -> "09:00 น." */
+/* แสดงค่าที่พิมพ์มาตรงๆ ไม่ต่อ "น." หรือแปลงรูปแบบใดๆ */
 function wpTimeDisplay(v) {
-  const t = wpNormalizeTime(v);
-  if (!t) return '';
-  return /^\d{2}:\d{2}$/.test(t) ? `${t} น.` : t;
+  return wpNormalizeTime(v);
 }
 function wpImpHtml(imp) {
   if (imp === 'สูง')      return `<span class="wp-imp-high">🔥 สูง</span>`;
