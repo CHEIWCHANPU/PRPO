@@ -573,6 +573,24 @@
   .briefing-category-title { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 0.892rem; color: var(--text); text-shadow: var(--text-shadow-sm); letter-spacing: 0.01em; }
   .briefing-category-badge { background: var(--glow-accent); color: var(--accent); font-size: 0.63rem; font-weight: 700; padding: 0.1rem 0.5rem; border-radius: 10px; font-family: var(--mono); }
   .briefing-flat-items { display: flex; flex-direction: column; gap: 0.35rem; }
+  .wp-briefing-item { padding: 0.75rem 0.85rem; }
+  .wp-briefing-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.15rem; }
+  .wp-meta-pill {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    font-family: var(--mono); font-size: 0.75rem; font-weight: 600;
+    padding: 0.3rem 0.6rem; border-radius: 8px;
+    background: var(--surface2); border: 1px solid var(--border);
+    box-shadow: var(--shadow-xs);
+    color: var(--text); white-space: nowrap;
+  }
+  .wp-meta-pill.wp-meta-date { color: var(--muted); }
+  .wp-meta-pill.wp-meta-time {
+    color: var(--accent);
+    background: var(--glow-accent);
+    border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+  }
+  .wp-meta-status { margin-left: auto; }
+  @media (max-width: 640px) { .wp-meta-status { margin-left: 0; } }
 
   /* ══════════════════════════════════════
      หน้าหลัก (Daily Briefing) — DEPTH & DIMENSION
@@ -6666,15 +6684,15 @@ function renderDailyBriefing() {
     const itemsHtml = sorted.map(w => {
       const r = w.item;
       const tag = briefingTag(w.daysLeft);
-      return `<div class="briefing-item${tag.urgent ? ' briefing-item-urgent' : ''}" style="--item-accent:${tag.color}">
+      return `<div class="briefing-item wp-briefing-item${tag.urgent ? ' briefing-item-urgent' : ''}" style="--item-accent:${tag.color}">
         <div class="briefing-item-top">
           <div class="briefing-item-name">${wpTypeEmoji(r.type)} ${r.name || '(ไม่มีชื่องาน)'} ${r.location ? `<span style="color:var(--muted);font-size: 0.714rem">(${r.location})</span>` : ''}</div>
           <span class="briefing-tag${tag.urgent ? ' briefing-tag-urgent' : ''}" style="color:${tag.color};border-color:${tag.color}">${tag.text}</span>
         </div>
-        <div class="briefing-item-sub">
-          <span class="briefing-item-due">📅 ${r.date || '—'}</span>
-          ${(r.timeStart || r.timeEnd) ? `<span class="briefing-item-due">🕐 ${wpTimeDisplay(r.timeStart) || '—'}${r.timeEnd ? ' - ' + wpTimeDisplay(r.timeEnd) : ''}</span>` : ''}
-          ${wpStatusHtml(r.status)}
+        <div class="wp-briefing-meta">
+          <span class="wp-meta-pill wp-meta-date">📅 ${r.date || '—'}</span>
+          ${(r.timeStart || r.timeEnd) ? `<span class="wp-meta-pill wp-meta-time">🕐 ${wpTimeDisplay(r.timeStart) || '—'}${r.timeEnd ? ' – ' + wpTimeDisplay(r.timeEnd) : ''}</span>` : ''}
+          <span class="wp-meta-status">${wpStatusHtml(r.status)}</span>
         </div>
       </div>`;
     }).join('');
