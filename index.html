@@ -6673,7 +6673,7 @@ function renderDailyBriefing() {
         </div>
         <div class="briefing-item-sub">
           <span class="briefing-item-due">📅 ${r.date || '—'}</span>
-          ${(r.timeStart || r.timeEnd) ? `<span class="briefing-item-due">🕐 ${wpNormalizeTime(r.timeStart) || '—'}${r.timeEnd ? ' - ' + wpNormalizeTime(r.timeEnd) : ''}</span>` : ''}
+          ${(r.timeStart || r.timeEnd) ? `<span class="briefing-item-due">🕐 ${wpTimeDisplay(r.timeStart) || '—'}${r.timeEnd ? ' - ' + wpTimeDisplay(r.timeEnd) : ''}</span>` : ''}
           ${wpStatusHtml(r.status)}
         </div>
       </div>`;
@@ -11447,6 +11447,12 @@ function wpNormalizeTime(v) {
   if (m) return `${m[1].padStart(2,'0')}:00`;
   return v; // จำไม่ได้ ให้แสดงค่าดิบไว้ก่อน
 }
+/* แปลงเวลาเป็นข้อความแบบไทยอ่านง่าย เช่น 09:00 -> "09:00 น." */
+function wpTimeDisplay(v) {
+  const t = wpNormalizeTime(v);
+  if (!t) return '';
+  return /^\d{2}:\d{2}$/.test(t) ? `${t} น.` : t;
+}
 function wpImpHtml(imp) {
   if (imp === 'สูง')      return `<span class="wp-imp-high">🔥 สูง</span>`;
   if (imp === 'ปานกลาง') return `<span class="wp-imp-medium">🟡 ปานกลาง</span>`;
@@ -11530,8 +11536,8 @@ function renderWpTable() {
       <td style="font-size: 0.798rem">${r.location || '—'}</td>
       <td>${wpStatusHtml(r.status)}</td>
       <td>${wpImpHtml(r.importance)}</td>
-      <td class="wp-time-cell">${wpNormalizeTime(r.timeStart) || '—'}</td>
-      <td class="wp-time-cell">${wpNormalizeTime(r.timeEnd) || '—'}</td>
+      <td class="wp-time-cell">${wpTimeDisplay(r.timeStart) || '—'}</td>
+      <td class="wp-time-cell">${wpTimeDisplay(r.timeEnd) || '—'}</td>
       <td class="wp-note-cell">${r.note || '—'}</td>
       <td>
         <div style="display:flex;gap:0.3rem">
