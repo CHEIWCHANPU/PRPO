@@ -5806,11 +5806,11 @@
         </div>
         <div class="wp-form-group">
           <label class="wp-form-label">เวลาเริ่ม</label>
-          <input type="text" class="wp-form-input" id="wpf-timeStart">
+          <input type="time" class="wp-form-input" id="wpf-timeStart">
         </div>
         <div class="wp-form-group">
           <label class="wp-form-label">เวลาจบ</label>
-          <input type="text" class="wp-form-input" id="wpf-timeEnd">
+          <input type="time" class="wp-form-input" id="wpf-timeEnd">
         </div>
         <div class="wp-form-group wp-form-full">
           <label class="wp-form-label">หมายเหตุ / เป้าหมาย</label>
@@ -6673,6 +6673,7 @@ function renderDailyBriefing() {
         </div>
         <div class="briefing-item-sub">
           <span class="briefing-item-due">📅 ${r.date || '—'}</span>
+          ${(r.timeStart || r.timeEnd) ? `<span class="briefing-item-due">🕐 ${r.timeStart || '—'}${r.timeEnd ? ' - ' + r.timeEnd : ''}</span>` : ''}
           ${wpStatusHtml(r.status)}
         </div>
       </div>`;
