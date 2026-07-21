@@ -11448,6 +11448,13 @@ function wpStatusHtml(s) {
 /* แปลงเวลารูปแบบเก่าจาก Google Sheet (เช่น "9" -> "09:00", "13.3" -> "13:30") ให้เป็น HH:MM มาตรฐาน */
 function wpNormalizeTime(v) {
   if (v === null || v === undefined) return '';
+  // Google Sheets บางครั้งส่งค่าฟิลด์ "เวลาอย่างเดียว" มาเป็น Date object ที่มี
+  // ส่วนวันที่เพี้ยนเป็น 30 ธ.ค. 1899 — อ่านชั่วโมง/นาทีตรงจากตัว object แทนการแปลงทั้งก้อนเป็น string
+  if (v instanceof Date && !isNaN(v)) {
+    const h = String(v.getHours()).padStart(2,'0');
+    const mi = String(v.getMinutes()).padStart(2,'0');
+    return `${h}:${mi}`;
+  }
   v = String(v).trim();
   if (!v || v === '—') return '';
   // รูปแบบ HH:MM หรือ H:MM อยู่แล้ว
@@ -11463,6 +11470,13 @@ function wpNormalizeTime(v) {
   // แค่ตัวเลขชั่วโมง เช่น 9, 13
   m = v.match(/^(\d{1,2})$/);
   if (m) return `${m[1].padStart(2,'0')}:00`;
+  // รูปแบบ ISO datetime เช่น 1899-12-30T19:42:04.000Z หรือ 2026-07-24T19:42:04
+  m = v.match(/^\d{4}-\d{2}-\d{2}T(\d{2}):(\d{2})/);
+  if (m) return `${m[1]}:${m[2]}`;
+  // รูปแบบ Date.toString() เต็มรูปแบบ เช่น "Sat Dec 30 1899 19:42:04 GMT+0642 (Indochina Time)"
+  // (เกิดจาก Google Sheets เก็บค่า "เวลาอย่างเดียว" เป็นวันที่ 30 ธ.ค. 1899 แล้วถูกแปลงเป็น string ก่อนส่งมา)
+  m = v.match(/\d{4}\s+(\d{1,2}):(\d{2}):\d{2}\s+GMT/);
+  if (m) return `${m[1].padStart(2,'0')}:${m[2]}`;
   return v; // จำไม่ได้ ให้แสดงค่าดิบไว้ก่อน
 }
 /* แปลงเวลาเป็นข้อความแบบไทยอ่านง่าย เช่น 09:00 -> "09:00 น." */
