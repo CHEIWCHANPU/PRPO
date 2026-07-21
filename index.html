@@ -6673,7 +6673,7 @@ function renderDailyBriefing() {
         </div>
         <div class="briefing-item-sub">
           <span class="briefing-item-due">📅 ${r.date || '—'}</span>
-          ${(r.timeStart || r.timeEnd) ? `<span class="briefing-item-due">🕐 ${r.timeStart || '—'}${r.timeEnd ? ' - ' + r.timeEnd : ''}</span>` : ''}
+          ${(r.timeStart || r.timeEnd) ? `<span class="briefing-item-due">🕐 ${wpNormalizeTime(r.timeStart) || '—'}${r.timeEnd ? ' - ' + wpNormalizeTime(r.timeEnd) : ''}</span>` : ''}
           ${wpStatusHtml(r.status)}
         </div>
       </div>`;
@@ -11427,6 +11427,26 @@ function wpStatusHtml(s) {
   if (s === 'กำลังดำเนินการ')  return `<span class="wp-status-badge wp-status-inprog">🔄 ดำเนินการ</span>`;
   return `<span class="wp-status-badge wp-status-todo">🕐 ยังไม่เริ่ม</span>`;
 }
+/* แปลงเวลารูปแบบเก่าจาก Google Sheet (เช่น "9" -> "09:00", "13.3" -> "13:30") ให้เป็น HH:MM มาตรฐาน */
+function wpNormalizeTime(v) {
+  if (v === null || v === undefined) return '';
+  v = String(v).trim();
+  if (!v || v === '—') return '';
+  // รูปแบบ HH:MM หรือ H:MM อยู่แล้ว
+  let m = v.match(/^(\d{1,2}):(\d{1,2})$/);
+  if (m) return `${m[1].padStart(2,'0')}:${m[2].padStart(2,'0')}`;
+  // รูปแบบทศนิยม เช่น 13.3 (หมายถึง 13:30), 9.45
+  m = v.match(/^(\d{1,2})\.(\d{1,2})$/);
+  if (m) {
+    let h = m[1].padStart(2,'0');
+    let mm = m[2].length === 1 ? m[2] + '0' : m[2].slice(0,2);
+    return `${h}:${mm}`;
+  }
+  // แค่ตัวเลขชั่วโมง เช่น 9, 13
+  m = v.match(/^(\d{1,2})$/);
+  if (m) return `${m[1].padStart(2,'0')}:00`;
+  return v; // จำไม่ได้ ให้แสดงค่าดิบไว้ก่อน
+}
 function wpImpHtml(imp) {
   if (imp === 'สูง')      return `<span class="wp-imp-high">🔥 สูง</span>`;
   if (imp === 'ปานกลาง') return `<span class="wp-imp-medium">🟡 ปานกลาง</span>`;
@@ -11510,8 +11530,8 @@ function renderWpTable() {
       <td style="font-size: 0.798rem">${r.location || '—'}</td>
       <td>${wpStatusHtml(r.status)}</td>
       <td>${wpImpHtml(r.importance)}</td>
-      <td class="wp-time-cell">${r.timeStart || '—'}</td>
-      <td class="wp-time-cell">${r.timeEnd || '—'}</td>
+      <td class="wp-time-cell">${wpNormalizeTime(r.timeStart) || '—'}</td>
+      <td class="wp-time-cell">${wpNormalizeTime(r.timeEnd) || '—'}</td>
       <td class="wp-note-cell">${r.note || '—'}</td>
       <td>
         <div style="display:flex;gap:0.3rem">
@@ -11605,8 +11625,8 @@ function openWpEditModal(item) {
   document.getElementById('wpf-location').value = item.location || '';
   document.getElementById('wpf-status').value = item.status || 'ยังไม่เริ่ม';
   document.getElementById('wpf-importance').value = item.importance || 'สูง';
-  document.getElementById('wpf-timeStart').value = item.timeStart || '';
-  document.getElementById('wpf-timeEnd').value = item.timeEnd || '';
+  document.getElementById('wpf-timeStart').value = wpNormalizeTime(item.timeStart);
+  document.getElementById('wpf-timeEnd').value = wpNormalizeTime(item.timeEnd);
   document.getElementById('wpf-note').value = item.note || '';
   document.getElementById('wpModalOverlay').classList.add('open');
 }
