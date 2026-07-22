@@ -1204,6 +1204,91 @@
   .accent-popover .accent-pick-row { margin-top: 0; gap: 0.55rem; }
   .accent-popover .accent-swatch { width: 30px; height: 30px; }
 
+  /* ── ACCOUNT POPOVER (topbar) ── */
+  .account-popover-wrap { position: relative; }
+  .account-pill {
+    display: flex; align-items: center; gap: 0.5rem; padding: 0.28rem 0.75rem 0.28rem 0.32rem;
+    border-radius: 22px; border: 1px solid var(--border); background: var(--surface2);
+    color: var(--text); font-size: 0.777rem; font-weight: 600; cursor: pointer;
+    transition: border-color 0.18s, transform 0.18s, box-shadow 0.18s; white-space: nowrap; font-family: var(--font);
+    position: relative;
+  }
+  .account-pill:hover { border-color: color-mix(in srgb, var(--accent) 55%, var(--border)); transform: translateY(-1px); box-shadow: 0 6px 18px -8px rgba(0,0,0,0.35); }
+  .account-pill:active { transform: translateY(0); }
+  .account-pill-avatar-wrap { position: relative; flex-shrink: 0; display: flex; }
+  .account-pill-dot {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--success, #22c55e); flex-shrink: 0;
+    box-shadow: 0 0 0 2px var(--surface2);
+    position: absolute; bottom: -1px; right: -1px; z-index: 2;
+  }
+  .account-pill-dot::after {
+    content: ''; position: absolute; inset: -3px; border-radius: 50%;
+    border: 1.5px solid var(--success, #22c55e); opacity: 0.55; animation: accountPulse 2.2s ease-out infinite;
+  }
+  @keyframes accountPulse { 0% { transform: scale(0.6); opacity: 0.6; } 100% { transform: scale(1.9); opacity: 0; } }
+  .account-pill-avatar {
+    width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0; position: relative;
+    background: linear-gradient(140deg, var(--accent), color-mix(in srgb, var(--accent) 55%, #7c3aed));
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    font-size: 0.635rem; font-weight: 800; letter-spacing: 0; font-family: var(--font-display);
+    box-shadow: inset 0 0 0 1.5px rgba(255,255,255,0.25);
+  }
+  .account-pill-label { color: var(--muted); font-weight: 600; }
+  .account-pill-chevron { width: 12px; height: 12px; color: var(--muted); transition: transform 0.18s; flex-shrink: 0; margin-left: -0.15rem; }
+  .account-pill[aria-expanded="true"] .account-pill-chevron { transform: rotate(180deg); }
+
+  .account-popover {
+    position: absolute; top: calc(100% + 12px); right: 0; z-index: 999; display: none; width: 268px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 20px 60px -16px rgba(0,0,0,0.55), 0 4px 18px -6px rgba(0,0,0,0.35);
+    overflow: hidden; animation: accountPopIn 0.16s cubic-bezier(.2,.9,.3,1.3);
+  }
+  @keyframes accountPopIn { from { opacity: 0; transform: translateY(-6px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  .account-popover.show { display: block; }
+  .account-popover-banner {
+    height: 44px; background: linear-gradient(120deg, var(--accent), color-mix(in srgb, var(--accent) 45%, #7c3aed) 70%, color-mix(in srgb, var(--accent) 20%, #7c3aed));
+    position: relative; overflow: hidden;
+  }
+  .account-popover-banner::after {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(120px 60px at 85% 0%, rgba(255,255,255,0.28), transparent 70%);
+  }
+  .account-popover-user { display: flex; align-items: flex-start; gap: 0.65rem; padding: 0 0.95rem 0.85rem; margin-top: -22px; position: relative; }
+  .account-popover-avatar {
+    width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(140deg, var(--accent), color-mix(in srgb, var(--accent) 55%, #7c3aed));
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    font-size: 0.93rem; font-weight: 800; font-family: var(--font-display);
+    border: 3px solid var(--surface); box-shadow: 0 4px 14px -4px rgba(0,0,0,0.5);
+  }
+  .account-popover-idwrap { padding-top: 4px; min-width: 0; }
+  .account-popover-id { font-size: 0.86rem; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .account-popover-role {
+    display: inline-flex; align-items: center; margin-top: 0.3rem; padding: 0.1rem 0.5rem;
+    border-radius: 20px; background: color-mix(in srgb, var(--accent) 14%, transparent);
+    color: var(--accent); font-size: 0.641rem; font-weight: 700; letter-spacing: 0.02em;
+  }
+  .account-popover-status {
+    display: flex; align-items: center; gap: 0.4rem; padding: 0 0.95rem 0.85rem; font-size: 0.703rem; color: var(--muted);
+  }
+  .account-popover-status .account-pill-dot { position: static; }
+  .account-popover-status .account-pill-dot::after { border-color: var(--success, #22c55e); }
+  .account-popover-divider { height: 1px; background: var(--border); margin: 0 0.95rem; }
+  .account-popover-meta { padding: 0.8rem 0.95rem; display: flex; flex-direction: column; gap: 0.5rem; }
+  .account-popover-meta-row { display: flex; align-items: center; justify-content: space-between; font-size: 0.714rem; }
+  .account-popover-meta-label { color: var(--muted); }
+  .account-popover-meta-val { color: var(--text); font-weight: 600; font-family: var(--mono); }
+  .account-popover-actions { padding: 0.6rem 0.7rem 0.75rem; }
+  .account-popover-logout {
+    width: 100%; display: flex; align-items: center; gap: 0.6rem; padding: 0.58rem 0.7rem;
+    border-radius: 10px; border: 1px solid var(--border); background: transparent;
+    color: var(--muted); font-size: 0.84rem; font-weight: 600; cursor: pointer; transition: all 0.16s;
+    white-space: nowrap; font-family: var(--font);
+  }
+  .account-popover-logout:hover { background: color-mix(in srgb, var(--danger) 12%, transparent); border-color: color-mix(in srgb, var(--danger) 45%, transparent); color: var(--danger); transform: translateY(-1px); }
+  .account-popover-logout:active { transform: translateY(0); }
+  .account-popover-logout svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+
   /* DIVIDER */
   .section-divider { display: flex; align-items: center; gap: 0.75rem; margin: 1.2rem 0; }
   .section-divider-line { flex: 1; height: 1px; background: var(--border); }
@@ -3310,6 +3395,8 @@
     .theme-pill { padding: 0; width: 30px; height: 30px; justify-content: center; }
     .mute-pill span:last-child { display: none; }
     .mute-pill { padding: 0; width: 30px; height: 30px; justify-content: center; }
+    .account-pill-label { display: none; }
+    .account-pill { padding: 0.28rem 0.5rem; }
     .topbar-right { flex-wrap: nowrap; justify-content: flex-end; gap: 0.4rem !important; width: auto; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
     .topbar-right::-webkit-scrollbar { display: none; }
     .topbar-right > div[style*="width:1px"] { display: none; }
@@ -4362,9 +4449,6 @@
 
   </nav>
   <div class="sidebar-footer">
-    <button class="logout-btn" onclick="doLogout()">
-      <span class="logout-icon"><svg viewBox="0 0 24 24"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></span><span class="nav-text" style="font-size: 0.84rem">ออกจากระบบ</span>
-    </button>
     <button class="collapse-btn" onclick="toggleSidebar()">
       <span class="nav-icon" id="collapseIcon" style="font-size:0.892rem">◀</span><span class="nav-text" style="font-size:0.819rem">ย่อเมนู</span>
     </button>
@@ -4417,6 +4501,40 @@
         </div>
       </div>
       <button class="theme-pill" id="themeToggle" onclick="toggleTheme()" data-tour="theme-toggle">🌙 Dark</button>
+      <div style="width:1px;height:20px;background:var(--border);flex-shrink:0"></div>
+      <div class="account-popover-wrap">
+        <div class="account-pill" id="accountBtn" onclick="toggleAccountPopover(event)" title="บัญชี" aria-expanded="false" aria-haspopup="true">
+          <span class="account-pill-avatar-wrap">
+            <span class="account-pill-avatar" id="accountAvatarMini">PU</span>
+            <span class="account-pill-dot"></span>
+          </span>
+          <span class="account-pill-label">บัญชี</span>
+          <svg class="account-pill-chevron" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="account-popover" id="accountPopover" role="menu">
+          <div class="account-popover-banner"></div>
+          <div class="account-popover-user">
+            <div class="account-popover-avatar" id="accountAvatarFull">PU</div>
+            <div class="account-popover-idwrap">
+              <div class="account-popover-id" id="accountIdLabel">Purchasing Engineer</div>
+              <span class="account-popover-role">ทีมจัดซื้อ · Purchase</span>
+            </div>
+          </div>
+          <div class="account-popover-status"><span class="account-pill-dot"></span>เข้าสู่ระบบอยู่ · เซสชันปลอดภัย</div>
+          <div class="account-popover-divider"></div>
+          <div class="account-popover-meta">
+            <div class="account-popover-meta-row"><span class="account-popover-meta-label">บริษัท</span><span class="account-popover-meta-val">Chiewchan Industry</span></div>
+            <div class="account-popover-meta-row"><span class="account-popover-meta-label">ระบบ</span><span class="account-popover-meta-val">PURCHASE-EN-CCIP</span></div>
+          </div>
+          <div class="account-popover-divider"></div>
+          <div class="account-popover-actions">
+            <button class="account-popover-logout" onclick="doLogout()">
+              <svg viewBox="0 0 24 24"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+              ออกจากระบบ
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -6026,6 +6144,7 @@ window.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('click', (e) => {
     if (notifOpen && !e.target.closest('#notifPanel') && !e.target.closest('#notifBell')) closeNotif();
     if (accentPopoverOpen && !e.target.closest('#accentPopover') && !e.target.closest('#accentBtn')) closeAccentPopover();
+    if (accountPopoverOpen && !e.target.closest('#accountPopover') && !e.target.closest('#accountBtn')) closeAccountPopover();
   });
   loadData();
   loadSuppliers();
@@ -6133,6 +6252,20 @@ function toggleAccentPopover(e) {
 function closeAccentPopover() {
   accentPopoverOpen = false;
   document.getElementById('accentPopover')?.classList.remove('show');
+}
+
+/* ── ACCOUNT POPOVER ── */
+let accountPopoverOpen = false;
+function toggleAccountPopover(e) {
+  if (e) e.stopPropagation();
+  accountPopoverOpen = !accountPopoverOpen;
+  document.getElementById('accountPopover').classList.toggle('show', accountPopoverOpen);
+  document.getElementById('accountBtn')?.setAttribute('aria-expanded', String(accountPopoverOpen));
+}
+function closeAccountPopover() {
+  accountPopoverOpen = false;
+  document.getElementById('accountPopover')?.classList.remove('show');
+  document.getElementById('accountBtn')?.setAttribute('aria-expanded', 'false');
 }
 
 function applyAccent(idx) {
