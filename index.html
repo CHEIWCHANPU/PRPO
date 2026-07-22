@@ -1204,78 +1204,148 @@
   .accent-popover .accent-pick-row { margin-top: 0; gap: 0.55rem; }
   .accent-popover .accent-swatch { width: 30px; height: 30px; }
 
-  /* ── ACCOUNT POPOVER (topbar) ── */
+  /* ── ACCOUNT POPOVER (topbar) — glass / glow edition ── */
+  @keyframes acctBannerFlow { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+  @keyframes acctShimmer { 0% { transform: translateX(-60%) rotate(8deg); } 100% { transform: translateX(160%) rotate(8deg); } }
+  @keyframes acctDotPulse {
+    0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--success, #22c55e) 55%, transparent), 0 0 0 2px var(--surface2); }
+    70%  { box-shadow: 0 0 0 6px color-mix(in srgb, var(--success, #22c55e) 0%, transparent), 0 0 0 2px var(--surface2); }
+    100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--success, #22c55e) 0%, transparent), 0 0 0 2px var(--surface2); }
+  }
+  @keyframes acctPopIn {
+    0%   { opacity: 0; transform: translateY(-10px) scale(0.94); filter: blur(4px); }
+    100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+  }
+  @keyframes acctRingSpin { to { transform: rotate(360deg); } }
+
   .account-popover-wrap { position: relative; }
   .account-pill {
     display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.85rem 0.3rem 0.32rem;
-    border-radius: 22px; border: 1px solid var(--border); background: var(--surface2);
+    border-radius: 22px; border: 1px solid var(--border);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--surface2) 100%, transparent), color-mix(in srgb, var(--surface2) 92%, var(--accent) 8%));
     color: var(--text); font-size: 0.86rem; font-weight: 600; cursor: pointer;
     white-space: nowrap; font-family: var(--font); position: relative;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 0 0 0 color-mix(in srgb, var(--accent) 0%, transparent);
+    transition: border-color .25s ease, box-shadow .25s ease, transform .2s ease, background .25s ease;
   }
-  .account-pill:hover { border-color: color-mix(in srgb, var(--accent) 55%, var(--border)); }
+  .account-pill:hover {
+    border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+    box-shadow: 0 4px 14px -4px color-mix(in srgb, var(--accent) 35%, transparent), 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent);
+    transform: translateY(-1px);
+  }
+  .account-pill:active { transform: translateY(0) scale(0.98); }
+  .account-pill[aria-expanded="true"] {
+    border-color: color-mix(in srgb, var(--accent) 65%, var(--border));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent), 0 6px 18px -6px color-mix(in srgb, var(--accent) 40%, transparent);
+  }
   .account-pill-avatar-wrap { position: relative; flex-shrink: 0; display: flex; }
   .account-pill-dot {
     width: 8px; height: 8px; border-radius: 50%; background: var(--success, #22c55e); flex-shrink: 0;
     box-shadow: 0 0 0 2px var(--surface2);
     position: absolute; bottom: -1px; right: -1px; z-index: 2;
+    animation: acctDotPulse 2.4s ease-out infinite;
   }
   .account-pill-avatar {
     width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; position: relative;
     background: #fff; display: flex; align-items: center; justify-content: center;
-    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06);
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06), 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent);
+    transition: box-shadow .25s ease;
   }
+  .account-pill:hover .account-pill-avatar { box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06), 0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent); }
   .account-pill-avatar img { width: 100%; height: 100%; object-fit: contain; padding: 3px; border-radius: 50%; }
   .account-pill-label { color: var(--muted); font-weight: 600; font-size: 0.86rem; }
-  .account-pill-chevron { width: 13px; height: 13px; color: var(--muted); flex-shrink: 0; margin-left: -0.1rem; }
-  .account-pill[aria-expanded="true"] .account-pill-chevron { transform: rotate(180deg); }
+  .account-pill-chevron { width: 13px; height: 13px; color: var(--muted); flex-shrink: 0; margin-left: -0.1rem; transition: transform .25s cubic-bezier(.4,0,.2,1); }
+  .account-pill[aria-expanded="true"] .account-pill-chevron { transform: rotate(180deg); color: var(--accent); }
 
   .account-popover {
-    position: absolute; top: calc(100% + 12px); right: 0; z-index: 999; display: none; width: 296px;
-    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
-    box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 20px 60px -16px rgba(0,0,0,0.55), 0 4px 18px -6px rgba(0,0,0,0.35);
+    position: absolute; top: calc(100% + 12px); right: 0; z-index: 999; display: none; width: 300px;
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
+    border-radius: 18px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.05) inset,
+      0 0 0 1px color-mix(in srgb, var(--accent) 10%, transparent),
+      0 24px 70px -18px rgba(0,0,0,0.6),
+      0 6px 22px -6px rgba(0,0,0,0.4),
+      0 0 40px -12px color-mix(in srgb, var(--accent) 35%, transparent);
     overflow: hidden;
+    transform-origin: top right;
   }
-  .account-popover.show { display: block; }
+  .account-popover.show { display: block; animation: acctPopIn .28s cubic-bezier(.16,1,.3,1) both; }
   .account-popover-banner {
-    height: 50px; background: linear-gradient(120deg, var(--accent), color-mix(in srgb, var(--accent) 45%, #7c3aed) 70%, color-mix(in srgb, var(--accent) 20%, #7c3aed));
-    position: relative; overflow: hidden;
+    height: 54px; position: relative; overflow: hidden;
+    background: linear-gradient(115deg,
+      color-mix(in srgb, var(--accent) 100%, transparent),
+      color-mix(in srgb, var(--accent) 55%, #7c3aed) 45%,
+      color-mix(in srgb, var(--accent) 30%, #7c3aed) 75%,
+      color-mix(in srgb, var(--accent) 100%, transparent));
+    background-size: 220% 100%;
+    animation: acctBannerFlow 6s ease-in-out infinite alternate;
   }
   .account-popover-banner::after {
     content: ''; position: absolute; inset: 0; pointer-events: none;
-    background: radial-gradient(120px 60px at 85% 0%, rgba(255,255,255,0.28), transparent 70%);
+    background: radial-gradient(130px 70px at 88% -10%, rgba(255,255,255,0.35), transparent 70%);
   }
-  .account-popover-user { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0 1.05rem 0.95rem; margin-top: -26px; position: relative; }
+  .account-popover-banner::before {
+    content: ''; position: absolute; top: -50%; left: 0; width: 40%; height: 200%;
+    background: linear-gradient(75deg, transparent, rgba(255,255,255,0.22) 45%, transparent 65%);
+    animation: acctShimmer 3.2s ease-in-out infinite; pointer-events: none;
+  }
+  .account-popover-user { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0 1.05rem 0.95rem; margin-top: -28px; position: relative; }
   .account-popover-avatar {
-    width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+    width: 54px; height: 54px; border-radius: 50%; flex-shrink: 0; position: relative;
     background: #fff; display: flex; align-items: center; justify-content: center;
-    border: 3px solid var(--surface); box-shadow: 0 4px 14px -4px rgba(0,0,0,0.5);
+    border: 3px solid var(--surface); box-shadow: 0 6px 18px -4px rgba(0,0,0,0.55), 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent);
+    transition: transform .25s ease;
   }
-  .account-popover-avatar img { width: 100%; height: 100%; object-fit: contain; padding: 5px; border-radius: 50%; }
+  .account-popover-avatar::before {
+    content: ''; position: absolute; inset: -4px; border-radius: 50%; z-index: -1;
+    background: conic-gradient(from 0deg, var(--accent), #7c3aed, var(--accent));
+    opacity: 0.85; animation: acctRingSpin 4s linear infinite;
+  }
+  .account-popover-user:hover .account-popover-avatar { transform: scale(1.05); }
+  .account-popover-avatar img { width: 100%; height: 100%; object-fit: contain; padding: 5px; border-radius: 50%; position: relative; z-index: 1; }
   .account-popover-idwrap { padding-top: 8px; min-width: 0; }
   .account-popover-id { font-size: 1.08rem; font-weight: 800; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; letter-spacing: -0.01em; }
   .account-popover-role {
     display: inline-flex; align-items: center; margin-top: 0.4rem; padding: 0.18rem 0.6rem;
-    border-radius: 20px; background: color-mix(in srgb, var(--accent) 14%, transparent);
+    border-radius: 20px; background: color-mix(in srgb, var(--accent) 16%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
     color: var(--accent); font-size: 0.756rem; font-weight: 700; letter-spacing: 0.02em;
   }
   .account-popover-status {
     display: flex; align-items: center; gap: 0.45rem; padding: 0 1.05rem 0.95rem; font-size: 0.798rem; color: var(--muted); font-weight: 500;
   }
   .account-popover-status .account-pill-dot { position: static; box-shadow: none; }
-  .account-popover-divider { height: 1px; background: var(--border); margin: 0 1.05rem; }
-  .account-popover-meta { padding: 0.85rem 1.05rem; display: flex; flex-direction: column; gap: 0.55rem; }
-  .account-popover-meta-row { display: flex; align-items: center; justify-content: space-between; font-size: 0.798rem; }
+  .account-popover-divider { height: 1px; margin: 0 1.05rem; background: linear-gradient(90deg, transparent, var(--border) 15%, var(--border) 85%, transparent); }
+  .account-popover-meta { padding: 0.85rem 1.05rem; display: flex; flex-direction: column; gap: 0.3rem; }
+  .account-popover-meta-row {
+    display: flex; align-items: center; justify-content: space-between; font-size: 0.798rem;
+    padding: 0.32rem 0.5rem; margin: 0 -0.5rem; border-radius: 8px;
+    transition: background .2s ease;
+  }
+  .account-popover-meta-row:hover { background: color-mix(in srgb, var(--accent) 8%, transparent); }
   .account-popover-meta-label { color: var(--muted); }
   .account-popover-meta-val { color: var(--text); font-weight: 700; font-family: var(--mono); }
   .account-popover-actions { padding: 0.65rem 0.75rem 0.8rem; }
   .account-popover-logout {
     width: 100%; display: flex; align-items: center; gap: 0.6rem; padding: 0.62rem 0.75rem;
-    border-radius: 10px; border: 1px solid var(--border); background: transparent;
+    border-radius: 11px; border: 1px solid var(--border); background: transparent;
     color: var(--muted); font-size: 0.91rem; font-weight: 600; cursor: pointer;
-    white-space: nowrap; font-family: var(--font); position: relative; z-index: 1;
+    white-space: nowrap; font-family: var(--font); position: relative; z-index: 1; overflow: hidden;
+    transition: background .22s ease, border-color .22s ease, color .22s ease, transform .15s ease;
   }
-  .account-popover-logout:hover { background: color-mix(in srgb, var(--danger) 12%, transparent); border-color: color-mix(in srgb, var(--danger) 45%, transparent); color: var(--danger); }
-  .account-popover-logout svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+  .account-popover-logout:hover {
+    background: color-mix(in srgb, var(--danger) 12%, transparent);
+    border-color: color-mix(in srgb, var(--danger) 45%, transparent);
+    color: var(--danger);
+    box-shadow: 0 4px 14px -6px color-mix(in srgb, var(--danger) 45%, transparent);
+  }
+  .account-popover-logout:active { transform: scale(0.98); }
+  .account-popover-logout svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; transition: transform .2s ease; }
+  .account-popover-logout:hover svg { transform: translateX(2px) rotate(-8deg); }
 
   /* DIVIDER */
   .section-divider { display: flex; align-items: center; gap: 0.75rem; margin: 1.2rem 0; }
@@ -4471,7 +4541,7 @@
           <div class="notif-dot" id="notifDot"></div>
         </div>
       </div>
-      <div class="icon-action" id="fullscreenBtn" onclick="toggleFullscreen()" title="เต็มจอ">
+      <div class="icon-action" id="fullscreenBtn" onclick="toggleFullscreen()" title="ย่อเป็น 90%">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
       </div>
       <div class="mute-pill" id="toastMuteBtn" onclick="toggleToastMute()" title="popup แจ้งเตือน">
@@ -6319,39 +6389,22 @@ function initAccent() {
 /* ── FULLSCREEN ── */
 const FS_EXPAND_ICON   = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>';
 const FS_COMPRESS_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>';
+let zoom90Active = false;
 function isFullscreenActive() {
-  return !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+  return zoom90Active;
 }
 function toggleFullscreen() {
-  const el = document.documentElement;
-  if (!isFullscreenActive()) {
-    const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
-    if (req) {
-      const p = req.call(el);
-      if (p && p.catch) p.catch(() => {});
-    }
-  } else {
-    const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
-    if (exit) exit.call(document);
-  }
+  zoom90Active = !zoom90Active;
+  document.documentElement.style.zoom = zoom90Active ? '0.9' : '';
+  updateFullscreenIcon();
 }
 function updateFullscreenIcon() {
   const btn = document.getElementById('fullscreenBtn');
   if (!btn) return;
   const active = isFullscreenActive();
   btn.innerHTML = active ? FS_COMPRESS_ICON : FS_EXPAND_ICON;
-  btn.title = active ? 'ออกจากโหมดเต็มจอ' : 'ขยายเต็มจอ';
+  btn.title = active ? 'กลับเป็น 100%' : 'ย่อเป็น 90%';
 }
-['fullscreenchange','webkitfullscreenchange','mozfullscreenchange','MSFullscreenChange'].forEach(evt =>
-  document.addEventListener(evt, () => {
-    updateFullscreenIcon();
-    if (isFullscreenActive()) {
-      document.documentElement.style.zoom = '1';
-    } else {
-      document.documentElement.style.zoom = '';
-    }
-  })
-);
 
 /* ── SIDEBAR ── */
 function toggleSidebar() {
