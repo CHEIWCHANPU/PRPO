@@ -1220,41 +1220,52 @@
 
   .account-popover-wrap { position: relative; }
   .account-pill {
-    display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.85rem 0.3rem 0.32rem;
-    border-radius: 22px; border: 1px solid var(--border);
-    background: linear-gradient(180deg, color-mix(in srgb, var(--surface2) 100%, transparent), color-mix(in srgb, var(--surface2) 92%, var(--accent) 8%));
-    color: var(--text); font-size: 0.86rem; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; gap: 0.5rem; padding: 0.32rem 0.9rem 0.32rem 0.32rem;
+    border-radius: 24px; border: 1px solid var(--border);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--surface2) 100%, transparent), color-mix(in srgb, var(--surface2) 90%, var(--accent) 10%));
+    color: var(--text); font-size: 0.9rem; font-weight: 700; cursor: pointer;
     white-space: nowrap; font-family: var(--font); position: relative;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 0 0 0 color-mix(in srgb, var(--accent) 0%, transparent);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1), 0 1px 0 rgba(255,255,255,0.03) inset;
     transition: border-color .25s ease, box-shadow .25s ease, transform .2s ease, background .25s ease;
   }
   .account-pill:hover {
     border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
-    box-shadow: 0 4px 14px -4px color-mix(in srgb, var(--accent) 35%, transparent), 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent);
+    box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--accent) 45%, transparent), 0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent), 0 1px 0 rgba(255,255,255,0.04) inset;
     transform: translateY(-1px);
   }
   .account-pill:active { transform: translateY(0) scale(0.98); }
   .account-pill[aria-expanded="true"] {
     border-color: color-mix(in srgb, var(--accent) 65%, var(--border));
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent), 0 6px 18px -6px color-mix(in srgb, var(--accent) 40%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent), 0 8px 20px -8px color-mix(in srgb, var(--accent) 45%, transparent);
   }
   .account-pill-avatar-wrap { position: relative; flex-shrink: 0; display: flex; }
   .account-pill-dot {
-    width: 8px; height: 8px; border-radius: 50%; background: var(--success, #22c55e); flex-shrink: 0;
+    width: 9px; height: 9px; border-radius: 50%; background: var(--success, #22c55e); flex-shrink: 0;
     box-shadow: 0 0 0 2px var(--surface2);
     position: absolute; bottom: -1px; right: -1px; z-index: 2;
     animation: acctDotPulse 2.4s ease-out infinite;
   }
   .account-pill-avatar {
-    width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; position: relative;
+    width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; position: relative;
     background: #fff; display: flex; align-items: center; justify-content: center;
-    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06), 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent);
-    transition: box-shadow .25s ease;
+    box-shadow:
+      inset 0 0 0 1px rgba(0,0,0,0.06),
+      0 0 0 2px var(--surface2),
+      0 0 0 3.5px color-mix(in srgb, var(--accent) 55%, transparent),
+      0 3px 8px -2px color-mix(in srgb, var(--accent) 40%, transparent);
+    transition: box-shadow .25s ease, transform .25s ease;
   }
-  .account-pill:hover .account-pill-avatar { box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06), 0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent); }
-  .account-pill-avatar img { width: 100%; height: 100%; object-fit: contain; padding: 3px; border-radius: 50%; }
-  .account-pill-label { color: var(--muted); font-weight: 600; font-size: 0.86rem; }
-  .account-pill-chevron { width: 13px; height: 13px; color: var(--muted); flex-shrink: 0; margin-left: -0.1rem; transition: transform .25s cubic-bezier(.4,0,.2,1); }
+  .account-pill:hover .account-pill-avatar {
+    transform: scale(1.06);
+    box-shadow:
+      inset 0 0 0 1px rgba(0,0,0,0.06),
+      0 0 0 2px var(--surface2),
+      0 0 0 3.5px color-mix(in srgb, var(--accent) 80%, transparent),
+      0 4px 12px -2px color-mix(in srgb, var(--accent) 55%, transparent);
+  }
+  .account-pill-avatar img { width: 100%; height: 100%; object-fit: contain; padding: 3.5px; border-radius: 50%; }
+  .account-pill-label { color: var(--text); font-weight: 700; font-size: 0.9rem; letter-spacing: 0.01em; }
+  .account-pill-chevron { width: 14px; height: 14px; color: var(--muted); flex-shrink: 0; margin-left: -0.05rem; transition: transform .25s cubic-bezier(.4,0,.2,1); }
   .account-pill[aria-expanded="true"] .account-pill-chevron { transform: rotate(180deg); color: var(--accent); }
 
   .account-popover {
