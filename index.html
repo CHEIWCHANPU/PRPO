@@ -1304,7 +1304,7 @@
     background: linear-gradient(75deg, transparent, rgba(255,255,255,0.22) 45%, transparent 65%);
     animation: acctShimmer 3.2s ease-in-out infinite; pointer-events: none;
   }
-  .account-popover-user { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0 1.05rem 0.95rem; margin-top: -28px; position: relative; }
+  .account-popover-user { display: flex; align-items: center; gap: 0.8rem; padding: 0 1.05rem 1rem; margin-top: -24px; position: relative; }
   .account-popover-avatar {
     width: 54px; height: 54px; border-radius: 50%; flex-shrink: 0; position: relative;
     background: #fff; display: flex; align-items: center; justify-content: center;
@@ -1318,13 +1318,22 @@
   }
   .account-popover-user:hover .account-popover-avatar { transform: scale(1.05); }
   .account-popover-avatar img { width: 100%; height: 100%; object-fit: contain; padding: 5px; border-radius: 50%; position: relative; z-index: 1; }
-  .account-popover-idwrap { padding-top: 8px; min-width: 0; }
-  .account-popover-id { font-size: 1.08rem; font-weight: 800; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; letter-spacing: -0.01em; }
+  .account-popover-idwrap { display: flex; flex-direction: column; align-items: flex-start; gap: 0.4rem; padding-top: 22px; min-width: 0; }
+  .account-popover-id { font-size: 1.08rem; font-weight: 800; line-height: 1.25; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; letter-spacing: -0.01em; }
   .account-popover-role {
-    display: inline-flex; align-items: center; margin-top: 0.4rem; padding: 0.18rem 0.6rem;
-    border-radius: 20px; background: color-mix(in srgb, var(--accent) 16%, transparent);
-    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
-    color: var(--accent); font-size: 0.756rem; font-weight: 700; letter-spacing: 0.02em;
+    display: inline-flex; align-items: center; gap: 0.32rem; padding: 0.22rem 0.7rem;
+    border-radius: 20px;
+    background: rgba(0,0,0,0.32);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,0.28);
+    color: #fff; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.015em;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    box-shadow: 0 2px 8px -2px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
+  }
+  .account-popover-role::before {
+    content: ''; width: 5px; height: 5px; border-radius: 50%;
+    background: #fff; box-shadow: 0 0 6px 1px rgba(255,255,255,0.8); flex-shrink: 0;
   }
   .account-popover-status {
     display: flex; align-items: center; gap: 0.45rem; padding: 0 1.05rem 0.95rem; font-size: 0.798rem; color: var(--muted); font-weight: 500;
