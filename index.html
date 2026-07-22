@@ -4634,13 +4634,15 @@
           <span class="table-title-label">⚡ รายการใกล้ถึงกำหนด</span>
           <button class="btn btn-ghost" onclick="showPage('list',document.getElementById('nav-list'))" style="font-size: 0.745rem;padding:0.3rem 0.7rem">ดูทั้งหมด →</button>
         </div>
+        <div style="max-height:520px;overflow-y:auto;">
         <table>
-          <thead><tr>
+          <thead style="position:sticky;top:0;z-index:2;"><tr>
             <th>NO.</th><th>PART NO.</th><th>PART NAME</th><th>MODEL</th>
             <th>วันนัดส่ง</th><th>เหลือ (วัน)</th><th>สถานะ</th><th>MAKER</th>
           </tr></thead>
           <tbody id="dashTableBody"><tr><td colspan="8" class="empty"><div class="spinner"></div></td></tr></tbody>
         </table>
+        </div>
       </div>
     </div>
 
@@ -7095,7 +7097,7 @@ function renderDashTable() {
     .sort((a,b) => {
       const toNum = v => (v === 'Done' || v === '' || v === null || v === undefined) ? 9999 : (Number(v) || 9999);
       return toNum(a.daysLeft) - toNum(b.daysLeft);
-    }).slice(0, 8);
+    });
   document.getElementById('dashTableBody').innerHTML = urgent.length ? urgent.map(r => {
     const dl = Number(r.daysLeft);
     const rowCls = (!isNaN(dl) && dl <= 3) ? 'row-urgent' : (!isNaN(dl) && dl <= 7) ? 'row-warn' : '';
