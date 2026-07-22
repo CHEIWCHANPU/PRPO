@@ -5508,13 +5508,13 @@
           <label style="font-size: 0.819rem;color:var(--muted);white-space:nowrap;font-weight:600">ค่าแรง OT/ชม.</label>
           <input type="number" id="pr-ot-rate" class="form-input" min="0" step="1"
             style="width:90px;font-size: 0.861rem;padding:0.3rem 0.55rem"
-            oninput="prRefreshDetail()">
+            oninput="prUpdateOtRate()">
           <div style="width:1px;height:20px;background:var(--border);margin:0 0.2rem"></div>
           <span style="font-size: 0.84rem;color:#f59e0b">✂️</span>
           <label style="font-size: 0.819rem;color:var(--muted);white-space:nowrap;font-weight:600">วันตัดรอบ</label>
           <input type="number" id="pr-cutoff-day" class="form-input" min="1" max="31" step="1"
             style="width:70px;font-size: 0.861rem;padding:0.3rem 0.55rem"
-            oninput="prRefreshDetail()">
+            oninput="prUpdateCutoffDay()">
           <span style="font-size: 0.756rem;color:var(--muted)" id="pr-cutoff-range-label"></span>
         </div>
 
@@ -11738,6 +11738,7 @@ let prNewColor = 0;
 let prNewPhoto = null;
 let prEditingId = null;
 let prSyncStatus = 'idle'; // 'idle' | 'loading' | 'online' | 'offline'
+let prCutoffDayGlobal = localStorage.getItem('prpo_payroll_cutoffday') || ''; // วันตัดรอบ (ใช้ร่วมกันทุกคน บันทึกไว้ในเครื่อง)
 
 function prSave() { localStorage.setItem('prpo_payroll_users', JSON.stringify(prUsers)); }
 
@@ -12087,6 +12088,37 @@ async function prVerifyPin(){
   }
 }
 
+/* บันทึกวันตัดรอบ (ใช้ร่วมกันทุกคน) ลงเครื่อง แล้วคำนวณสรุป/OT ใหม่เฉพาะรอบนั้นทันที */
+function prUpdateCutoffDay(){
+  const v = document.getElementById('pr-cutoff-day').value || '';
+  prCutoffDayGlobal = v;
+  localStorage.setItem('prpo_payroll_cutoffday', v);
+  prRefreshDetail();
+}
+
+const _prOtRateSyncTimers = {};
+/* บันทึกค่าแรง OT/ชม. ของพนักงานคนนี้ (เก็บต่อคน) ลงเครื่อง+Sheet แล้วคำนวณ OT รอบนั้นใหม่ทันที */
+function prUpdateOtRate(){
+  if(!prSelected) return;
+  const v = parseFloat(document.getElementById('pr-ot-rate').value) || 0;
+  prSelected.otRate = v;
+  prSave();
+  prRefreshDetail();
+  const userId = prSelected.id;
+  if(_prOtRateSyncTimers[userId]) clearTimeout(_prOtRateSyncTimers[userId]);
+  _prOtRateSyncTimers[userId] = setTimeout(() => {
+    delete _prOtRateSyncTimers[userId];
+    const u = prUsers.find(u => u.id === userId);
+    if(!u) return;
+    const employeePayload = {
+      id:u.id, empid:u.empid, name:u.name, dept:u.dept, position:u.position,
+      phone:u.phone, color:u.color, photo:u.photo, otRate:u.otRate||0
+    };
+    prApiPost('saveEmployee', { employee: employeePayload })
+      .catch(err => console.warn('[payroll] saveEmployee (otRate) ไม่สำเร็จ:', err.message||err));
+  }, 800);
+}
+
 function prEnterDetail(id){
   prSelected=prUsers.find(u=>u.id===id);
   if(!prSelected) return;
@@ -12095,6 +12127,9 @@ function prEnterDetail(id){
   // set back button + name in top bar
   const topBar=document.getElementById('pr-detail-topbar');
   if(topBar) topBar.textContent=prSelected.name;
+  // โหลดค่า ค่าแรง OT/ชม. ของพนักงานคนนี้ (เก็บต่อคน) + วันตัดรอบ (ใช้ร่วมกันทุกคน)
+  document.getElementById('pr-ot-rate').value = prSelected.otRate || '';
+  document.getElementById('pr-cutoff-day').value = prCutoffDayGlobal || '';
   prRefreshDetail();
 }
 
@@ -12580,9 +12615,9 @@ function prOpenResetPeriod(){
   const msgEl = document.getElementById('pr-reset-msg');
   if(range){
     const fmt = d => `${d.getDate()}/${d.getMonth()+1}/${String(d.getFullYear()+543).slice(-2)}`;
-    msgEl.innerHTML = `ล้างข้อมูลลงเวลาของ <strong style="color:var(--text)">${prSelected.name}</strong><br>ช่วง ${fmt(range.startDate)} – ${fmt(range.endDate)}<br>(เงินเดือน${payMonthName}) ทั้งหมด — ทำย้อนกลับไม่ได้`;
+    msgEl.innerHTML = `ล้างวันทำงาน/OT ของ <strong style="color:var(--text)">${prSelected.name}</strong><br>ช่วง ${fmt(range.startDate)} – ${fmt(range.endDate)}<br>(เงินเดือน${payMonthName}) ทั้งหมด — ทำย้อนกลับไม่ได้<br><span style="color:var(--muted);font-size:0.8em">(หมายเหตุจะยังคงอยู่)</span>`;
   } else {
-    msgEl.innerHTML = `ล้างข้อมูลลงเวลาของ <strong style="color:var(--text)">${prSelected.name}</strong><br>ทั้งเดือน${payMonthName} — ทำย้อนกลับไม่ได้`;
+    msgEl.innerHTML = `ล้างวันทำงาน/OT ของ <strong style="color:var(--text)">${prSelected.name}</strong><br>ทั้งเดือน${payMonthName} — ทำย้อนกลับไม่ได้<br><span style="color:var(--muted);font-size:0.8em">(หมายเหตุจะยังคงอยู่)</span>`;
   }
   document.getElementById('pr-reset-modal').style.display='flex';
 }
@@ -12594,16 +12629,24 @@ function prConfirmResetPeriod(){
   const range = prGetCutoffRange(prCalYear, prCalMonth);
   const userId = prSelected.id;
 
-  // เก็บ dateKey ที่อยู่ในรอบนี้และมีข้อมูลอยู่จริง (ไม่ลบวันที่ไม่มีข้อมูลอยู่แล้ว ไม่มีประโยชน์)
-  const datesToReset = Object.keys(prSelected.records).filter(dk => prDateInRange(dk, range));
+  // เก็บ dateKey ที่อยู่ในรอบนี้และมีข้อมูล work/ot อยู่จริง (ไม่ยุ่งกับหมายเหตุ)
+  const datesToReset = Object.keys(prSelected.records).filter(dk => {
+    if (!prDateInRange(dk, range)) return false;
+    const r = prSelected.records[dk];
+    return (r.work || 0) !== 0 || (r.ot || 0) !== 0;
+  });
 
-  datesToReset.forEach(dk => { delete prSelected.records[dk]; });
+  // ล้างเฉพาะ work/ot เป็น 0 แต่ "หมายเหตุ" ยังคงอยู่เหมือนเดิม
+  datesToReset.forEach(dk => {
+    prSelected.records[dk].work = 0;
+    prSelected.records[dk].ot = 0;
+  });
   prSave(); prRefreshDetail();
   document.getElementById('pr-reset-modal').style.display='none';
   showResultModal(`รีเซ็ตข้อมูล ${datesToReset.length} วันแล้ว`, 'success');
 
-  // sync ไป Sheet ทีละวัน (เขียนเป็น work=0,ot=0 ซึ่งฝั่ง Apps Script จะลบแถวออกให้เอง)
-  datesToReset.forEach(dk => prSyncAttendanceToSheet(userId, dk, {work:0, ot:0, note:''}));
+  // sync ไป Sheet ทีละวัน (เขียนเป็น work=0,ot=0 แต่คง note เดิมไว้)
+  datesToReset.forEach(dk => prSyncAttendanceToSheet(userId, dk, {work:0, ot:0, note: prSelected.records[dk].note || ''}));
 }
 
 
