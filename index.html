@@ -4541,7 +4541,7 @@
           <div class="notif-dot" id="notifDot"></div>
         </div>
       </div>
-      <div class="icon-action" id="fullscreenBtn" onclick="toggleFullscreen()" title="ย่อเป็น 90%">
+      <div class="icon-action" id="fullscreenBtn" onclick="toggleFullscreen()" title="เต็มจอ (ย่อ 90%)">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
       </div>
       <div class="mute-pill" id="toastMuteBtn" onclick="toggleToastMute()" title="popup แจ้งเตือน">
@@ -6389,22 +6389,35 @@ function initAccent() {
 /* ── FULLSCREEN ── */
 const FS_EXPAND_ICON   = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>';
 const FS_COMPRESS_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>';
-let zoom90Active = false;
 function isFullscreenActive() {
-  return zoom90Active;
+  return !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
 }
 function toggleFullscreen() {
-  zoom90Active = !zoom90Active;
-  document.documentElement.style.zoom = zoom90Active ? '0.9' : '';
-  updateFullscreenIcon();
+  const el = document.documentElement;
+  if (!isFullscreenActive()) {
+    const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+    if (req) {
+      const p = req.call(el);
+      if (p && p.catch) p.catch(() => {});
+    }
+  } else {
+    const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+    if (exit) exit.call(document);
+  }
 }
 function updateFullscreenIcon() {
   const btn = document.getElementById('fullscreenBtn');
   if (!btn) return;
   const active = isFullscreenActive();
   btn.innerHTML = active ? FS_COMPRESS_ICON : FS_EXPAND_ICON;
-  btn.title = active ? 'กลับเป็น 100%' : 'ย่อเป็น 90%';
+  btn.title = active ? 'ออกจากโหมดเต็มจอ' : 'เต็มจอ (ย่อ 90%)';
 }
+['fullscreenchange','webkitfullscreenchange','mozfullscreenchange','MSFullscreenChange'].forEach(evt =>
+  document.addEventListener(evt, () => {
+    updateFullscreenIcon();
+    document.documentElement.style.zoom = isFullscreenActive() ? '0.9' : '';
+  })
+);
 
 /* ── SIDEBAR ── */
 function toggleSidebar() {
