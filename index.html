@@ -5574,6 +5574,9 @@
                   <span id="pr-total" style="font-size: 1.365rem;font-weight:700;color:var(--accent)">฿0</span>
                 </div>
               </div>
+              <div id="pr-attendance-bonus" style="display:none;margin-top:0.6rem;padding:0.45rem 0.6rem;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.35);border-radius:8px;color:#4ade80;font-size: 0.77rem;font-weight:700;text-align:center">
+                🏆 มาทำงานครบ ได้เบี้ยขยัน
+              </div>
               <button onclick="prOpenResetPeriod()" style="width:100%;margin-top:0.7rem;padding:0.5rem;border-radius:8px;border:1px solid rgba(239,68,68,0.35);background:rgba(239,68,68,0.08);color:#f87171;font-size: 0.756rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.4rem;transition:all 0.15s"
                 onmouseenter="this.style.background='rgba(239,68,68,0.16)'"
                 onmouseleave="this.style.background='rgba(239,68,68,0.08)'">
@@ -11882,6 +11885,31 @@ function prCalcTotals(user){
   return {days,ot,otPay,base:0,total:otPay};
 }
 
+/* เช็คว่ามาทำงานครบทุกวันในรอบ (ไม่นับวันอาทิตย์) หรือไม่ → ได้เบี้ยขยัน
+   นับเฉพาะวันที่ผ่านมาแล้ว (ถึงวันนี้) เผื่อรอบยังไม่จบ จะได้เช็คระหว่างรอบได้เลย */
+function prHasFullAttendance(user, range){
+  const today = new Date(); today.setHours(0,0,0,0);
+  let iterStart, iterEnd;
+  if(range){
+    iterStart = new Date(range.startDate);
+    iterEnd   = new Date(range.endDate);
+  } else {
+    iterStart = new Date(prCalYear, prCalMonth, 1);
+    iterEnd   = new Date(prCalYear, prCalMonth+1, 0);
+  }
+  const effectiveEnd = iterEnd < today ? iterEnd : today; // นับถึงวันนี้ ถ้ารอบยังไม่จบ
+  if(effectiveEnd < iterStart) return false; // รอบยังไม่เริ่ม
+  let hasAnyWorkday = false;
+  for(let d = new Date(iterStart); d <= effectiveEnd; d.setDate(d.getDate()+1)){
+    if(d.getDay() === 0) continue; // ข้ามวันอาทิตย์
+    hasAnyWorkday = true;
+    const dk = prDateKey(d.getFullYear(), d.getMonth(), d.getDate());
+    const rec = prGetRec(user, dk);
+    if(!((rec.work||0) > 0)) return false;
+  }
+  return hasAnyWorkday;
+}
+
 function payrollInit(){
   prRenderGrid(); // render ของ cache ไปก่อนให้เห็นทันที ไม่ต้องรอ network
   prSyncFromSheet();
@@ -12216,6 +12244,13 @@ function prRefreshDetail(){
   document.getElementById('pr-total').textContent='฿'+Math.round(t.total).toLocaleString();
   document.getElementById('pr-stat-days').textContent=t.days+' วัน';
   document.getElementById('pr-stat-ot').textContent=t.ot+' ชม. = ฿'+Math.round(t.otPay).toLocaleString();
+
+  // เบี้ยขยัน: มาทำงานครบทุกวันในรอบ (ไม่นับวันอาทิตย์)
+  const bonusEl = document.getElementById('pr-attendance-bonus');
+  if (bonusEl) {
+    const range = prGetCutoffRange(prCalYear, prCalMonth);
+    bonusEl.style.display = prHasFullAttendance(u, range) ? 'block' : 'none';
+  }
 
   // อัปเดต summary period label
   const periodEl = document.getElementById('pr-summary-period');
