@@ -9091,11 +9091,6 @@ function validateForm(params, isEdit) {
   clearFormErrors();
   let ok = true;
   if (!params.partNo.trim()) { setFieldError('f-partNo','err-partNo','กรุณากรอก Part No.'); ok = false; }
-  else if (!isEdit) {
-    // #2 ตรวจ Part No. ซ้ำ (เฉพาะ add ใหม่)
-    const dup = allData.find(r => r.partNo && r.partNo.trim().toLowerCase() === params.partNo.trim().toLowerCase());
-    if (dup) { setFieldError('f-partNo','err-partNo',`Part No. นี้มีอยู่แล้ว (แถว ${dup.no})`); ok = false; }
-  }
   if (!params.partName.trim()) { setFieldError('f-partName','err-partName','กรุณากรอก Part Name'); ok = false; }
   if (params.prDate && !isValidDateStr(params.prDate))
     { setFieldError('f-prDate','err-prDate','รูปแบบ: d/M/yyyy เช่น 7/6/2026'); ok = false; }
