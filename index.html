@@ -6819,6 +6819,8 @@ function buildNotifications() {
 /* รวมข้อมูลจากทุกหมวดหมู่ที่มีวันครบกำหนด: ชิ้นงาน/PO (allData), ใบรับรอง CER (cerData), ตารางแผนงาน (wpData)
    แจ้งเตือนล่วงหน้า 3 วันก่อนครบกำหนด (รวมรายการที่เลยกำหนดแล้ว และครบกำหนดวันนี้ด้วย) */
 const BRIEFING_LEAD_DAYS = 3;
+// ใบ CER ใช้ระยะแจ้งเตือนที่กว้างกว่า (30 วัน) ให้ตรงกับนิยาม "ใกล้หมดอายุ" ของหน้า CER เอง
+const CER_BRIEFING_LEAD_DAYS = 30;
 
 function briefingTag(daysLeft) {
   if (daysLeft < 0)  return { text: `⏰ เลยกำหนด ${Math.abs(daysLeft)} วัน`, color: 'var(--danger)', urgent: true };
@@ -6856,7 +6858,7 @@ function renderDailyBriefing() {
       const exp = parseThaiDate(dateStr);
       if (!exp) return;
       const daysLeft = Math.round((exp - today) / 86400000);
-      if (daysLeft <= BRIEFING_LEAD_DAYS) {
+      if (daysLeft <= CER_BRIEFING_LEAD_DAYS) {
         cerFollow.push({ supplier: r, certLabel: c.label, dateStr, daysLeft });
       }
     });
@@ -6881,7 +6883,7 @@ function renderDailyBriefing() {
   ];
   const overdueCount = allDaysLeft.filter(d => d < 0).length;
   const todayCount   = allDaysLeft.filter(d => d === 0).length;
-  const soonCount    = allDaysLeft.filter(d => d > 0 && d <= BRIEFING_LEAD_DAYS).length;
+  const soonCount    = allDaysLeft.filter(d => d > 0).length;
   document.getElementById('brief-overdue').textContent  = overdueCount;
   document.getElementById('brief-duetoday').textContent = todayCount;
   document.getElementById('brief-soon').textContent     = soonCount;
