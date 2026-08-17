@@ -5645,7 +5645,7 @@
           <thead>
             <tr>
               <th style="width:36px">#</th>
-              <th>วันที่</th>
+              <th id="wpDateHeader" onclick="wpSortToggle()" style="cursor:pointer">วันที่</th>
               <th>ชื่องาน / กิจกรรม</th>
               <th>ประเภท</th>
               <th>สถานที่ / ซัพพลายเออร์</th>
@@ -11639,8 +11639,23 @@ function wpGetFiltered() {
   );
   return data.sort((a,b) => {
     const da = wpParseDate(a.date), db = wpParseDate(b.date);
-    return (da||0) - (db||0);
+    const diff = (da||0) - (db||0);
+    return wpSortDir === 'desc' ? -diff : diff;
   });
+}
+
+let wpSortDir = 'asc';
+function wpSortToggle() {
+  wpSortDir = wpSortDir === 'asc' ? 'desc' : 'asc';
+  wpPage = 1;
+  renderWpTable();
+  updateWpSortHeader();
+}
+function updateWpSortHeader() {
+  const th = document.getElementById('wpDateHeader');
+  if (!th) return;
+  th.classList.remove('sort-asc','sort-desc');
+  th.classList.add(wpSortDir === 'asc' ? 'sort-asc' : 'sort-desc');
 }
 
 function wpTypeClass(type) {
@@ -11695,6 +11710,7 @@ async function renderWorkplan() {
   renderWpKpiBanner();
   renderWpMonthTabs();
   renderWpTable();
+  updateWpSortHeader();
   renderWpCharts();
   renderDailyBriefing();
 }
