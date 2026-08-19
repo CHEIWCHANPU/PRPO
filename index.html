@@ -4550,6 +4550,11 @@
       <div class="topbar-sub" id="lastSync">กำลังโหลด...</div>
     </div>
     <div class="topbar-right">
+      <div class="cmdk-trigger" onclick="openCommandPalette()" title="ค้นหาเมนู (Ctrl+K)">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span class="cmdk-trigger-text">ค้นหาเมนู</span>
+        <span class="cmdk-trigger-kbd">Ctrl K</span>
+      </div>
       <div class="topbar-chip" id="currentDateChip"></div>
       <button class="sync-pill" onclick="syncData()" data-tour="sync-btn"><span id="syncIcon">⟳</span> Sync</button>
       <div style="width:1px;height:20px;background:var(--border);flex-shrink:0"></div>
@@ -7088,8 +7093,13 @@ function renderDailyBriefing() {
 }
 
 /* ── DATA LOAD ── */
+// คืนค่า true/false บอกว่าซิงค์ "จริง" สำเร็จหรือไม่ (ไม่ใช่แค่ว่ามีข้อมูลมาแสดงหรือเปล่า)
+// เพื่อให้โค้ดที่เรียกใช้ (เช่น syncData) รู้สถานะจริงและไม่แสดงข้อความ "สำเร็จ" หลอกๆ
 async function loadData(forceRefresh = false) {
-  if (!WEB_APP_URL) { allData = DEMO; processData(); showToast('ℹ️ ใช้ข้อมูลตัวอย่าง — ตั้งค่า URL ใน Setup', 'info'); return; }
+  if (!WEB_APP_URL) { allData = DEMO; processData(); showToast('ℹ️ ใช้ข้อมูลตัวอย่าง — ตั้งค่า URL ใน Setup', 'info'); return false; }
+
+  const lastSyncEl = document.getElementById('lastSync');
+  const setSyncLabel = (text) => { if (lastSyncEl) lastSyncEl.textContent = text; };
 
   // ── แสดง cache ก่อนทันที (stale-while-revalidate) ──
   const CACHE_KEY = 'prpo_data_cache';
@@ -7099,30 +7109,43 @@ async function loadData(forceRefresh = false) {
   const cachedTime = parseInt(localStorage.getItem(CACHE_TIME_KEY) || '0');
   const cacheAge = Date.now() - cachedTime;
   const cacheValid = cached && cacheAge < CACHE_TTL;
+  const cacheAgeLabel = () => {
+    const ageMin = Math.round((Date.now() - cachedTime) / 60000);
+    return 'แคช' + (ageMin > 0 ? ' (' + ageMin + ' นาทีที่แล้ว)' : ' (เมื่อกี้)');
+  };
 
   if (cached && !forceRefresh) {
     // แสดงข้อมูล cache ทันที
     allData = JSON.parse(cached);
     processData();
-    const ageMin = Math.round(cacheAge / 60000);
-    document.getElementById('lastSync').textContent = 'แคช' + (ageMin > 0 ? ' (' + ageMin + ' นาทีที่แล้ว)' : ' (เมื่อกี้)');
+    setSyncLabel(cacheAgeLabel());
 
     // ถ้า cache ยังใหม่อยู่ ไม่ต้อง fetch ใหม่
-    if (cacheValid) return;
+    if (cacheValid) return true;
 
-    // fetch ใหม่เงียบๆ ใน background
-    fetch(WEB_APP_URL + '?action=getData')
-      .then(r => r.json())
-      .then(json => {
-        if (json.success) {
-          allData = json.data;
-          localStorage.setItem(CACHE_KEY, JSON.stringify(json.data));
-          localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
-          document.getElementById('lastSync').textContent = 'ซิงค์ล่าสุด: ' + String(json.updated).split(' ')[0];
-          processData();
-        }
-      }).catch(() => {});
-    return;
+    // fetch ใหม่ใน background — ถ้าพลาด ต้อง "แจ้งให้เห็น" ไม่ใช่เงียบหายเหมือนเดิม
+    // (เดิมโค้ดจุดนี้ catch(() => {}) แล้วปล่อยให้ป้าย "แคช (5 นาทีที่แล้ว)" ค้างอยู่แบบนั้นตลอดไป
+    //  โดยผู้ใช้ไม่มีทางรู้เลยว่า sync เบื้องหลังล้มเหลวซ้ำๆ)
+    try {
+      const r = await fetch(WEB_APP_URL + '?action=getData');
+      const json = await r.json();
+      if (json.success) {
+        allData = json.data;
+        localStorage.setItem(CACHE_KEY, JSON.stringify(json.data));
+        localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
+        setSyncLabel('ซิงค์ล่าสุด: ' + String(json.updated).split(' ')[0]);
+        processData();
+        return true;
+      } else {
+        setSyncLabel(cacheAgeLabel() + ' · sync ล้มเหลว');
+        showToast('⚠️ Sync ข้อมูลไม่สำเร็จ: ' + (json.error || 'ไม่ทราบสาเหตุ'), 'error');
+        return false;
+      }
+    } catch (e) {
+      setSyncLabel(cacheAgeLabel() + ' · เชื่อมต่อไม่ได้');
+      showToast('⚠️ เชื่อมต่อ Sheet ไม่ได้ — แสดงข้อมูลแคชเดิมไว้ก่อน', 'error');
+      return false;
+    }
   }
 
   // ── ไม่มี cache → fetch ปกติ ──
@@ -7133,10 +7156,21 @@ async function loadData(forceRefresh = false) {
       allData = json.data;
       localStorage.setItem(CACHE_KEY, JSON.stringify(json.data));
       localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
-      document.getElementById('lastSync').textContent = 'ซิงค์ล่าสุด: ' + String(json.updated).split(' ')[0];
+      setSyncLabel('ซิงค์ล่าสุด: ' + String(json.updated).split(' ')[0]);
       processData(); showToast('✅ Sync สำเร็จ', 'success');
+      return true;
+    } else {
+      allData = DEMO; processData();
+      setSyncLabel('⚠️ เชื่อมต่อไม่ได้ (ใช้ข้อมูลตัวอย่าง)');
+      showToast('⚠️ โหลดข้อมูลไม่สำเร็จ: ' + (json.error || 'ไม่ทราบสาเหตุ'), 'error');
+      return false;
     }
-  } catch(e) { allData = DEMO; processData(); showToast('⚠️ ไม่สามารถเชื่อมต่อ — ใช้ข้อมูล Demo', 'error'); }
+  } catch(e) {
+    allData = DEMO; processData();
+    setSyncLabel('⚠️ เชื่อมต่อไม่ได้ (ใช้ข้อมูลตัวอย่าง)');
+    showToast('⚠️ ไม่สามารถเชื่อมต่อ — ใช้ข้อมูล Demo', 'error');
+    return false;
+  }
 }
 async function syncData() {
   const icon = document.getElementById('syncIcon');
@@ -7144,13 +7178,18 @@ async function syncData() {
   const spin = '<span class="spinner" style="width:12px;height:12px;border-width:2px"></span>';
   icon.innerHTML = spin; if (sIcon) sIcon.innerHTML = spin;
   cerLoaded = false; // force CER to reload on next visit
-  await loadData(true); // force refresh เมื่อกด Sync
+  const ok = await loadData(true); // force refresh เมื่อกด Sync — ok = false ถ้าเชื่อมต่อไม่สำเร็จ
   // ถ้าอยู่หน้า CER อยู่แล้วให้ reload เลย
   if (document.getElementById('page-cer')?.classList.contains('active')) {
     await loadCerPage(true);
   }
   icon.textContent = '⟳'; if (sIcon) sIcon.textContent = '⟳';
-  document.getElementById('lastSync').textContent = 'ซิงค์ล่าสุด: ' + new Date().toLocaleDateString('th-TH');
+  // เดิมโค้ดจุดนี้เขียนทับเป็น "ซิงค์ล่าสุด: วันนี้" เสมอไม่ว่า loadData จะสำเร็จหรือไม่
+  // ทำให้ผู้ใช้เข้าใจผิดว่า sync ผ่านทั้งที่จริงพัง — ตอนนี้จะเขียนทับเฉพาะตอนสำเร็จจริงเท่านั้น
+  // ส่วนตอนพัง ให้คงข้อความ error/สถานะแคชที่ loadData() ตั้งไว้ให้ผู้ใช้เห็น
+  if (ok) {
+    document.getElementById('lastSync').textContent = 'ซิงค์ล่าสุด: ' + new Date().toLocaleDateString('th-TH');
+  }
 }
 
 /* ── PROCESS DATA ── */
@@ -7696,11 +7735,23 @@ async function updateItemsStatus(rowIndexes, newStatus) {
   processData();
   showToast(`✅ อัปเดตสถานะ ${items.length} รายการ เป็น "${newStatus}"`, 'success');
   if (WEB_APP_URL) {
+    // เดิมโค้ดจุดนี้ catch(e){} เงียบไว้เฉยๆ พร้อมคอมเมนต์ว่า "จะ sync ใหม่รอบหน้า"
+    // — แต่จริงๆ ถ้าเขียนขึ้น Sheet ไม่สำเร็จ รอบ sync ถัดไปจะดึงค่าเดิมจาก Sheet มาทับ
+    // สถานะที่เพิ่งเปลี่ยนในเครื่องจนหายไปเงียบๆ โดยผู้ใช้ไม่รู้ตัว จึงต้องนับจำนวนที่พลาด
+    // แล้วแจ้งเตือนให้เห็นชัดเจน
+    let failCount = 0;
     for (const item of items) {
       const fields = ['partNo','partName','model','volume','receivedQty','prDate','dueDate','actualDate','location','status','maker','poNo','note','prLink','prFileName'];
       const params = {}; fields.forEach(f => { params[f] = item[f] ?? ''; });
       const p = new URLSearchParams({ action:'edit', rowIndex:item.rowIndex, ...params });
-      try { await fetch(WEB_APP_URL + '?' + p.toString()); } catch(e) { /* เงียบไว้ — ข้อมูลหน้าจอถูกต้องแล้ว จะ sync ใหม่รอบหน้า */ }
+      try {
+        const res = await fetch(WEB_APP_URL + '?' + p.toString());
+        const json = await res.json();
+        if (!json.success) failCount++;
+      } catch(e) { failCount++; }
+    }
+    if (failCount > 0) {
+      showToast(`⚠️ บันทึกขึ้น Sheet ไม่สำเร็จ ${failCount}/${items.length} รายการ — กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่ (ไม่เช่นนั้นการเปลี่ยนแปลงอาจหายเมื่อ sync รอบหน้า)`, 'error');
     }
   }
 }
@@ -8852,7 +8903,14 @@ async function saveItem() {
   if (WEB_APP_URL) {
     const action = rowIndex ? 'edit' : 'add';
     const p = new URLSearchParams({ action, rowIndex, ...params });
-    try { await fetch(WEB_APP_URL + '?' + p.toString()); } catch(e) { showResultModal('บันทึกใน Sheet ไม่สำเร็จ', 'error', 'ข้อมูลอาจไม่ถูกบันทึกลง Google Sheet กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่'); }
+    // เดิมโค้ดจุดนี้แค่ await fetch(...) เฉยๆ โดยไม่อ่าน response เลย — ถ้า server ตอบ
+    // {success:false, error:...} กลับมา (เช่น validation พังฝั่ง Apps Script) ผู้ใช้จะไม่มีทางรู้เลย
+    // เพราะไม่มีการโยน error ออกมาให้ catch จับ ตอนนี้เช็ค json.success ด้วยเสมอ
+    try {
+      const res  = await fetch(WEB_APP_URL + '?' + p.toString());
+      const json = await res.json();
+      if (!json.success) showResultModal('บันทึกใน Sheet ไม่สำเร็จ', 'error', json.error || 'ข้อมูลอาจไม่ถูกบันทึกลง Google Sheet');
+    } catch(e) { showResultModal('บันทึกใน Sheet ไม่สำเร็จ', 'error', 'ข้อมูลอาจไม่ถูกบันทึกลง Google Sheet กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่'); }
   }
 }
 async function deleteItem(rowIndex) {
@@ -8861,7 +8919,13 @@ async function deleteItem(rowIndex) {
   if(delItem) addHistoryLog('del', delItem.partNo, delItem.partName, 'ลบรายการ');
   allData = allData.filter(r => r.rowIndex !== rowIndex);
   processData(); showResultModal('ลบรายการสำเร็จ', 'success');
-  if (WEB_APP_URL) { try { await fetch(WEB_APP_URL + '?action=del&rowIndex=' + rowIndex); } catch(e) { showResultModal('ลบใน Sheet ไม่สำเร็จ', 'error', 'รายการถูกลบจากหน้าจอแล้ว แต่อาจยังอยู่ใน Google Sheet กรุณาตรวจสอบอินเทอร์เน็ต'); } }
+  if (WEB_APP_URL) {
+    try {
+      const res  = await fetch(WEB_APP_URL + '?action=del&rowIndex=' + rowIndex);
+      const json = await res.json();
+      if (!json.success) showResultModal('ลบใน Sheet ไม่สำเร็จ', 'error', json.error || 'รายการถูกลบจากหน้าจอแล้ว แต่อาจยังอยู่ใน Google Sheet');
+    } catch(e) { showResultModal('ลบใน Sheet ไม่สำเร็จ', 'error', 'รายการถูกลบจากหน้าจอแล้ว แต่อาจยังอยู่ใน Google Sheet กรุณาตรวจสอบอินเทอร์เน็ต'); }
+  }
 }
 
 /* ── DETAIL PANEL ── */
@@ -9170,8 +9234,13 @@ function validateForm(params, isEdit) {
 
 /* ══════════════════════════════════════════════════════
    #3 AUTO-SYNC (ทุก 5 นาที เงียบๆ)
+   หมายเหตุ: เดิม catch(e){} เงียบสนิททุกครั้ง ไม่ว่าจะพังกี่รอบติดต่อกันก็ตาม
+   ผู้ใช้จึงไม่มีทางรู้เลยว่า auto-sync พังมานานแค่ไหน (นี่คือสาเหตุหลักที่ทำให้
+   ข้อมูลดูเหมือน "ค้างแคช" อยู่เรื่อยๆ โดยไม่มีสัญญาณเตือนใดๆ) ตอนนี้จะแจ้งเตือน
+   ครั้งแรกที่เริ่มพัง (กันสแปม toast ทุก 5 นาที) และอัปเดตป้ายบนสุดให้เห็นสถานะจริงเสมอ
 ══════════════════════════════════════════════════════ */
 const AUTO_SYNC_MS = 5 * 60 * 1000; // 5 minutes
+let autoSyncFailCount = 0;
 function initAutoSync() {
   if (autoSyncInterval) clearInterval(autoSyncInterval);
   autoSyncInterval = setInterval(async () => {
@@ -9183,9 +9252,21 @@ function initAutoSync() {
         allData = json.data;
         document.getElementById('lastSync').textContent = 'ซิงค์ล่าสุด: ' + new Date().toLocaleDateString('th-TH') + ' (auto)';
         processData();
-        // ไม่ showToast เพราะเป็น background sync
+        if (autoSyncFailCount > 0) {
+          showToast('✅ เชื่อมต่อ Sheet กลับมาใช้ได้แล้ว', 'success');
+        }
+        autoSyncFailCount = 0;
+      } else {
+        autoSyncFailCount++;
+        document.getElementById('lastSync').textContent = '⚠️ Auto-sync ล้มเหลว: ' + (json.error || 'ไม่ทราบสาเหตุ');
+        if (autoSyncFailCount === 1) showToast('⚠️ Auto-sync ล้มเหลว: ' + (json.error || 'ไม่ทราบสาเหตุ'), 'error');
       }
-    } catch(e) { /* เงียบ — ไม่รบกวน user */ }
+    } catch(e) {
+      autoSyncFailCount++;
+      document.getElementById('lastSync').textContent = '⚠️ เชื่อมต่อ Sheet ไม่ได้ (auto-sync ล้มเหลว ' + autoSyncFailCount + ' ครั้งติดกัน)';
+      // แจ้งเตือนแค่ครั้งแรกที่เริ่มพัง ไม่สแปม toast ทุก 5 นาที
+      if (autoSyncFailCount === 1) showToast('⚠️ เชื่อมต่อ Sheet ไม่ได้ — จะลองใหม่อัตโนมัติทุก 5 นาที', 'error');
+    }
     // ซิงค์ CER (ใบรับรอง) พร้อมกันในรอบเดียวกัน — กันไม่ให้ Dashboard/แจ้งเตือนค้างข้อมูลเก่า
     fetchCerFromSheet();
   }, AUTO_SYNC_MS);
@@ -11469,6 +11550,10 @@ async function mtSaveModel(){
   const customer=document.getElementById('mt-f-customer').value.trim();
   const volume=document.getElementById('mt-f-volume').value.trim();
   const statusNote=document.getElementById('mt-f-statusnote').value.trim();
+  // เดิมฟังก์ชันนี้ไม่เช็ค WEB_APP_URL เลย — ถ้ายังไม่ได้ตั้งค่า URL จะยิง fetch ไปที่
+  // path เปล่าๆ ('?...') ของหน้าเว็บเอง แล้วโดน error คลุมเครือ "เชื่อมต่อ Sheet ไม่สำเร็จ"
+  // ทั้งที่จริงสาเหตุคือยังไม่ได้ตั้งค่าต่างหาก
+  if(!WEB_APP_URL){ showResultModal('ยังไม่ได้ตั้งค่า Web App URL', 'error', 'กรุณาตั้งค่า URL ใน Setup ก่อนเพิ่ม/แก้ไข Model'); return; }
   const saveBtn=document.getElementById('mt-btnSaveModel');
   saveBtn.disabled=true; saveBtn.textContent='💾 กำลังบันทึก...';
   try{
@@ -11501,6 +11586,7 @@ async function mtSaveModel(){
 async function mtDeleteModel(){
   if(!mtEditingModelId) return;
   if(!confirm('ลบ Model นี้ทั้งหมด (รวม milestone) ใช่หรือไม่?')) return;
+  if(!WEB_APP_URL){ showResultModal('ยังไม่ได้ตั้งค่า Web App URL', 'error', 'กรุณาตั้งค่า URL ใน Setup ก่อนลบ Model'); return; }
   const m=MT_DATA.find(x=>x.id===mtEditingModelId);
   try{
     const res=await fetch(WEB_APP_URL+'?action=delModelTracker&rowIndex='+m.rowIndex);
@@ -11551,6 +11637,7 @@ async function mtSaveMs(){
   const date=monthVal?(monthVal+'-01'):'';
   const note=document.getElementById('mt-f-msnote').value.trim();
   if(!date){ alert('กรุณาเลือกเดือน/ปี'); return; }
+  if(!WEB_APP_URL){ showResultModal('ยังไม่ได้ตั้งค่า Web App URL', 'error', 'กรุณาตั้งค่า URL ใน Setup ก่อนบันทึก Milestone'); return; }
   const m=MT_DATA.find(x=>x.id===mtCurrentMsModelId);
 
   // ทำงานกับ copy ของ milestones ในหน่วยความจำก่อน แล้วค่อยสรุปเป็น params
@@ -11591,6 +11678,7 @@ async function mtSaveMs(){
 }
 async function mtDeleteMs(){
   if(!mtEditingMs) return;
+  if(!WEB_APP_URL){ showResultModal('ยังไม่ได้ตั้งค่า Web App URL', 'error', 'กรุณาตั้งค่า URL ใน Setup ก่อนลบ Milestone'); return; }
   const m=MT_DATA.find(x=>x.id===mtCurrentMsModelId);
   const newMilestones = m.milestones.filter(x=>x.id!==mtEditingMs);
   const tempModel = { ...m, milestones: newMilestones };
@@ -11947,6 +12035,7 @@ async function saveWpItem() {
   const date = document.getElementById('wpf-date').value.trim();
   const name = document.getElementById('wpf-name').value.trim();
   if (!date || !name) { showToast('⚠️ กรุณากรอกวันที่ และ ชื่องาน', 'warn'); return; }
+  if (!WEB_APP_URL) { showResultModal('ยังไม่ได้ตั้งค่า Web App URL', 'error', 'กรุณาตั้งค่า URL ใน Setup ก่อนเพิ่ม/แก้ไขแผนงาน'); return; }
   const editRowIndex = document.getElementById('wpf-editIdx').value;
   const item = {
     date, name,
@@ -11987,6 +12076,7 @@ async function saveWpItem() {
 }
 async function deleteWpItem(rowIndex) {
   if (!confirm('ลบแผนงานนี้ใช่ไหม?')) return;
+  if (!WEB_APP_URL) { showResultModal('ยังไม่ได้ตั้งค่า Web App URL', 'error', 'กรุณาตั้งค่า URL ใน Setup ก่อนลบแผนงาน'); return; }
   try {
     const res  = await fetch(WEB_APP_URL + '?action=delWorkplan&rowIndex=' + rowIndex);
     const json = await res.json();
@@ -12134,6 +12224,10 @@ async function prSyncFromSheet(){
   }catch(err){
     console.warn('[payroll] โหลดจาก Sheet ไม่สำเร็จ ใช้ข้อมูล cache แทน:', err.message||err);
     prSyncStatus = 'offline';
+    // เดิมสถานะ 'offline' ถูกเก็บไว้ในตัวแปรเฉยๆ ไม่เคยแสดงให้ผู้ใช้เห็นที่ไหนเลย
+    // (เช็คโค้ดแล้วพบว่า prSyncStatus ถูกอ่านแค่ตอน 'loading' เท่านั้น) ผู้ใช้จึงไม่รู้เลย
+    // ว่ากำลังดูข้อมูลพนักงาน/เวลาเข้างานที่แคชไว้ ไม่ใช่ข้อมูลล่าสุดจาก Sheet
+    showToast('⚠️ เชื่อมต่อ Sheet เงินเดือนไม่ได้ — แสดงข้อมูลแคชล่าสุดในเครื่องแทน', 'error');
   }
   prRenderGrid();
   if(prSelected) prRefreshDetail();
