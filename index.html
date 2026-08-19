@@ -5379,6 +5379,8 @@
           <option value="warn">⚠️ ใกล้หมดอายุ</option>
           <option value="tracking">🔄 กำลังติดตาม</option>
           <option value="temp">📃 ใบรับรองชั่วคราว</option>
+          <option value="partial">⚪ ไม่ครบ</option>
+          <option value="none">— ไม่มี</option>
           <option value="danger">🔴 หมดอายุแล้ว</option>
         </select>
         <button class="btn btn-primary" onclick="openCerModal()" style="white-space:nowrap">+ เพิ่มบริษัท</button>
@@ -7875,14 +7877,16 @@ function cerOverallStatus(r) {
   ];
   if (states.includes('danger')) return 'danger';
   if (states.includes('warn'))   return 'warn';
-  const progressStates = [
+  const certStates = [
     cerCertStatus(r.iso9001Date,  r.iso9001Has).state,
     cerCertStatus(r.iso14001Date, r.iso14001Has).state,
     cerCertStatus(r.iatfDate,     r.iatfHas).state
   ];
-  if (progressStates.includes('progress')) return 'progress';
-  if (progressStates.includes('temp')) return 'temp';
-  return 'ok';
+  if (certStates.includes('progress')) return 'progress';
+  if (certStates.includes('temp')) return 'temp';
+  if (certStates.every(s => s === 'none')) return 'none';    // ไม่มีใบรับรองเลยสักใบ
+  if (certStates.some(s => s === 'none'))  return 'partial'; // มีบางใบ แต่ไม่ครบทั้ง 3
+  return 'ok'; // ครบทุกใบ ไม่หมดอายุ
 }
 
 async function loadCerData(forceRefresh = false) {
@@ -8039,6 +8043,8 @@ function renderCerTable() {
                         : overall === 'warn'     ? `<span class="badge badge-progress">⚠️ ใกล้หมดอายุ</span>`
                         : overall === 'progress' ? `<span class="badge" style="background:rgba(129,140,248,0.12);color:#818cf8;border:1px solid rgba(129,140,248,0.25)">🔄 กำลังติดตาม</span>`
                         : overall === 'temp'     ? `<span class="badge" style="background:rgba(245,158,11,0.12);color:#f59e0b;border:1px solid rgba(245,158,11,0.25)">📃 ใบรับรองชั่วคราว</span>`
+                        : overall === 'none'     ? `<span class="badge" style="background:rgba(100,116,139,0.1);color:var(--muted);border:1px solid rgba(100,116,139,0.15)">— ไม่มี</span>`
+                        : overall === 'partial'  ? `<span class="badge" style="background:rgba(100,116,139,0.14);color:var(--muted);border:1px solid rgba(100,116,139,0.28)">⚪ ไม่ครบ</span>`
                         : `<span class="badge badge-done">✅ มีครบ</span>`;
     return `<tr>
       <td class="no-num">${r.id}</td>
@@ -8158,7 +8164,7 @@ async function saveCer() {
     const json = await res.json();
     if (json.success) {
       closeCerModal();
-      await loadCerPage();
+      await loadCerPage(true);
       showResultModal('บันทึกสำเร็จ', 'success');
     } else {
       showResultModal('บันทึกไม่สำเร็จ', 'error', json.error || '');
@@ -8183,7 +8189,7 @@ async function deleteCerItem(rowIndex) {
     const res  = await fetch(WEB_APP_URL + '?action=delCer&rowIndex=' + rowIndex);
     const json = await res.json();
     if (json.success) {
-      await loadCerPage();
+      await loadCerPage(true);
       showResultModal('ลบสำเร็จ', 'success');
     } else {
       showResultModal('ลบไม่สำเร็จ', 'error', json.error || '');
