@@ -2623,6 +2623,50 @@
     transform: translateY(-1px) !important;
   }
 
+  /* ══════════════════════════════════════════════════════
+     TOPBAR — CLEAN REFRESH: ตัดกรอบ/เส้นแบ่งออก จัดเรียงโปร่งสบายตา
+  ══════════════════════════════════════════════════════ */
+  .topbar { gap: 0.4rem; padding: 0 1.4rem !important; }
+  .topbar-left { gap: 0.65rem !important; }
+  .topbar-right { gap: 0.35rem !important; }
+  .topbar .topbar-divider,
+  .topbar-right > div[style*="width:1px"] { display: none !important; }
+
+  .topbar .topbar-sub,
+  .topbar .topbar-chip,
+  .topbar .icon-action,
+  .topbar .theme-pill,
+  .topbar .mute-pill,
+  .topbar .account-pill {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+  .topbar .topbar-sub:hover,
+  .topbar .topbar-chip:hover,
+  .topbar .icon-action:hover,
+  .topbar .theme-pill:hover,
+  .topbar .mute-pill:hover,
+  .topbar .account-pill:hover {
+    background: var(--surface2) !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+  .topbar .icon-action.bell:hover { background: var(--glow-warn) !important; }
+  .topbar .mute-pill.muted { background: rgba(16,185,129,0.1) !important; }
+  .topbar .mute-pill.muted:hover { background: rgba(16,185,129,0.16) !important; }
+
+  .topbar .sync-pill {
+    border: none !important;
+    box-shadow: none !important;
+    background: var(--glow-accent) !important;
+  }
+  .topbar .sync-pill:hover {
+    background: rgba(62,106,225,0.18) !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
   /* ── SIDEBAR ENHANCED ── */
   .sidebar {
     box-shadow: 2px 0 24px rgba(0,0,0,0.12) !important;
@@ -4278,7 +4322,7 @@
   }
 </style>
 </head>
-<body>
+<body class="light-theme">
 
 <!-- ══════════════════════════════════════════════
      WELCOME SCREEN  (ซ่อนตัวเองหลังกด "เข้าสู่ระบบ")
@@ -4550,11 +4594,6 @@
       <div class="topbar-sub" id="lastSync">กำลังโหลด...</div>
     </div>
     <div class="topbar-right">
-      <div class="cmdk-trigger" onclick="openCommandPalette()" title="ค้นหาเมนู (Ctrl+K)">
-        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <span class="cmdk-trigger-text">ค้นหาเมนู</span>
-        <span class="cmdk-trigger-kbd">Ctrl K</span>
-      </div>
       <div class="topbar-chip" id="currentDateChip"></div>
       <button class="sync-pill" onclick="syncData()" data-tour="sync-btn"><span id="syncIcon">⟳</span> Sync</button>
       <div style="width:1px;height:20px;background:var(--border);flex-shrink:0"></div>
@@ -4581,7 +4620,7 @@
           <div class="accent-pick-row" id="accentColorPickTop"></div>
         </div>
       </div>
-      <button class="theme-pill" id="themeToggle" onclick="toggleTheme()" data-tour="theme-toggle">🌙 Dark</button>
+      <button class="theme-pill" id="themeToggle" onclick="toggleTheme()" data-tour="theme-toggle">☀️ Light</button>
       <div style="width:1px;height:20px;background:var(--border);flex-shrink:0"></div>
       <div class="account-popover-wrap">
         <div class="account-pill" id="accountBtn" onclick="toggleAccountPopover(event)" title="บัญชี" aria-expanded="false" aria-haspopup="true">
@@ -5268,7 +5307,7 @@
       <div class="chart-card" style="margin-bottom:1rem">
         <div class="chart-header" style="flex-wrap:wrap;gap:0.4rem">
           <div class="chart-title">🏆 Maker Leaderboard — ตรงเวลาที่สุด</div>
-          <div style="font-size: 0.7rem;color:var(--muted)">จัดอันดับจาก % ตรงเวลา (ต้องมีงานปิดแล้วอย่างน้อย 3 รายการ)</div>
+          <div style="font-size: 0.7rem;color:var(--muted)">จัดอันดับจาก % ตรงเวลา (ต้องมีงานปิดแล้วอย่างน้อย 2 รายการ)</div>
         </div>
         <div id="leaderboardPodium" style="display:flex;justify-content:center;align-items:flex-end;gap:1.4rem;padding:1.2rem 0 0.4rem;flex-wrap:wrap;min-height:170px"></div>
       </div>
@@ -6281,10 +6320,10 @@ function initNavGroups() {
 
 /* ── THEME ── */
 function initTheme() {
-  // รีเซ็ตทุกครั้งที่โหลด: dark + accent 0 เสมอ
+  // รีเซ็ตทุกครั้งที่โหลด: light + accent 0 เสมอ
   localStorage.removeItem('prpo_theme');
   localStorage.removeItem('prpo_accent');
-  applyTheme('dark');
+  applyTheme('light');
 }
 function applyTheme(theme) {
   const isLight = theme === 'light';
@@ -10161,7 +10200,7 @@ function computeMakerLeaderboard() {
       streakBest: best
     };
   })
-    .filter(m => m.total >= 3) // ต้องมีข้อมูลพอสมควรถึงจะจัดอันดับอย่างเป็นธรรม
+    .filter(m => m.total >= 2) // ต้องมีข้อมูลพอสมควรถึงจะจัดอันดับอย่างเป็นธรรม
     .sort((a, b) => (b.ontimeRate - a.ontimeRate) || (b.total - a.total));
 }
 
@@ -10213,7 +10252,7 @@ function renderLeaderboard() {
 
   const podiumEl = document.getElementById('leaderboardPodium');
   if (!ranked.length) {
-    podiumEl.innerHTML = `<div class="empty" style="padding:1rem"><div class="empty-icon">🏆</div><div class="empty-title">ยังไม่มีข้อมูลพอจัดอันดับ</div><div class="empty-sub">ต้องมี Maker ที่ปิดงานแล้วอย่างน้อย 3 รายการ</div></div>`;
+    podiumEl.innerHTML = `<div class="empty" style="padding:1rem"><div class="empty-icon">🏆</div><div class="empty-title">ยังไม่มีข้อมูลพอจัดอันดับ</div><div class="empty-sub">ต้องมี Maker ที่ปิดงานแล้วอย่างน้อย 2 รายการ</div></div>`;
   } else {
     const top3 = ranked.slice(0, 3);
     const medalColor = ['#f5c542', '#c7cdd6', '#d08a52'];
@@ -10250,7 +10289,7 @@ function renderLeaderboard() {
       <td style="text-align:center" class="lb-fire">${m.streakCurrent > 0 ? `🔥 ${m.streakCurrent}` : '—'}</td>
       <td style="text-align:center;font-family:var(--mono);color:var(--muted)">${m.streakBest}</td>
     </tr>`;
-  }).join('') : `<tr><td colspan="7" class="empty">ยังไม่มีข้อมูลพอจัดอันดับ (ต้องมีงานปิดแล้วอย่างน้อย 3 รายการต่อ Maker)</td></tr>`;
+  }).join('') : `<tr><td colspan="7" class="empty">ยังไม่มีข้อมูลพอจัดอันดับ (ต้องมีงานปิดแล้วอย่างน้อย 2 รายการต่อ Maker)</td></tr>`;
 
   renderSimplePagination('leaderboardPagination', leaderboardPage, rankedTotalPages, (p) => { leaderboardPage = p; renderLeaderboard(); });
 }
