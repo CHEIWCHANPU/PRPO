@@ -7101,54 +7101,27 @@ async function loadData(forceRefresh = false) {
   const lastSyncEl = document.getElementById('lastSync');
   const setSyncLabel = (text) => { if (lastSyncEl) lastSyncEl.textContent = text; };
 
-  // ── แสดง cache ก่อนทันที (stale-while-revalidate) ──
+  // ── แสดง cache ก่อนทันที (ถ้ามี) เพื่อความเร็ว — แต่ยังไงก็ตาม
+  //    จะยิง fetch ไปเช็คของจริงจาก Sheet เสมอทุกครั้งที่โหลดหน้า ไม่ปล่อยให้ค้างเป็นข้อมูลเก่า
+  //    (เดิม: ถ้า cache อายุ < 5 นาที จะไม่ยิง fetch เลย ทำให้รีเฟรชแล้วเห็นข้อมูลเก่า
+  //     ต้องกด Sync เองถึงจะได้ของใหม่ — แก้แล้วโดยตัดเงื่อนไข cacheValid ที่ short-circuit ทิ้ง) ──
   const CACHE_KEY = 'prpo_data_cache';
   const CACHE_TIME_KEY = 'prpo_data_cache_time';
-  const CACHE_TTL = 5 * 60 * 1000; // 5 นาที
   const cached = localStorage.getItem(CACHE_KEY);
   const cachedTime = parseInt(localStorage.getItem(CACHE_TIME_KEY) || '0');
-  const cacheAge = Date.now() - cachedTime;
-  const cacheValid = cached && cacheAge < CACHE_TTL;
   const cacheAgeLabel = () => {
     const ageMin = Math.round((Date.now() - cachedTime) / 60000);
     return 'แคช' + (ageMin > 0 ? ' (' + ageMin + ' นาทีที่แล้ว)' : ' (เมื่อกี้)');
   };
 
   if (cached && !forceRefresh) {
-    // แสดงข้อมูล cache ทันที
+    // แสดงข้อมูล cache ทันทีระหว่างรอโหลดของจริง (ให้เว็บดูเร็ว ไม่ค้างจอขาว)
     allData = JSON.parse(cached);
     processData();
     setSyncLabel(cacheAgeLabel());
-
-    // ถ้า cache ยังใหม่อยู่ ไม่ต้อง fetch ใหม่
-    if (cacheValid) return true;
-
-    // fetch ใหม่ใน background — ถ้าพลาด ต้อง "แจ้งให้เห็น" ไม่ใช่เงียบหายเหมือนเดิม
-    // (เดิมโค้ดจุดนี้ catch(() => {}) แล้วปล่อยให้ป้าย "แคช (5 นาทีที่แล้ว)" ค้างอยู่แบบนั้นตลอดไป
-    //  โดยผู้ใช้ไม่มีทางรู้เลยว่า sync เบื้องหลังล้มเหลวซ้ำๆ)
-    try {
-      const r = await fetch(WEB_APP_URL + '?action=getData');
-      const json = await r.json();
-      if (json.success) {
-        allData = json.data;
-        localStorage.setItem(CACHE_KEY, JSON.stringify(json.data));
-        localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
-        setSyncLabel('ซิงค์ล่าสุด: ' + String(json.updated).split(' ')[0]);
-        processData();
-        return true;
-      } else {
-        setSyncLabel(cacheAgeLabel() + ' · sync ล้มเหลว');
-        showToast('⚠️ Sync ข้อมูลไม่สำเร็จ: ' + (json.error || 'ไม่ทราบสาเหตุ'), 'error');
-        return false;
-      }
-    } catch (e) {
-      setSyncLabel(cacheAgeLabel() + ' · เชื่อมต่อไม่ได้');
-      showToast('⚠️ เชื่อมต่อ Sheet ไม่ได้ — แสดงข้อมูลแคชเดิมไว้ก่อน', 'error');
-      return false;
-    }
   }
 
-  // ── ไม่มี cache → fetch ปกติ ──
+  // ── ยิงไป Google Sheet เสมอทุกครั้งที่เรียก loadData (ไม่ว่า cache จะใหม่แค่ไหนก็ตาม) ──
   try {
     const res = await fetch(WEB_APP_URL + '?action=getData');
     const json = await res.json();
@@ -7157,18 +7130,28 @@ async function loadData(forceRefresh = false) {
       localStorage.setItem(CACHE_KEY, JSON.stringify(json.data));
       localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
       setSyncLabel('ซิงค์ล่าสุด: ' + String(json.updated).split(' ')[0]);
-      processData(); showToast('✅ Sync สำเร็จ', 'success');
+      processData();
+      if (forceRefresh) showToast('✅ Sync สำเร็จ', 'success');
       return true;
     } else {
-      allData = DEMO; processData();
-      setSyncLabel('⚠️ เชื่อมต่อไม่ได้ (ใช้ข้อมูลตัวอย่าง)');
+      if (cached) {
+        setSyncLabel(cacheAgeLabel() + ' · sync ล้มเหลว');
+      } else {
+        allData = DEMO; processData();
+        setSyncLabel('⚠️ เชื่อมต่อไม่ได้ (ใช้ข้อมูลตัวอย่าง)');
+      }
       showToast('⚠️ โหลดข้อมูลไม่สำเร็จ: ' + (json.error || 'ไม่ทราบสาเหตุ'), 'error');
       return false;
     }
-  } catch(e) {
-    allData = DEMO; processData();
-    setSyncLabel('⚠️ เชื่อมต่อไม่ได้ (ใช้ข้อมูลตัวอย่าง)');
-    showToast('⚠️ ไม่สามารถเชื่อมต่อ — ใช้ข้อมูล Demo', 'error');
+  } catch (e) {
+    if (cached) {
+      setSyncLabel(cacheAgeLabel() + ' · เชื่อมต่อไม่ได้');
+      showToast('⚠️ เชื่อมต่อ Sheet ไม่ได้ — แสดงข้อมูลแคชเดิมไว้ก่อน', 'error');
+    } else {
+      allData = DEMO; processData();
+      setSyncLabel('⚠️ เชื่อมต่อไม่ได้ (ใช้ข้อมูลตัวอย่าง)');
+      showToast('⚠️ ไม่สามารถเชื่อมต่อ — ใช้ข้อมูล Demo', 'error');
+    }
     return false;
   }
 }
