@@ -8698,6 +8698,7 @@ function renderSummaryCards(mData, mLabel) {
   }).join('');
 
   // Maker chart (จำกัดด้วย Top N กันกราฟเพี้ยนตอนมี Maker เพิ่มขึ้นในอนาคต)
+  document.getElementById('s-maker-chart-title').textContent = `จำนวนรายการส่ง ตาม Maker: ${label}`;
   const makerMap = {};
   mData.forEach(r => { if (r.maker) makerMap[r.maker] = (makerMap[r.maker]||0) + 1; });
   const makers = Object.entries(makerMap).sort((a,b) => b[1]-a[1]);
