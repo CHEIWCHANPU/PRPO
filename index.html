@@ -6182,6 +6182,7 @@ let accentPopoverOpen = false;
 let activeMonthTab = null;
 let cerData = [];
 let cerLoaded = false;
+let cerLoadedTime = 0; // เวลาที่ดึงข้อมูล CER ล่าสุดสำเร็จ — ใช้เช็คว่า cache หมดอายุหรือยัง
 let cerSortCol = 'name';
 let cerSortDir = 'asc';
 let cerCurrentPage = 1;
@@ -7889,6 +7890,8 @@ function cerOverallStatus(r) {
   return 'ok'; // ครบทุกใบ ไม่หมดอายุ
 }
 
+const CER_CACHE_TTL = 5 * 60 * 1000; // 5 นาที — เท่ากับ cache ของ PR/PO (loadData)
+
 async function loadCerData(forceRefresh = false) {
   if (!WEB_APP_URL) {
     if (!cerLoaded) {
@@ -7900,30 +7903,58 @@ async function loadCerData(forceRefresh = false) {
     renderDailyBriefing();
     return;
   }
-  // ถ้าโหลดแล้วและไม่ได้ force → ใช้ cache
-  if (cerLoaded && !forceRefresh) {
+
+  const cacheStale = !cerLoaded || (Date.now() - cerLoadedTime) >= CER_CACHE_TTL;
+
+  // มีข้อมูลอยู่แล้วและยังไม่หมดอายุ → ใช้ของเดิม ไม่ต้อง fetch ซ้ำ
+  if (cerLoaded && !forceRefresh && !cacheStale) {
     buildNotifications();
     renderDailyBriefing();
     return;
   }
+
+  // มีข้อมูลอยู่แล้วแต่ cache หมดอายุ (ไม่ได้กด force) → โชว์ของเดิมไปก่อน แล้วรีเฟรชเงียบๆ เบื้องหลัง
+  if (cerLoaded && !forceRefresh && cacheStale) {
+    buildNotifications();
+    renderDailyBriefing();
+    fetchCerFromSheet(); // ไม่ await — เสร็จเมื่อไหร่จะ re-render ให้เองข้างใน
+    return;
+  }
+
+  // ไม่มีข้อมูลเลย หรือถูกสั่ง force → ดึงแบบรอผลก่อนแสดง
+  await fetchCerFromSheet();
+  buildNotifications();
+  renderDailyBriefing();
+}
+
+// ดึงข้อมูล CER จาก Sheet จริง + อัปเดต cache — แยกออกมาเพื่อเรียกซ้ำได้ทั้งแบบ await และแบบ background
+async function fetchCerFromSheet() {
   try {
     const res  = await fetch(WEB_APP_URL + '?action=getCer');
     const json = await res.json();
     if (json.success) {
       cerData = json.data;
       cerLoaded = true;
+      cerLoadedTime = Date.now();
+      localStorage.setItem('cer_data', JSON.stringify(cerData));
       document.getElementById('cerFetchError').style.display = 'none';
+      // ถ้าเป็นการรีเฟรชเบื้องหลัง (ข้อมูลเก่าถูกแสดงไปแล้ว) ต้องอัปเดตหน้าจอซ้ำเมื่อของใหม่มาถึง
+      buildNotifications();
+      renderDailyBriefing();
+      if (document.getElementById('cerTableBody')) renderCerTable();
     } else {
       throw new Error(json.error || 'unknown error');
     }
   } catch (e) {
-    const local = JSON.parse(localStorage.getItem('cer_data') || 'null');
-    cerData = local || CER_DEMO;
+    // ดึงไม่สำเร็จ: ถ้ายังไม่เคยมีข้อมูลในหน่วยความจำเลย ค่อย fallback ไป localStorage/demo
+    // (ถ้ามีข้อมูลเก่าอยู่แล้วจากรอบก่อน ให้คงของเดิมไว้ ดีกว่าทับด้วยของเก่ากว่า)
+    if (!cerLoaded) {
+      const local = JSON.parse(localStorage.getItem('cer_data') || 'null');
+      cerData = local || CER_DEMO;
+    }
     document.getElementById('cerFetchErrorText').textContent = 'ดึงข้อมูลจาก Sheet ไม่สำเร็จ — แสดงข้อมูลสำรอง';
     document.getElementById('cerFetchError').style.display = 'block';
   }
-  buildNotifications();
-  renderDailyBriefing();
 }
 
 async function loadCerPage(forceRefresh = false) {
@@ -9160,6 +9191,8 @@ function initAutoSync() {
         // ไม่ showToast เพราะเป็น background sync
       }
     } catch(e) { /* เงียบ — ไม่รบกวน user */ }
+    // ซิงค์ CER (ใบรับรอง) พร้อมกันในรอบเดียวกัน — กันไม่ให้ Dashboard/แจ้งเตือนค้างข้อมูลเก่า
+    fetchCerFromSheet();
   }, AUTO_SYNC_MS);
 }
 
