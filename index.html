@@ -21,13 +21,18 @@
     background_color: "#080b10",
     theme_color: "#080b10",
     orientation: "portrait-primary",
-    icons: [{ src: document.querySelector('link[rel="icon"]')?.href || '', sizes: "192x192", type: "image/png" }]
+    icons: [{ src: document.querySelector('link[rel="icon"]')?.href || '', sizes: "447x447", type: "image/jpeg", purpose: "any" }]
   };
   const blob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const link = document.createElement('link');
   link.rel = 'manifest'; link.href = url;
   document.head.appendChild(link);
+  /* ไอคอนสำหรับ iOS (Add to Home Screen) ใช้ไอคอนเดียวกับ favicon */
+  const appleIcon = document.createElement('link');
+  appleIcon.rel = 'apple-touch-icon';
+  appleIcon.href = document.querySelector('link[rel="icon"]')?.href || '';
+  document.head.appendChild(appleIcon);
 })();
 </script>
 <title>PURCHASE-EN-CCIP | ระบบจัดการ PU/EN</title>
@@ -10667,6 +10672,82 @@ function renderLeaderboard() {
 })();
 </script>
 
+<!-- ═══════════════════════════════════════════════════════════════
+     ปุ่มติดตั้งแอป (PWA Install) — กดแล้วสร้างไอคอนที่หน้าจอเครื่อง
+     ใช้เปิดแบบ standalone เหมือนแอป Windows/มือถือทั่วไป
+════════════════════════════════════════════════════════════════ -->
+<style>
+  #pwaInstallBtn {
+    display: none; align-items: center; gap: 8px;
+    position: fixed; right: 20px; bottom: 20px; z-index: 9999;
+    padding: 12px 18px; border: 1px solid var(--border);
+    border-radius: var(--r-pill, 999px);
+    background: var(--accent); color: #fff;
+    font-family: var(--font); font-weight: 600; font-size: 14px;
+    box-shadow: var(--shadow-lg); cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  #pwaInstallBtn:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg), 0 0 0 4px var(--glow-accent); }
+  #pwaInstallBtn:disabled { opacity: 0.6; cursor: default; transform: none; }
+  #pwaInstallBtn svg { flex-shrink: 0; }
+  @media (max-width: 640px) {
+    #pwaInstallBtn { right: 14px; bottom: 84px; padding: 10px 14px; font-size: 13px; }
+  }
+</style>
+<button id="pwaInstallBtn" type="button" title="ติดตั้งแอปนี้ลงเครื่อง">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+  </svg>
+  <span>ติดตั้งแอป</span>
+</button>
+<script>
+(function(){
+  const btn = document.getElementById('pwaInstallBtn');
+  let deferredPrompt = null;
+
+  function isStandalone() {
+    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  }
+  function isIOS() {
+    return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+  }
+  function notify(payload) {
+    if (typeof showToast === 'function') { showToast(payload.msg, payload.type || 'info', payload.duration || 4000); }
+    else { alert(typeof payload.msg === 'object' ? (payload.msg.title + (payload.msg.sub ? ' — ' + payload.msg.sub : '')) : payload.msg); }
+  }
+
+  if (isStandalone()) {
+    // เปิดจากไอคอนที่ติดตั้งไว้แล้ว — ไม่ต้องแสดงปุ่มซ้ำ
+  } else if (isIOS()) {
+    // Safari บน iOS ไม่รองรับ beforeinstallprompt ต้องกดปุ่มแชร์เอง — แสดงปุ่มพร้อมคำแนะนำ
+    btn.style.display = 'flex';
+    btn.addEventListener('click', () => {
+      notify({ msg: { icon: '📲', title: 'ติดตั้งแอปบน iPhone/iPad', sub: 'แตะปุ่มแชร์ (กรอบสี่เหลี่ยมมีลูกศรขึ้น) ด้านล่างจอ แล้วเลือก "เพิ่มไปยังหน้าจอโฮม"' }, duration: 7000 });
+    });
+  } else {
+    // Chrome / Edge / Android — ใช้ beforeinstallprompt เพื่อโชว์ปุ่มติดตั้งของเบราว์เซอร์เอง
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      btn.style.display = 'flex';
+    });
+    btn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      btn.disabled = true;
+      deferredPrompt.prompt();
+      const choice = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      btn.disabled = false;
+      if (choice.outcome === 'accepted') btn.style.display = 'none';
+    });
+    window.addEventListener('appinstalled', () => {
+      btn.style.display = 'none';
+      deferredPrompt = null;
+      notify({ msg: 'ติดตั้งแอปสำเร็จ — เปิดได้จากไอคอนบนหน้าจอเครื่องได้เลย', type: 'success' });
+    });
+  }
+})();
+</script>
 </body>
 
 <script>
