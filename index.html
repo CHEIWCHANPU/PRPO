@@ -4614,7 +4614,7 @@
       <div class="icon-action" id="fullscreenBtn" onclick="toggleFullscreen()" title="เต็มจอ (ย่อ 90%)">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
       </div>
-      <div class="icon-action" id="pwaInstallTopbarBtn" onclick="pwaInstallClick()" title="ติดตั้งแอปลงเครื่อง" style="display:none">
+      <div class="icon-action" id="pwaInstallTopbarBtn" onclick="pwaInstallClick()" title="ติดตั้งแอปลงเครื่อง">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       </div>
       <div class="mute-pill" id="toastMuteBtn" onclick="toggleToastMute()" title="popup แจ้งเตือน">
@@ -10699,25 +10699,25 @@ function renderLeaderboard() {
     else { alert(typeof payload.msg === 'object' ? (payload.msg.title + (payload.msg.sub ? ' — ' + payload.msg.sub : '')) : payload.msg); }
   }
 
-  let mode = null; // 'ios' | 'chrome'
+  let mode = isIOS() ? 'ios' : 'chrome'; // 'ios' | 'chrome'
 
   if (isStandalone()) {
-    // เปิดจากไอคอนที่ติดตั้งไว้แล้ว — ไม่ต้องแสดงปุ่ม
-  } else if (isIOS()) {
-    mode = 'ios';
-    btn.style.display = 'flex';
+    // เปิดจากไอคอนที่ติดตั้งไว้แล้ว — ซ่อนปุ่ม ไม่มีอะไรให้ติดตั้งซ้ำ
+    btn.style.display = 'none';
   } else {
-    mode = 'chrome';
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      btn.style.display = 'flex';
-    });
-    window.addEventListener('appinstalled', () => {
-      btn.style.display = 'none';
-      deferredPrompt = null;
-      notify({ msg: 'ติดตั้งแอปสำเร็จ — เปิดได้จากไอคอนบนหน้าจอเครื่องได้เลย', type: 'success' });
-    });
+    // แสดงปุ่มไว้เสมอ (ไม่รอ beforeinstallprompt ก่อนถึงจะโผล่ — บาง Chrome/บาง
+    // เงื่อนไขไม่ยิง event นี้จนกว่าจะมี engagement ระดับหนึ่ง ปุ่มเลยหายไปเฉยๆ)
+    if (mode === 'chrome') {
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+      });
+      window.addEventListener('appinstalled', () => {
+        btn.style.display = 'none';
+        deferredPrompt = null;
+        notify({ msg: 'ติดตั้งแอปสำเร็จ — เปิดได้จากไอคอนบนหน้าจอเครื่องได้เลย', type: 'success' });
+      });
+    }
   }
 
   window.pwaInstallClick = async function() {
@@ -10725,7 +10725,12 @@ function renderLeaderboard() {
       notify({ msg: { icon: '📲', title: 'ติดตั้งแอปบน iPhone/iPad', sub: 'แตะปุ่มแชร์ (กรอบสี่เหลี่ยมมีลูกศรขึ้น) ด้านล่างจอ แล้วเลือก "เพิ่มไปยังหน้าจอโฮม"' }, duration: 7000 });
       return;
     }
-    if (!deferredPrompt) return;
+    if (!deferredPrompt) {
+      // เบราว์เซอร์ยังไม่พร้อมยิง prompt อัตโนมัติ (Chrome บางเวอร์ชันต้องมี engagement
+      // ก่อนถึงจะปล่อย beforeinstallprompt) — บอกวิธีติดตั้งเองผ่านเมนูเบราว์เซอร์แทน
+      notify({ msg: { icon: '💻', title: 'ติดตั้งแอปนี้', sub: 'กดไอคอนติดตั้ง (⊕ หรือจอคอมพิวเตอร์) ที่แถบ URL ด้านบน หรือเมนู ⋮ → "ติดตั้งแอป / Install app"' }, duration: 7000 });
+      return;
+    }
     btn.style.pointerEvents = 'none';
     deferredPrompt.prompt();
     const choice = await deferredPrompt.userChoice;
