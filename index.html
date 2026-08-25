@@ -523,24 +523,12 @@
   .progress-section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1rem 1.2rem; margin-bottom: 1.3rem; }
   .progress-row { display: flex; align-items: center; gap: 1rem; }
   .progress-label { font-size: 0.735rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
-  .progress-bar-wrap {
-    flex: 1; height: 10px; background: var(--surface2); border-radius: var(--r-pill); overflow: hidden;
-    position: relative; box-shadow: inset 0 1px 3px rgba(0,0,0,0.18);
-  }
+  .progress-bar-wrap { flex: 1; height: 8px; background: var(--surface2); border-radius: var(--r-pill); overflow: hidden; }
   .progress-bar {
-    height: 100%; border-radius: var(--r-pill); position: relative; overflow: hidden;
-    background: linear-gradient(90deg, var(--accent), var(--accent2), #22d3ee);
-    background-size: 220% 100%; animation: progressFlow 3.5s linear infinite;
-    box-shadow: 0 0 12px rgba(34,211,238,0.55), 0 0 3px rgba(99,102,241,0.6);
+    height: 100%; border-radius: var(--r-pill);
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
     transition: width 1s cubic-bezier(0.4,0,0.2,1);
   }
-  .progress-bar::after {
-    content: ''; position: absolute; inset: 0;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent);
-    width: 40%; animation: progressShine 2.2s ease-in-out infinite;
-  }
-  @keyframes progressFlow { 0% { background-position: 0% 0; } 100% { background-position: -220% 0; } }
-  @keyframes progressShine { 0% { transform: translateX(-120%); } 100% { transform: translateX(340%); } }
   .progress-pct { font-family: var(--mono); font-size: 0.945rem; font-weight: 700; color: var(--accent); white-space: nowrap; }
 
   /* DAILY BRIEFING */
@@ -754,28 +742,13 @@
   .chart-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1.3rem; }
   .chart-card {
     background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg);
-    padding: 1.1rem; position: relative; overflow: hidden;
-    transition: box-shadow 0.25s, border-color 0.25s, transform 0.25s;
+    padding: 1.1rem; position: relative;
+    transition: box-shadow 0.2s, transform 0.2s;
   }
-  .chart-card::before {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-    background: linear-gradient(90deg, var(--accent2), #22d3ee, var(--accent2));
-    background-size: 200% 100%; opacity: 0.55; animation: chartTopSheen 5s linear infinite;
-  }
-  .chart-card:hover { box-shadow: 0 10px 34px rgba(34,211,238,0.14), 0 4px 20px rgba(0,0,0,0.12); border-color: rgba(34,211,238,0.35); transform: translateY(-2px); }
-  @keyframes chartTopSheen { 0% { background-position: 0% 0; } 100% { background-position: -200% 0; } }
+  .chart-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.12); transform: translateY(-1px); }
   .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.9rem; }
   .chart-title { font-size: 0.714rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); }
   .chart-wrap { position: relative; height: 170px; }
-
-  /* Donut glow halo — apply via .chart-wrap.donut-glow around a doughnut canvas */
-  .chart-wrap.donut-glow::before {
-    content: ''; position: absolute; inset: 8%; border-radius: 50%;
-    background: radial-gradient(circle, rgba(34,211,238,0.16) 0%, rgba(99,102,241,0.10) 45%, transparent 72%);
-    filter: blur(6px); animation: donutPulse 3.2s ease-in-out infinite; pointer-events: none; z-index: 0;
-  }
-  .chart-wrap.donut-glow canvas { position: relative; z-index: 1; }
-  @keyframes donutPulse { 0%, 100% { opacity: 0.55; transform: scale(0.97); } 50% { opacity: 1; transform: scale(1.03); } }
 
   /* TOOLBAR */
   .toolbar { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.95rem; flex-wrap: wrap; }
@@ -1210,13 +1183,8 @@
   .maker-row { display: flex; align-items: center; justify-content: space-between; padding: 0.45rem 0; border-bottom: 1px solid var(--border); font-size: 0.83rem; gap: 0.6rem; }
   .maker-row:last-child { border-bottom: none; }
   .maker-row-name { flex: 0 0 auto; max-width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.819rem; }
-  .maker-bar { flex: 1; height: 6px; background: var(--surface2); border-radius: var(--r-pill); overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.15); }
-  .maker-fill {
-    height: 100%; border-radius: var(--r-pill); position: relative; overflow: hidden;
-    background: linear-gradient(90deg, var(--accent), var(--accent2), #22d3ee);
-    background-size: 220% 100%; animation: progressFlow 3.5s linear infinite;
-    box-shadow: 0 0 8px rgba(34,211,238,0.5);
-  }
+  .maker-bar { flex: 1; height: 5px; background: var(--surface2); border-radius: var(--r-pill); overflow: hidden; }
+  .maker-fill { height: 100%; border-radius: var(--r-pill); background: linear-gradient(90deg, var(--accent), var(--accent2)); }
   .maker-count { font-family: var(--mono); font-size: 0.724rem; color: var(--muted); white-space: nowrap; }
 
   /* TOAST */
@@ -4907,7 +4875,7 @@
       <div class="exec-grid-2">
         <div class="exec-panel">
           <div class="exec-panel-title">📊 สถานะงานทั้งหมด</div>
-          <div class="chart-wrap donut-glow" style="height:220px"><canvas id="execStatusChart"></canvas></div>
+          <div class="chart-wrap" style="height:220px"><canvas id="execStatusChart"></canvas></div>
         </div>
         <div class="exec-panel">
           <div class="exec-panel-title">🏭 Top 5 Maker ตามจำนวนรายการ</div>
@@ -5030,7 +4998,7 @@
         </div>
         <div class="chart-card">
           <div class="chart-header"><div class="chart-title">สัดส่วนสถานะ · On-Time Achievement</div></div>
-          <div class="chart-wrap donut-glow" style="height:230px"><canvas id="chartStatus"></canvas></div>
+          <div class="chart-wrap" style="height:230px"><canvas id="chartStatus"></canvas></div>
         </div>
       </div>
 
@@ -8767,7 +8735,7 @@ function renderCharts() {
       data:{ labels:['เสร็จแล้ว','กำลังดำเนินการ','ยังไม่ครบ'], datasets:[{ data:[done,progress,incomplete], backgroundColor:['#10b981','#f59e0b','#ef4444'], borderColor: cs.getPropertyValue('--surface').trim(), borderWidth:2, borderRadius:6, spacing:4, hoverOffset:10 }] },
       options:{ responsive:true, maintainAspectRatio:false, cutout:'70%', animation: CHART_EASE,
         plugins:{ legend: chartLegendCfg(chartText), tooltip: chartTooltipCfg(cs),
-          centerText: { text: (doneRowsForOnTime.length ? onTimeRateForHero + '%' : statusTotal.toLocaleString()), label: doneRowsForOnTime.length ? 'On-Time Rate' : 'รวม', color: cs.getPropertyValue('--text').trim(), labelColor: chartText, glow: 'rgba(34,211,238,0.85)', valueSize: 26 } } }
+          centerText: { text: (doneRowsForOnTime.length ? onTimeRateForHero + '%' : statusTotal.toLocaleString()), label: doneRowsForOnTime.length ? 'On-Time Rate' : 'รวม', color: cs.getPropertyValue('--text').trim(), labelColor: chartText, valueSize: 24 } } }
     });
   }
 
@@ -8902,7 +8870,7 @@ function renderCharts() {
             },
             fill: true, tension: 0.35, pointRadius: 3, pointHoverRadius: 6,
             pointBackgroundColor: '#f59e0b', pointBorderColor: '#fff', pointBorderWidth: 1.5,
-            borderWidth: 2.5, shadowColor: 'rgba(245,158,11,0.6)',
+            borderWidth: 2.5,
             yAxisID: 'y1'
           }
         ]
@@ -9049,7 +9017,7 @@ function renderExecDashboard() {
       data: { labels: ['เสร็จแล้ว', 'กำลังดำเนินการ', 'ยังไม่ครบ'], datasets: [{ data: [done, progress, incomplete], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderColor: cs.getPropertyValue('--surface').trim(), borderWidth: 2, borderRadius: 6, spacing: 4, hoverOffset: 9 }] },
       options: { responsive: true, maintainAspectRatio: false, cutout: '70%', animation: CHART_EASE,
         plugins: { legend: chartLegendCfg(chartText), tooltip: chartTooltipCfg(cs),
-          centerText: { text: total.toLocaleString(), label: 'รวม', color: cs.getPropertyValue('--text').trim(), labelColor: chartText, glow: 'rgba(34,211,238,0.85)', valueSize: 24 } } }
+          centerText: { text: total.toLocaleString(), label: 'รวม', color: cs.getPropertyValue('--text').trim(), labelColor: chartText, valueSize: 22 } } }
     });
   }
 
@@ -9228,8 +9196,8 @@ function renderSummaryCards(mData, mLabel) {
       <div style="display:flex;justify-content:space-between;font-size: 0.788rem;margin-bottom:0.3rem">
         <span>${b.label}</span><span style="font-family:var(--mono);color:${b.color}">${b.count} (${p}%)</span>
       </div>
-      <div style="height:8px;background:var(--surface2);border-radius:var(--r-pill);overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,0.15)">
-        <div style="height:100%;width:${p}%;background:linear-gradient(90deg, ${b.hex}99, ${b.hex});border-radius:var(--r-pill);box-shadow:0 0 8px ${b.hex}88;transition:width 0.6s ease"></div>
+      <div style="height:6px;background:var(--surface2);border-radius:var(--r-pill);overflow:hidden">
+        <div style="height:100%;width:${p}%;background:${b.hex};border-radius:var(--r-pill);transition:width 0.6s ease"></div>
       </div>
     </div>`;
   }).join('');
