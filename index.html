@@ -523,8 +523,24 @@
   .progress-section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1rem 1.2rem; margin-bottom: 1.3rem; }
   .progress-row { display: flex; align-items: center; gap: 1rem; }
   .progress-label { font-size: 0.735rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
-  .progress-bar-wrap { flex: 1; height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
-  .progress-bar { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width 1s cubic-bezier(0.4,0,0.2,1); }
+  .progress-bar-wrap {
+    flex: 1; height: 10px; background: var(--surface2); border-radius: var(--r-pill); overflow: hidden;
+    position: relative; box-shadow: inset 0 1px 3px rgba(0,0,0,0.18);
+  }
+  .progress-bar {
+    height: 100%; border-radius: var(--r-pill); position: relative; overflow: hidden;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), #22d3ee);
+    background-size: 220% 100%; animation: progressFlow 3.5s linear infinite;
+    box-shadow: 0 0 12px rgba(34,211,238,0.55), 0 0 3px rgba(99,102,241,0.6);
+    transition: width 1s cubic-bezier(0.4,0,0.2,1);
+  }
+  .progress-bar::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent);
+    width: 40%; animation: progressShine 2.2s ease-in-out infinite;
+  }
+  @keyframes progressFlow { 0% { background-position: 0% 0; } 100% { background-position: -220% 0; } }
+  @keyframes progressShine { 0% { transform: translateX(-120%); } 100% { transform: translateX(340%); } }
   .progress-pct { font-family: var(--mono); font-size: 0.945rem; font-weight: 700; color: var(--accent); white-space: nowrap; }
 
   /* DAILY BRIEFING */
@@ -736,11 +752,30 @@
 
   /* CHARTS */
   .chart-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1.3rem; }
-  .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 1.1rem; transition: box-shadow 0.2s; }
-  .chart-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.12); }
+  .chart-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg);
+    padding: 1.1rem; position: relative; overflow: hidden;
+    transition: box-shadow 0.25s, border-color 0.25s, transform 0.25s;
+  }
+  .chart-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--accent2), #22d3ee, var(--accent2));
+    background-size: 200% 100%; opacity: 0.55; animation: chartTopSheen 5s linear infinite;
+  }
+  .chart-card:hover { box-shadow: 0 10px 34px rgba(34,211,238,0.14), 0 4px 20px rgba(0,0,0,0.12); border-color: rgba(34,211,238,0.35); transform: translateY(-2px); }
+  @keyframes chartTopSheen { 0% { background-position: 0% 0; } 100% { background-position: -200% 0; } }
   .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.9rem; }
   .chart-title { font-size: 0.714rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); }
   .chart-wrap { position: relative; height: 170px; }
+
+  /* Donut glow halo — apply via .chart-wrap.donut-glow around a doughnut canvas */
+  .chart-wrap.donut-glow::before {
+    content: ''; position: absolute; inset: 8%; border-radius: 50%;
+    background: radial-gradient(circle, rgba(34,211,238,0.16) 0%, rgba(99,102,241,0.10) 45%, transparent 72%);
+    filter: blur(6px); animation: donutPulse 3.2s ease-in-out infinite; pointer-events: none; z-index: 0;
+  }
+  .chart-wrap.donut-glow canvas { position: relative; z-index: 1; }
+  @keyframes donutPulse { 0%, 100% { opacity: 0.55; transform: scale(0.97); } 50% { opacity: 1; transform: scale(1.03); } }
 
   /* TOOLBAR */
   .toolbar { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.95rem; flex-wrap: wrap; }
@@ -1089,13 +1124,99 @@
 
   /* SUMMARY */
   .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+  /* ── DASHBOARD HERO (Strategic Sourcing Intelligence style) ── */
+  .dash-hero {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+    background: linear-gradient(135deg, var(--surface), var(--surface2));
+    border: 1px solid var(--border); border-left: 4px solid var(--accent2);
+    border-radius: var(--r-lg); padding: 1.1rem 1.4rem; margin-bottom: 1rem;
+  }
+  .dash-hero-badge {
+    display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.63rem; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent2);
+    background: rgba(99,102,241,0.12); border-radius: var(--r-pill); padding: 0.2rem 0.6rem; margin-bottom: 0.5rem;
+  }
+  .dash-hero-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 3px rgba(16,185,129,0.25); }
+  .dash-hero-title { font-size: 1.26rem; font-weight: 700; color: var(--text); margin-bottom: 0.2rem; }
+  .dash-hero-sub { font-size: 0.756rem; color: var(--muted); max-width: 560px; }
+  .dash-hero-stats { display: flex; align-items: center; gap: 1.6rem; flex-wrap: wrap; }
+  .dash-hero-stat { text-align: right; }
+  .dash-hero-stat-val { font-family: var(--mono); font-size: 1.32rem; font-weight: 700; color: var(--text); line-height: 1.1; }
+  .dash-hero-stat-lbl { font-size: 0.63rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 0.15rem; }
+  .dash-hero-stat.pos .dash-hero-stat-val { color: var(--success); }
+  .dash-hero-stat.acc .dash-hero-stat-val { color: var(--warn); }
+
+  /* ── MINI KPI STRIP (icon-square, like reference volume/model/maker cards) ── */
+  .dash-mini-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.85rem; margin-bottom: 1rem; }
+  .dash-mini-card {
+    background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--accent2);
+    border-radius: var(--r-lg); padding: 0.9rem 1.1rem; display: flex; align-items: center; gap: 0.8rem;
+    transition: transform 0.18s, box-shadow 0.2s;
+  }
+  .dash-mini-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(15,23,42,0.12); }
+  .dash-mini-card.c2 { border-top-color: var(--success); }
+  .dash-mini-card.c3 { border-top-color: var(--warn); }
+  .dash-mini-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; flex-shrink: 0; background: rgba(99,102,241,0.12); color: var(--accent2); }
+  .dash-mini-card.c2 .dash-mini-icon { background: rgba(16,185,129,0.12); color: var(--success); }
+  .dash-mini-card.c3 .dash-mini-icon { background: rgba(245,158,11,0.12); color: var(--warn); }
+  .dash-mini-value { font-family: var(--mono); font-size: 1.32rem; font-weight: 700; color: var(--text); line-height: 1.1; }
+  .dash-mini-label { font-size: 0.672rem; color: var(--muted); margin-top: 0.15rem; }
+  @media (max-width: 900px) { .dash-mini-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 560px) { .dash-mini-grid { grid-template-columns: 1fr; } .dash-hero { flex-direction: column; align-items: flex-start; } .dash-hero-stats { width: 100%; justify-content: space-between; gap: 0.8rem; } }
+
+  /* ── DASHBOARD CHART GRID (2-col trend+donut, 3-col breakdowns) ── */
+  .dash-chart-row-2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+  .dash-chart-row-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.3rem; }
+  @media (max-width: 1100px) { .dash-chart-row-2, .dash-chart-row-3 { grid-template-columns: 1fr; } }
+
+  /* ── SUMMARY HERO KPI (executive-grade, corporate minimal) ── */
+  .summary-hero-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.85rem; margin-bottom: 1.1rem; }
+  .summary-hero-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg);
+    padding: 1rem 1.05rem; position: relative; overflow: hidden;
+    transition: transform 0.18s, box-shadow 0.2s, border-color 0.2s;
+  }
+  .summary-hero-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .summary-hero-card:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(15,23,42,0.14); }
+  .summary-hero-top { display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; margin-bottom: 0.65rem; }
+  .summary-hero-icon { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 1.05rem; flex-shrink: 0; }
+  .summary-hero-icon svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .summary-hero-label { font-size: 0.63rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.2rem; }
+  .summary-hero-value { font-family: var(--mono); font-size: 1.58rem; font-weight: 600; line-height: 1; letter-spacing: -0.01em; }
+  .summary-hero-sub { font-size: 0.672rem; color: var(--muted); margin-top: 0.28rem; }
+  .summary-hero-card.h-total::before   { background: linear-gradient(90deg, var(--accent2), #818cf8); }
+  .summary-hero-card.h-done::before    { background: linear-gradient(90deg, var(--success), #34d399); }
+  .summary-hero-card.h-progress::before{ background: linear-gradient(90deg, var(--warn), #fcd34d); }
+  .summary-hero-card.h-incomplete::before { background: linear-gradient(90deg, var(--danger), #f87171); }
+  .summary-hero-card.h-ontime::before  { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+  .summary-hero-card.h-lead::before    { background: linear-gradient(90deg, #ec4899, #f472b6); }
+  .summary-hero-card.h-total .summary-hero-icon    { background: rgba(99,102,241,0.12); color: var(--accent2); }
+  .summary-hero-card.h-done .summary-hero-icon     { background: rgba(16,185,129,0.12); color: var(--success); }
+  .summary-hero-card.h-progress .summary-hero-icon { background: rgba(245,158,11,0.12); color: var(--warn); }
+  .summary-hero-card.h-incomplete .summary-hero-icon { background: rgba(239,68,68,0.12); color: var(--danger); }
+  .summary-hero-card.h-ontime .summary-hero-icon   { background: rgba(59,130,246,0.12); color: #3b82f6; }
+  .summary-hero-card.h-lead .summary-hero-icon     { background: rgba(236,72,153,0.12); color: #ec4899; }
+  .summary-hero-card.h-total .summary-hero-value    { color: var(--accent2); }
+  .summary-hero-card.h-done .summary-hero-value     { color: var(--success); }
+  .summary-hero-card.h-progress .summary-hero-value { color: var(--warn); }
+  .summary-hero-card.h-incomplete .summary-hero-value { color: var(--danger); }
+  .summary-hero-card.h-ontime .summary-hero-value   { color: #3b82f6; }
+  .summary-hero-card.h-lead .summary-hero-value     { color: #ec4899; }
+  @media (max-width: 1200px) { .summary-hero-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 640px)  { .summary-hero-grid { grid-template-columns: repeat(2, 1fr); } }
   #monthTabs button:hover { border-color: var(--accent) !important; color: var(--accent) !important; }
   .maker-list { margin-top: 0.7rem; }
   .maker-row { display: flex; align-items: center; justify-content: space-between; padding: 0.45rem 0; border-bottom: 1px solid var(--border); font-size: 0.83rem; gap: 0.6rem; }
   .maker-row:last-child { border-bottom: none; }
   .maker-row-name { flex: 0 0 auto; max-width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.819rem; }
-  .maker-bar { flex: 1; height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
-  .maker-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 3px; }
+  .maker-bar { flex: 1; height: 6px; background: var(--surface2); border-radius: var(--r-pill); overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.15); }
+  .maker-fill {
+    height: 100%; border-radius: var(--r-pill); position: relative; overflow: hidden;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), #22d3ee);
+    background-size: 220% 100%; animation: progressFlow 3.5s linear infinite;
+    box-shadow: 0 0 8px rgba(34,211,238,0.5);
+  }
   .maker-count { font-family: var(--mono); font-size: 0.724rem; color: var(--muted); white-space: nowrap; }
 
   /* TOAST */
@@ -1386,7 +1507,7 @@
   .section-divider-label { font-size: 0.662rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
 
   /* KPI ROW */
-  .kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1.3rem; }
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin-bottom: 1.3rem; }
   .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 0.9rem 1rem; display: flex; align-items: center; gap: 0.85rem; }
   .kpi-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
   .kpi-label { font-size: 0.714rem; color: var(--muted); margin-bottom: 0.15rem; }
@@ -2897,16 +3018,8 @@
     border: 1px solid var(--border) !important;
   }
   .progress-bar-wrap {
-    height: 6px !important;
-    border-radius: 6px !important;
-  }
-  .progress-bar {
-    border-radius: 6px !important;
-    background: linear-gradient(90deg, var(--accent), var(--accent2)) !important;
-    box-shadow: 0 0 8px rgba(62,106,225,0.2) !important;
-  }
-  .light-theme .progress-bar {
-    box-shadow: 0 0 8px rgba(37,84,199,0.2) !important;
+    height: 8px !important;
+    border-radius: 8px !important;
   }
   .progress-pct {
     font-size: 0.924rem !important;
@@ -3778,7 +3891,7 @@
   }
   .exec-health-label { font-size: 0.683rem; color: var(--muted); text-align: center; max-width: 90px; }
   .exec-kpi-grid {
-    display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.9rem;
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.9rem;
     margin-bottom: 1.2rem;
   }
   .exec-kpi-card {
@@ -3925,6 +4038,7 @@
   }
 
   /* Responsive executive dashboard */
+  @media (max-width: 1300px) { .exec-kpi-grid { grid-template-columns: repeat(4, 1fr); } }
   @media (max-width: 1100px) { .exec-kpi-grid { grid-template-columns: repeat(3, 1fr); } }
   @media (max-width: 800px) {
     .exec-kpi-grid { grid-template-columns: repeat(2, 1fr); }
@@ -4776,17 +4890,34 @@
           <div class="exec-kpi-label">จำนวน Supplier/Maker</div>
           <div class="exec-kpi-trend">ที่กำลังดำเนินการ</div>
         </div>
+        <div class="exec-kpi-card">
+          <div class="exec-kpi-icon" style="background:rgba(59,130,246,0.12);color:#3b82f6">🎯</div>
+          <div class="exec-kpi-value" id="exec-ontime">—</div>
+          <div class="exec-kpi-label">On-Time Rate</div>
+          <div class="exec-kpi-trend" id="exec-ontime-sub">ของงานที่เสร็จแล้ว</div>
+        </div>
+        <div class="exec-kpi-card">
+          <div class="exec-kpi-icon" style="background:rgba(236,72,153,0.12);color:#ec4899">⏱️</div>
+          <div class="exec-kpi-value" id="exec-leadtime">—</div>
+          <div class="exec-kpi-label">Avg Lead Time (วัน)</div>
+          <div class="exec-kpi-trend">PR → ส่งจริง</div>
+        </div>
       </div>
 
       <div class="exec-grid-2">
         <div class="exec-panel">
           <div class="exec-panel-title">📊 สถานะงานทั้งหมด</div>
-          <div style="height:220px"><canvas id="execStatusChart"></canvas></div>
+          <div class="chart-wrap donut-glow" style="height:220px"><canvas id="execStatusChart"></canvas></div>
         </div>
         <div class="exec-panel">
           <div class="exec-panel-title">🏭 Top 5 Maker ตามจำนวนรายการ</div>
           <div style="height:220px"><canvas id="execMakerChart"></canvas></div>
         </div>
+      </div>
+
+      <div class="exec-panel" style="margin-top:1rem">
+        <div class="exec-panel-title">📈 แนวโน้ม 12 เดือน: PR เข้า vs ส่งเสร็จ</div>
+        <div style="height:230px"><canvas id="execTrendChart"></canvas></div>
       </div>
 
       <div class="exec-panel" style="margin-top:1rem">
@@ -4797,6 +4928,43 @@
 
     <!-- DASHBOARD -->
     <div class="page" id="page-dashboard">
+      <div class="dash-hero">
+        <div>
+          <div class="dash-hero-badge">Live Analytics · Real-Time</div>
+          <div class="dash-hero-title">Purchasing Intelligence Dashboard</div>
+          <div class="dash-hero-sub">ภาพรวมงานจัดซื้อ &amp; PR/PO ทั้งหมดในระบบ อัปเดตแบบเรียลไทม์</div>
+        </div>
+        <div class="dash-hero-stats">
+          <div class="dash-hero-stat">
+            <div class="dash-hero-stat-val" id="hero-total">—</div>
+            <div class="dash-hero-stat-lbl">Total Records</div>
+          </div>
+          <div class="dash-hero-stat pos">
+            <div class="dash-hero-stat-val" id="hero-donepct">—</div>
+            <div class="dash-hero-stat-lbl">% เสร็จสมบูรณ์</div>
+          </div>
+          <div class="dash-hero-stat acc">
+            <div class="dash-hero-stat-val" id="hero-ontime">—</div>
+            <div class="dash-hero-stat-lbl">On-Time Rate</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dash-mini-grid">
+        <div class="dash-mini-card">
+          <div class="dash-mini-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div>
+          <div><div class="dash-mini-value" id="mini-volume">—</div><div class="dash-mini-label">Volume รวม (ชิ้น)</div></div>
+        </div>
+        <div class="dash-mini-card c2">
+          <div class="dash-mini-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg></div>
+          <div><div class="dash-mini-value" id="mini-models">—</div><div class="dash-mini-label">จำนวนรุ่น (Model)</div></div>
+        </div>
+        <div class="dash-mini-card c3">
+          <div class="dash-mini-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l8-4v18M13 21V11l6 3v7"/></svg></div>
+          <div><div class="dash-mini-value" id="mini-makers">—</div><div class="dash-mini-label">จำนวน Maker</div></div>
+        </div>
+      </div>
+
       <div class="stat-grid">
         <div class="stat-card total" onclick="filterByStatus('')">
           <div class="stat-top"><div class="stat-icon-wrap"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div><span class="stat-trend" id="trend-total"></span></div>
@@ -4846,19 +5014,30 @@
           <div><div class="kpi-label">เหลือ ≤ 7 วัน</div><div class="kpi-value" id="kpi-warn" style="color:var(--warn)">—</div></div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-dot" style="background:var(--accent2)"></div>
-          <div><div class="kpi-label">Volume รวม (ชิ้น)</div><div class="kpi-value" id="kpi-volume" style="color:var(--accent2)">—</div></div>
+          <div class="kpi-dot" style="background:#3b82f6"></div>
+          <div><div class="kpi-label">On-Time Rate</div><div class="kpi-value" id="kpi-ontime" style="color:#3b82f6">—</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-dot" style="background:#ec4899"></div>
+          <div><div class="kpi-label">Avg Lead Time (วัน)</div><div class="kpi-value" id="kpi-leadtime" style="color:#ec4899">—</div></div>
         </div>
       </div>
 
-      <div class="chart-row">
+      <div class="dash-chart-row-2">
         <div class="chart-card">
-          <div class="chart-header"><div class="chart-title">สัดส่วนสถานะ</div></div>
-          <div class="chart-wrap"><canvas id="chartStatus"></canvas></div>
+          <div class="chart-header"><div class="chart-title">เปิด PR รายเดือน vs % ความสำเร็จ</div></div>
+          <div class="chart-wrap" style="height:230px"><canvas id="chartTimeline"></canvas></div>
         </div>
+        <div class="chart-card">
+          <div class="chart-header"><div class="chart-title">สัดส่วนสถานะ · On-Time Achievement</div></div>
+          <div class="chart-wrap donut-glow" style="height:230px"><canvas id="chartStatus"></canvas></div>
+        </div>
+      </div>
+
+      <div class="dash-chart-row-3">
         <div class="chart-card" id="makerChartCard">
           <div class="chart-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.6rem">
-            <div class="chart-title" id="makerChartTitle">จำนวนรายการส่ง ตาม Maker (Top 6)</div>
+            <div class="chart-title" id="makerChartTitle">Top Maker ตาม Volume</div>
             <select id="makerTopN" onchange="renderCharts()" style="
               background:var(--surface2);border:1px solid var(--border);border-radius:7px;
               color:var(--text);font-size: 0.714rem;padding:0.2rem 0.45rem;
@@ -4870,14 +5049,25 @@
               <option value="999">ทั้งหมด</option>
             </select>
           </div>
-          <div id="makerChartWrap" style="overflow-y:auto;max-height:300px;padding-right:4px;">
+          <div id="makerChartWrap" style="overflow-y:auto;max-height:260px;padding-right:4px;">
             <div style="position:relative;"><canvas id="chartMaker"></canvas></div>
           </div>
         </div>
         <div class="chart-card">
-          <div class="chart-header"><div class="chart-title">เปิด PR รายเดือน</div></div>
-          <div class="chart-wrap"><canvas id="chartTimeline"></canvas></div>
+          <div class="chart-header"><div class="chart-title">Top Model ตาม Volume</div></div>
+          <div style="overflow-y:auto;max-height:260px;padding-right:4px;">
+            <div style="position:relative;"><canvas id="chartTopModel"></canvas></div>
+          </div>
         </div>
+        <div class="chart-card">
+          <div class="chart-header"><div class="chart-title">จำนวนรายการ แยกตามปี</div></div>
+          <div class="chart-wrap" style="height:230px"><canvas id="chartYearly"></canvas></div>
+        </div>
+      </div>
+
+      <div class="chart-card" style="margin-bottom:1.3rem">
+        <div class="chart-header"><div class="chart-title">แนวโน้ม 12 เดือน: % ความสำเร็จ &amp; On-Time Rate</div></div>
+        <div class="chart-wrap" style="height:230px"><canvas id="chartDashTrend"></canvas></div>
       </div>
 
       <div class="table-wrap">
@@ -5029,6 +5219,44 @@
 
     <!-- SUMMARY -->
     <div class="page" id="page-summary">
+      <div class="summary-hero-grid" id="summaryHeroGrid">
+        <div class="summary-hero-card h-total">
+          <div class="summary-hero-top"><div class="summary-hero-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg></div></div>
+          <div class="summary-hero-label">รายการทั้งหมด</div>
+          <div class="summary-hero-value" id="sh-total">—</div>
+          <div class="summary-hero-sub" id="sh-total-sub">&nbsp;</div>
+        </div>
+        <div class="summary-hero-card h-done">
+          <div class="summary-hero-top"><div class="summary-hero-icon"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div></div>
+          <div class="summary-hero-label">เสร็จสมบูรณ์</div>
+          <div class="summary-hero-value" id="sh-done">—</div>
+          <div class="summary-hero-sub" id="sh-done-sub">&nbsp;</div>
+        </div>
+        <div class="summary-hero-card h-progress">
+          <div class="summary-hero-top"><div class="summary-hero-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div></div>
+          <div class="summary-hero-label">กำลังดำเนินการ</div>
+          <div class="summary-hero-value" id="sh-progress">—</div>
+          <div class="summary-hero-sub" id="sh-progress-sub">&nbsp;</div>
+        </div>
+        <div class="summary-hero-card h-incomplete">
+          <div class="summary-hero-top"><div class="summary-hero-icon"><svg viewBox="0 0 24 24"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg></div></div>
+          <div class="summary-hero-label">ส่งยังไม่ครบ</div>
+          <div class="summary-hero-value" id="sh-incomplete">—</div>
+          <div class="summary-hero-sub" id="sh-incomplete-sub">&nbsp;</div>
+        </div>
+        <div class="summary-hero-card h-ontime">
+          <div class="summary-hero-top"><div class="summary-hero-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg></div></div>
+          <div class="summary-hero-label">On-Time Rate</div>
+          <div class="summary-hero-value" id="sh-ontime">—</div>
+          <div class="summary-hero-sub" id="sh-ontime-sub">ของรายการที่เสร็จแล้ว</div>
+        </div>
+        <div class="summary-hero-card h-lead">
+          <div class="summary-hero-top"><div class="summary-hero-icon"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18" transform="rotate(45 12 12)"/></svg></div></div>
+          <div class="summary-hero-label">Avg Lead Time</div>
+          <div class="summary-hero-value" id="sh-lead">—</div>
+          <div class="summary-hero-sub" id="sh-lead-sub">วัน (PR → ส่งจริง)</div>
+        </div>
+      </div>
       <div class="chart-card" style="margin-bottom:1rem">
         <div class="chart-header" style="flex-wrap:wrap;gap:0.6rem">
           <div class="chart-title">📅 สรุปรายเดือน</div>
@@ -5104,6 +5332,27 @@
             </select>
           </div>
           <div class="chart-wrap"><canvas id="chartLocation"></canvas></div>
+        </div>
+        <div class="chart-card" style="grid-column:1/-1">
+          <div class="chart-header">
+            <div class="chart-title" id="s-trend-title">แนวโน้มรายเดือน: PR เข้า vs ส่งเสร็จ</div>
+          </div>
+          <div class="chart-wrap" style="height:230px"><canvas id="chartSummaryTrend"></canvas></div>
+        </div>
+        <div class="chart-card" style="grid-column:1/-1">
+          <div class="chart-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.6rem">
+            <div class="chart-title" id="s-model-breakdown-title">สถานะงาน แยกตาม Model</div>
+            <select id="modelBreakdownTopN" onchange="renderSummary()" style="
+              background:var(--surface2);border:1px solid var(--border);border-radius:7px;
+              color:var(--text);font-size: 0.714rem;padding:0.2rem 0.45rem;
+              font-family:var(--mono);cursor:pointer;outline:none;">
+              <option value="5">Top 5</option>
+              <option value="10" selected>Top 10</option>
+              <option value="15">Top 15</option>
+              <option value="999">ทั้งหมด</option>
+            </select>
+          </div>
+          <div class="chart-wrap" style="height:220px;overflow-y:auto"><canvas id="chartModelBreakdown"></canvas></div>
         </div>
       </div>
     </div>
@@ -7347,7 +7596,8 @@ function processData() {
   const totalVol = allData.reduce((s, r) => s + (Number(r.volume) || 0), 0);
   document.getElementById('kpi-overdue').textContent = overdue;
   document.getElementById('kpi-warn').textContent = warnCount;
-  document.getElementById('kpi-volume').textContent = totalVol.toLocaleString();
+  const kpiVolumeEl = document.getElementById('kpi-volume');
+  if (kpiVolumeEl) kpiVolumeEl.textContent = totalVol.toLocaleString();
 
   populateFilters();
   renderDashTable();
@@ -8441,6 +8691,15 @@ function chartLegendCfg(chartText, fontSize) {
   };
 }
 const CHART_EASE = { duration: 650, easing: 'easeOutQuart' };
+function makeGradient(ctx, chartArea, colorStart, colorEnd, vertical) {
+  if (!chartArea) return colorStart;
+  const g = vertical
+    ? ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top)
+    : ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+  g.addColorStop(0, colorStart);
+  g.addColorStop(1, colorEnd);
+  return g;
+}
 if (window.Chart) {
   Chart.register({
     id: 'centerText',
@@ -8453,12 +8712,18 @@ if (window.Chart) {
       const cy = (chartArea.top + chartArea.bottom) / 2;
       ctx.save();
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.font = `700 ${opt.valueSize || 21}px 'IBM Plex Mono', monospace`;
+      ctx.font = `800 ${opt.valueSize || 21}px 'IBM Plex Mono', monospace`;
+      if (opt.glow) {
+        ctx.shadowColor = opt.glow;
+        ctx.shadowBlur = 16;
+      }
       ctx.fillStyle = opt.color || '#e2e8f0';
       ctx.fillText(String(opt.text), cx, cy - (opt.label ? 9 : 0));
+      ctx.shadowBlur = 0;
       if (opt.label) {
-        ctx.font = `600 ${opt.labelSize || 9.5}px 'Sarabun', sans-serif`;
+        ctx.font = `700 ${opt.labelSize || 9.5}px 'Sarabun', sans-serif`;
         ctx.fillStyle = opt.labelColor || '#64748b';
+        ctx.textTransform = 'uppercase';
         ctx.fillText(opt.label, cx, cy + 12);
       }
       ctx.restore();
@@ -8474,21 +8739,40 @@ function renderCharts() {
   const done = allData.filter(r => r.status && r.status.includes('เสร็จแล้ว')).length;
   const progress = allData.filter(r => r.status && r.status.includes('กำลังดำเนินการ')).length;
   const incomplete = allData.filter(r => r.status && r.status.includes('ยังไม่ครบ')).length;
+  const totalAll = allData.length;
+
+  // ── Hero banner + mini KPI strip ──
+  const doneRowsForOnTime = allData.filter(r => r.status && r.status.includes('เสร็จแล้ว') && r.actualDate);
+  const onTimeCountForHero = doneRowsForOnTime.filter(r => {
+    const due = parseThaiDate(r.dueDate), act = parseThaiDate(r.actualDate);
+    return due && act && act <= due;
+  }).length;
+  const onTimeRateForHero = doneRowsForOnTime.length ? Math.round(onTimeCountForHero / doneRowsForOnTime.length * 100) : 0;
+  const setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  setTxt('hero-total', totalAll.toLocaleString());
+  setTxt('hero-donepct', totalAll ? Math.round(done/totalAll*100) + '%' : '—');
+  setTxt('hero-ontime', doneRowsForOnTime.length ? onTimeRateForHero + '%' : '—');
+  const totalVolumeForMini = allData.reduce((s,r) => s + (Number(r.volume) || 0), 0);
+  const distinctModels = new Set(allData.map(r => r.model).filter(Boolean)).size;
+  const distinctMakers = new Set(allData.map(r => r.maker).filter(Boolean)).size;
+  setTxt('mini-volume', totalVolumeForMini.toLocaleString());
+  setTxt('mini-models', distinctModels.toLocaleString());
+  setTxt('mini-makers', distinctMakers.toLocaleString());
 
   destroyChart('status');
   if (document.getElementById('chartStatus')) {
     const statusTotal = done + progress + incomplete;
     charts.status = new Chart(document.getElementById('chartStatus'), {
       type:'doughnut',
-      data:{ labels:['เสร็จแล้ว','กำลังดำเนินการ','ยังไม่ครบ'], datasets:[{ data:[done,progress,incomplete], backgroundColor:['#10b981','#f59e0b','#ef4444'], borderWidth:0, borderRadius:4, spacing:3, hoverOffset:8 }] },
-      options:{ responsive:true, maintainAspectRatio:false, cutout:'68%', animation: CHART_EASE,
+      data:{ labels:['เสร็จแล้ว','กำลังดำเนินการ','ยังไม่ครบ'], datasets:[{ data:[done,progress,incomplete], backgroundColor:['#10b981','#f59e0b','#ef4444'], borderColor: cs.getPropertyValue('--surface').trim(), borderWidth:2, borderRadius:6, spacing:4, hoverOffset:10 }] },
+      options:{ responsive:true, maintainAspectRatio:false, cutout:'70%', animation: CHART_EASE,
         plugins:{ legend: chartLegendCfg(chartText), tooltip: chartTooltipCfg(cs),
-          centerText: { text: statusTotal.toLocaleString(), label: 'รวม', color: cs.getPropertyValue('--text').trim(), labelColor: chartText } } }
+          centerText: { text: (doneRowsForOnTime.length ? onTimeRateForHero + '%' : statusTotal.toLocaleString()), label: doneRowsForOnTime.length ? 'On-Time Rate' : 'รวม', color: cs.getPropertyValue('--text').trim(), labelColor: chartText, glow: 'rgba(34,211,238,0.85)', valueSize: 26 } } }
     });
   }
 
   const makerMap = {};
-  allData.forEach(r => { if (r.maker) makerMap[r.maker] = (makerMap[r.maker]||0) + 1; });
+  allData.forEach(r => { if (r.maker) makerMap[r.maker] = (makerMap[r.maker]||0) + (Number(r.volume) || 1); });
   const topN = getTopNValue('makerTopN', 6);
   const allMakersSorted = Object.entries(makerMap).sort((a,b) => b[1]-a[1]);
   const makersSorted = allMakersSorted.slice(0, topN);
@@ -8496,14 +8780,21 @@ function renderCharts() {
   setBarChartHeight('chartMaker', makersSorted.length, 32, 160);
   // update title
   const titleEl = document.getElementById('makerChartTitle');
-  if (titleEl) titleEl.textContent = `จำนวนรายการส่ง ตาม Maker (Top ${topN >= 999 ? 'ทั้งหมด' : topN})`;
+  if (titleEl) titleEl.textContent = `Top Maker ตาม Volume (Top ${topN >= 999 ? 'ทั้งหมด' : topN})`;
   destroyChart('maker');
   if (makerCanvas) {
     charts.maker = new Chart(makerCanvas, {
       type:'bar',
-      data:{ labels:makersSorted.map(m=>m[0]), datasets:[{ data:makersSorted.map(m=>m[1]), backgroundColor: makersSorted.map((_,i)=>PALETTE[i % PALETTE.length]), borderRadius:6, borderSkipped:false, maxBarThickness:24 }] },
+      data:{ labels:makersSorted.map(m=>m[0]), datasets:[{ data:makersSorted.map(m=>m[1]),
+        backgroundColor: (context) => {
+          const { ctx, chartArea } = context.chart;
+          const i = context.dataIndex;
+          const base = PALETTE[i % PALETTE.length];
+          return makeGradient(ctx, chartArea, hexToRgba(base, 0.55), base, false);
+        },
+        borderRadius:6, borderSkipped:false, maxBarThickness:24 }] },
       options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y', animation: CHART_EASE,
-        plugins:{ legend:{display:false}, tooltip: Object.assign(chartTooltipCfg(cs), { callbacks:{ label: ctx => ` ${ctx.raw.toLocaleString()} รายการ` } }) },
+        plugins:{ legend:{display:false}, tooltip: Object.assign(chartTooltipCfg(cs), { callbacks:{ label: ctx => ` Volume ${ctx.raw.toLocaleString()}` } }) },
         scales:{
           x:{ ticks:{color:chartText,font:{size:9,family:"'IBM Plex Mono',monospace"}}, grid:{color:gridColor, drawTicks:false}, border:{display:false} },
           y:{ ticks:{color:chartText,font:{size:9.5,family:"'Sarabun',sans-serif",weight:'500'}, maxRotation:0}, grid:{display:false}, border:{display:false} }
@@ -8512,7 +8803,65 @@ function renderCharts() {
     });
   }
 
-  // เปิด PR รายเดือน — ดูว่าเดือนไหนเปิด PR พุ่งเยอะผิดปกติ (ใช้วันที่เปิด P/R ไม่ใช่วันนัดส่ง)
+  // Top Model ตาม Volume
+  const modelMapVol = {};
+  allData.forEach(r => { if (r.model) modelMapVol[r.model] = (modelMapVol[r.model]||0) + (Number(r.volume) || 1); });
+  const topModelsSorted = Object.entries(modelMapVol).sort((a,b) => b[1]-a[1]).slice(0, 10);
+  const topModelCanvas = document.getElementById('chartTopModel');
+  setBarChartHeight('chartTopModel', topModelsSorted.length, 26, 160);
+  destroyChart('topModel');
+  if (topModelCanvas) {
+    charts.topModel = new Chart(topModelCanvas, {
+      type:'bar',
+      data:{ labels:topModelsSorted.map(m=>m[0]), datasets:[{ data:topModelsSorted.map(m=>m[1]),
+        backgroundColor: (context) => {
+          const { ctx, chartArea } = context.chart;
+          return makeGradient(ctx, chartArea, hexToRgba('#6366f1', 0.35), '#6366f1', false);
+        },
+        borderRadius:6, borderSkipped:false, maxBarThickness:20 }] },
+      options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y', animation: CHART_EASE,
+        plugins:{ legend:{display:false}, tooltip: Object.assign(chartTooltipCfg(cs), { callbacks:{ label: ctx => ` Volume ${ctx.raw.toLocaleString()}` } }) },
+        scales:{
+          x:{ ticks:{color:chartText,font:{size:9,family:"'IBM Plex Mono',monospace"}}, grid:{color:gridColor, drawTicks:false}, border:{display:false} },
+          y:{ ticks:{color:chartText,font:{size:9,family:"'Sarabun',sans-serif",weight:'500'}, maxRotation:0}, grid:{display:false}, border:{display:false} }
+        }
+      }
+    });
+  }
+
+  // จำนวนรายการ แยกตามปี (ใช้ปีจากวันนัดส่ง)
+  const yearMap = {};
+  allData.forEach(r => {
+    const d = parseThaiDate(r.dueDate) || parseThaiDate(r.prDate);
+    if (!d) return;
+    const y = d.getFullYear();
+    yearMap[y] = (yearMap[y] || 0) + 1;
+  });
+  const yearsSorted = Object.keys(yearMap).map(Number).sort((a,b) => a-b);
+  destroyChart('yearly');
+  if (document.getElementById('chartYearly')) {
+    charts.yearly = new Chart(document.getElementById('chartYearly'), {
+      type:'bar',
+      data:{
+        labels: yearsSorted.map(y => 'ปี ' + y),
+        datasets:[{ data: yearsSorted.map(y => yearMap[y]),
+          backgroundColor: (context) => {
+            const { ctx, chartArea } = context.chart;
+            return makeGradient(ctx, chartArea, 'rgba(62,106,225,0.25)', '#3E6AE1', true);
+          },
+          borderRadius:6, maxBarThickness:38 }]
+      },
+      options:{ responsive:true, maintainAspectRatio:false, animation: CHART_EASE,
+        plugins:{ legend:{display:false}, tooltip: Object.assign(chartTooltipCfg(cs), { callbacks:{ label: ctx => ` ${ctx.raw.toLocaleString()} รายการ` } }) },
+        scales:{
+          x:{ ticks:{color:chartText,font:{size:9,family:"'Sarabun',sans-serif"}}, grid:{display:false}, border:{display:false} },
+          y:{ ticks:{color:chartText,font:{size:9,family:"'IBM Plex Mono',monospace"},precision:0}, grid:{color:gridColor, drawTicks:false}, border:{display:false}, beginAtZero:true }
+        }
+      }
+    });
+  }
+
+  // เปิด PR รายเดือน (combo: bar = จำนวน PR เข้า, line = % ความสำเร็จของเดือนนั้น)
   const monthMap = {};
   allData.forEach(r => {
     const key = getMonthKey(r.prDate);
@@ -8521,25 +8870,113 @@ function renderCharts() {
   });
   const monthKeysSorted = Object.keys(monthMap).sort();
   const monthCounts = monthKeysSorted.map(k => monthMap[k]);
+  const monthSuccessRate = monthKeysSorted.map(k => {
+    const inMonth = allData.filter(r => getMonthKey(r.prDate) === k);
+    const doneInMonth = inMonth.filter(r => r.status && r.status.includes('เสร็จแล้ว'));
+    return inMonth.length ? Math.round(doneInMonth.length / inMonth.length * 100) : 0;
+  });
   const peakCount = monthCounts.length ? Math.max(...monthCounts) : 0;
   destroyChart('timeline');
   if (document.getElementById('chartTimeline')) {
     charts.timeline = new Chart(document.getElementById('chartTimeline'), {
-      type:'bar',
       data:{
         labels: monthKeysSorted.map(k => getMonthLabel(k)),
-        datasets:[{
-          data: monthCounts,
-          backgroundColor: monthCounts.map(v => v === peakCount && peakCount > 0 ? '#3E6AE1' : 'rgba(62,106,225,0.35)'),
-          hoverBackgroundColor: monthCounts.map(() => '#3E6AE1'),
-          borderRadius: 6, maxBarThickness: 40
-        }]
+        datasets:[
+          {
+            type: 'bar', label: 'PR เข้า',
+            data: monthCounts,
+            backgroundColor: (context) => {
+              const { ctx, chartArea } = context.chart;
+              const v = context.raw;
+              return makeGradient(ctx, chartArea, v === peakCount && peakCount > 0 ? 'rgba(62,106,225,0.55)' : 'rgba(62,106,225,0.18)', v === peakCount && peakCount > 0 ? '#3E6AE1' : 'rgba(62,106,225,0.45)', true);
+            },
+            borderRadius: 6, maxBarThickness: 34, yAxisID: 'y'
+          },
+          {
+            type: 'line', label: '% ความสำเร็จ',
+            data: monthSuccessRate,
+            borderColor: '#f59e0b',
+            backgroundColor: (context) => {
+              const { ctx, chartArea } = context.chart;
+              return makeGradient(ctx, chartArea, 'rgba(245,158,11,0.02)', 'rgba(245,158,11,0.28)', true);
+            },
+            fill: true, tension: 0.35, pointRadius: 3, pointHoverRadius: 6,
+            pointBackgroundColor: '#f59e0b', pointBorderColor: '#fff', pointBorderWidth: 1.5,
+            borderWidth: 2.5, shadowColor: 'rgba(245,158,11,0.6)',
+            yAxisID: 'y1'
+          }
+        ]
       },
       options:{ responsive:true, maintainAspectRatio:false, animation: CHART_EASE,
-        plugins:{ legend:{display:false}, tooltip: Object.assign(chartTooltipCfg(cs), { callbacks:{ label: ctx => ` เปิด PR ${ctx.raw.toLocaleString()} รายการ` } }) },
+        interaction: { mode: 'index', intersect: false },
+        plugins:{ legend: chartLegendCfg(chartText), tooltip: Object.assign(chartTooltipCfg(cs), { callbacks:{ label: ctx => ctx.dataset.yAxisID === 'y1' ? ` % ความสำเร็จ ${ctx.raw}%` : ` เปิด PR ${ctx.raw.toLocaleString()} รายการ` } }) },
         scales:{
           x:{ ticks:{color:chartText,font:{size:9,family:"'Sarabun',sans-serif"}}, grid:{display:false}, border:{display:false} },
-          y:{ ticks:{color:chartText,font:{size:9,family:"'IBM Plex Mono',monospace"},precision:0}, grid:{color:gridColor, drawTicks:false}, border:{display:false}, beginAtZero:true }
+          y:{ position:'left', ticks:{color:chartText,font:{size:9,family:"'IBM Plex Mono',monospace"},precision:0}, grid:{color:gridColor, drawTicks:false}, border:{display:false}, beginAtZero:true },
+          y1:{ position:'right', min:0, max:100, ticks:{color:chartText,font:{size:9,family:"'IBM Plex Mono',monospace"}, callback: v => v+'%'}, grid:{display:false}, border:{display:false} }
+        }
+      }
+    });
+  }
+
+  // ── On-Time Rate & Avg Lead Time (ภาพรวมทั้งระบบ) ──
+  const doneRowsAll = allData.filter(r => r.status && r.status.includes('เสร็จแล้ว') && r.actualDate);
+  const onTimeCountAll = doneRowsAll.filter(r => {
+    const due = parseThaiDate(r.dueDate), act = parseThaiDate(r.actualDate);
+    return due && act && act <= due;
+  }).length;
+  const onTimeRateAll = doneRowsAll.length ? Math.round(onTimeCountAll / doneRowsAll.length * 100) : 0;
+  const leadDaysAll = doneRowsAll.map(r => {
+    const pr = parseThaiDate(r.prDate), act = parseThaiDate(r.actualDate);
+    if (!pr || !act) return null;
+    return Math.round((act - pr) / 86400000);
+  }).filter(v => v !== null && v >= 0);
+  const avgLeadAll = leadDaysAll.length ? Math.round(leadDaysAll.reduce((s,v)=>s+v,0) / leadDaysAll.length) : 0;
+  const kpiOntimeEl = document.getElementById('kpi-ontime');
+  if (kpiOntimeEl) kpiOntimeEl.textContent = doneRowsAll.length ? onTimeRateAll + '%' : '—';
+  const kpiLeadEl = document.getElementById('kpi-leadtime');
+  if (kpiLeadEl) kpiLeadEl.textContent = leadDaysAll.length ? avgLeadAll : '—';
+
+  // ── แนวโน้ม 12 เดือนล่าสุด (rolling): % ความสำเร็จ & On-Time Rate ──
+  const trendCanvas = document.getElementById('chartDashTrend');
+  if (trendCanvas) {
+    const now = new Date();
+    const rollingKeys = Array.from({length:12}, (_,i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - (11 - i), 1);
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    });
+    const rollingLabels = rollingKeys.map(k => MONTH_NAMES[parseInt(k.split('-')[1]) - 1] + ' ' + k.split('-')[0].slice(2));
+    const successRates = rollingKeys.map(k => {
+      const inMonth = allData.filter(r => getMonthKey(r.dueDate) === k);
+      const doneInMonth = inMonth.filter(r => r.status && r.status.includes('เสร็จแล้ว'));
+      return inMonth.length ? Math.round(doneInMonth.length / inMonth.length * 100) : null;
+    });
+    const onTimeRates = rollingKeys.map(k => {
+      const doneInMonth = allData.filter(r => r.status && r.status.includes('เสร็จแล้ว') && r.actualDate && getMonthKey(r.actualDate) === k);
+      if (!doneInMonth.length) return null;
+      const onTime = doneInMonth.filter(r => {
+        const due = parseThaiDate(r.dueDate), act = parseThaiDate(r.actualDate);
+        return due && act && act <= due;
+      }).length;
+      return Math.round(onTime / doneInMonth.length * 100);
+    });
+    destroyChart('dashTrend');
+    charts.dashTrend = new Chart(trendCanvas, {
+      type: 'line',
+      data: {
+        labels: rollingLabels,
+        datasets: [
+          { label: '% ความสำเร็จ', data: successRates, borderColor: PALETTE[0], backgroundColor: hexToRgba(PALETTE[0], 0.14), fill: true, tension: 0.35, spanGaps: true, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2.2 },
+          { label: 'On-Time Rate', data: onTimeRates, borderColor: '#3b82f6', backgroundColor: hexToRgba('#3b82f6', 0.12), fill: true, tension: 0.35, spanGaps: true, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2.2 }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: CHART_EASE,
+        interaction: { mode: 'index', intersect: false },
+        plugins: { legend: chartLegendCfg(chartText), tooltip: Object.assign(chartTooltipCfg(cs), { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw === null ? '—' : ctx.raw + '%'}` } }) },
+        scales: {
+          x: { ticks: { color: chartText, font: { size: 9, family: "'Sarabun',sans-serif" } }, grid: { display: false }, border: { display: false } },
+          y: { beginAtZero: true, max: 100, ticks: { color: chartText, font: { size: 9, family: "'IBM Plex Mono',monospace" }, callback: v => v + '%' }, grid: { color: gridColor, drawTicks: false }, border: { display: false } }
         }
       }
     });
@@ -8567,6 +9004,20 @@ function renderExecDashboard() {
   const overduePenalty = total ? Math.min(40, Math.round((overdue / total) * 100)) : 0;
   const health = Math.max(0, Math.min(100, donePct - overduePenalty + (warnCount === 0 ? 5 : 0)));
 
+  // ── On-Time Rate & Avg Lead Time ──
+  const doneRowsExec = allData.filter(r => r.status && r.status.includes('เสร็จแล้ว') && r.actualDate);
+  const onTimeCountExec = doneRowsExec.filter(r => {
+    const due = parseThaiDate(r.dueDate), act = parseThaiDate(r.actualDate);
+    return due && act && act <= due;
+  }).length;
+  const onTimeRateExec = doneRowsExec.length ? Math.round(onTimeCountExec / doneRowsExec.length * 100) : 0;
+  const leadDaysExec = doneRowsExec.map(r => {
+    const pr = parseThaiDate(r.prDate), act = parseThaiDate(r.actualDate);
+    if (!pr || !act) return null;
+    return Math.round((act - pr) / 86400000);
+  }).filter(v => v !== null && v >= 0);
+  const avgLeadExec = leadDaysExec.length ? Math.round(leadDaysExec.reduce((s,v)=>s+v,0) / leadDaysExec.length) : 0;
+
   const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
   setText('exec-total', total.toLocaleString());
   setText('exec-donepct', donePct + '%');
@@ -8574,6 +9025,9 @@ function renderExecDashboard() {
   setText('exec-overdue', overdue);
   setText('exec-volume', totalVol.toLocaleString());
   setText('exec-makers', activeMakers.size);
+  setText('exec-ontime', doneRowsExec.length ? onTimeRateExec + '%' : '—');
+  setText('exec-ontime-sub', doneRowsExec.length ? `${onTimeCountExec}/${doneRowsExec.length} รายการ` : 'ยังไม่มีข้อมูล');
+  setText('exec-leadtime', leadDaysExec.length ? avgLeadExec : '—');
   setText('exec-total-trend', `${done} เสร็จแล้ว · ${progress} กำลังทำ · ${incomplete} ยังไม่ครบ`);
   setText('exec-done-trend', donePct >= 70 ? 'ภาพรวมอยู่ในเกณฑ์ดี ✅' : donePct >= 40 ? 'อยู่ระหว่างดำเนินการ ⚠️' : 'ควรเร่งติดตามงาน 🔴');
   setText('execUpdatedAt', 'อัปเดตล่าสุด ' + new Date().toLocaleString('th-TH'));
@@ -8592,10 +9046,10 @@ function renderExecDashboard() {
   if (statusCanvas) {
     charts.execStatus = new Chart(statusCanvas, {
       type: 'doughnut',
-      data: { labels: ['เสร็จแล้ว', 'กำลังดำเนินการ', 'ยังไม่ครบ'], datasets: [{ data: [done, progress, incomplete], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderWidth: 0, borderRadius: 4, spacing: 3, hoverOffset: 7 }] },
+      data: { labels: ['เสร็จแล้ว', 'กำลังดำเนินการ', 'ยังไม่ครบ'], datasets: [{ data: [done, progress, incomplete], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderColor: cs.getPropertyValue('--surface').trim(), borderWidth: 2, borderRadius: 6, spacing: 4, hoverOffset: 9 }] },
       options: { responsive: true, maintainAspectRatio: false, cutout: '70%', animation: CHART_EASE,
         plugins: { legend: chartLegendCfg(chartText), tooltip: chartTooltipCfg(cs),
-          centerText: { text: total.toLocaleString(), label: 'รวม', color: cs.getPropertyValue('--text').trim(), labelColor: chartText } } }
+          centerText: { text: total.toLocaleString(), label: 'รวม', color: cs.getPropertyValue('--text').trim(), labelColor: chartText, glow: 'rgba(34,211,238,0.85)', valueSize: 24 } } }
     });
   }
 
@@ -8607,13 +9061,53 @@ function renderExecDashboard() {
   if (makerCanvas) {
     charts.execMaker = new Chart(makerCanvas, {
       type: 'bar',
-      data: { labels: topMakers.map(m => m[0]), datasets: [{ data: topMakers.map(m => m[1]), backgroundColor: topMakers.map((_, i) => PALETTE[i % PALETTE.length]), borderRadius: 6, borderSkipped: false, maxBarThickness: 26 }] },
+      data: { labels: topMakers.map(m => m[0]), datasets: [{ data: topMakers.map(m => m[1]),
+        backgroundColor: (context) => {
+          const { ctx, chartArea } = context.chart;
+          const i = context.dataIndex;
+          const base = PALETTE[i % PALETTE.length];
+          return makeGradient(ctx, chartArea, hexToRgba(base, 0.5), base, false);
+        },
+        borderRadius: 6, borderSkipped: false, maxBarThickness: 26 }] },
       options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', animation: CHART_EASE,
         plugins: { legend: { display: false }, tooltip: Object.assign(chartTooltipCfg(cs), { callbacks: { label: ctx => ` ${ctx.raw.toLocaleString()} รายการ` } }) },
         scales: {
           x: { ticks: { color: chartText, font: { size: 9, family: "'IBM Plex Mono',monospace" } }, grid: { color: cs.getPropertyValue('--surface2').trim(), drawTicks:false }, border:{display:false} },
           y: { ticks: { color: chartText, font: { size: 9.5, family: "'Sarabun',sans-serif", weight:'500' } }, grid: { display: false }, border:{display:false} }
         } }
+    });
+  }
+
+  // ── แนวโน้ม 12 เดือน: PR เข้า vs ส่งเสร็จ ──
+  const execTrendCanvas = document.getElementById('execTrendChart');
+  if (execTrendCanvas) {
+    const now = new Date();
+    const rollingKeys = Array.from({length:12}, (_,i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - (11 - i), 1);
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    });
+    const rollingLabels = rollingKeys.map(k => MONTH_NAMES[parseInt(k.split('-')[1]) - 1] + ' ' + k.split('-')[0].slice(2));
+    const prCounts = rollingKeys.map(k => allData.filter(r => getMonthKey(r.prDate) === k).length);
+    const doneCounts = rollingKeys.map(k => allData.filter(r => r.status && r.status.includes('เสร็จแล้ว') && getMonthKey(r.actualDate) === k).length);
+    destroyChart('execTrend');
+    charts.execTrend = new Chart(execTrendCanvas, {
+      type: 'line',
+      data: {
+        labels: rollingLabels,
+        datasets: [
+          { label: 'PR เข้า', data: prCounts, borderColor: PALETTE[0], backgroundColor: hexToRgba(PALETTE[0], 0.14), fill: true, tension: 0.35, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2.2 },
+          { label: 'ส่งเสร็จ', data: doneCounts, borderColor: PALETTE[2], backgroundColor: hexToRgba(PALETTE[2], 0.12), fill: true, tension: 0.35, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2.2 }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: CHART_EASE,
+        interaction: { mode: 'index', intersect: false },
+        plugins: { legend: chartLegendCfg(chartText), tooltip: chartTooltipCfg(cs) },
+        scales: {
+          x: { ticks: { color: chartText, font: { size: 9, family: "'Sarabun',sans-serif" } }, grid: { display: false }, border: { display: false } },
+          y: { beginAtZero: true, ticks: { color: chartText, font: { size: 9, family: "'IBM Plex Mono',monospace" }, precision: 0 }, grid: { color: cs.getPropertyValue('--surface2').trim(), drawTicks: false }, border: { display: false } }
+        }
+      }
     });
   }
 
@@ -8625,6 +9119,7 @@ function renderExecDashboard() {
     if (warnCount > 0) lines.push(`⏳ มี ${warnCount} รายการใกล้ครบกำหนดภายใน 7 วัน ควรเตรียมความพร้อมล่วงหน้า`);
     if (overdue === 0 && warnCount === 0) lines.push(`✅ ไม่มีรายการที่เสี่ยงล่าช้าในขณะนี้ ภาพรวมงานควบคุมได้ดี`);
     lines.push(`📦 ขณะนี้มีงานทั้งหมด ${total} รายการ เสร็จสมบูรณ์แล้ว ${donePct}% และมี Supplier ที่กำลังดำเนินงานร่วมด้วย ${activeMakers.size} ราย`);
+    if (doneRowsExec.length) lines.push(`🎯 On-Time Rate อยู่ที่ ${onTimeRateExec}% (${onTimeCountExec}/${doneRowsExec.length} รายการ) และ Lead Time เฉลี่ย ${avgLeadExec} วัน`);
     insightEl.innerHTML = lines.map(l => `<div class="exec-insight-line">${l}</div>`).join('');
   }
 }
@@ -8688,15 +9183,44 @@ function renderSummaryCards(mData, mLabel) {
   document.getElementById('s-volume').textContent = volume.toLocaleString();
   document.getElementById('s-pct').textContent = pct + '%';
 
+  // ── Executive hero KPI (on-time rate, avg lead time, active makers) ──
+  const doneRows = mData.filter(r => r.status.includes('เสร็จแล้ว') && r.actualDate);
+  const onTimeCount = doneRows.filter(r => {
+    const due = parseThaiDate(r.dueDate), act = parseThaiDate(r.actualDate);
+    return due && act && act <= due;
+  }).length;
+  const onTimePct = doneRows.length ? Math.round(onTimeCount / doneRows.length * 100) : 0;
+  const leadDays = doneRows.map(r => {
+    const pr = parseThaiDate(r.prDate), act = parseThaiDate(r.actualDate);
+    if (!pr || !act) return null;
+    return Math.round((act - pr) / 86400000);
+  }).filter(v => v !== null && v >= 0);
+  const avgLead = leadDays.length ? Math.round(leadDays.reduce((s,v) => s+v, 0) / leadDays.length) : 0;
+  const activeMakerCount = new Set(mData.map(r => r.maker).filter(Boolean)).size;
+
+  const shSet = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  shSet('sh-total', total);
+  shSet('sh-total-sub', `Volume ${volume.toLocaleString()} ชิ้น`);
+  shSet('sh-done', done);
+  shSet('sh-done-sub', total ? `${pct}% ของทั้งหมด` : '\u00a0');
+  shSet('sh-progress', progress);
+  shSet('sh-progress-sub', total ? `${Math.round(progress/total*100)}% ของทั้งหมด` : '\u00a0');
+  shSet('sh-incomplete', incomplete);
+  shSet('sh-incomplete-sub', total ? `${Math.round(incomplete/total*100)}% ของทั้งหมด` : '\u00a0');
+  shSet('sh-ontime', doneRows.length ? onTimePct + '%' : '—');
+  shSet('sh-ontime-sub', doneRows.length ? `${onTimeCount}/${doneRows.length} รายการที่เสร็จแล้ว` : 'ยังไม่มีรายการเสร็จ');
+  shSet('sh-lead', leadDays.length ? avgLead : '—');
+  shSet('sh-lead-sub', leadDays.length ? `วัน (PR → ส่งจริง) • Maker ${activeMakerCount} ราย` : 'ยังไม่มีข้อมูลเพียงพอ');
+
   const cs = getComputedStyle(document.documentElement);
   const chartText = cs.getPropertyValue('--chart-text').trim() || '#64748b';
 
   // Status bars
   document.getElementById('s-bars-title').textContent = `สัดส่วนสถานะ: ${label}`;
   const bars = [
-    { label:'เสร็จแล้ว', count:done, color:'var(--success)' },
-    { label:'กำลังดำเนินการ', count:progress, color:'var(--warn)' },
-    { label:'ยังไม่ครบ', count:incomplete, color:'var(--danger)' }
+    { label:'เสร็จแล้ว', count:done, color:'var(--success)', hex:'#10b981' },
+    { label:'กำลังดำเนินการ', count:progress, color:'var(--warn)', hex:'#f59e0b' },
+    { label:'ยังไม่ครบ', count:incomplete, color:'var(--danger)', hex:'#ef4444' }
   ];
   document.getElementById('statusBars').innerHTML = bars.map(b => {
     const p = total ? Math.round(b.count/total*100) : 0;
@@ -8704,8 +9228,8 @@ function renderSummaryCards(mData, mLabel) {
       <div style="display:flex;justify-content:space-between;font-size: 0.788rem;margin-bottom:0.3rem">
         <span>${b.label}</span><span style="font-family:var(--mono);color:${b.color}">${b.count} (${p}%)</span>
       </div>
-      <div style="height:6px;background:var(--surface2);border-radius:3px;overflow:hidden">
-        <div style="height:100%;width:${p}%;background:${b.color};border-radius:3px;transition:width 0.6s ease"></div>
+      <div style="height:8px;background:var(--surface2);border-radius:var(--r-pill);overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,0.15)">
+        <div style="height:100%;width:${p}%;background:linear-gradient(90deg, ${b.hex}99, ${b.hex});border-radius:var(--r-pill);box-shadow:0 0 8px ${b.hex}88;transition:width 0.6s ease"></div>
       </div>
     </div>`;
   }).join('');
@@ -8722,7 +9246,13 @@ function renderSummaryCards(mData, mLabel) {
   if (document.getElementById('chartMaker2')) {
     charts.maker2 = new Chart(document.getElementById('chartMaker2'), {
       type:'bar',
-      data:{ labels:makers2Chart.map(m=>m[0]), datasets:[{ data:makers2Chart.map(m=>m[1]), backgroundColor:makers2Chart.map((_,i)=>PALETTE[i % PALETTE.length]), borderRadius:6, maxBarThickness:22 }] },
+      data:{ labels:makers2Chart.map(m=>m[0]), datasets:[{ data:makers2Chart.map(m=>m[1]),
+        backgroundColor: (context) => {
+          const { ctx, chartArea } = context.chart;
+          const base = PALETTE[context.dataIndex % PALETTE.length];
+          return makeGradient(ctx, chartArea, hexToRgba(base, 0.5), base, false);
+        },
+        borderRadius:6, maxBarThickness:22 }] },
       options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y', animation: CHART_EASE,
         plugins:{legend:{display:false}, tooltip: Object.assign(chartTooltipCfg(cs), { callbacks:{ label: ctx => ` ${ctx.raw.toLocaleString()} รายการ` } })},
         scales:{
@@ -8781,11 +9311,91 @@ function renderSummaryCards(mData, mLabel) {
     document.getElementById('monthSummaryContent').innerHTML = '';
   }
 }
+/* ── TREND CHART: PR เข้า vs ส่งเสร็จ รายเดือน (ทั้งปีที่เลือกผ่าน Year Navigator) ── */
+function renderSummaryTrend() {
+  const canvas = document.getElementById('chartSummaryTrend');
+  if (!canvas) return;
+  const cs = getComputedStyle(document.documentElement);
+  const chartText = cs.getPropertyValue('--chart-text').trim() || '#64748b';
+
+  const monthKeys = Array.from({length:12}, (_,i) => `${summaryYear}-${String(i+1).padStart(2,'0')}`);
+  const prCounts = monthKeys.map(k => allData.filter(r => getMonthKey(r.prDate) === k).length);
+  const doneCounts = monthKeys.map(k => allData.filter(r => r.status.includes('เสร็จแล้ว') && getMonthKey(r.actualDate) === k).length);
+  const labels = monthKeys.map(k => MONTH_NAMES[parseInt(k.split('-')[1]) - 1]);
+
+  document.getElementById('s-trend-title').textContent = `แนวโน้มรายเดือน: PR เข้า vs ส่งเสร็จ (ปี ${summaryYear})`;
+  destroyChart('summaryTrend');
+  charts.summaryTrend = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'PR เข้า', data: prCounts, borderColor: PALETTE[0], backgroundColor: hexToRgba(PALETTE[0], 0.14), fill: true, tension: 0.35, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2.2 },
+        { label: 'ส่งเสร็จ', data: doneCounts, borderColor: PALETTE[2], backgroundColor: hexToRgba(PALETTE[2], 0.12), fill: true, tension: 0.35, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2.2 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: CHART_EASE,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: chartLegendCfg(chartText), tooltip: chartTooltipCfg(cs) },
+      scales: {
+        x: { ticks: { color: chartText, font: { size: 9.5, family: "'Sarabun',sans-serif" } }, grid: { display: false }, border: { display: false } },
+        y: { beginAtZero: true, ticks: { color: chartText, font: { size: 9, family: "'IBM Plex Mono',monospace" }, precision: 0 }, grid: { color: cs.getPropertyValue('--surface2').trim(), drawTicks: false }, border: { display: false } }
+      }
+    }
+  });
+}
+
+/* ── BREAKDOWN CHART: สถานะงาน แยกตาม Model (stacked bar, Top N) ── */
+function renderModelBreakdown() {
+  const canvas = document.getElementById('chartModelBreakdown');
+  if (!canvas) return;
+  const cs = getComputedStyle(document.documentElement);
+  const chartText = cs.getPropertyValue('--chart-text').trim() || '#64748b';
+  const mData = getMonthData();
+
+  const modelMap = {};
+  mData.forEach(r => {
+    const key = (r.model || 'ไม่ระบุ').trim() || 'ไม่ระบุ';
+    if (!modelMap[key]) modelMap[key] = { done: 0, progress: 0, incomplete: 0, total: 0 };
+    modelMap[key].total++;
+    if (r.status.includes('เสร็จแล้ว')) modelMap[key].done++;
+    else if (r.status.includes('กำลังดำเนินการ')) modelMap[key].progress++;
+    else if (r.status.includes('ยังไม่ครบ')) modelMap[key].incomplete++;
+  });
+  const modelTopN = getTopNValue('modelBreakdownTopN', 10);
+  const models = Object.entries(modelMap).sort((a,b) => b[1].total - a[1].total).slice(0, modelTopN);
+
+  setBarChartHeight('chartModelBreakdown', models.length, 30, 200);
+  destroyChart('modelBreakdown');
+  charts.modelBreakdown = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: models.map(m => m[0]),
+      datasets: [
+        { label: 'เสร็จแล้ว', data: models.map(m => m[1].done), backgroundColor: (context) => makeGradient(context.chart.ctx, context.chart.chartArea, hexToRgba('#10b981',0.4), '#10b981', false), borderRadius: 4, maxBarThickness: 18 },
+        { label: 'กำลังดำเนินการ', data: models.map(m => m[1].progress), backgroundColor: (context) => makeGradient(context.chart.ctx, context.chart.chartArea, hexToRgba('#f59e0b',0.4), '#f59e0b', false), borderRadius: 4, maxBarThickness: 18 },
+        { label: 'ยังไม่ครบ', data: models.map(m => m[1].incomplete), backgroundColor: (context) => makeGradient(context.chart.ctx, context.chart.chartArea, hexToRgba('#ef4444',0.4), '#ef4444', false), borderRadius: 4, maxBarThickness: 18 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, indexAxis: 'y', animation: CHART_EASE,
+      plugins: { legend: chartLegendCfg(chartText), tooltip: chartTooltipCfg(cs) },
+      scales: {
+        x: { stacked: true, beginAtZero: true, ticks: { color: chartText, font: { size: 9, family: "'IBM Plex Mono',monospace" }, precision: 0 }, grid: { color: cs.getPropertyValue('--surface2').trim(), drawTicks: false }, border: { display: false } },
+        y: { stacked: true, ticks: { color: chartText, font: { size: 9, family: "'Sarabun',sans-serif", weight: '500' }, maxRotation: 0 }, grid: { display: false }, border: { display: false } }
+      }
+    }
+  });
+}
+
 function renderSummary() {
   renderMonthTabs();
   const mData = getMonthData();
   const mLabel = activeMonthTab ? getMonthLabel(activeMonthTab) : null;
   renderSummaryCards(mData, mLabel);
+  renderSummaryTrend();
+  renderModelBreakdown();
 }
 
 /* ── MODAL ── */
@@ -10091,8 +10701,12 @@ function renderLeadTime() {
         datasets: [{
           label: 'Lead Time เฉลี่ย (วัน)',
           data:  sorted.map(s => s.avgLead),
-          backgroundColor: sorted.map(s =>
-            s.avgLead > 20 ? '#ef4444' : s.avgLead > 10 ? '#f59e0b' : '#10b981'),
+          backgroundColor: (context) => {
+            const { ctx, chartArea } = context.chart;
+            const v = sorted[context.dataIndex] ? sorted[context.dataIndex].avgLead : 0;
+            const base = v > 20 ? '#ef4444' : v > 10 ? '#f59e0b' : '#10b981';
+            return makeGradient(ctx, chartArea, hexToRgba(base, 0.35), base, false);
+          },
           borderRadius: 6, borderSkipped: false, maxBarThickness: 24
         }]
       },
@@ -12094,7 +12708,13 @@ function renderWpCharts() {
   if (locCanvas) {
     wpCharts.location = new Chart(locCanvas, {
       type:'bar',
-      data:{ labels:locEntries.map(e=>e[0]), datasets:[{ data:locEntries.map(e=>e[1]), backgroundColor:locEntries.map((_,i)=>PALETTE[i % PALETTE.length]), borderRadius:6, maxBarThickness:22 }] },
+      data:{ labels:locEntries.map(e=>e[0]), datasets:[{ data:locEntries.map(e=>e[1]),
+        backgroundColor: (context) => {
+          const { ctx, chartArea } = context.chart;
+          const base = PALETTE[context.dataIndex % PALETTE.length];
+          return makeGradient(ctx, chartArea, hexToRgba(base, 0.5), base, false);
+        },
+        borderRadius:6, maxBarThickness:22 }] },
       options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y', animation: CHART_EASE,
         plugins:{legend:{display:false}, tooltip: Object.assign(chartTooltipCfg(cs), { callbacks:{ label: ctx => ` ${ctx.raw.toLocaleString()} รายการ` } })},
         scales:{
