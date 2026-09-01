@@ -4412,6 +4412,285 @@
     content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px;
     background: linear-gradient(90deg, transparent, rgba(216,178,92,0.45) 35%, rgba(216,178,92,0.45) 65%, transparent);
   }
+/* ══════════════════════════════════════════════════════════════════
+   DESIGN UPLIFT LAYER — futuristic business polish
+   ทับ token เดิมทั้งหมด: เพิ่มความลึก (glass/glow), ตัวอักษรคมขึ้น,
+   กราฟและการ์ดดูพรีเมียมขึ้น โดยไม่แตะโครงสร้าง HTML/JS เดิม
+   ══════════════════════════════════════════════════════════════════ */
+:root {
+  --accent-grad: linear-gradient(135deg, #4C7CF0 0%, #7C5CFF 55%, #00C2A8 100%);
+  --accent-grad-soft: linear-gradient(135deg, rgba(76,124,240,0.16) 0%, rgba(124,92,255,0.13) 55%, rgba(0,194,168,0.13) 100%);
+  --glass-blur: saturate(160%) blur(14px);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+body.dark-theme:not(.light-theme) {
+  --glass-surface: rgba(17, 22, 32, 0.72);
+  --glass-sidebar: rgba(13, 17, 23, 0.82);
+  --mesh-glow-1: rgba(76,124,240,0.10);
+  --mesh-glow-2: rgba(124,92,255,0.08);
+}
+.light-theme {
+  --glass-surface: rgba(255,255,255,0.72);
+  --glass-sidebar: rgba(255,255,255,0.85);
+  --mesh-glow-1: rgba(37,84,199,0.06);
+  --mesh-glow-2: rgba(84,70,196,0.05);
+}
+
+/* ── typography polish ── */
+html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+.topbar-title, .exec-kpi-value, .stat-value, .kpi-card-value, .briefing-stat-value,
+.mt-kpi-value, .cer-stat-value, .exec-health-value, .gantt-kpi-value { letter-spacing: -0.01em; }
+.nav-label-text { letter-spacing: 0.01em; }
+
+/* ── body: subtle tech mesh backdrop (fixed, non-intrusive) ── */
+body {
+  background-image:
+    radial-gradient(ellipse 900px 500px at 8% -6%, var(--mesh-glow-1), transparent 60%),
+    radial-gradient(ellipse 800px 480px at 108% 8%, var(--mesh-glow-2), transparent 55%);
+  background-attachment: fixed, fixed;
+  background-repeat: no-repeat;
+}
+
+/* ── sidebar: frosted glass + glow edge ── */
+.sidebar {
+  background: var(--glass-sidebar) !important;
+  backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: 1px 0 0 var(--border2), 6px 0 30px -18px rgba(0,0,0,0.5);
+}
+.sidebar::after {
+  content: ''; position: absolute; top: 0; right: -1px; width: 1px; height: 100%;
+  background: linear-gradient(180deg, transparent, rgba(76,124,240,0.5) 30%, rgba(124,92,255,0.45) 70%, transparent);
+  opacity: 0.7;
+}
+
+/* ── topbar: glass, sits above content ── */
+.topbar {
+  background: var(--glass-surface) !important;
+  backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+}
+
+/* ── nav-item.active: gradient pill instead of flat tint ── */
+.nav-item.active {
+  background: var(--accent-grad-soft) !important;
+  border-color: transparent !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 4px 14px -6px rgba(76,124,240,0.35);
+  position: relative;
+}
+.nav-item.active::before {
+  content: ''; position: absolute; left: -1px; top: 12%; bottom: 12%; width: 3px; border-radius: 3px;
+  background: var(--accent-grad); box-shadow: 0 0 10px rgba(76,124,240,0.7);
+}
+.nav-item { transition: all 0.2s var(--ease-out); }
+.nav-item:hover { transform: translateX(2px); }
+
+/* ── pills: sync / theme — gradient sheen ── */
+.sync-pill {
+  background: var(--accent-grad) !important; color: #fff !important;
+  border: none !important; box-shadow: var(--shadow-sm), 0 3px 14px -4px rgba(76,124,240,0.55);
+  transition: transform 0.18s var(--ease-out), box-shadow 0.18s var(--ease-out);
+}
+.sync-pill:hover { transform: translateY(-1px) scale(1.02); box-shadow: var(--shadow-md), 0 6px 18px -4px rgba(76,124,240,0.6); }
+.theme-pill:hover { transform: translateY(-1px); }
+
+/* ── stat-card / kpi-card / exec-kpi-card / chart-card: glass + lift ── */
+.stat-card, .kpi-card, .exec-kpi-card, .chart-card, .cer-stat-card, .mt-kpi-card,
+.briefing-panel, .notif-panel, .orgchart-panel, .gantt-kpi, .wp-kpi-card {
+  background: var(--glass-surface) !important;
+  backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+  transition: transform 0.28s var(--ease-out), box-shadow 0.28s var(--ease-out), border-color 0.28s var(--ease-out) !important;
+}
+.stat-card:hover, .kpi-card:hover, .exec-kpi-card:hover, .chart-card:hover, .cer-stat-card:hover,
+.mt-kpi-card:hover, .gantt-kpi:hover, .wp-kpi-card:hover {
+  transform: translateY(-4px) !important;
+}
+.chart-card { position: relative; overflow: hidden; }
+.chart-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: var(--accent-grad); opacity: 0.55;
+}
+.chart-title { letter-spacing: 0.08em; }
+
+/* ── exec hero / health ring: gradient glow ── */
+.exec-hero { position: relative; overflow: hidden; }
+.exec-hero::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse 500px 260px at 15% 0%, rgba(124,92,255,0.14), transparent 65%);
+  pointer-events: none;
+}
+.exec-health-ring circle.exec-ring-fg { filter: drop-shadow(0 0 6px currentColor); transition: stroke-dashoffset 0.8s var(--ease-out); }
+
+/* ── chart canvases: soft rounded frame ── */
+.chart-wrap, [id^="chart"] { border-radius: var(--r-sm); }
+
+/* ── accent numerals: gradient-clipped for a premium tech feel ── */
+.stat-card.total .stat-value, .exec-health-value {
+  background: var(--accent-grad); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+
+/* ── buttons / primary actions: consistent gradient treatment ── */
+.wl-btn, button.btn-primary, .btn-primary {
+  background: var(--accent-grad) !important; border: none !important;
+}
+
+/* ── refined scrollbar (thin gradient thumb) ── */
+::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #4C7CF0, #7C5CFF); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #7C5CFF, #00C2A8); }
+
+/* ── page transition polish ── */
+.page { animation: pageFadeIn 0.35s var(--ease-out); }
+@keyframes pageFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── notif dot / live badges: subtle pulse for "live" business feel ── */
+.notif-dot.show { box-shadow: 0 0 0 rgba(239,68,68,0.5); animation: pulseDot 1.8s infinite; }
+@keyframes pulseDot {
+  0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); }
+  70% { box-shadow: 0 0 0 7px rgba(239,68,68,0); }
+  100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+}
+
+/* ── reduced motion respect ── */
+@media (prefers-reduced-motion: reduce) {
+  .page, .nav-item, .stat-card, .kpi-card, .chart-card, .sync-pill { animation: none !important; transition: none !important; }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   CLEAN WHITE THEME — softer, thinner, lower-contrast borders
+   (ธีมขาวสะอาด: กรอบบางลง สีอ่อนลง เงาเบาลง ให้ดูคลีนขึ้น)
+   ══════════════════════════════════════════════════════════════════ */
+.light-theme {
+  --border: #E7EAF1;
+  --border2: #E7EAF1;
+  --shadow-xs: 0 1px 2px rgba(30,41,59,0.045);
+  --shadow-sm: 0 1px 2px rgba(30,41,59,0.035), 0 4px 12px -6px rgba(30,41,59,0.06);
+  --shadow-md: 0 1px 3px rgba(30,41,59,0.04), 0 10px 24px -10px rgba(30,41,59,0.08);
+  --shadow-lg: 0 2px 6px rgba(30,41,59,0.045), 0 18px 40px -16px rgba(30,41,59,0.10);
+}
+
+/* thin, uniform, low-contrast hairline borders on every surface/card */
+.light-theme .stat-card, .light-theme .kpi-card, .light-theme .exec-kpi-card,
+.light-theme .chart-card, .light-theme .cer-stat-card, .light-theme .mt-kpi-card,
+.light-theme .mt-detail-card, .light-theme .supplier-card, .light-theme .wp-kpi-card,
+.light-theme .briefing-panel, .light-theme .detail-panel, .light-theme .notif-panel,
+.light-theme .orgchart-panel, .light-theme .exec-panel, .light-theme .instruction-card,
+.light-theme .gantt-kpi, .light-theme .progress-section, .light-theme .bc-panel,
+.light-theme .briefing-group, .light-theme .briefing-item, .light-theme .briefing-stat,
+.light-theme .table-wrap, .light-theme .card, .light-theme .modal, .light-theme .wl-card,
+.light-theme .tour-card {
+  border-color: var(--border) !important;
+}
+
+/* soften the colored status accent bars — thinner + lower opacity reads as an
+   indicator, not a loud frame */
+.light-theme .briefing-stat::before,
+.light-theme .briefing-group::before,
+.light-theme .briefing-head::after { opacity: 0.55 !important; width: 2px; }
+.light-theme .briefing-item { border-left-width: 2px !important; }
+.light-theme .wp-kpi-card { border-left-width: 2px !important; }
+.light-theme .sc-item.sc-issue,
+.light-theme .comment-item.important { border-left-width: 2px !important; }
+.light-theme .mt-model-customer,
+.light-theme td[style*="border-left"] { border-left-width: 2px !important; }
+
+/* flatten heavier shadow/border combos so cards read as flat, clean panels */
+.light-theme .stat-card, .light-theme .kpi-card, .light-theme .exec-kpi-card,
+.light-theme .chart-card, .light-theme .cer-stat-card, .light-theme .mt-kpi-card,
+.light-theme .mt-detail-card, .light-theme .supplier-card, .light-theme .wp-kpi-card,
+.light-theme .briefing-panel, .light-theme .detail-panel, .light-theme .notif-panel,
+.light-theme .orgchart-panel, .light-theme .exec-panel, .light-theme .instruction-card,
+.light-theme .gantt-kpi, .light-theme .progress-section, .light-theme .bc-panel {
+  box-shadow: var(--shadow-sm) !important;
+}
+.light-theme .briefing-group, .light-theme .briefing-stat, .light-theme .wp-meta-pill {
+  box-shadow: none !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   UI REFRESH 2.0 — modern enterprise console
+   หลักการ: แร็คเมนูมืดคงที่เป็นแบรนด์ (แยกจากธีมเนื้อหา) + เนื้อหาโปร่ง
+   สะอาด ระยะห่างมากขึ้น + การ์ด/กราฟ อ่านง่าย ไม่มีกรอบสีฉูดฉาด
+   ══════════════════════════════════════════════════════════════════ */
+:root {
+  --rail-bg: #0F1428;
+  --rail-bg-soft: #171D38;
+  --rail-border: rgba(255,255,255,0.07);
+  --rail-text: #C7CCE3;
+  --rail-text-dim: #7A82A6;
+  --rail-active-bg: rgba(124,140,255,0.16);
+  --rail-active-text: #A9B6FF;
+  --rail-icon-bg: rgba(124,140,255,0.14);
+}
+
+/* ---- sidebar: permanent dark rail, independent of light/dark content theme ---- */
+.sidebar {
+  background: var(--rail-bg) !important;
+  border-right: 1px solid var(--rail-border) !important;
+  box-shadow: 1px 0 0 rgba(255,255,255,0.03) inset, 6px 0 28px -14px rgba(6,8,16,0.55) !important;
+  backdrop-filter: none !important;
+}
+.sidebar-logo {
+  background: linear-gradient(135deg, rgba(124,140,255,0.12), rgba(124,92,255,0.05)) !important;
+  border-bottom: 1px solid var(--rail-border) !important;
+}
+.sidebar-logo::after { background: linear-gradient(90deg, transparent, rgba(169,182,255,0.5) 35%, rgba(169,182,255,0.5) 65%, transparent) !important; }
+.logo-title { color: #F5F6FC !important; }
+.logo-sub { color: var(--rail-text-dim) !important; }
+.nav-section-divider { color: var(--rail-text-dim) !important; }
+.nav-section-divider::after { background: var(--rail-border) !important; }
+.nav-group {
+  background: var(--rail-bg-soft) !important; border: 1px solid var(--rail-border) !important;
+  box-shadow: none !important;
+}
+.nav-group:hover { border-color: rgba(124,140,255,0.3) !important; box-shadow: none !important; }
+.sidebar.collapsed .nav-group { background: transparent !important; border-color: transparent !important; }
+.nav-label { color: var(--rail-text) !important; border-bottom-color: var(--rail-border) !important; }
+.nav-label:hover { background: rgba(124,140,255,0.08) !important; color: #fff !important; }
+.nav-label-icon { background: var(--rail-icon-bg) !important; color: var(--rail-active-text) !important; }
+.nav-item { color: var(--rail-text-dim) !important; border-color: transparent !important; }
+.nav-item:hover { background: rgba(255,255,255,0.045) !important; color: var(--rail-text) !important; border-color: transparent !important; }
+.nav-item.active {
+  background: var(--rail-active-bg) !important; color: var(--rail-active-text) !important;
+  border: 1px solid rgba(124,140,255,0.32) !important; box-shadow: none !important; font-weight: 600 !important;
+}
+.nav-icon { color: var(--rail-text-dim) !important; }
+.nav-item.active .nav-icon, .nav-item.active .nav-icon svg { color: var(--rail-active-text) !important; }
+.nav-item:hover .nav-icon { color: var(--rail-text) !important; }
+.sidebar-footer { border-top: 1px solid var(--rail-border) !important; background: none !important; }
+.collapse-btn { color: var(--rail-text-dim) !important; border-color: var(--rail-border) !important; background: transparent !important; }
+.collapse-btn:hover { border-color: rgba(124,140,255,0.4) !important; color: var(--rail-active-text) !important; background: rgba(124,140,255,0.08) !important; }
+.logout-btn { color: var(--rail-text-dim) !important; border-color: var(--rail-border) !important; background: transparent !important; }
+.logout-btn:hover { background: rgba(239,68,68,0.12) !important; border-color: rgba(239,68,68,0.35) !important; color: #FCA5A5 !important; }
+.sidebar ::-webkit-scrollbar-track { background: var(--rail-bg) !important; }
+.sidebar ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12) !important; }
+
+/* ---- topbar: airier, quieter chrome ---- */
+.topbar {
+  box-shadow: 0 1px 0 var(--border) !important;
+  backdrop-filter: blur(10px) !important;
+  padding: 0 1.75rem !important;
+}
+.topbar-sub, .topbar-chip, .theme-pill {
+  background: transparent !important; border: 1px solid var(--border) !important;
+  box-shadow: none !important;
+}
+.icon-action { background: transparent !important; box-shadow: none !important; }
+.sync-pill { border-radius: var(--r-pill) !important; box-shadow: none !important; }
+
+/* ---- stat / kpi cards: flatten the top gradient bar, quieter elevation ---- */
+.stat-card::before { height: 2px !important; opacity: 0.85; }
+.stat-card, .kpi-card, .exec-kpi-card, .chart-card, .cer-stat-card, .mt-kpi-card,
+.wp-kpi-card, .gantt-kpi {
+  box-shadow: none !important;
+}
+.stat-card:hover, .kpi-card:hover, .exec-kpi-card:hover, .chart-card:hover,
+.cer-stat-card:hover, .mt-kpi-card:hover, .wp-kpi-card:hover, .gantt-kpi:hover {
+  box-shadow: var(--shadow-sm) !important; transform: translateY(-2px);
+}
+.stat-value { letter-spacing: -0.03em !important; }
+.stat-grid, .kpi-grid { gap: 1.1rem !important; }
+
+/* ---- breathing room ---- */
+main { padding: 1.6rem 1.75rem !important; }
+.briefing-panel, .chart-card, .table-wrap, .exec-panel { border-radius: var(--r-lg) !important; }
 </style>
 </head>
 <body class="light-theme">
@@ -8610,7 +8889,7 @@ function volumeCell(item) {
 }
 
 /* ── CHARTS ── */
-const PALETTE = ['#3E6AE1','#6366f1','#f59e0b','#ef4444','#3b82f6','#ec4899','#94A3B8','#f97316'];
+const PALETTE = ['#4C7CF0','#7C5CFF','#00C2A8','#F5A524','#FF5C7A','#22B8CF','#A78BFA','#FB923C'];
 function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
 
 /* ── TOP N SELECTOR (ใช้ร่วมกันทุกกราฟแบบ ranking/อันดับ) ──
@@ -8637,28 +8916,37 @@ function setBarChartHeight(canvasId, count, perBar = 30, minH = 160) {
    reads consistently: crisp tooltips, point-style legends, and a
    labelled total in the middle of every doughnut. ── */
 function chartTooltipCfg(cs) {
-  const surface = cs.getPropertyValue('--surface').trim() || '#111620';
-  const border  = cs.getPropertyValue('--border').trim()  || '#1e2a3a';
+  const surface = cs.getPropertyValue('--surface').trim() || '#182030';
+  const border  = cs.getPropertyValue('--border').trim()  || '#E4E7F0';
   const text    = cs.getPropertyValue('--text').trim()    || '#e2e8f0';
   return {
     enabled: true, backgroundColor: surface, titleColor: text, bodyColor: text,
-    borderColor: border, borderWidth: 1, cornerRadius: 10, padding: 10,
-    boxPadding: 6, displayColors: true, usePointStyle: true, boxWidth: 8, boxHeight: 8,
-    caretSize: 6,
-    titleFont: { family: "'Prompt','Sarabun',sans-serif", size: 12, weight: '600' },
-    bodyFont:  { family: "'Sarabun',sans-serif", size: 11.5 }
+    borderColor: border, borderWidth: 1, cornerRadius: 10, padding: 12,
+    boxPadding: 7, displayColors: true, usePointStyle: true, boxWidth: 9, boxHeight: 9,
+    caretSize: 6, titleSpacing: 6, titleMarginBottom: 8,
+    titleFont: { family: "'Prompt','Sarabun',sans-serif", size: 12.5, weight: '700' },
+    bodyFont:  { family: "'Sarabun',sans-serif", size: 11.5, weight: '500' },
+    bodySpacing: 5,
+    shadowOffsetX: 0, shadowOffsetY: 6, shadowBlur: 18, shadowColor: 'rgba(15,23,42,0.12)'
   };
 }
 function chartLegendCfg(chartText, fontSize) {
   return {
     position: 'bottom',
     labels: {
-      color: chartText, padding: 14, usePointStyle: true, pointStyle: 'circle',
-      boxWidth: 8, boxHeight: 8, font: { size: fontSize || 10.5, family: "'Sarabun',sans-serif" }
+      color: chartText, padding: 16, usePointStyle: true, pointStyle: 'circle',
+      boxWidth: 9, boxHeight: 9, font: { size: fontSize || 10.5, family: "'Sarabun',sans-serif", weight: '600' }
     }
   };
 }
-const CHART_EASE = { duration: 650, easing: 'easeOutQuart' };
+const CHART_EASE = { duration: 750, easing: 'easeOutQuart' };
+if (window.Chart) {
+  Chart.defaults.font.family = "'Sarabun', sans-serif";
+  Chart.defaults.plugins.tooltip.animation = { duration: 150 };
+  Chart.defaults.elements.line.borderCapStyle = 'round';
+  Chart.defaults.elements.line.borderJoinStyle = 'round';
+  Chart.defaults.elements.point.hoverBorderWidth = 2;
+}
 function makeGradient(ctx, chartArea, colorStart, colorEnd, vertical) {
   if (!chartArea) return colorStart;
   const g = vertical
@@ -8764,7 +9052,7 @@ function renderCharts() {
       options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y', animation: CHART_EASE,
         plugins:{ legend:{display:false}, tooltip: Object.assign(chartTooltipCfg(cs), { callbacks:{ label: ctx => ` Volume ${ctx.raw.toLocaleString()}` } }) },
         scales:{
-          x:{ ticks:{color:chartText,font:{size:9,family:"'IBM Plex Mono',monospace"}}, grid:{color:gridColor, drawTicks:false}, border:{display:false} },
+          x:{ ticks:{color:chartText,font:{size:9,family:"'IBM Plex Mono',monospace"}}, grid:{color:gridColor, drawTicks:false, lineWidth:1, borderDash:[3,4]}, border:{display:false} },
           y:{ ticks:{color:chartText,font:{size:9.5,family:"'Sarabun',sans-serif",weight:'500'}, maxRotation:0}, grid:{display:false}, border:{display:false} }
         }
       }
@@ -8790,7 +9078,7 @@ function renderCharts() {
       options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y', animation: CHART_EASE,
         plugins:{ legend:{display:false}, tooltip: Object.assign(chartTooltipCfg(cs), { callbacks:{ label: ctx => ` Volume ${ctx.raw.toLocaleString()}` } }) },
         scales:{
-          x:{ ticks:{color:chartText,font:{size:9,family:"'IBM Plex Mono',monospace"}}, grid:{color:gridColor, drawTicks:false}, border:{display:false} },
+          x:{ ticks:{color:chartText,font:{size:9,family:"'IBM Plex Mono',monospace"}}, grid:{color:gridColor, drawTicks:false, lineWidth:1, borderDash:[3,4]}, border:{display:false} },
           y:{ ticks:{color:chartText,font:{size:9,family:"'Sarabun',sans-serif",weight:'500'}, maxRotation:0}, grid:{display:false}, border:{display:false} }
         }
       }
@@ -8823,7 +9111,7 @@ function renderCharts() {
         plugins:{ legend:{display:false}, tooltip: Object.assign(chartTooltipCfg(cs), { callbacks:{ label: ctx => ` ${ctx.raw.toLocaleString()} รายการ` } }) },
         scales:{
           x:{ ticks:{color:chartText,font:{size:9,family:"'Sarabun',sans-serif"}}, grid:{display:false}, border:{display:false} },
-          y:{ ticks:{color:chartText,font:{size:9,family:"'IBM Plex Mono',monospace"},precision:0}, grid:{color:gridColor, drawTicks:false}, border:{display:false}, beginAtZero:true }
+          y:{ ticks:{color:chartText,font:{size:9,family:"'IBM Plex Mono',monospace"},precision:0}, grid:{color:gridColor, drawTicks:false, lineWidth:1, borderDash:[3,4]}, border:{display:false}, beginAtZero:true }
         }
       }
     });
@@ -8880,7 +9168,7 @@ function renderCharts() {
         plugins:{ legend: chartLegendCfg(chartText), tooltip: Object.assign(chartTooltipCfg(cs), { callbacks:{ label: ctx => ctx.dataset.yAxisID === 'y1' ? ` % ความสำเร็จ ${ctx.raw}%` : ` เปิด PR ${ctx.raw.toLocaleString()} รายการ` } }) },
         scales:{
           x:{ ticks:{color:chartText,font:{size:9,family:"'Sarabun',sans-serif"}}, grid:{display:false}, border:{display:false} },
-          y:{ position:'left', ticks:{color:chartText,font:{size:9,family:"'IBM Plex Mono',monospace"},precision:0}, grid:{color:gridColor, drawTicks:false}, border:{display:false}, beginAtZero:true },
+          y:{ position:'left', ticks:{color:chartText,font:{size:9,family:"'IBM Plex Mono',monospace"},precision:0}, grid:{color:gridColor, drawTicks:false, lineWidth:1, borderDash:[3,4]}, border:{display:false}, beginAtZero:true },
           y1:{ position:'right', min:0, max:100, ticks:{color:chartText,font:{size:9,family:"'IBM Plex Mono',monospace"}, callback: v => v+'%'}, grid:{display:false}, border:{display:false} }
         }
       }
@@ -8944,7 +9232,7 @@ function renderCharts() {
         plugins: { legend: chartLegendCfg(chartText), tooltip: Object.assign(chartTooltipCfg(cs), { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw === null ? '—' : ctx.raw + '%'}` } }) },
         scales: {
           x: { ticks: { color: chartText, font: { size: 9, family: "'Sarabun',sans-serif" } }, grid: { display: false }, border: { display: false } },
-          y: { beginAtZero: true, max: 100, ticks: { color: chartText, font: { size: 9, family: "'IBM Plex Mono',monospace" }, callback: v => v + '%' }, grid: { color: gridColor, drawTicks: false }, border: { display: false } }
+          y: { beginAtZero: true, max: 100, ticks: { color: chartText, font: { size: 9, family: "'IBM Plex Mono',monospace" }, callback: v => v + '%' }, grid: { color: gridColor, drawTicks: false, lineWidth: 1, borderDash: [3,4] }, border: { display: false } }
         }
       }
     });
@@ -9040,7 +9328,7 @@ function renderExecDashboard() {
       options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', animation: CHART_EASE,
         plugins: { legend: { display: false }, tooltip: Object.assign(chartTooltipCfg(cs), { callbacks: { label: ctx => ` ${ctx.raw.toLocaleString()} รายการ` } }) },
         scales: {
-          x: { ticks: { color: chartText, font: { size: 9, family: "'IBM Plex Mono',monospace" } }, grid: { color: cs.getPropertyValue('--surface2').trim(), drawTicks:false }, border:{display:false} },
+          x: { ticks: { color: chartText, font: { size: 9, family: "'IBM Plex Mono',monospace" } }, grid: { color: cs.getPropertyValue('--surface2').trim(), drawTicks:false, lineWidth:1, borderDash:[3,4] }, border:{display:false} },
           y: { ticks: { color: chartText, font: { size: 9.5, family: "'Sarabun',sans-serif", weight:'500' } }, grid: { display: false }, border:{display:false} }
         } }
     });
@@ -9073,7 +9361,7 @@ function renderExecDashboard() {
         plugins: { legend: chartLegendCfg(chartText), tooltip: chartTooltipCfg(cs) },
         scales: {
           x: { ticks: { color: chartText, font: { size: 9, family: "'Sarabun',sans-serif" } }, grid: { display: false }, border: { display: false } },
-          y: { beginAtZero: true, ticks: { color: chartText, font: { size: 9, family: "'IBM Plex Mono',monospace" }, precision: 0 }, grid: { color: cs.getPropertyValue('--surface2').trim(), drawTicks: false }, border: { display: false } }
+          y: { beginAtZero: true, ticks: { color: chartText, font: { size: 9, family: "'IBM Plex Mono',monospace" }, precision: 0 }, grid: { color: cs.getPropertyValue('--surface2').trim(), drawTicks: false, lineWidth:1, borderDash:[3,4] }, border: { display: false } }
         }
       }
     });
@@ -9224,7 +9512,7 @@ function renderSummaryCards(mData, mLabel) {
       options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y', animation: CHART_EASE,
         plugins:{legend:{display:false}, tooltip: Object.assign(chartTooltipCfg(cs), { callbacks:{ label: ctx => ` ${ctx.raw.toLocaleString()} รายการ` } })},
         scales:{
-          x:{ticks:{color:chartText,font:{size:9,family:"'IBM Plex Mono',monospace"}},grid:{color:cs.getPropertyValue('--surface2').trim(), drawTicks:false}, border:{display:false}},
+          x:{ticks:{color:chartText,font:{size:9,family:"'IBM Plex Mono',monospace"}},grid:{color:cs.getPropertyValue('--surface2').trim(), drawTicks:false, lineWidth:1, borderDash:[3,4]}, border:{display:false}},
           y:{ticks:{color:chartText,font:{size:9,family:"'Sarabun',sans-serif",weight:'500'}, maxRotation:0},grid:{display:false}, border:{display:false}} } }
     });
   }
@@ -9308,7 +9596,7 @@ function renderSummaryTrend() {
       plugins: { legend: chartLegendCfg(chartText), tooltip: chartTooltipCfg(cs) },
       scales: {
         x: { ticks: { color: chartText, font: { size: 9.5, family: "'Sarabun',sans-serif" } }, grid: { display: false }, border: { display: false } },
-        y: { beginAtZero: true, ticks: { color: chartText, font: { size: 9, family: "'IBM Plex Mono',monospace" }, precision: 0 }, grid: { color: cs.getPropertyValue('--surface2').trim(), drawTicks: false }, border: { display: false } }
+        y: { beginAtZero: true, ticks: { color: chartText, font: { size: 9, family: "'IBM Plex Mono',monospace" }, precision: 0 }, grid: { color: cs.getPropertyValue('--surface2').trim(), drawTicks: false, lineWidth:1, borderDash:[3,4] }, border: { display: false } }
       }
     }
   });
@@ -9350,7 +9638,7 @@ function renderModelBreakdown() {
       responsive: true, maintainAspectRatio: false, indexAxis: 'y', animation: CHART_EASE,
       plugins: { legend: chartLegendCfg(chartText), tooltip: chartTooltipCfg(cs) },
       scales: {
-        x: { stacked: true, beginAtZero: true, ticks: { color: chartText, font: { size: 9, family: "'IBM Plex Mono',monospace" }, precision: 0 }, grid: { color: cs.getPropertyValue('--surface2').trim(), drawTicks: false }, border: { display: false } },
+        x: { stacked: true, beginAtZero: true, ticks: { color: chartText, font: { size: 9, family: "'IBM Plex Mono',monospace" }, precision: 0 }, grid: { color: cs.getPropertyValue('--surface2').trim(), drawTicks: false, lineWidth:1, borderDash:[3,4] }, border: { display: false } },
         y: { stacked: true, ticks: { color: chartText, font: { size: 9, family: "'Sarabun',sans-serif", weight: '500' }, maxRotation: 0 }, grid: { display: false }, border: { display: false } }
       }
     }
@@ -10682,7 +10970,7 @@ function renderLeadTime() {
         responsive: true, maintainAspectRatio: false, indexAxis: 'y', animation: CHART_EASE,
         plugins: { legend: { display: false }, tooltip: Object.assign(chartTooltipCfg(cs), { callbacks:{ label: ctx => ` เฉลี่ย ${ctx.raw} วัน` } }) },
         scales: {
-          x: { ticks:{color:chartText,font:{size:9,family:"'IBM Plex Mono',monospace"}}, grid:{color:gridColor, drawTicks:false}, border:{display:false}, beginAtZero:true },
+          x: { ticks:{color:chartText,font:{size:9,family:"'IBM Plex Mono',monospace"}}, grid:{color:gridColor, drawTicks:false, lineWidth:1, borderDash:[3,4]}, border:{display:false}, beginAtZero:true },
           y: { ticks:{color:chartText,font:{size:9.5,family:"'Sarabun',sans-serif",weight:'500'}, maxRotation:0}, grid:{display:false}, border:{display:false} }
         }
       }
@@ -12628,7 +12916,7 @@ function renderWpCharts() {
   const data = wpActiveMonth ? wpData.filter(r => wpMonthKey(r.date) === wpActiveMonth) : wpData;
   const cs = getComputedStyle(document.documentElement);
   const chartText = cs.getPropertyValue('--chart-text').trim() || '#64748b';
-  const PALETTE = ['#3E6AE1','#6366f1','#f59e0b','#ef4444','#3b82f6','#ec4899'];
+  const PALETTE = ['#4C7CF0','#7C5CFF','#00C2A8','#F5A524','#FF5C7A','#22B8CF'];
 
   // Type chart
   const typeMap = {};
@@ -12686,7 +12974,7 @@ function renderWpCharts() {
       options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y', animation: CHART_EASE,
         plugins:{legend:{display:false}, tooltip: Object.assign(chartTooltipCfg(cs), { callbacks:{ label: ctx => ` ${ctx.raw.toLocaleString()} รายการ` } })},
         scales:{
-          x:{ticks:{color:chartText,font:{size:9,family:"'IBM Plex Mono',monospace"}},grid:{color:cs.getPropertyValue('--surface2').trim(), drawTicks:false}, border:{display:false}, beginAtZero:true},
+          x:{ticks:{color:chartText,font:{size:9,family:"'IBM Plex Mono',monospace"}},grid:{color:cs.getPropertyValue('--surface2').trim(), drawTicks:false, lineWidth:1, borderDash:[3,4]}, border:{display:false}, beginAtZero:true},
           y:{ticks:{color:chartText,font:{size:9,family:"'Sarabun',sans-serif",weight:'500'}, maxRotation:0},grid:{display:false}, border:{display:false}} } }
     });
   }
