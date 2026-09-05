@@ -3686,6 +3686,14 @@
 
     /* Payroll two-col → one col */
     #pr-two-col { grid-template-columns: 1fr !important; }
+    /* UX: ปุ่ม +/- และช่องกรอกตัวเลขเล็กเกินไปสำหรับนิ้วบนมือถือ ขยายพื้นที่แตะให้ใหญ่ขึ้น
+       และบังคับ font-size ขั้นต่ำ 16px ตอน focus กัน iOS Safari auto-zoom เข้าไปทั้งหน้า */
+    #page-payroll .pr-num-input { min-width: 34px; }
+    #page-payroll input[type="number"]:focus,
+    #page-payroll input[type="text"]:focus { font-size: 16px !important; }
+    #page-payroll #pr-day-table button { min-width: 30px; min-height: 30px; }
+    /* Add/Edit employee modal: 2-col → 1-col บนมือถือ อ่าน/กรอกง่ายขึ้น ไม่ต้องซูม */
+    #pr-add-modal > div > div[style*="grid-template-columns:1fr 1fr"] { grid-template-columns: 1fr !important; }
 
     /* Gantt */
     .gantt-controls { gap: 0.4rem; }
@@ -6328,6 +6336,37 @@ main { padding: 1.6rem 1.75rem !important; }
           <!-- LEFT COLUMN -->
           <div style="display:flex;flex-direction:column;gap:1rem">
 
+            <!-- Quick Today Card -->
+            <div style="background:linear-gradient(135deg, rgba(62,106,225,0.10), rgba(62,106,225,0.02));border:1px solid rgba(62,106,225,0.35);border-radius:12px;padding:0.85rem">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;flex-wrap:wrap;gap:0.4rem">
+                <div style="display:flex;align-items:center;gap:0.5rem">
+                  <span style="font-size:0.9rem">⚡</span>
+                  <span style="font-size: 0.798rem;font-weight:700;color:var(--text)">บันทึกวันนี้แบบเร็ว</span>
+                </div>
+                <button onclick="prCopyYesterday()" title="คัดลอกจากเมื่อวาน" style="font-size:0.672rem;padding:0.3rem 0.6rem;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;white-space:nowrap">📋 คัดลอกเมื่อวาน</button>
+              </div>
+              <div id="pr-today-date-label" style="font-size:0.714rem;color:var(--muted);margin-bottom:0.7rem"></div>
+
+              <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.6rem">
+                <span style="font-size:0.756rem;color:var(--accent);font-weight:600;min-width:56px">มาทำงาน</span>
+                <button onclick="prTodayAdj('work',-1)" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:1.05rem;cursor:pointer;flex-shrink:0">−</button>
+                <span id="pr-today-work-val" style="min-width:26px;text-align:center;font-weight:700;font-size:1rem;color:var(--accent)">0</span>
+                <button onclick="prTodayAdj('work',1)" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:1.05rem;cursor:pointer;flex-shrink:0">+</button>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.7rem">
+                <span style="font-size:0.756rem;color:#f59e0b;font-weight:600;min-width:56px">OT (ชม.)</span>
+                <button onclick="prTodayAdj('ot',-0.5)" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:1.05rem;cursor:pointer;flex-shrink:0">−</button>
+                <span id="pr-today-ot-val" style="min-width:30px;text-align:center;font-weight:700;font-size:1rem;color:#f59e0b">0</span>
+                <button onclick="prTodayAdj('ot',0.5)" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:1.05rem;cursor:pointer;flex-shrink:0">+</button>
+                <span style="font-size:0.63rem;color:var(--muted)">(ทีละ 0.5)</span>
+              </div>
+
+              <input type="text" id="pr-today-note" placeholder="หมายเหตุวันนี้..." onchange="prTodaySetNote(this.value)"
+                style="width:100%;padding:0.45rem 0.6rem;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:0.798rem;outline:none;box-sizing:border-box">
+            </div>
+            <!-- /Quick Today Card -->
+
             <!-- Mini Calendar -->
             <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:0.85rem">
               <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.6rem">
@@ -6369,7 +6408,12 @@ main { padding: 1.6rem 1.75rem !important; }
               <div id="pr-attendance-bonus" style="display:none;margin-top:0.6rem;padding:0.45rem 0.6rem;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.35);border-radius:8px;color:#4ade80;font-size: 0.77rem;font-weight:700;text-align:center">
                 🏆 มาทำงานครบ ได้เบี้ยขยัน
               </div>
-              <button onclick="prOpenResetPeriod()" style="width:100%;margin-top:0.7rem;padding:0.5rem;border-radius:8px;border:1px solid rgba(239,68,68,0.35);background:rgba(239,68,68,0.08);color:#f87171;font-size: 0.756rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.4rem;transition:all 0.15s"
+              <button onclick="prOpenFillWorkdays()" style="width:100%;margin-top:0.7rem;padding:0.5rem;border-radius:8px;border:1px solid rgba(62,106,225,0.35);background:rgba(62,106,225,0.08);color:var(--accent);font-size: 0.756rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.4rem;transition:all 0.15s"
+                onmouseenter="this.style.background='rgba(62,106,225,0.16)'"
+                onmouseleave="this.style.background='rgba(62,106,225,0.08)'">
+                ⚡ เติมวันทำงาน (จ-ส) ที่ยังว่าง
+              </button>
+              <button onclick="prOpenResetPeriod()" style="width:100%;margin-top:0.5rem;padding:0.5rem;border-radius:8px;border:1px solid rgba(239,68,68,0.35);background:rgba(239,68,68,0.08);color:#f87171;font-size: 0.756rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.4rem;transition:all 0.15s"
                 onmouseenter="this.style.background='rgba(239,68,68,0.16)'"
                 onmouseleave="this.style.background='rgba(239,68,68,0.08)'">
                 🔄 รีเซ็ตข้อมูลรอบนี้
@@ -6385,6 +6429,7 @@ main { padding: 1.6rem 1.75rem !important; }
               <div style="display:flex;align-items:center;gap:0.5rem">
                 <span style="font-size: 0.735rem;color:var(--accent)">📋</span>
                 <span style="font-size: 0.756rem;font-weight:700;color:var(--text)">บันทึกรายวัน</span>
+                <button onclick="prGoToToday()" style="font-size:0.672rem;padding:0.3rem 0.6rem;border-radius:20px;border:1px solid rgba(62,106,225,0.4);background:rgba(62,106,225,0.1);color:var(--accent);cursor:pointer;font-weight:600;white-space:nowrap">📍 ไปวันนี้</button>
               </div>
               <div style="font-size: 0.651rem;color:var(--muted)">วัน · WD (วัน) · OT (ชม.) · หมายเหตุ</div>
             </div>
@@ -6500,6 +6545,19 @@ main { padding: 1.6rem 1.75rem !important; }
           <div style="display:flex;justify-content:center;gap:0.5rem">
             <button class="btn btn-ghost" onclick="prCancelDelete()">ยกเลิก</button>
             <button class="btn btn-primary" style="background:var(--danger);border-color:var(--danger)" onclick="prConfirmDelete()">ลบ</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fill Workdays Confirm Modal -->
+      <div id="pr-fill-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;align-items:center;justify-content:center">
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:1.5rem;width:300px;max-width:92vw;text-align:center">
+          <div style="font-size: 1.89rem;margin-bottom:0.4rem">⚡</div>
+          <div style="font-size: 0.966rem;font-weight:700;color:var(--text);margin-bottom:0.3rem">เติมวันทำงาน?</div>
+          <div id="pr-fill-msg" style="font-size: 0.819rem;color:var(--muted);margin-bottom:1.1rem;line-height:1.5"></div>
+          <div style="display:flex;justify-content:center;gap:0.5rem">
+            <button class="btn btn-ghost" onclick="prCancelFillWorkdays()">ยกเลิก</button>
+            <button class="btn btn-primary" onclick="prConfirmFillWorkdays()">เติมเลย</button>
           </div>
         </div>
       </div>
@@ -13441,22 +13499,55 @@ let prEditingId = null;
 let prSyncStatus = 'idle'; // 'idle' | 'loading' | 'online' | 'offline'
 let prCutoffDayGlobal = localStorage.getItem('prpo_payroll_cutoffday') || ''; // วันตัดรอบ (ใช้ร่วมกันทุกคน บันทึกไว้ในเครื่อง)
 
-function prSave() { localStorage.setItem('prpo_payroll_users', JSON.stringify(prUsers)); }
+let prSaveWarned = false;
+/* FIX: เดิม localStorage.setItem ไม่มี try/catch — ถ้าพื้นที่เต็ม (เช่น มีรูปพนักงานสะสมเยอะ)
+   จะ throw exception กลางฟังก์ชันที่เรียก prSave() (prAdj/prSetNote/prToggleDay ฯลฯ)
+   ทำให้โค้ดหลังจากนั้นในฟังก์ชันเดียวกัน (prRefreshDetail / sync ไป Sheet) ไม่ทำงานต่อเลย
+   ผู้ใช้กดปุ่ม +/- แล้วดูเหมือนค้าง/ไม่บันทึก ทั้งที่จริงคือ error ถูกโยนทิ้งแบบไม่มีใครจับ */
+function prSave() {
+  try {
+    localStorage.setItem('prpo_payroll_users', JSON.stringify(prUsers));
+  } catch (err) {
+    console.warn('[payroll] บันทึกลงเครื่องไม่สำเร็จ:', err.message || err);
+    if (!prSaveWarned) {
+      prSaveWarned = true;
+      showToast('⚠️ พื้นที่จัดเก็บในเครื่องเต็ม — ข้อมูลจะยังซิงค์ไป Sheet แต่จะหายเมื่อปิดหน้านี้จนกว่าจะลบรูป/ข้อมูลเก่าออก', 'error');
+    }
+  }
+}
 
 /* ── Sheet API wrapper ──
    GET ใช้ query string, POST ใช้ JSON body (action-based ตาม Code.gs)
    ทุกอันมี try/catch กันพังตอน offline — ฟังก์ชันเรียกจะตัดสินใจเอง
    ว่าจะ fallback ไป localStorage หรือไม่ */
+const PR_API_TIMEOUT_MS = 15000;
+/* FIX: เดิม fetch ไม่มี timeout — ถ้าเน็ตค้าง/สคริปต์ deploy มีปัญหา request จะแขวนไม่มีกำหนด
+   ทำให้ปุ่มที่ await อยู่ (เช่น "กำลังตรวจสอบ..." ตอน verify PIN) ค้างตลอดไปไม่มีข้อความ error ใดๆ
+   หมายเหตุ: เดิมเคยลองใช้ AbortController + signal ใส่ใน fetch options แต่พังในโฮสต์นี้ เพราะ fetch
+   ถูก proxy ผ่าน postMessage อยู่เบื้องหลัง และ AbortSignal เป็น object ที่ clone ผ่าน postMessage
+   ไม่ได้ (เจอ error "AbortSignal object could not be cloned") ทำให้ทุก request พังทันที
+   แก้ใหม่ด้วย Promise.race แทน — ตั้งเวลาแข่งกับ fetch ปกติโดยไม่ยุ่งกับ options ของ fetch เลย */
+async function prFetchWithTimeout(url, options){
+  let timer;
+  const timeoutPromise = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error('หมดเวลาเชื่อมต่อ (network timeout)')), PR_API_TIMEOUT_MS);
+  });
+  try{
+    return await Promise.race([fetch(url, options), timeoutPromise]);
+  }finally{
+    clearTimeout(timer);
+  }
+}
 async function prApiGet(action, params){
   params = params || {};
   const qs = new URLSearchParams(Object.assign({action}, params)).toString();
-  const res = await fetch(`${PAYROLL_API_URL}?${qs}`);
+  const res = await prFetchWithTimeout(`${PAYROLL_API_URL}?${qs}`);
   const json = await res.json();
   if(!json.success) throw new Error(json.error || 'API error');
   return json.data;
 }
 async function prApiPost(action, body){
-  const res = await fetch(PAYROLL_API_URL, {
+  const res = await prFetchWithTimeout(PAYROLL_API_URL, {
     method:'POST',
     body: JSON.stringify(Object.assign({action}, body))
   });
@@ -13541,6 +13632,16 @@ async function prSyncFromSheet(){
     prNextId = prUsers.length ? Math.max(...prUsers.map(u=>u.id))+1 : 1;
     prSave(); // อัปเดต cache
     prSyncStatus = 'online';
+
+    // FIX: prUsers ถูกแทนที่ด้วย array/object ใหม่ทั้งหมด — prSelected (ถ้ากำลังเปิดหน้ารายละเอียดอยู่)
+    // ยังชี้ไปที่ object เก่าที่หลุดออกจาก prUsers แล้ว ถ้าไม่ทำอะไรต่อ หน้าจอจะค้างแสดงข้อมูลเก่า
+    // ตลอดไปแม้จะกดแก้ไขสำเร็จ (เพราะการแก้ไขไปแก้ object ใหม่ใน prUsers แต่ prRefreshDetail
+    // ยัง render จาก prSelected ตัวเก่า) ต้องชี้ prSelected ไปที่ object ใหม่ตัวเดียวกันเสมอ
+    if (prSelected) {
+      const fresh = prUsers.find(u => u.id === prSelected.id);
+      prSelected = fresh || null;
+      if (!fresh) prBack(); // พนักงานคนนี้ถูกลบออกจาก Sheet ไปแล้ว → กลับไปหน้ารายชื่อ
+    }
   }catch(err){
     console.warn('[payroll] โหลดจาก Sheet ไม่สำเร็จ ใช้ข้อมูล cache แทน:', err.message||err);
     prSyncStatus = 'offline';
@@ -13861,6 +13962,7 @@ function prEnterDetail(id){
   document.getElementById('pr-ot-rate').value = prSelected.otRate || '';
   document.getElementById('pr-cutoff-day').value = prCutoffDayGlobal || '';
   prRefreshDetail();
+  setTimeout(prScrollToToday, 80);
 }
 
 function prBack(){
@@ -13924,6 +14026,8 @@ function prDateInRangeForMonth(dk, year, month, range) {
 function prRefreshDetail(){
   if(!prSelected) return;
   const u=prSelected;
+
+  prRenderTodayCard(u);
 
   // render month strip (แทน label เดิม)
   prRenderMonthStrip(u);
@@ -14012,22 +14116,28 @@ function prRenderCal(user){
 
 function prToggleDay(dk){
   if(!prSelected) return;
-  if(!prSelected.records[dk]) prSelected.records[dk]={work:0,ot:0,note:''};
-  prSelected.records[dk].work=(prSelected.records[dk].work||0)>0?0:1;
+  // FIX: หา object ล่าสุดจาก prUsers ด้วย id แทนการใช้ prSelected ตรงๆ (เผื่อ prSelected
+  // หลุดจาก prUsers ไปแล้วจากการ sync พื้นหลัง) แล้ว sync prSelected ให้ชี้ตัวเดียวกันเสมอ
+  const u = prUsers.find(x => x.id === prSelected.id);
+  if(!u) return;
+  prSelected = u;
+  if(!u.records[dk]) u.records[dk]={work:0,ot:0,note:''};
+  u.records[dk].work=(u.records[dk].work||0)>0?0:1;
   prSave(); prRefreshDetail();
-  prSyncAttendanceToSheet(prSelected.id, dk, prSelected.records[dk]);
+  prSyncAttendanceToSheet(u.id, dk, u.records[dk]);
 }
 
-/* sync record — debounce 800ms + serial queue ป้องกัน race condition
+/* sync record — debounce 300ms + serial queue ป้องกัน race condition
    FIX: กด Work แล้วกด OT ทันที → เดิมยิง 2 request พร้อมกัน → Sheet เขียนแถวซ้อน
-   ตอนนี้: รอ 800ms แล้วส่งครั้งเดียวพร้อมค่าล่าสุด, ถ้า request กำลังวิ่งอยู่ให้รอก่อน */
+   ตอนนี้: รอ 300ms แล้วส่งครั้งเดียวพร้อมค่าล่าสุด (คลิกซ้ำในช่วงนี้ยัง reset ตัวจับเวลาและ
+   รวมเป็น request เดียวเหมือนเดิม), ถ้า request กำลังวิ่งอยู่ให้รอก่อน */
 const _prSyncTimers  = {};
 const _prSyncRunning = {};
 const _prSyncPending = {};
 function prSyncAttendanceToSheet(userId, dk, record){
   const key = String(userId) + '|' + dk;
   if(_prSyncTimers[key]) clearTimeout(_prSyncTimers[key]);
-  _prSyncTimers[key] = setTimeout(() => { // FIX: ลดจาก 800ms → 300ms ป้องกันข้อมูลหายตอน refresh เร็ว
+  _prSyncTimers[key] = setTimeout(() => { // 300ms debounce — ป้องกันข้อมูลหายตอนปิด/รีเฟรชหน้าเร็วๆ หลังกด
     delete _prSyncTimers[key];
     const u = prUsers.find(u => u.id === userId);
     const latest = (u && u.records && u.records[dk])
@@ -14049,7 +14159,7 @@ function prSyncAttendanceToSheet(userId, dk, record){
             .catch(err => console.warn('[payroll] saveAttendanceRecord (pending) ไม่สำเร็จ:', err.message||err));
         }
       });
-  }, 800);
+  }, 300);
 }
 
 /* ── DAY TABLE ── */
@@ -14100,27 +14210,36 @@ function prRenderDayTable(user){
     const dayColor=isWknd?'#ef4444':isToday?'var(--accent)':'var(--text)';
     const dayNameColor=isWknd?'#ef4444':'var(--muted)';
     const adjBtn=(field,delta)=>`<button style="width:22px;height:22px;border-radius:5px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size: 0.997rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0" onclick="prAdj('${dk}','${field}',${delta},${user.id})">${delta>0?'+':'−'}</button>`;
+    // FIX/UX: เดิมค่า WD/OT เป็น <span> อ่านอย่างเดียว ต้องกด +/- ทีละ 1 ถ้ามี OT 5 ชม.ต้องกด 5 ครั้ง
+    // เปลี่ยนเป็น <input type=number> พิมพ์ค่าตรงๆ ได้เลย เร็วกว่ามาก โดยยังกด +/- ข้างๆ ได้เหมือนเดิม
+    const numInput=(field,value,activeColor)=>`<input type="number" inputmode="decimal" step="0.5" min="0"
+      value="${value||0}" onfocus="this.select()"
+      onchange="prSetField('${dk}','${field}',this.value,${user.id})"
+      onkeydown="if(event.key==='Enter'){this.blur()}"
+      class="pr-num-input"
+      style="width:38px;text-align:center;font-weight:700;font-size: 0.861rem;color:${(value||0)>0?activeColor:'var(--muted)'};background:transparent;border:1px solid transparent;border-radius:5px;padding:2px 0">`;
 
     const leftBorder=range?'border-left:3px solid rgba(245,158,11,0.4)':'border-left:3px solid transparent';
 
     // แสดงวันที่ พร้อม ชื่อเดือนย่อถ้าข้ามเดือน
     const dayLabel = (range && m !== prCalMonth) ? `<span style="font-size: 0.683rem;color:var(--muted)">${PR_MONTHS_TH[m].slice(0,3)}</span><br>${d}` : d;
+    const todayChip = isToday ? `<span style="display:inline-block;margin-left:4px;padding:0 5px;border-radius:8px;background:var(--accent);color:#000;font-size: 0.588rem;font-weight:700;vertical-align:middle">วันนี้</span>` : '';
 
-    rows+=`<tr style="${rowBg};${leftBorder};border-bottom:1px solid var(--border)">
+    rows+=`<tr data-today="${isToday?'1':'0'}" style="${rowBg};${leftBorder};border-bottom:1px solid var(--border)">
       <td style="padding:5px 6px;font-weight:${isToday?'700':'500'};color:${dayColor};font-size: 0.84rem;line-height:1.3;text-align:center">${dayLabel}</td>
-      <td style="padding:5px 6px;font-size: 0.756rem;color:${dayNameColor}">${PR_DAYS_FULL[dow]}</td>
+      <td style="padding:5px 6px;font-size: 0.756rem;color:${dayNameColor};white-space:nowrap">${PR_DAYS_FULL[dow]}${todayChip}</td>
       <td style="padding:4px 6px">
         <div style="display:flex;align-items:center;gap:4px;justify-content:center">
           ${adjBtn('work',-1)}
-          <span style="min-width:22px;text-align:center;font-weight:700;font-size: 0.861rem;color:${worked?'var(--accent)':'var(--muted)'}">${rec.work||0}</span>
+          ${numInput('work', rec.work, 'var(--accent)')}
           ${adjBtn('work',1)}
         </div>
       </td>
       <td style="padding:4px 6px">
         <div style="display:flex;align-items:center;gap:4px;justify-content:center">
-          ${adjBtn('ot',-1)}
-          <span style="min-width:22px;text-align:center;font-weight:700;font-size: 0.861rem;color:${hasOT?'#f59e0b':'var(--muted)'}">${rec.ot||0}</span>
-          ${adjBtn('ot',1)}
+          ${adjBtn('ot',-0.5)}
+          ${numInput('ot', rec.ot, '#f59e0b')}
+          ${adjBtn('ot',0.5)}
         </div>
       </td>
       <td style="padding:4px 8px">
@@ -14145,6 +14264,19 @@ function prAdj(dk,field,delta,userId){
   prSyncAttendanceToSheet(userId, dk, u.records[dk]);
 }
 
+/* UX: กรอกค่าตรงๆ ผ่าน <input type=number> แทนการกด +/- ทีละ 1 — เร็วกว่ามากเวลามี OT หลายชั่วโมง */
+function prSetField(dk,field,rawVal,userId){
+  const u=prUsers.find(u=>u.id===userId);
+  if(!u) return;
+  if(!u.records[dk]) u.records[dk]={work:0,ot:0,note:''};
+  let v=parseFloat(rawVal);
+  if(isNaN(v)||v<0) v=0;
+  v=Math.round(v*10)/10;
+  u.records[dk][field]=v;
+  prSave(); prRefreshDetail();
+  prSyncAttendanceToSheet(userId, dk, u.records[dk]);
+}
+
 function prSetNote(dk,val,userId){
   const u=prUsers.find(u=>u.id===userId);
   if(!u) return;
@@ -14152,6 +14284,106 @@ function prSetNote(dk,val,userId){
   u.records[dk].note=val;
   prSave();
   prSyncAttendanceToSheet(userId, dk, u.records[dk]);
+}
+
+/* ── QUICK TODAY CARD ──
+   บันทึกวันนี้แบบเร็ว โดยไม่ต้องเลื่อนหาแถวในตาราง ทำงานอิสระจากเดือน/ปีที่กำลังดูอยู่
+   (อ้างอิงวันที่ปัจจุบันจริงเสมอ ไม่ใช่เดือนที่เปิดค้างอยู่บนหน้าจอ) */
+function prTodayKey(){ const t=new Date(); return prDateKey(t.getFullYear(), t.getMonth(), t.getDate()); }
+
+function prRenderTodayCard(user){
+  const card=document.getElementById('pr-today-date-label');
+  if(!card) return;
+  const dk=prTodayKey();
+  const rec=prGetRec(user,dk);
+  const t=new Date();
+  card.textContent=`${PR_DAYS_FULL[t.getDay()]}ที่ ${t.getDate()} ${PR_MONTHS_TH[t.getMonth()]} ${t.getFullYear()+543}`;
+  const workVal=document.getElementById('pr-today-work-val');
+  if(workVal) workVal.textContent=rec.work||0;
+  const otVal=document.getElementById('pr-today-ot-val');
+  if(otVal) otVal.textContent=rec.ot||0;
+  const noteEl=document.getElementById('pr-today-note');
+  if(noteEl && document.activeElement!==noteEl) noteEl.value=rec.note||'';
+}
+function prTodayAdj(field,delta){
+  if(!prSelected) return;
+  prAdj(prTodayKey(), field, delta, prSelected.id);
+}
+function prTodaySetNote(val){
+  if(!prSelected) return;
+  prSetNote(prTodayKey(), val, prSelected.id);
+}
+function prCopyYesterday(){
+  if(!prSelected) return;
+  const y=new Date(); y.setDate(y.getDate()-1);
+  const yKey=prDateKey(y.getFullYear(), y.getMonth(), y.getDate());
+  const yRec=prGetRec(prSelected, yKey);
+  if(!((yRec.work||0)>0) && !((yRec.ot||0)>0)){
+    showToast('⚠️ เมื่อวานไม่มีข้อมูลให้คัดลอก','warn');
+    return;
+  }
+  const dk=prTodayKey();
+  prSetField(dk,'work', yRec.work||0, prSelected.id);
+  prSetField(dk,'ot', yRec.ot||0, prSelected.id);
+  if(yRec.note) prSetNote(dk, yRec.note, prSelected.id);
+  showToast('✅ คัดลอกข้อมูลเมื่อวานมาที่วันนี้แล้ว','success');
+}
+
+/* ── GO TO TODAY (สลับไปเดือนปัจจุบัน + เลื่อน/ไฮไลท์แถววันนี้ในตาราง) ── */
+function prGoToToday(){
+  const now=new Date();
+  prCalYear=now.getFullYear(); prCalMonth=now.getMonth();
+  prRefreshDetail();
+  setTimeout(prScrollToToday, 80); // รอให้ตาราง render เสร็จก่อนค่อยเลื่อน
+}
+function prScrollToToday(){
+  const el=document.querySelector('#pr-day-tbody tr[data-today="1"]');
+  if(el) el.scrollIntoView({block:'center', behavior:'smooth'});
+}
+
+/* ── FILL WORKDAYS (เติม WD=1 ให้วันจ-ส ที่ยังว่างในรอบปัจจุบัน โดยไม่แตะวันที่กรอกไว้แล้ว) ── */
+let prFillPendingDates=null;
+function prOpenFillWorkdays(){
+  if(!prSelected) return;
+  const range=prGetCutoffRange(prCalYear, prCalMonth);
+  const today=new Date(); today.setHours(0,0,0,0);
+  let iterStart, iterEnd;
+  if(range){ iterStart=new Date(range.startDate); iterEnd=new Date(range.endDate); }
+  else { iterStart=new Date(prCalYear, prCalMonth, 1); iterEnd=new Date(prCalYear, prCalMonth+1, 0); }
+  const effectiveEnd = iterEnd < today ? iterEnd : today; // ไม่เติมวันในอนาคต
+  const toFill=[];
+  for(let d=new Date(iterStart); d<=effectiveEnd; d.setDate(d.getDate()+1)){
+    if(d.getDay()===0) continue; // ข้ามวันอาทิตย์
+    const dk=prDateKey(d.getFullYear(), d.getMonth(), d.getDate());
+    const rec=prGetRec(prSelected, dk);
+    if(!((rec.work||0)>0)) toFill.push(dk);
+  }
+  if(!toFill.length){
+    showToast('✅ วันทำงานในรอบนี้ถูกกรอกครบแล้ว','success');
+    return;
+  }
+  prFillPendingDates=toFill;
+  const msgEl=document.getElementById('pr-fill-msg');
+  if(msgEl) msgEl.innerHTML=`เติม <strong style="color:var(--accent)">${toFill.length} วัน</strong> ที่ยังไม่ได้กรอก เป็น <strong>มาทำงาน 1 วัน</strong><br><span style="color:var(--muted);font-size:0.8em">(ไม่นับวันอาทิตย์ และไม่แตะวันที่กรอกไว้แล้ว)</span>`;
+  document.getElementById('pr-fill-modal').style.display='flex';
+}
+function prCancelFillWorkdays(){
+  prFillPendingDates=null;
+  document.getElementById('pr-fill-modal').style.display='none';
+}
+function prConfirmFillWorkdays(){
+  if(!prSelected || !prFillPendingDates){ prCancelFillWorkdays(); return; }
+  const userId=prSelected.id;
+  const dates=prFillPendingDates;
+  dates.forEach(dk=>{
+    if(!prSelected.records[dk]) prSelected.records[dk]={work:0,ot:0,note:''};
+    prSelected.records[dk].work=1;
+  });
+  prSave(); prRefreshDetail();
+  document.getElementById('pr-fill-modal').style.display='none';
+  showResultModal(`เติมวันทำงานให้แล้ว ${dates.length} วัน`, 'success');
+  dates.forEach(dk=>prSyncAttendanceToSheet(userId, dk, prSelected.records[dk]));
+  prFillPendingDates=null;
 }
 
 /* ── ADD / EDIT / DELETE ── */
