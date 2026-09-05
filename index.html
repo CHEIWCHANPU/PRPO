@@ -4688,6 +4688,1032 @@ body {
 /* ---- breathing room ---- */
 main { padding: 1.6rem 1.75rem !important; }
 .briefing-panel, .chart-card, .table-wrap, .exec-panel { border-radius: var(--r-lg) !important; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ENTERPRISE PREMIUM — FINAL DESIGN LAYER  (v4.0)
+   ระบบดีไซน์ชั้นสุดท้าย: สะอาด คมชัด พรีเมียม สำหรับใช้งานจริงทั้งวัน
+   แนวทาง Linear / Vercel / Stripe — เน้นลำดับชั้นข้อมูล ไม่ใช่เอฟเฟกต์
+   • ปรับเฉพาะ CSS — ไม่แตะโครงสร้าง HTML หรือ JS เดิม
+   • ตัวแปรสีทั้งหมดยังใช้ชื่อเดิม (ตัวเลือกสี accent ยังทำงานปกติ)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ───────────────────────── 1. DESIGN TOKENS ───────────────────────── */
+
+:root {
+  /* motion */
+  --e-fast: 140ms cubic-bezier(0.32, 0.72, 0, 1);
+  --e-base: 200ms cubic-bezier(0.32, 0.72, 0, 1);
+  --e-slow: 320ms cubic-bezier(0.32, 0.72, 0, 1);
+
+  /* spacing rhythm */
+  --gap-xs: 0.4rem;
+  --gap-sm: 0.7rem;
+  --gap-md: 1rem;
+  --gap-lg: 1.5rem;
+
+  /* unified radius — flatter, more precise than before */
+  --r-xs: 6px;
+  --r-sm: 8px;
+  --r-md: 10px;
+  --r-lg: 12px;
+  --r-xl: 16px;
+  --r-pill: 999px;
+}
+
+/* ── DARK: graphite-navy, neutral and quiet; text contrast raised ── */
+:root,
+body.dark-theme,
+body.dark-theme:not(.light-theme) {
+  --bg:        #0A0C11;
+  --sidebar:   #0C0F15;
+  --surface:   #12151C;
+  --surface2:  #171B24;
+  --border:    #232833;
+  --border2:   rgba(255,255,255,0.06);
+  --text:      #E8EBF1;
+  --muted:     #8A93A6;
+  --chart-text:#8A93A6;
+
+  --success: #34D399;
+  --warn:    #FBBF24;
+  --danger:  #F87171;
+
+  --glow-accent: rgba(79,123,247,0.10);
+  --glow-danger: rgba(248,113,113,0.10);
+  --glow-warn:   rgba(251,191,36,0.10);
+
+  --mt-stripe-even: rgba(255,255,255,0.014);
+  --mt-month-border: rgba(255,255,255,0.07);
+
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.30);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.28), 0 4px 12px -4px rgba(0,0,0,0.40);
+  --shadow-md: 0 2px 4px rgba(0,0,0,0.30), 0 12px 28px -10px rgba(0,0,0,0.55);
+  --shadow-lg: 0 4px 10px rgba(0,0,0,0.32), 0 28px 60px -20px rgba(0,0,0,0.65);
+  --shadow-inset-hl: inset 0 1px 0 rgba(255,255,255,0.035);
+  --text-shadow-sm: none;
+  --text-shadow-md: none;
+
+  --hairline: rgba(255,255,255,0.075);
+  --hover-tint: rgba(255,255,255,0.035);
+  --active-tint: rgba(255,255,255,0.055);
+}
+
+/* ── LIGHT: cool near-white, crisp hairlines, high legibility ── */
+body.light-theme,
+.light-theme {
+  --bg:        #F6F7F9;
+  --sidebar:   #FFFFFF;
+  --surface:   #FFFFFF;
+  --surface2:  #F1F3F7;
+  --border:    #E2E6ED;
+  --border2:   #E9ECF2;
+  --text:      #0F172A;
+  --muted:     #5A6478;
+  --chart-text:#5A6478;
+
+  --success: #0E9F6E;
+  --warn:    #B45309;
+  --danger:  #DC2626;
+
+  --glow-accent: rgba(44,90,232,0.07);
+  --glow-danger: rgba(220,38,38,0.06);
+  --glow-warn:   rgba(180,83,9,0.06);
+
+  --mt-stripe-even: rgba(15,23,42,0.016);
+  --mt-month-border: #E2E6ED;
+
+  --shadow-xs: 0 1px 2px rgba(15,23,42,0.05);
+  --shadow-sm: 0 1px 2px rgba(15,23,42,0.05), 0 4px 12px -4px rgba(15,23,42,0.07);
+  --shadow-md: 0 2px 4px rgba(15,23,42,0.05), 0 12px 28px -10px rgba(15,23,42,0.10);
+  --shadow-lg: 0 4px 10px rgba(15,23,42,0.06), 0 28px 60px -20px rgba(15,23,42,0.14);
+  --shadow-inset-hl: none;
+  --text-shadow-sm: none;
+  --text-shadow-md: none;
+
+  --hairline: #E2E6ED;
+  --hover-tint: rgba(15,23,42,0.035);
+  --active-tint: rgba(15,23,42,0.055);
+}
+
+/* accent defaults — ไม่ใช้ !important เพื่อให้ตัวเลือกสี (inline style) ยังทับได้ */
+:root { --accent: #4F7BF7; --accent2: #7C5CFF; }
+body.light-theme { --accent: #2C5AE8; --accent2: #6D4DF2; }
+
+/* the permanent dark navigation rail */
+:root {
+  --rail-bg:          #0B0E15;
+  --rail-bg-soft:     transparent;
+  --rail-border:      rgba(255,255,255,0.06);
+  --rail-text:        #D3D8E6;
+  --rail-text-dim:    #79839C;
+  --rail-active-bg:   rgba(255,255,255,0.07);
+  --rail-active-text: #FFFFFF;
+  --rail-icon-bg:     rgba(255,255,255,0.06);
+}
+
+/* ───────────────── 2. RESET ACCUMULATED VISUAL NOISE ───────────────── */
+/* ระบบองค์กรต้องอ่านง่ายตลอดวัน — ตัดพื้นหลังลาย grid, แสงเคลื่อนไหว,
+   ตัวเลข gradient, และเงาเรืองแสงที่รบกวนสายตาออก                      */
+
+html body::before { content: none !important; display: none !important; }
+html body::after {
+  content: '' !important; display: block !important;
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  animation: none !important;
+  background:
+    radial-gradient(900px 380px at 18% -12%, var(--glow-accent), transparent 70%) !important;
+  opacity: 1;
+}
+
+/* ตัวเลขและหัวข้อกลับมาเป็นสีทึบ อ่านชัด ไม่ใช่ gradient */
+html .stat-value,
+html .exec-hero-title,
+html .stat-card.total .stat-value,
+html .exec-health-value,
+html .mt-kpi-val,
+html .cer-stat-value,
+html .lb-rank-cell,
+html .streak-flame-num,
+html .podium-rate,
+html .cmdk-data-badge {
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+/* โลโก้หยุดเต้น, ปุ่มหยุดวิ่งแสง — นิ่งและเป็นมืออาชีพ */
+html .logo-icon { animation: none !important; }
+html .btn-primary::after { display: none !important; }
+html .sidebar-logo::after { background: var(--rail-border) !important; }
+
+/* scrollbar: บางและเงียบ */
+html ::-webkit-scrollbar { width: 10px; height: 10px; }
+html ::-webkit-scrollbar-track { background: transparent !important; }
+html ::-webkit-scrollbar-thumb {
+  background: var(--hairline) !important;
+  border: 3px solid transparent; background-clip: content-box !important;
+  border-radius: 999px;
+}
+html ::-webkit-scrollbar-thumb:hover { background: var(--muted) !important; background-clip: content-box !important; }
+* { scrollbar-width: thin; scrollbar-color: var(--hairline) transparent; }
+
+/* ─────────────────────── 3. TYPOGRAPHY SYSTEM ─────────────────────── */
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-variant-ligatures: common-ligatures;
+}
+body { letter-spacing: -0.003em; }
+
+/* ตัวเลขทุกจุดที่เป็นข้อมูล ใช้ตัวเลขความกว้างเท่ากัน — คอลัมน์ตรงกันเป๊ะ */
+html body,
+html table, html td, html th, html input, html select,
+html .stat-value, html .kpi-value, html .exec-kpi-value, html .mt-kpi-val,
+html .cer-stat-value, html .summary-hero-value, html .dash-mini-value,
+html .wp-kpi-value, html .briefing-stat-value, html .gantt-kpi-val,
+html .days-left, html .badge, html .qty-progress-text, html .stat-meta {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+/* หัวข้อ: แน่น คม มีน้ำหนัก */
+html .page-header, html .section-title, html .topbar-title,
+html .modal-title, html .exec-hero-title, html .detail-name {
+  font-family: var(--font-display) !important;
+  letter-spacing: -0.02em !important;
+  font-weight: 700 !important;
+}
+html .topbar-title { font-size: 0.94rem !important; }
+html .page-header, html .section-title { font-size: 1.08rem !important; }
+
+/* ป้ายกำกับเล็ก: uppercase ระยะห่างสม่ำเสมอทั้งระบบ */
+html .stat-label, html .chart-title, html .kpi-label, html .exec-kpi-label,
+html .cer-stat-label, html .mt-kpi-label, html .wp-kpi-label,
+html .form-label, html .section-divider-label, html .summary-hero-label,
+html .briefing-stat-label, html thead th, html .nav-section-divider {
+  font-size: 0.655rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.085em !important;
+  text-transform: uppercase !important;
+  color: var(--muted) !important;
+}
+
+/* ตัวเลขหลัก: ใช้ฟอนต์ display ไม่ใช่ mono — ดูเป็นแดชบอร์ดผู้บริหาร */
+html .stat-value, html .exec-kpi-value, html .summary-hero-value,
+html .mt-kpi-val, html .cer-stat-value, html .dash-mini-value, html .wp-kpi-value {
+  font-family: var(--font-display) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.035em !important;
+  line-height: 1.02 !important;
+}
+html .stat-value { font-size: 2.05rem !important; }
+
+/* ────────────────────── 4. LAYOUT & SURFACES ────────────────────── */
+
+html main { padding: 1.5rem 1.75rem 2.5rem !important; }
+@media (max-width: 900px) { html main { padding: 1rem 0.9rem 5.5rem !important; } }
+
+/* พื้นผิวมาตรฐาน: hairline + เงาบางมาก — เรียบ ชัด ไม่ฟุ้ง */
+html .stat-card, html .kpi-card, html .exec-kpi-card, html .chart-card,
+html .cer-stat-card, html .mt-kpi-card, html .mt-detail-card, html .wp-kpi-card,
+html .gantt-kpi, html .table-wrap, html .briefing-panel, html .exec-panel,
+html .orgchart-panel, html .instruction-card, html .supplier-card,
+html .progress-section, html .bc-panel, html .summary-hero-card,
+html .dash-mini-card, html .streak-flame-card {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-lg) !important;
+  box-shadow: var(--shadow-xs) !important;
+  transition: border-color var(--e-base), box-shadow var(--e-base), transform var(--e-base) !important;
+}
+
+html .stat-card:hover, html .kpi-card:hover, html .exec-kpi-card:hover,
+html .chart-card:hover, html .cer-stat-card:hover, html .mt-kpi-card:hover,
+html .wp-kpi-card:hover, html .gantt-kpi:hover, html .supplier-card:hover,
+html .instruction-card:hover, html .dash-mini-card:hover, html .summary-hero-card:hover {
+  transform: none !important;
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--border)) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+/* แถบสีสถานะบนการ์ด: เหลือเป็นเส้นบอกใบ้บาง ๆ ไม่ใช่กรอบสีฉูดฉาด */
+html .stat-card::before, html .cer-stat-card::before,
+html .summary-hero-card::before {
+  height: 2px !important; opacity: 0.9 !important;
+  border-radius: var(--r-lg) var(--r-lg) 0 0 !important;
+}
+
+html .stat-grid, html .kpi-row, html .cer-stat-grid, html .exec-kpi-grid,
+html .summary-hero-grid, html .dash-mini-grid, html .mt-kpi-bar, html .wp-kpi-banner {
+  gap: 0.85rem !important;
+}
+
+/* ────────────────────── 5. NAVIGATION RAIL ────────────────────── */
+
+html .sidebar {
+  background: var(--rail-bg) !important;
+  border-right: 1px solid var(--rail-border) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+html .sidebar::after { display: none !important; }
+
+html .sidebar-logo {
+  background: transparent !important;
+  border-bottom: 1px solid var(--rail-border) !important;
+  min-height: 60px !important;
+}
+html .logo-icon {
+  border-radius: 9px !important;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.08) inset !important;
+}
+html .logo-title { color: #FFFFFF !important; font-weight: 700 !important; letter-spacing: -0.015em !important; }
+html .logo-sub { color: var(--rail-text-dim) !important; letter-spacing: 0.06em !important; }
+
+/* กลุ่มเมนู: ตัดกรอบกล่องออก ใช้หัวข้อ + รายการแบน อ่านเร็วกว่าเดิมมาก */
+html .nav-group, html .nav-group-plain {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  margin-bottom: 0.15rem !important;
+}
+html .nav-group:hover { border: 0 !important; box-shadow: none !important; }
+html .nav-label {
+  color: var(--rail-text-dim) !important;
+  border-bottom: 0 !important;
+  background: transparent !important;
+  font-size: 0.7rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.05em !important;
+  padding: 0.5rem 0.6rem !important;
+  border-radius: var(--r-sm) !important;
+  transition: color var(--e-fast), background var(--e-fast) !important;
+}
+html .nav-label:hover { background: var(--rail-active-bg) !important; color: var(--rail-text) !important; }
+html .nav-label-icon {
+  background: transparent !important;
+  color: var(--rail-text-dim) !important;
+  box-shadow: none !important;
+}
+html .nav-group-items { padding-bottom: 0.2rem !important; }
+
+html .nav-item {
+  position: relative !important;
+  border: 0 !important;
+  border-radius: var(--r-sm) !important;
+  padding: 0.48rem 0.6rem !important;
+  gap: 0.6rem !important;
+  font-size: 0.795rem !important;
+  font-weight: 500 !important;
+  color: var(--rail-text-dim) !important;
+  background: transparent !important;
+  transition: color var(--e-fast), background var(--e-fast) !important;
+  margin-bottom: 1px !important;
+}
+html .nav-item:hover {
+  background: var(--rail-active-bg) !important;
+  color: var(--rail-text) !important;
+  transform: none !important;
+}
+html .nav-item.active {
+  background: var(--rail-active-bg) !important;
+  color: var(--rail-active-text) !important;
+  font-weight: 600 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+/* ตัวชี้ตำแหน่ง: เส้นสีแบรนด์ด้านซ้าย — สัญญาณชัดโดยไม่เพิ่มสีพื้น */
+html .nav-item.active::before {
+  content: '' !important; display: block !important;
+  position: absolute; left: -0.55rem; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 16px; border-radius: 0 3px 3px 0;
+  background: var(--accent) !important;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+html .sidebar.collapsed .nav-item.active::before { left: -0.35rem !important; }
+html .nav-icon { color: inherit !important; }
+html .nav-item.active .nav-icon, html .nav-item.active .nav-icon svg { color: var(--accent) !important; }
+
+html .nav-badge, html .nav-label-badge {
+  background: rgba(255,255,255,0.08) !important;
+  color: var(--rail-text) !important;
+  border: 0 !important; box-shadow: none !important;
+  font-variant-numeric: tabular-nums;
+}
+
+html .nav-section-divider { color: var(--rail-text-dim) !important; opacity: 0.75; }
+html .nav-section-divider::after { background: var(--rail-border) !important; }
+
+html .sidebar-footer { border-top: 1px solid var(--rail-border) !important; }
+html .collapse-btn, html .logout-btn {
+  background: transparent !important;
+  border: 1px solid var(--rail-border) !important;
+  color: var(--rail-text-dim) !important;
+  border-radius: var(--r-sm) !important;
+  transition: all var(--e-fast) !important;
+}
+html .collapse-btn:hover { background: var(--rail-active-bg) !important; color: #fff !important; border-color: rgba(255,255,255,0.14) !important; }
+html .logout-btn:hover {
+  background: rgba(248,113,113,0.10) !important;
+  border-color: rgba(248,113,113,0.28) !important;
+  color: #FCA5A5 !important;
+}
+
+/* ───────────────────────── 6. TOPBAR ───────────────────────── */
+
+html .topbar {
+  height: 58px !important;
+  min-height: 58px !important;
+  background: color-mix(in srgb, var(--bg) 78%, transparent) !important;
+  border-bottom: 1px solid var(--border) !important;
+  box-shadow: none !important;
+  backdrop-filter: saturate(180%) blur(18px) !important;
+  -webkit-backdrop-filter: saturate(180%) blur(18px) !important;
+  padding: 0 1.5rem !important;
+}
+html .topbar-divider { background: var(--border) !important; }
+html .topbar-sub { color: var(--muted) !important; }
+
+html .topbar-chip, html .theme-pill, html .sync-pill, html .mute-pill, html .account-pill {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-sm) !important;
+  box-shadow: none !important;
+  font-size: 0.72rem !important;
+  transition: border-color var(--e-fast), background var(--e-fast) !important;
+}
+html .topbar-chip:hover, html .theme-pill:hover, html .sync-pill:hover,
+html .mute-pill:hover, html .account-pill:hover {
+  background: var(--surface2) !important;
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border)) !important;
+  transform: none !important;
+}
+html .icon-action {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--r-sm) !important;
+  color: var(--muted) !important;
+  transition: all var(--e-fast) !important;
+}
+html .icon-action:hover {
+  background: var(--surface2) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+  transform: none !important;
+}
+
+/* ─────────────────── 7. BUTTONS & CONTROLS ─────────────────── */
+
+html .btn {
+  border-radius: var(--r-sm) !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.005em !important;
+  padding: 0.5rem 0.95rem !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+  transition: background var(--e-fast), border-color var(--e-fast), color var(--e-fast), box-shadow var(--e-fast) !important;
+}
+html .btn-primary {
+  background: var(--accent) !important;
+  background-image: none !important;
+  color: #fff !important;
+  border-color: color-mix(in srgb, #000 12%, var(--accent)) !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.12) !important;
+}
+html .btn-primary:hover {
+  background: color-mix(in srgb, #fff 10%, var(--accent)) !important;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 32%, transparent) !important;
+  transform: none !important;
+}
+html .btn-primary:active { background: color-mix(in srgb, #000 8%, var(--accent)) !important; transform: translateY(0.5px) !important; }
+
+html .btn-secondary, html .btn-ghost {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+html .btn-secondary:hover, html .btn-ghost:hover {
+  background: var(--surface2) !important;
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--border)) !important;
+  transform: none !important;
+}
+html .btn-danger { background: var(--danger) !important; color: #fff !important; border-color: transparent !important; }
+html .btn-danger:hover { background: color-mix(in srgb, #fff 10%, var(--danger)) !important; transform: none !important; }
+
+/* วงแหวนโฟกัสมาตรฐานเดียวทั้งระบบ — เข้าถึงได้และดูตั้งใจออกแบบ */
+html button:focus-visible, html input:focus-visible, html select:focus-visible,
+html textarea:focus-visible, html [tabindex]:focus-visible {
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 2px !important;
+  box-shadow: none !important;
+}
+
+/* ─────────────────── 8. INPUTS & FILTERS ─────────────────── */
+
+html .form-input, html .search-box input, html .filter-select, html .perpage-select,
+html .ms-toggle, html .wp-form-input, html .comment-name-input, html .comment-textarea,
+html .mt-field-row input, html .mt-field-row select, html .sc-name, html .sc-textarea,
+html .bc-name, html .bc-ta, html .bc-sel, html .gantt-controls select,
+html .gantt-controls input[type=month] {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-sm) !important;
+  color: var(--text) !important;
+  font-family: var(--font) !important;
+  font-size: 0.83rem !important;
+  transition: border-color var(--e-fast), box-shadow var(--e-fast), background var(--e-fast) !important;
+  box-shadow: none !important;
+}
+html .form-input:focus, html .search-box input:focus, html .filter-select:focus,
+html .perpage-select:focus, html .wp-form-input:focus, html .comment-textarea:focus,
+html .mt-field-row input:focus, html .mt-field-row select:focus,
+html .sc-name:focus, html .sc-textarea:focus, html .bc-name:focus, html .bc-ta:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent) !important;
+  outline: none !important;
+}
+html .form-input::placeholder, html .search-box input::placeholder { color: var(--muted) !important; opacity: 0.75; }
+html .search-icon { color: var(--muted) !important; }
+html .toolbar { gap: 0.5rem !important; margin-bottom: 0.9rem !important; }
+
+/* ───────────────────────── 9. DATA TABLES ─────────────────────────
+   หัวใจของระบบองค์กร: อ่านเร็ว สแกนง่าย หัวตารางติดขอบบน           */
+
+html .table-wrap {
+  overflow: hidden !important;
+  box-shadow: var(--shadow-xs) !important;
+  padding-right: 0 !important;
+}
+html .table-wrap::before { display: none !important; }
+html .table-wrap table { border-collapse: separate !important; border-spacing: 0 !important; }
+
+html thead th {
+  position: sticky !important; top: 0 !important; z-index: 5 !important;
+  background: var(--surface2) !important;
+  padding: 0.62rem 0.85rem !important;
+  border-bottom: 1px solid var(--border) !important;
+  box-shadow: none !important;
+  white-space: nowrap !important;
+}
+html thead th:hover { color: var(--text) !important; background: var(--surface2) !important; }
+
+html tbody tr {
+  border-bottom: 1px solid var(--border2) !important;
+  transition: background var(--e-fast) !important;
+}
+html tbody tr:nth-child(even) { background: transparent !important; }
+html tbody tr:nth-child(5n) { background: transparent !important; }
+html tbody tr:hover { background: var(--hover-tint) !important; box-shadow: none !important; }
+html tbody tr:last-child { border-bottom: 0 !important; }
+html tbody td { padding: 0.62rem 0.85rem !important; font-size: 0.82rem !important; }
+
+html .part-no, html .no-num { font-family: var(--mono) !important; font-size: 0.76rem !important; letter-spacing: -0.01em !important; }
+html .part-name { font-weight: 500 !important; }
+
+/* แถบสถานะแถว: เส้นซ้ายบาง แทนพื้นสีทั้งแถว */
+html tbody tr.row-urgent, html tbody tr.row-urgent:nth-child(even) {
+  background: color-mix(in srgb, var(--danger) 7%, transparent) !important;
+  box-shadow: inset 2px 0 0 var(--danger) !important;
+}
+html tbody tr.row-warn, html tbody tr.row-warn:nth-child(even) {
+  background: color-mix(in srgb, var(--warn) 7%, transparent) !important;
+  box-shadow: inset 2px 0 0 var(--warn) !important;
+}
+html tbody tr.row-done { box-shadow: inset 2px 0 0 color-mix(in srgb, var(--success) 55%, transparent) !important; }
+html tbody tr.row-urgent:hover, html tbody tr.row-warn:hover, html tbody tr.row-done:hover {
+  filter: brightness(1.03);
+}
+
+html .table-footer { border-top: 1px solid var(--border) !important; background: var(--surface) !important; }
+html .page-btn {
+  border-radius: var(--r-xs) !important;
+  border: 1px solid var(--border) !important;
+  background: var(--surface) !important;
+  color: var(--muted) !important;
+  transition: all var(--e-fast) !important;
+  font-variant-numeric: tabular-nums;
+}
+html .page-btn:hover:not(:disabled) { background: var(--surface2) !important; color: var(--text) !important; border-color: var(--accent) !important; }
+html .page-btn.active { background: var(--accent) !important; border-color: var(--accent) !important; color: #fff !important; }
+
+/* ─────────────────── 10. BADGES & STATUS ─────────────────── */
+
+html .badge, html .location-chip, html .log-badge, html .wp-type-badge,
+html .wp-status-badge, html .mt-status-pill, html .comment-tag, html .sc-tag,
+html .bc-tag, html .raci-tag, html .briefing-tag, html .notif-chip {
+  border-radius: var(--r-xs) !important;
+  box-shadow: none !important;
+  font-size: 0.685rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.005em !important;
+  padding: 0.16rem 0.5rem !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+}
+html .badge-done      { background: color-mix(in srgb, var(--success) 12%, transparent) !important; color: var(--success) !important; border-color: color-mix(in srgb, var(--success) 30%, transparent) !important; }
+html .badge-progress  { background: color-mix(in srgb, var(--accent) 12%, transparent) !important;  color: var(--accent) !important;  border-color: color-mix(in srgb, var(--accent) 30%, transparent) !important; }
+html .badge-incomplete{ background: color-mix(in srgb, var(--warn) 12%, transparent) !important;    color: var(--warn) !important;    border-color: color-mix(in srgb, var(--warn) 30%, transparent) !important; }
+html tbody tr:hover .badge-done,
+html tbody tr:hover .badge-progress,
+html tbody tr:hover .badge-incomplete { transform: none !important; box-shadow: none !important; }
+
+html .days-left { font-variant-numeric: tabular-nums; font-weight: 600 !important; }
+html .days-urgent { color: var(--danger) !important; }
+html .days-warn   { color: var(--warn) !important; }
+html .days-ok     { color: var(--muted) !important; }
+html .days-done   { color: var(--success) !important; }
+
+/* แถบความคืบหน้า: บาง คม สีเดียวกับระบบ */
+html .progress-bar-wrap, html .qty-progress-track, html .maker-bar,
+html .mt-row-progress, html .lt-bar-wrap {
+  background: var(--surface2) !important;
+  border-radius: 999px !important;
+  overflow: hidden !important;
+}
+html .progress-bar, html .qty-progress-fill, html .maker-fill, html .mt-row-progress-fill {
+  border-radius: 999px !important;
+  box-shadow: none !important;
+  transition: width var(--e-slow) !important;
+}
+
+/* ─────────────── 11. MODALS, PANELS & OVERLAYS ─────────────── */
+
+html .modal-overlay, html .wp-modal-overlay, html .result-modal-overlay, html .detail-overlay {
+  background: color-mix(in srgb, #05070C 62%, transparent) !important;
+  backdrop-filter: blur(6px) saturate(120%) !important;
+  -webkit-backdrop-filter: blur(6px) saturate(120%) !important;
+}
+html .modal, html .wp-modal, html .result-modal-box, html .detail-panel,
+html .notif-panel, html .cmdk-box, html .tour-card, html .account-popover,
+html .accent-popover, html .ms-panel, html .mobile-drawer {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-xl) !important;
+  box-shadow: var(--shadow-lg) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+html .ms-panel, html .accent-popover { border-radius: var(--r-md) !important; box-shadow: var(--shadow-md) !important; }
+html .modal-header, html .wp-modal-header, html .modal-head {
+  border-bottom: 1px solid var(--border) !important;
+  background: transparent !important;
+}
+html .modal-footer, html .wp-modal-foot, html .modal-foot {
+  border-top: 1px solid var(--border) !important;
+  background: var(--surface2) !important;
+}
+html .modal-close, html .wp-modal-close, html .detail-close-btn {
+  border-radius: var(--r-sm) !important;
+  transition: all var(--e-fast) !important;
+}
+html .modal-close:hover, html .wp-modal-close:hover, html .detail-close-btn:hover {
+  background: var(--surface2) !important; color: var(--danger) !important;
+}
+
+html .toast {
+  border-radius: var(--r-md) !important;
+  border: 1px solid var(--border) !important;
+  background: var(--surface) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+/* ─────────────── 12. CHARTS & VISUAL PANELS ─────────────── */
+
+html .chart-card { padding: 1.05rem 1.1rem !important; }
+html .chart-card::before { display: none !important; }
+html .chart-header { margin-bottom: 0.8rem !important; }
+html .exec-hero {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-xl) !important;
+  box-shadow: var(--shadow-xs) !important;
+  padding: 1.6rem 1.8rem !important;
+}
+html .exec-hero::before {
+  background: radial-gradient(600px 240px at 12% 0%, var(--glow-accent), transparent 72%) !important;
+  opacity: 1 !important;
+}
+html .exec-hero-title { color: var(--text) !important; }
+
+/* ─────────────── 13. MOTION & FINAL DETAILS ─────────────── */
+
+html .page { animation: pageEnter 180ms cubic-bezier(0.32,0.72,0,1) !important; }
+@keyframes pageEnter { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+html ::selection { background: color-mix(in srgb, var(--accent) 32%, transparent); color: var(--text); }
+
+html .section-divider-line { background: var(--border) !important; }
+html .empty-icon { opacity: 0.4 !important; }
+html .spinner { border-color: var(--border) !important; }
+
+/* มือถือ: แถบล่างและลิ้นชักให้เข้าชุดกัน */
+html .bottom-nav {
+  background: color-mix(in srgb, var(--surface) 88%, transparent) !important;
+  border-top: 1px solid var(--border) !important;
+  backdrop-filter: saturate(180%) blur(18px) !important;
+  -webkit-backdrop-filter: saturate(180%) blur(18px) !important;
+}
+html .bn-item.active { color: var(--accent) !important; }
+html .mobile-fab {
+  background: var(--accent) !important;
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--accent) 38%, transparent) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html *:not(.logo-marquee-track), html *:not(.logo-marquee-track)::before, html *:not(.logo-marquee-track)::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* โลโก้แถบข้อความวิ่ง: เป็นองค์ประกอบแบรนด์ถาวร ไม่ใช่ลูกเล่นตกแต่ง
+   จึงให้ขยับต่อเนื่องเสมอ ไม่ผูกกับการตั้งค่า "ลดการเคลื่อนไหว" ── */
+html .logo-marquee-track {
+  animation-duration: 9s !important;
+  animation-iteration-count: infinite !important;
+}
+
+/* ปรับความสูงพื้นที่เนื้อหาให้พอดีกับ topbar 58px */
+html main { height: calc(100vh - 58px) !important; }
+@media (max-width: 900px) { html main { height: auto !important; min-height: calc(100vh - 58px) !important; } }
+
+
+/* ─────────────── 14. CORRECTIONS & FINE-TUNING ─────────────── */
+
+/* ตัวเลขที่เคยถูกทำเป็น gradient (color:transparent) ต้องคืนสีจริง */
+html .stat-card.total .stat-value { color: var(--accent2) !important; -webkit-text-fill-color: var(--accent2) !important; }
+html .exec-health-value          { color: var(--text) !important;    -webkit-text-fill-color: var(--text) !important; }
+html .stat-card.done .stat-value       { color: var(--success) !important; -webkit-text-fill-color: var(--success) !important; }
+html .stat-card.progress .stat-value   { color: var(--accent) !important;  -webkit-text-fill-color: var(--accent) !important; }
+html .stat-card.incomplete .stat-value { color: var(--warn) !important;    -webkit-text-fill-color: var(--warn) !important; }
+html .exec-hero-title { color: var(--text) !important; -webkit-text-fill-color: var(--text) !important; }
+html .lb-rank-cell, html .streak-flame-num, html .podium-rate { -webkit-text-fill-color: currentColor !important; }
+
+/* ความสูงคอนโทรลเท่ากันทั้งแถบเครื่องมือ — รายละเอียดที่ทำให้ดูเนี้ยบ */
+html .search-box input, html .filter-select, html .perpage-select,
+html .ms-toggle, html .toolbar .btn, html .view-toggle button, html .form-input {
+  height: 34px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  line-height: 32px !important;
+}
+html textarea.form-input, html .comment-textarea, html .sc-textarea, html .bc-ta {
+  height: auto !important; line-height: 1.5 !important; padding: 0.55rem 0.8rem !important;
+}
+html .search-box input { padding-left: 2.1rem !important; }
+html .filter-select, html .perpage-select {
+  -webkit-appearance: none; appearance: none;
+  padding-right: 1.9rem !important;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+                    linear-gradient(135deg, var(--muted) 50%, transparent 50%) !important;
+  background-position: calc(100% - 15px) 50%, calc(100% - 10px) 50% !important;
+  background-size: 5px 5px, 5px 5px !important;
+  background-repeat: no-repeat !important;
+}
+html .view-toggle { border: 1px solid var(--border) !important; border-radius: var(--r-sm) !important; overflow: hidden; padding: 0 !important; background: var(--surface) !important; }
+html .view-toggle button { border: 0 !important; border-radius: 0 !important; background: transparent !important; }
+html .view-toggle button.active { background: var(--accent) !important; color: #fff !important; }
+
+/* การ์ดสถิติ: กระชับขึ้น ลดพื้นที่ว่าง */
+html .stat-card { padding: 0.95rem 1.05rem !important; }
+html .stat-top { margin-bottom: 0.35rem !important; }
+html .stat-icon-wrap {
+  width: 30px !important; height: 30px !important;
+  border-radius: var(--r-sm) !important; box-shadow: none !important;
+}
+html .stat-icon-wrap svg { width: 15px !important; height: 15px !important; }
+html .stat-value { margin-bottom: 0.1rem !important; }
+html .stat-meta { font-size: 0.7rem !important; color: var(--muted) !important; }
+html .stat-spark { height: 24px !important; margin-top: 0.5rem !important; opacity: 0.75 !important; }
+html .stat-trend { font-size: 0.66rem !important; font-weight: 600 !important; }
+
+/* ไอคอนของ KPI อื่น ๆ ให้เข้าชุดกัน */
+html .exec-kpi-icon, html .mt-kpi-icon, html .wp-kpi-icon, html .summary-hero-icon,
+html .dash-mini-icon, html .cer-stat-card .stat-icon-wrap {
+  border-radius: var(--r-sm) !important; box-shadow: none !important;
+}
+
+/* Dashboard hero: สะอาดขึ้น */
+html .dash-hero {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-left: 3px solid var(--accent) !important;
+  border-radius: var(--r-lg) !important;
+  box-shadow: var(--shadow-xs) !important;
+}
+html .dash-hero-title { letter-spacing: -0.025em !important; font-weight: 700 !important; }
+html .dash-hero-badge { font-size: 0.63rem !important; letter-spacing: 0.1em !important; }
+html .dash-mini-card { padding: 0.85rem 1rem !important; }
+
+/* แถบความคืบหน้ารวม */
+html .progress-section { padding: 0.9rem 1.1rem !important; }
+html .progress-bar-wrap { height: 6px !important; }
+
+/* KPI แถวเล็ก */
+html .kpi-card { padding: 0.8rem 1rem !important; }
+html .kpi-value { font-family: var(--font-display) !important; font-weight: 700 !important; letter-spacing: -0.03em !important; }
+
+
+/* ─────────────── 15. FINAL CORRECTIONS ─────────────── */
+
+/* .ms-dropdown ใช้คลาส .filter-select ร่วมด้วย — ยกเว้นไม่ให้วาดลูกศรซ้ำ/บีบความสูง */
+html .ms-dropdown.filter-select {
+  height: auto !important;
+  line-height: normal !important;
+  padding: 0 !important;
+  background-image: none !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+html .ms-toggle {
+  width: 100% !important;
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-sm) !important;
+  padding: 0 0.75rem !important;
+  gap: 0.45rem !important;
+}
+html .ms-dropdown.open .ms-toggle,
+html .ms-dropdown.has-selection .ms-toggle { border-color: var(--accent) !important; }
+html .ms-chevron { color: var(--muted) !important; }
+html .ms-option { border-radius: var(--r-xs) !important; }
+html .ms-option:hover { background: var(--hover-tint) !important; }
+html .ms-search input { height: 32px !important; border-radius: var(--r-xs) !important; }
+
+/* แถวสถานะ: ลดความแรงของพื้นสี ให้เส้นซ้ายเป็นตัวบอกหลัก อ่านตารางได้สบายตาขึ้น */
+html tbody tr.row-urgent, html tbody tr.row-urgent:nth-child(even) {
+  background: color-mix(in srgb, var(--danger) 4.5%, transparent) !important;
+}
+html tbody tr.row-warn, html tbody tr.row-warn:nth-child(even) {
+  background: color-mix(in srgb, var(--warn) 4.5%, transparent) !important;
+}
+html tbody tr.row-urgent:hover { background: color-mix(in srgb, var(--danger) 9%, transparent) !important; filter: none; }
+html tbody tr.row-warn:hover   { background: color-mix(in srgb, var(--warn) 9%, transparent) !important; filter: none; }
+html tbody tr.row-done:hover   { background: var(--hover-tint) !important; filter: none; }
+
+/* ปุ่มในแถบเครื่องมือให้สูงเท่ากันจริง (มี inline style เดิมทับอยู่) */
+html .toolbar .btn { padding: 0 0.9rem !important; display: inline-flex !important; align-items: center !important; }
+html #filterStarBtn { font-size: 0.8rem !important; }
+html .view-toggle button { padding: 0 0.85rem !important; font-size: 0.78rem !important; }
+
+/* ปุ่มไอคอนในแถว */
+html .icon-btn, html .star-btn {
+  border-radius: var(--r-xs) !important;
+  border: 1px solid transparent !important;
+  transition: all var(--e-fast) !important;
+}
+html .icon-btn:hover { background: var(--surface2) !important; border-color: var(--border) !important; transform: none !important; }
+html .icon-btn.del:hover { background: color-mix(in srgb, var(--danger) 12%, transparent) !important; border-color: color-mix(in srgb, var(--danger) 35%, transparent) !important; }
+
+/* Kanban ให้เข้าชุดระบบเดียวกัน */
+html .kanban-col { background: var(--surface2) !important; border: 1px solid var(--border) !important; border-radius: var(--r-lg) !important; }
+html .kanban-card {
+  background: var(--surface) !important; border: 1px solid var(--border) !important;
+  border-radius: var(--r-md) !important; box-shadow: var(--shadow-xs) !important;
+  transition: border-color var(--e-fast), box-shadow var(--e-fast) !important;
+}
+html .kanban-card:hover { border-color: var(--accent) !important; box-shadow: var(--shadow-sm) !important; transform: none !important; }
+
+/* Gantt / Timeline / Model tracker: เส้นตารางบางลง อ่านง่ายขึ้น */
+html .gantt-table th, html .gantt-table td { border-color: var(--border2) !important; }
+html .gantt-table th { background: var(--surface2) !important; }
+html .gantt-bar { border-radius: 4px !important; box-shadow: none !important; }
+html .mt-gantt-header .mt-gtd { background: var(--surface2) !important; }
+html .mt-marker { box-shadow: 0 0 0 2px var(--surface) !important; }
+
+/* Command palette */
+html .cmdk-item { border-radius: var(--r-sm) !important; }
+html .cmdk-item.active { background: var(--accent) !important; color: #fff !important; }
+html .cmdk-item.active svg { color: #fff !important; }
+html .cmdk-input { font-size: 0.9rem !important; }
+html .cmdk-trigger { border-radius: var(--r-sm) !important; border: 1px solid var(--border) !important; background: var(--surface) !important; box-shadow: none !important; }
+
+/* หน้า Login: คมและพรีเมียมขึ้น โดยคงองค์ประกอบเดิม */
+html .wl-card {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 18px !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+html .wl-input {
+  border-radius: var(--r-sm) !important;
+  border: 1px solid var(--border) !important;
+  background: var(--surface2) !important;
+  transition: border-color var(--e-fast), box-shadow var(--e-fast) !important;
+}
+html .wl-input:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent) !important;
+}
+html .wl-btn {
+  border-radius: var(--r-sm) !important;
+  background: var(--accent) !important;
+  background-image: none !important;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--accent) 30%, transparent) !important;
+  letter-spacing: -0.005em !important;
+}
+html .wl-btn:hover { background: color-mix(in srgb, #fff 10%, var(--accent)) !important; transform: none !important; }
+html .wl-btn::before { display: none !important; }
+html .wl-hero-title { letter-spacing: -0.03em !important; }
+html .wl-trust-item, html .wl-feature-item {
+  border-radius: var(--r-md) !important;
+  border: 1px solid var(--border2) !important;
+  box-shadow: none !important;
+}
+
+
+/* ─────────────── 16. POLISH PASS — ความสม่ำเสมอทั้งระบบ ─────────────── */
+
+/* select ทุกจุดในระบบใช้ลูกศรและความสูงชุดเดียวกัน */
+html .gantt-controls select, html .gantt-controls input[type=month],
+html .comment-tag-select, html .sc-select, html .bc-sel, html select.form-input,
+html select.wp-form-input {
+  height: 34px !important;
+  -webkit-appearance: none; appearance: none;
+  padding: 0 1.9rem 0 0.75rem !important;
+  border-radius: var(--r-sm) !important;
+  border: 1px solid var(--border) !important;
+  background-color: var(--surface) !important;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+                    linear-gradient(135deg, var(--muted) 50%, transparent 50%) !important;
+  background-position: calc(100% - 15px) 50%, calc(100% - 10px) 50% !important;
+  background-size: 5px 5px, 5px 5px !important;
+  background-repeat: no-repeat !important;
+  color: var(--text) !important;
+  font-family: var(--font) !important;
+  font-size: 0.82rem !important;
+}
+html input[type=date], html input[type=month], html input[type=time] {
+  line-height: normal !important;
+}
+html .gantt-nav-btn, html .mt-year-nav-btn, html .mt-year-nav-today,
+html .gantt-controls .btn {
+  height: 34px !important;
+  border-radius: var(--r-sm) !important;
+  border: 1px solid var(--border) !important;
+  background: var(--surface) !important;
+  color: var(--muted) !important;
+  transition: all var(--e-fast) !important;
+}
+html .gantt-nav-btn:hover, html .mt-year-nav-btn:hover, html .mt-year-nav-today:hover {
+  background: var(--surface2) !important;
+  border-color: var(--accent) !important;
+  color: var(--text) !important;
+  transform: none !important;
+}
+html .gantt-controls { gap: 0.5rem !important; align-items: center !important; }
+html .gantt-month-label, html .mt-year-nav-label {
+  font-family: var(--font-display) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.015em !important;
+}
+
+/* KPI / stat แถวบนของทุกหน้าให้กระชับเท่ากัน */
+html .gantt-kpi, html .mt-kpi-card, html .wp-kpi-card, html .cer-stat-card,
+html .exec-kpi-card, html .summary-hero-card {
+  padding: 0.9rem 1.05rem !important;
+}
+html .gantt-kpi-val, html .mt-kpi-val, html .wp-kpi-value, html .cer-stat-value,
+html .exec-kpi-value, html .summary-hero-value {
+  font-family: var(--font-display) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.03em !important;
+  line-height: 1.05 !important;
+}
+
+/* กล่องค้นหา: วงแหวนโฟกัสครอบทั้งกล่อง */
+html .search-box { position: relative; }
+html .search-box:focus-within input {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent) !important;
+}
+
+/* legend / chips เล็ก ๆ ให้เข้าชุด */
+html .gantt-legend-item, html .mt-legend-item, html .raci-legend span {
+  font-size: 0.7rem !important; color: var(--muted) !important;
+}
+html .gantt-density-cell { border-color: var(--border2) !important; }
+
+/* ตารางย่อยอื่น ๆ (RACI, gantt) ใช้เส้นบางชุดเดียวกัน */
+html .raci-table th { background: var(--surface2) !important; }
+html .raci-table td, html .raci-table th { border-color: var(--border2) !important; }
+
+/* ปุ่ม/การ์ดในหน้าตั้งค่า & คู่มือ */
+html .setup-action, html .instruction-card {
+  border-radius: var(--r-lg) !important;
+  border: 1px solid var(--border) !important;
+  transition: border-color var(--e-fast), box-shadow var(--e-fast) !important;
+}
+html .setup-action:hover { border-color: var(--accent) !important; box-shadow: var(--shadow-sm) !important; transform: none !important; }
+html .code-block, html .url-display {
+  background: var(--surface2) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-sm) !important;
+  font-family: var(--mono) !important;
+}
+
+/* แผงแจ้งเตือน / รายละเอียด */
+html .notif-item { border-color: var(--border2) !important; transition: background var(--e-fast) !important; }
+html .notif-item:hover { background: var(--hover-tint) !important; }
+html .notif-icon { border-radius: var(--r-sm) !important; box-shadow: none !important; }
+html .detail-field { border-radius: var(--r-sm) !important; }
+html .comment-item, html .sc-item, html .bc-item { border-radius: var(--r-sm) !important; }
+
+/* Supplier / รายการการ์ด */
+html .supplier-avatar { border-radius: var(--r-md) !important; box-shadow: none !important; }
+
+/* Empty state ให้เงียบและสุภาพ */
+html .empty, html .gantt-empty, html .mt-empty-state, html .kanban-empty {
+  color: var(--muted) !important;
+}
+html .empty-title { font-weight: 600 !important; color: var(--text) !important; }
+
+/* Toast */
+html .toast-icon { border-radius: var(--r-sm) !important; }
+html .toast-title { font-weight: 600 !important; }
+
+
+/* ─────────────── 17. รายละเอียดสุดท้าย ─────────────── */
+html input[type=file] {
+  background: var(--surface2) !important;
+  border: 1px dashed var(--border) !important;
+  border-radius: var(--r-sm) !important;
+  color: var(--muted) !important;
+  padding: 0.6rem 0.75rem !important;
+  font-family: var(--font) !important;
+  font-size: 0.8rem !important;
+  width: 100%;
+  transition: border-color var(--e-fast), background var(--e-fast) !important;
+}
+html input[type=file]:hover { border-color: var(--accent) !important; background: var(--surface) !important; }
+html input[type=file]::file-selector-button {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-xs) !important;
+  color: var(--text) !important;
+  font-family: var(--font) !important;
+  font-size: 0.76rem !important;
+  font-weight: 600 !important;
+  padding: 0.32rem 0.7rem !important;
+  margin-right: 0.7rem;
+  cursor: pointer;
+}
+html input[type=file]::file-selector-button:hover { border-color: var(--accent) !important; color: var(--accent) !important; }
+
+/* checkbox / radio ใช้สีแบรนด์ */
+html input[type=checkbox], html input[type=radio] { accent-color: var(--accent); }
+
+/* ลิงก์ในตาราง */
+html td a, html .part-no a { color: var(--accent) !important; text-decoration: none !important; }
+html td a:hover { text-decoration: underline !important; }
+
 </style>
 </head>
 <body class="light-theme">
@@ -8921,8 +9947,47 @@ function volumeCell(item) {
   return Number(item.volume || 0).toLocaleString();
 }
 
-/* ── CHARTS ── */
-const PALETTE = ['#4C7CF0','#7C5CFF','#00C2A8','#F5A524','#FF5C7A','#22B8CF','#A78BFA','#FB923C'];
+/* ── CHARTS ──
+   โทนสีกราฟ: ใช้สี accent เดียวของระบบไล่เข้ม-อ่อนแทนชุดสีรุ้งเดิม
+   (มติผู้ใช้: เปลี่ยนทุกกราฟรวมถึงกราฟสถานะให้เป็นโทนเดียว)          */
+function hexToRgbParts(hex) {
+  hex = String(hex).replace('#', '').trim();
+  if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+  const num = parseInt(hex, 16) || 0;
+  return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+}
+function rgbPartsToHex(r, g, b) {
+  return '#' + [r, g, b].map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
+}
+function mixHex(hexA, hexB, t) {
+  const a = hexToRgbParts(hexA), b = hexToRgbParts(hexB);
+  return rgbPartsToHex(a.r + (b.r - a.r) * t, a.g + (b.g - a.g) * t, a.b + (b.b - a.b) * t);
+}
+function currentAccentHex() {
+  const v = getComputedStyle(document.body).getPropertyValue('--accent').trim();
+  return v || '#4F7BF7';
+}
+/* ไล่โทนสี accent เดียว จากอ่อนสุด → เข้มสุด (แทนที่ PALETTE สีรุ้งเดิม) */
+function getAccentPalette(baseHex, steps) {
+  steps = steps || 8;
+  const light = mixHex(baseHex, '#ffffff', 0.72);
+  const dark  = mixHex(baseHex, '#000000', 0.30);
+  const out = [];
+  for (let i = 0; i < steps; i++) out.push(mixHex(light, dark, steps === 1 ? 0 : i / (steps - 1)));
+  return out;
+}
+/* สถานะ 3 ระดับ (เสร็จแล้ว / กำลังดำเนินการ / ยังไม่ครบ) — โทนเดียวกัน ไล่เข้มตามความคืบหน้า
+   ยิ่งเข้ม = ยิ่งคืบหน้ามาก จึงยังอ่านค่าสถานะได้แม้ไม่ใช้สีเขียว/เหลือง/แดง */
+function getStatusShades(baseHex) {
+  const p = getAccentPalette(baseHex, 5);
+  return [p[4], p[2], p[0]]; // [เสร็จแล้ว, กำลังดำเนินการ, ยังไม่ครบ]
+}
+/* คู่สีสำหรับกราฟเส้นเปรียบเทียบ 2 ชุดข้อมูล — โทนเดียวกัน ต่างความเข้ม
+   + ใช้เส้นประกับชุดรอง เป็นตัวช่วยแยกความแตกต่างชั้นที่สอง */
+function getTrendDuo(baseHex) {
+  const p = getAccentPalette(baseHex, 5);
+  return { primary: p[4], secondary: p[1] };
+}
 function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
 
 /* ── TOP N SELECTOR (ใช้ร่วมกันทุกกราฟแบบ ranking/อันดับ) ──
@@ -9024,6 +10089,10 @@ function renderCharts() {
   const cs = getComputedStyle(document.documentElement);
   const chartText = cs.getPropertyValue('--chart-text').trim() || '#64748b';
   const gridColor = cs.getPropertyValue('--surface2').trim() || '#182030';
+  const accent = currentAccentHex();
+  const PALETTE = getAccentPalette(accent, 8);
+  const STATUS_SHADES = getStatusShades(accent);
+  const trendDuo = getTrendDuo(accent);
 
   const done = allData.filter(r => r.status && r.status.includes('เสร็จแล้ว')).length;
   const progress = allData.filter(r => r.status && r.status.includes('กำลังดำเนินการ')).length;
@@ -9053,7 +10122,7 @@ function renderCharts() {
     const statusTotal = done + progress + incomplete;
     charts.status = new Chart(document.getElementById('chartStatus'), {
       type:'doughnut',
-      data:{ labels:['เสร็จแล้ว','กำลังดำเนินการ','ยังไม่ครบ'], datasets:[{ data:[done,progress,incomplete], backgroundColor:['#10b981','#f59e0b','#ef4444'], borderColor: cs.getPropertyValue('--surface').trim(), borderWidth:2, borderRadius:6, spacing:4, hoverOffset:10 }] },
+      data:{ labels:['เสร็จแล้ว','กำลังดำเนินการ','ยังไม่ครบ'], datasets:[{ data:[done,progress,incomplete], backgroundColor:STATUS_SHADES, borderColor: cs.getPropertyValue('--surface').trim(), borderWidth:2, borderRadius:6, spacing:4, hoverOffset:10 }] },
       options:{ responsive:true, maintainAspectRatio:false, cutout:'70%', animation: CHART_EASE,
         plugins:{ legend: chartLegendCfg(chartText), tooltip: chartTooltipCfg(cs),
           centerText: { text: (doneRowsForOnTime.length ? onTimeRateForHero + '%' : statusTotal.toLocaleString()), label: doneRowsForOnTime.length ? 'On-Time Rate' : 'รวม', color: cs.getPropertyValue('--text').trim(), labelColor: chartText, valueSize: 24 } } }
@@ -9105,7 +10174,7 @@ function renderCharts() {
       data:{ labels:topModelsSorted.map(m=>m[0]), datasets:[{ data:topModelsSorted.map(m=>m[1]),
         backgroundColor: (context) => {
           const { ctx, chartArea } = context.chart;
-          return makeGradient(ctx, chartArea, hexToRgba('#6366f1', 0.35), '#6366f1', false);
+          return makeGradient(ctx, chartArea, hexToRgba(accent, 0.35), accent, false);
         },
         borderRadius:6, borderSkipped:false, maxBarThickness:20 }] },
       options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y', animation: CHART_EASE,
@@ -9136,7 +10205,7 @@ function renderCharts() {
         datasets:[{ data: yearsSorted.map(y => yearMap[y]),
           backgroundColor: (context) => {
             const { ctx, chartArea } = context.chart;
-            return makeGradient(ctx, chartArea, 'rgba(62,106,225,0.25)', '#3E6AE1', true);
+            return makeGradient(ctx, chartArea, hexToRgba(accent, 0.25), accent, true);
           },
           borderRadius:6, maxBarThickness:38 }]
       },
@@ -9177,20 +10246,21 @@ function renderCharts() {
             backgroundColor: (context) => {
               const { ctx, chartArea } = context.chart;
               const v = context.raw;
-              return makeGradient(ctx, chartArea, v === peakCount && peakCount > 0 ? 'rgba(62,106,225,0.55)' : 'rgba(62,106,225,0.18)', v === peakCount && peakCount > 0 ? '#3E6AE1' : 'rgba(62,106,225,0.45)', true);
+              return makeGradient(ctx, chartArea, v === peakCount && peakCount > 0 ? hexToRgba(accent, 0.55) : hexToRgba(accent, 0.18), v === peakCount && peakCount > 0 ? accent : hexToRgba(accent, 0.45), true);
             },
             borderRadius: 6, maxBarThickness: 34, yAxisID: 'y'
           },
           {
             type: 'line', label: '% ความสำเร็จ',
             data: monthSuccessRate,
-            borderColor: '#f59e0b',
+            borderColor: trendDuo.secondary,
+            borderDash: [6, 4],
             backgroundColor: (context) => {
               const { ctx, chartArea } = context.chart;
-              return makeGradient(ctx, chartArea, 'rgba(245,158,11,0.02)', 'rgba(245,158,11,0.28)', true);
+              return makeGradient(ctx, chartArea, hexToRgba(trendDuo.secondary, 0.02), hexToRgba(trendDuo.secondary, 0.24), true);
             },
             fill: true, tension: 0.35, pointRadius: 3, pointHoverRadius: 6,
-            pointBackgroundColor: '#f59e0b', pointBorderColor: '#fff', pointBorderWidth: 1.5,
+            pointBackgroundColor: trendDuo.secondary, pointBorderColor: cs.getPropertyValue('--surface').trim() || '#fff', pointBorderWidth: 1.5,
             borderWidth: 2.5,
             yAxisID: 'y1'
           }
@@ -9255,8 +10325,8 @@ function renderCharts() {
       data: {
         labels: rollingLabels,
         datasets: [
-          { label: '% ความสำเร็จ', data: successRates, borderColor: PALETTE[0], backgroundColor: hexToRgba(PALETTE[0], 0.14), fill: true, tension: 0.35, spanGaps: true, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2.2 },
-          { label: 'On-Time Rate', data: onTimeRates, borderColor: '#3b82f6', backgroundColor: hexToRgba('#3b82f6', 0.12), fill: true, tension: 0.35, spanGaps: true, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2.2 }
+          { label: '% ความสำเร็จ', data: successRates, borderColor: trendDuo.primary, backgroundColor: hexToRgba(trendDuo.primary, 0.14), fill: true, tension: 0.35, spanGaps: true, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2.2 },
+          { label: 'On-Time Rate', data: onTimeRates, borderColor: trendDuo.secondary, borderDash: [6,4], backgroundColor: hexToRgba(trendDuo.secondary, 0.12), fill: true, tension: 0.35, spanGaps: true, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2.2 }
         ]
       },
       options: {
@@ -9278,6 +10348,10 @@ function renderExecDashboard() {
   if (!Array.isArray(allData)) return;
   const cs = getComputedStyle(document.documentElement);
   const chartText = cs.getPropertyValue('--chart-text').trim() || '#64748b';
+  const accent = currentAccentHex();
+  const PALETTE = getAccentPalette(accent, 8);
+  const STATUS_SHADES = getStatusShades(accent);
+  const trendDuo = getTrendDuo(accent);
 
   const total = allData.length;
   const done = allData.filter(r => r.status && r.status.includes('เสร็จแล้ว')).length;
@@ -9335,7 +10409,7 @@ function renderExecDashboard() {
   if (statusCanvas) {
     charts.execStatus = new Chart(statusCanvas, {
       type: 'doughnut',
-      data: { labels: ['เสร็จแล้ว', 'กำลังดำเนินการ', 'ยังไม่ครบ'], datasets: [{ data: [done, progress, incomplete], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderColor: cs.getPropertyValue('--surface').trim(), borderWidth: 2, borderRadius: 6, spacing: 4, hoverOffset: 9 }] },
+      data: { labels: ['เสร็จแล้ว', 'กำลังดำเนินการ', 'ยังไม่ครบ'], datasets: [{ data: [done, progress, incomplete], backgroundColor: STATUS_SHADES, borderColor: cs.getPropertyValue('--surface').trim(), borderWidth: 2, borderRadius: 6, spacing: 4, hoverOffset: 9 }] },
       options: { responsive: true, maintainAspectRatio: false, cutout: '70%', animation: CHART_EASE,
         plugins: { legend: chartLegendCfg(chartText), tooltip: chartTooltipCfg(cs),
           centerText: { text: total.toLocaleString(), label: 'รวม', color: cs.getPropertyValue('--text').trim(), labelColor: chartText, valueSize: 22 } } }
@@ -9384,8 +10458,8 @@ function renderExecDashboard() {
       data: {
         labels: rollingLabels,
         datasets: [
-          { label: 'PR เข้า', data: prCounts, borderColor: PALETTE[0], backgroundColor: hexToRgba(PALETTE[0], 0.14), fill: true, tension: 0.35, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2.2 },
-          { label: 'ส่งเสร็จ', data: doneCounts, borderColor: PALETTE[2], backgroundColor: hexToRgba(PALETTE[2], 0.12), fill: true, tension: 0.35, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2.2 }
+          { label: 'PR เข้า', data: prCounts, borderColor: trendDuo.primary, backgroundColor: hexToRgba(trendDuo.primary, 0.14), fill: true, tension: 0.35, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2.2 },
+          { label: 'ส่งเสร็จ', data: doneCounts, borderColor: trendDuo.secondary, borderDash: [6,4], backgroundColor: hexToRgba(trendDuo.secondary, 0.12), fill: true, tension: 0.35, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2.2 }
         ]
       },
       options: {
@@ -9503,13 +10577,17 @@ function renderSummaryCards(mData, mLabel) {
 
   const cs = getComputedStyle(document.documentElement);
   const chartText = cs.getPropertyValue('--chart-text').trim() || '#64748b';
+  const accent = currentAccentHex();
+  const PALETTE = getAccentPalette(accent, 8);
+  const STATUS_SHADES = getStatusShades(accent);
+  const trendDuo = getTrendDuo(accent);
 
   // Status bars
   document.getElementById('s-bars-title').textContent = `สัดส่วนสถานะ: ${label}`;
   const bars = [
-    { label:'เสร็จแล้ว', count:done, color:'var(--success)', hex:'#10b981' },
-    { label:'กำลังดำเนินการ', count:progress, color:'var(--warn)', hex:'#f59e0b' },
-    { label:'ยังไม่ครบ', count:incomplete, color:'var(--danger)', hex:'#ef4444' }
+    { label:'เสร็จแล้ว', count:done, color:STATUS_SHADES[0], hex:STATUS_SHADES[0] },
+    { label:'กำลังดำเนินการ', count:progress, color:STATUS_SHADES[1], hex:STATUS_SHADES[1] },
+    { label:'ยังไม่ครบ', count:incomplete, color:STATUS_SHADES[2], hex:STATUS_SHADES[2] }
   ];
   document.getElementById('statusBars').innerHTML = bars.map(b => {
     const p = total ? Math.round(b.count/total*100) : 0;
@@ -9606,6 +10684,7 @@ function renderSummaryTrend() {
   if (!canvas) return;
   const cs = getComputedStyle(document.documentElement);
   const chartText = cs.getPropertyValue('--chart-text').trim() || '#64748b';
+  const trendDuo = getTrendDuo(currentAccentHex());
 
   const monthKeys = Array.from({length:12}, (_,i) => `${summaryYear}-${String(i+1).padStart(2,'0')}`);
   const prCounts = monthKeys.map(k => allData.filter(r => getMonthKey(r.prDate) === k).length);
@@ -9619,8 +10698,8 @@ function renderSummaryTrend() {
     data: {
       labels,
       datasets: [
-        { label: 'PR เข้า', data: prCounts, borderColor: PALETTE[0], backgroundColor: hexToRgba(PALETTE[0], 0.14), fill: true, tension: 0.35, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2.2 },
-        { label: 'ส่งเสร็จ', data: doneCounts, borderColor: PALETTE[2], backgroundColor: hexToRgba(PALETTE[2], 0.12), fill: true, tension: 0.35, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2.2 }
+        { label: 'PR เข้า', data: prCounts, borderColor: trendDuo.primary, backgroundColor: hexToRgba(trendDuo.primary, 0.14), fill: true, tension: 0.35, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2.2 },
+        { label: 'ส่งเสร็จ', data: doneCounts, borderColor: trendDuo.secondary, borderDash: [6,4], backgroundColor: hexToRgba(trendDuo.secondary, 0.12), fill: true, tension: 0.35, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2.2 }
       ]
     },
     options: {
@@ -9641,6 +10720,7 @@ function renderModelBreakdown() {
   if (!canvas) return;
   const cs = getComputedStyle(document.documentElement);
   const chartText = cs.getPropertyValue('--chart-text').trim() || '#64748b';
+  const STATUS_SHADES = getStatusShades(currentAccentHex());
   const mData = getMonthData();
 
   const modelMap = {};
@@ -9662,9 +10742,9 @@ function renderModelBreakdown() {
     data: {
       labels: models.map(m => m[0]),
       datasets: [
-        { label: 'เสร็จแล้ว', data: models.map(m => m[1].done), backgroundColor: (context) => makeGradient(context.chart.ctx, context.chart.chartArea, hexToRgba('#10b981',0.4), '#10b981', false), borderRadius: 4, maxBarThickness: 18 },
-        { label: 'กำลังดำเนินการ', data: models.map(m => m[1].progress), backgroundColor: (context) => makeGradient(context.chart.ctx, context.chart.chartArea, hexToRgba('#f59e0b',0.4), '#f59e0b', false), borderRadius: 4, maxBarThickness: 18 },
-        { label: 'ยังไม่ครบ', data: models.map(m => m[1].incomplete), backgroundColor: (context) => makeGradient(context.chart.ctx, context.chart.chartArea, hexToRgba('#ef4444',0.4), '#ef4444', false), borderRadius: 4, maxBarThickness: 18 }
+        { label: 'เสร็จแล้ว', data: models.map(m => m[1].done), backgroundColor: (context) => makeGradient(context.chart.ctx, context.chart.chartArea, hexToRgba(STATUS_SHADES[0],0.4), STATUS_SHADES[0], false), borderColor: cs.getPropertyValue('--surface').trim(), borderWidth: 2, borderRadius: 4, maxBarThickness: 18 },
+        { label: 'กำลังดำเนินการ', data: models.map(m => m[1].progress), backgroundColor: (context) => makeGradient(context.chart.ctx, context.chart.chartArea, hexToRgba(STATUS_SHADES[1],0.4), STATUS_SHADES[1], false), borderColor: cs.getPropertyValue('--surface').trim(), borderWidth: 2, borderRadius: 4, maxBarThickness: 18 },
+        { label: 'ยังไม่ครบ', data: models.map(m => m[1].incomplete), backgroundColor: (context) => makeGradient(context.chart.ctx, context.chart.chartArea, hexToRgba(STATUS_SHADES[2],0.4), STATUS_SHADES[2], false), borderColor: cs.getPropertyValue('--surface').trim(), borderWidth: 2, borderRadius: 4, maxBarThickness: 18 }
       ]
     },
     options: {
@@ -11207,6 +12287,10 @@ function renderLeadTime() {
   const cs        = getComputedStyle(document.documentElement);
   const chartText = cs.getPropertyValue('--chart-text').trim() || '#64748b';
   const gridColor = cs.getPropertyValue('--surface2').trim()   || '#182030';
+  const ltAccent  = currentAccentHex();
+  const ltLight   = mixHex(ltAccent, '#ffffff', 0.68);
+  const ltDark    = mixHex(ltAccent, '#000000', 0.30);
+  const ltMaxLead = Math.max(...sorted.map(s => s.avgLead || 0), 1);
   setBarChartHeight('chartLeadTime', sorted.length, 30, 220);
   destroyChart('leadtime');
   if (document.getElementById('chartLeadTime') && sorted.length) {
@@ -11220,8 +12304,9 @@ function renderLeadTime() {
           backgroundColor: (context) => {
             const { ctx, chartArea } = context.chart;
             const v = sorted[context.dataIndex] ? sorted[context.dataIndex].avgLead : 0;
-            const base = v > 20 ? '#ef4444' : v > 10 ? '#f59e0b' : '#10b981';
-            return makeGradient(ctx, chartArea, hexToRgba(base, 0.35), base, false);
+            // ยิ่ง Lead Time นาน ยิ่งเข้ม — ไล่โทนสีเดียวแทนสัญญาณไฟจราจรเดิม
+            const base = mixHex(ltLight, ltDark, ltMaxLead ? Math.min(1, v / ltMaxLead) : 0);
+            return makeGradient(ctx, chartArea, hexToRgba(base, 0.4), base, false);
           },
           borderRadius: 6, borderSkipped: false, maxBarThickness: 24
         }]
@@ -11258,8 +12343,8 @@ function renderLeadTime() {
 
   document.getElementById('leadTimeBody').innerHTML = pageRows.length ? pageRows.map(r => {
     const barW   = Math.round((r.avgLead||0)/maxLead*80);
-    const barCol = !r.avgLead ? 'var(--border)' : r.avgLead > 20 ? 'var(--danger)' : r.avgLead > 10 ? 'var(--warn)' : 'var(--success)';
-    const rateCol = r.ontimeRate === null ? 'var(--muted)' : r.ontimeRate >= 80 ? 'var(--success)' : r.ontimeRate >= 60 ? 'var(--warn)' : 'var(--danger)';
+    const barCol = !r.avgLead ? 'var(--border)' : mixHex(ltLight, ltDark, Math.min(1, r.avgLead / maxLead));
+    const rateCol = r.ontimeRate === null ? 'var(--muted)' : mixHex(ltLight, ltDark, r.ontimeRate / 100);
     return `<tr>
       <td class="maker-cell"><strong>${r.maker}</strong></td>
       <td style="text-align:center;font-family:var(--mono)">${r.total}</td>
@@ -13228,7 +14313,9 @@ function renderWpCharts() {
   const data = wpActiveMonth ? wpData.filter(r => wpMonthKey(r.date) === wpActiveMonth) : wpData;
   const cs = getComputedStyle(document.documentElement);
   const chartText = cs.getPropertyValue('--chart-text').trim() || '#64748b';
-  const PALETTE = ['#4C7CF0','#7C5CFF','#00C2A8','#F5A524','#FF5C7A','#22B8CF'];
+  const accent = currentAccentHex();
+  const PALETTE = getAccentPalette(accent, 8);
+  const STATUS_SHADES = getStatusShades(accent);
 
   // Type chart
   const typeMap = {};
@@ -13257,7 +14344,7 @@ function renderWpCharts() {
     const wpStatusTotal = done + inprog + todo;
     wpCharts.status = new Chart(statCanvas, {
       type:'doughnut',
-      data:{ labels:['เสร็จสิ้น','กำลังดำเนินการ','ยังไม่เริ่ม'], datasets:[{ data:[done,inprog,todo], backgroundColor:['#10b981','#f59e0b','#64748b'], borderWidth:0, borderRadius:4, spacing:3, hoverOffset:7 }] },
+      data:{ labels:['เสร็จสิ้น','กำลังดำเนินการ','ยังไม่เริ่ม'], datasets:[{ data:[done,inprog,todo], backgroundColor:STATUS_SHADES, borderWidth:0, borderRadius:4, spacing:3, hoverOffset:7 }] },
       options:{ responsive:true, maintainAspectRatio:false, cutout:'66%', animation: CHART_EASE,
         plugins:{ legend: chartLegendCfg(chartText, 9.5), tooltip: chartTooltipCfg(cs),
           centerText: { text: wpStatusTotal.toLocaleString(), label: 'รวม', color: cs.getPropertyValue('--text').trim(), labelColor: chartText, valueSize: 18 } } }
