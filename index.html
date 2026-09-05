@@ -6256,8 +6256,7 @@ main { padding: 1.6rem 1.75rem !important; }
           <button class="btn btn-ghost manual-cat-btn" data-cat="พื้นฐานการทำงาน" onclick="setManualCategoryFilter('พื้นฐานการทำงาน', this)" style="padding:0.4rem 0.9rem;font-size: 0.777rem">🧩 พื้นฐานการทำงาน</button>
           <button class="btn btn-ghost manual-cat-btn" data-cat="อื่นๆ" onclick="setManualCategoryFilter('อื่นๆ', this)" style="padding:0.4rem 0.9rem;font-size: 0.777rem">📄 อื่นๆ</button>
         </div>
-        <button class="btn btn-ghost" onclick="configManualApiUrl()" style="margin-left:auto" title="ตั้งค่า URL ของ Apps Script (MANUALS Sheet)">⚙️ ตั้งค่า</button>
-        <button class="btn btn-primary" onclick="openManualModal()">+ อัพโหลดคู่มือ (PDF)</button>
+        <button class="btn btn-primary" onclick="openManualModal()" style="margin-left:auto">+ อัพโหลดคู่มือ (PDF)</button>
       </div>
       <div id="manualGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:1rem"></div>
     </div>
@@ -10657,20 +10656,9 @@ async function deleteSupplier(rowIndex) {
    (ใช้ action เดียวกับการอัพโหลดไฟล์แนบ PR เพื่อไม่ต้องแก้ Apps Script เพิ่ม)
    ══════════════════════════════════════════════════ */
 const MANUAL_FILE_MAX_BYTES = 20 * 1024 * 1024; // 20MB
-const DEFAULT_MANUAL_API_URL = 'วาง_URL_ของ_Apps_Script_MANUALS_ที่นี่'; // Web App URL จาก Deploy ของสคริปต์ MANUALS (ไฟล์ Code.gs ที่มี doGet/doPost, action list/create/update/delete)
-let MANUAL_API_URL = localStorage.getItem('manual_api_url') || (DEFAULT_MANUAL_API_URL.startsWith('วาง_') ? '' : DEFAULT_MANUAL_API_URL);
 let manuals = [];
 let manualCategoryFilter = '';
 let manualPendingBase64 = ''; // ไฟล์ PDF ที่เลือกไว้ (base64) รอกดบันทึกตอนสร้างใหม่
-
-function configManualApiUrl() {
-  const url = prompt('วาง Web App URL ของ Apps Script "ระบบจัดการคู่มือการทำงาน" (สคริปต์ MANUALS แยกต่างหาก ไม่ใช่ตัวเดียวกับ PR/PO):', MANUAL_API_URL || '');
-  if (url === null) return;
-  MANUAL_API_URL = url.trim();
-  localStorage.setItem('manual_api_url', MANUAL_API_URL);
-  showToast(MANUAL_API_URL ? '✅ บันทึก URL ระบบคู่มือแล้ว' : 'ล้าง URL แล้ว', 'success');
-  loadManualsFromServer();
-}
 
 function mapManualRow(o) {
   return {
@@ -10694,16 +10682,16 @@ function mapManualRow(o) {
 
 async function loadManualsFromServer() {
   const grid = document.getElementById('manualGrid');
-  if (!MANUAL_API_URL) {
+  if (!WEB_APP_URL) {
     manuals = [];
-    if (grid) grid.innerHTML = '<div style="color:var(--muted);font-size: 0.892rem;padding:2rem 0;text-align:center;grid-column:1/-1">⚙️ ยังไม่ได้ตั้งค่า URL ของระบบคู่มือ — กดปุ่ม "⚙️ ตั้งค่า" ด้านบนก่อน</div>';
+    if (grid) grid.innerHTML = '<div style="color:var(--muted);font-size: 0.892rem;padding:2rem 0;text-align:center;grid-column:1/-1">⚙️ ยังไม่ได้ตั้งค่า Web App URL — ไปตั้งค่าที่หน้า Setup ก่อน</div>';
     return;
   }
   if (grid) grid.innerHTML = '<div style="color:var(--muted);font-size: 0.892rem;padding:2rem 0;text-align:center;grid-column:1/-1"><span class="spinner" style="width:14px;height:14px;border-width:2px"></span> กำลังโหลดคู่มือ...</div>';
   try {
-    const res  = await fetch(MANUAL_API_URL + '?action=list');
+    const res  = await fetch(WEB_APP_URL + '?action=getManuals');
     const json = await res.json();
-    if (!json.ok) throw new Error(json.error || 'โหลดข้อมูลไม่สำเร็จ');
+    if (!json.success) throw new Error(json.error || 'โหลดข้อมูลไม่สำเร็จ');
     manuals = (json.data || []).map(mapManualRow);
   } catch (err) {
     showToast('❌ โหลดคู่มือไม่สำเร็จ: ' + err.message, 'error');
@@ -10802,28 +10790,28 @@ async function saveManual() {
 
   if (!title) { showToast('❌ กรุณากรอกชื่อคู่มือ', 'error'); return; }
   if (!isEdit && !manualPendingBase64) { showToast('❌ กรุณาเลือกไฟล์ PDF ก่อนบันทึก', 'error'); return; }
-  if (!MANUAL_API_URL) { showToast('❌ กรุณาตั้งค่า URL ของระบบคู่มือก่อน (ปุ่ม ⚙️ ตั้งค่า)', 'error'); return; }
+  if (!WEB_APP_URL) { showToast('❌ กรุณาตั้งค่า Web App URL ก่อน (หน้า Setup)', 'error'); return; }
 
   const category    = document.getElementById('m-category').value;
   const description = document.getElementById('m-note').value.trim();
 
   const body = isEdit
-    ? { action: 'update', id, title, category, description }
+    ? { action: 'editManual', id, title, category, description }
     : {
-        action: 'create', title, category, description,
+        action: 'addManual', title, category, description,
         tags: '', version: 'v1.0', status: 'ใช้งาน',
         fileName: document.getElementById('m-fileName').value,
         base64: manualPendingBase64
       };
 
   try {
-    const res  = await fetch(MANUAL_API_URL, {
+    const res  = await fetch(WEB_APP_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify(body)
     });
     const json = await res.json();
-    if (!json.ok) throw new Error(json.error || 'บันทึกไม่สำเร็จ');
+    if (!json.success) throw new Error(json.error || 'บันทึกไม่สำเร็จ');
     closeManualModal();
     await loadManualsFromServer();
     addHistoryLog(isEdit ? 'edit' : 'add', title, category, 'คู่มือการทำงาน: ' + (isEdit ? 'แก้ไขข้อมูล' : 'เพิ่มคู่มือใหม่'));
@@ -10835,16 +10823,16 @@ async function saveManual() {
 
 async function deleteManual(id) {
   if (!confirm('ต้องการลบคู่มือนี้?')) return;
-  if (!MANUAL_API_URL) { showToast('❌ ยังไม่ได้ตั้งค่า URL ของระบบคู่มือ', 'error'); return; }
+  if (!WEB_APP_URL) { showToast('❌ ยังไม่ได้ตั้งค่า Web App URL', 'error'); return; }
   const item = manuals.find(m => String(m.id) === String(id));
   try {
-    const res = await fetch(MANUAL_API_URL, {
+    const res = await fetch(WEB_APP_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'delete', id, hard: true })
+      body: JSON.stringify({ action: 'delManual', id, hard: true })
     });
     const json = await res.json();
-    if (!json.ok) throw new Error(json.error || 'ลบไม่สำเร็จ');
+    if (!json.success) throw new Error(json.error || 'ลบไม่สำเร็จ');
     await loadManualsFromServer();
     addHistoryLog('del', item?.title || '-', item?.category || '', 'ลบคู่มือการทำงาน');
     showResultModal('ลบคู่มือสำเร็จ', 'success');
@@ -10860,8 +10848,8 @@ function viewManual(id) {
   document.getElementById('manualViewFrame').src = toManualEmbedUrl(item.url);
   document.getElementById('manualViewOpenTab').href = item.url;
   document.getElementById('manualViewOverlay').classList.add('open');
-  if (MANUAL_API_URL && item.id) {
-    fetch(MANUAL_API_URL + '?action=view&id=' + encodeURIComponent(item.id)).catch(() => {});
+  if (WEB_APP_URL && item.id) {
+    fetch(WEB_APP_URL + '?action=viewManual&id=' + encodeURIComponent(item.id)).catch(() => {});
   }
 }
 
