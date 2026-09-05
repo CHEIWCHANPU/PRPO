@@ -1574,11 +1574,11 @@
     box-sizing:border-box;
   }
   .gantt-bar:hover { opacity:1; z-index:10; }
-  .gantt-bar.done    { background:#10b981; }
-  .gantt-bar.progress{ background:#6366f1; }
-  .gantt-bar.warn    { background:#f59e0b; }
-  .gantt-bar.urgent  { background:#ef4444; }
-  .gantt-bar.incomplete { background:#ef4444; opacity:0.7; }
+  .gantt-bar.done    { background:#3F7D53; }
+  .gantt-bar.progress{ background:#2E5395; }
+  .gantt-bar.warn    { background:#C9A227; }
+  .gantt-bar.urgent  { background:#A6443C; }
+  .gantt-bar.incomplete { background:#A6443C; opacity:0.7; }
   .gantt-day-weekend { background:rgba(255,255,255,0.02); }
   .gantt-kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:0.85rem; margin-bottom:1.1rem; }
   .gantt-kpi { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:0.85rem 1rem; }
@@ -5154,7 +5154,7 @@ main { padding: 1.6rem 1.75rem !important; }
           <div class="exec-kpi-trend">ที่กำลังดำเนินการ</div>
         </div>
         <div class="exec-kpi-card">
-          <div class="exec-kpi-icon" style="background:rgba(59,130,246,0.12);color:#3b82f6">🎯</div>
+          <div class="exec-kpi-icon" style="background:rgba(90,143,192,0.14);color:#5A8FC0">🎯</div>
           <div class="exec-kpi-value" id="exec-ontime">—</div>
           <div class="exec-kpi-label">On-Time Rate</div>
           <div class="exec-kpi-trend" id="exec-ontime-sub">ของงานที่เสร็จแล้ว</div>
@@ -5277,8 +5277,8 @@ main { padding: 1.6rem 1.75rem !important; }
           <div><div class="kpi-label">เหลือ ≤ 7 วัน</div><div class="kpi-value" id="kpi-warn" style="color:var(--warn)">—</div></div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-dot" style="background:#3b82f6"></div>
-          <div><div class="kpi-label">On-Time Rate</div><div class="kpi-value" id="kpi-ontime" style="color:#3b82f6">—</div></div>
+          <div class="kpi-dot" style="background:#5A8FC0"></div>
+          <div><div class="kpi-label">On-Time Rate</div><div class="kpi-value" id="kpi-ontime" style="color:#5A8FC0">—</div></div>
         </div>
         <div class="kpi-card">
           <div class="kpi-dot" style="background:#ec4899"></div>
@@ -5647,10 +5647,10 @@ main { padding: 1.6rem 1.75rem !important; }
         </select>
       </div>
       <div class="gantt-legend">
-        <div class="gantt-legend-item"><div class="gantt-legend-dot" style="background:#10b981"></div>เสร็จแล้ว</div>
-        <div class="gantt-legend-item"><div class="gantt-legend-dot" style="background:#6366f1"></div>กำลังดำเนินการ</div>
-        <div class="gantt-legend-item"><div class="gantt-legend-dot" style="background:#f59e0b"></div>เหลือ ≤ 7 วัน</div>
-        <div class="gantt-legend-item"><div class="gantt-legend-dot" style="background:#ef4444"></div>เลยกำหนด / วันนี้</div>
+        <div class="gantt-legend-item"><div class="gantt-legend-dot" style="background:#3F7D53"></div>เสร็จแล้ว</div>
+        <div class="gantt-legend-item"><div class="gantt-legend-dot" style="background:#2E5395"></div>กำลังดำเนินการ</div>
+        <div class="gantt-legend-item"><div class="gantt-legend-dot" style="background:#C9A227"></div>เหลือ ≤ 7 วัน</div>
+        <div class="gantt-legend-item"><div class="gantt-legend-dot" style="background:#A6443C"></div>เลยกำหนด / วันนี้</div>
         <div class="gantt-legend-item"><div class="gantt-legend-dot" style="background:var(--accent);opacity:0.7"></div>วันนี้</div>
       </div>
       <div id="ganttDensityWrap" style="margin-bottom:0.5rem"></div>
@@ -8980,7 +8980,7 @@ function volumeCell(item) {
 }
 
 /* ── CHARTS ── */
-const PALETTE = ['#4C7CF0','#7C5CFF','#00C2A8','#F5A524','#FF5C7A','#22B8CF','#A78BFA','#FB923C'];
+const PALETTE = ['#2E5395','#5A8FC0','#2F8F6E','#C9A227','#8A94A6','#B0673A','#5C6F8A','#7A9E7E'];
 function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
 
 /* ── TOP N SELECTOR (ใช้ร่วมกันทุกกราฟแบบ ranking/อันดับ) ──
@@ -9111,7 +9111,7 @@ function renderCharts() {
     const statusTotal = done + progress + incomplete;
     charts.status = new Chart(document.getElementById('chartStatus'), {
       type:'doughnut',
-      data:{ labels:['เสร็จแล้ว','กำลังดำเนินการ','ยังไม่ครบ'], datasets:[{ data:[done,progress,incomplete], backgroundColor:['#10b981','#f59e0b','#ef4444'], borderColor: cs.getPropertyValue('--surface').trim(), borderWidth:2, borderRadius:6, spacing:4, hoverOffset:10 }] },
+      data:{ labels:['เสร็จแล้ว','กำลังดำเนินการ','ยังไม่ครบ'], datasets:[{ data:[done,progress,incomplete], backgroundColor:['#3F7D53','#C9A227','#A6443C'], borderColor: cs.getPropertyValue('--surface').trim(), borderWidth:2, borderRadius:3, spacing:3, hoverOffset:10 }] },
       options:{ responsive:true, maintainAspectRatio:false, cutout:'70%', animation: CHART_EASE,
         plugins:{ legend: chartLegendCfg(chartText), tooltip: chartTooltipCfg(cs),
           centerText: { text: (doneRowsForOnTime.length ? onTimeRateForHero + '%' : statusTotal.toLocaleString()), label: doneRowsForOnTime.length ? 'On-Time Rate' : 'รวม', color: cs.getPropertyValue('--text').trim(), labelColor: chartText, valueSize: 24 } } }
@@ -9139,7 +9139,7 @@ function renderCharts() {
           const base = PALETTE[i % PALETTE.length];
           return makeGradient(ctx, chartArea, hexToRgba(base, 0.55), base, false);
         },
-        borderRadius:6, borderSkipped:false, maxBarThickness:24 }] },
+        borderRadius:3, borderSkipped:false, maxBarThickness:24 }] },
       options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y', animation: CHART_EASE,
         plugins:{ legend:{display:false}, tooltip: Object.assign(chartTooltipCfg(cs), { callbacks:{ label: ctx => ` Volume ${ctx.raw.toLocaleString()}` } }) },
         scales:{
@@ -9163,9 +9163,9 @@ function renderCharts() {
       data:{ labels:topModelsSorted.map(m=>m[0]), datasets:[{ data:topModelsSorted.map(m=>m[1]),
         backgroundColor: (context) => {
           const { ctx, chartArea } = context.chart;
-          return makeGradient(ctx, chartArea, hexToRgba('#6366f1', 0.35), '#6366f1', false);
+          return makeGradient(ctx, chartArea, hexToRgba('#2E5395', 0.35), '#2E5395', false);
         },
-        borderRadius:6, borderSkipped:false, maxBarThickness:20 }] },
+        borderRadius:3, borderSkipped:false, maxBarThickness:20 }] },
       options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y', animation: CHART_EASE,
         plugins:{ legend:{display:false}, tooltip: Object.assign(chartTooltipCfg(cs), { callbacks:{ label: ctx => ` Volume ${ctx.raw.toLocaleString()}` } }) },
         scales:{
@@ -9194,9 +9194,9 @@ function renderCharts() {
         datasets:[{ data: yearsSorted.map(y => yearMap[y]),
           backgroundColor: (context) => {
             const { ctx, chartArea } = context.chart;
-            return makeGradient(ctx, chartArea, 'rgba(62,106,225,0.25)', '#3E6AE1', true);
+            return makeGradient(ctx, chartArea, 'rgba(46,83,149,0.25)', '#2E5395', true);
           },
-          borderRadius:6, maxBarThickness:38 }]
+          borderRadius:3, maxBarThickness:38 }]
       },
       options:{ responsive:true, maintainAspectRatio:false, animation: CHART_EASE,
         plugins:{ legend:{display:false}, tooltip: Object.assign(chartTooltipCfg(cs), { callbacks:{ label: ctx => ` ${ctx.raw.toLocaleString()} รายการ` } }) },
@@ -9235,20 +9235,20 @@ function renderCharts() {
             backgroundColor: (context) => {
               const { ctx, chartArea } = context.chart;
               const v = context.raw;
-              return makeGradient(ctx, chartArea, v === peakCount && peakCount > 0 ? 'rgba(62,106,225,0.55)' : 'rgba(62,106,225,0.18)', v === peakCount && peakCount > 0 ? '#3E6AE1' : 'rgba(62,106,225,0.45)', true);
+              return makeGradient(ctx, chartArea, v === peakCount && peakCount > 0 ? 'rgba(46,83,149,0.55)' : 'rgba(46,83,149,0.18)', v === peakCount && peakCount > 0 ? '#2E5395' : 'rgba(46,83,149,0.45)', true);
             },
-            borderRadius: 6, maxBarThickness: 34, yAxisID: 'y'
+            borderRadius: 3, maxBarThickness: 34, yAxisID: 'y'
           },
           {
             type: 'line', label: '% ความสำเร็จ',
             data: monthSuccessRate,
-            borderColor: '#f59e0b',
+            borderColor: '#C9A227',
             backgroundColor: (context) => {
               const { ctx, chartArea } = context.chart;
-              return makeGradient(ctx, chartArea, 'rgba(245,158,11,0.02)', 'rgba(245,158,11,0.28)', true);
+              return makeGradient(ctx, chartArea, 'rgba(201,162,39,0.02)', 'rgba(201,162,39,0.24)', true);
             },
             fill: true, tension: 0.35, pointRadius: 3, pointHoverRadius: 6,
-            pointBackgroundColor: '#f59e0b', pointBorderColor: '#fff', pointBorderWidth: 1.5,
+            pointBackgroundColor: '#C9A227', pointBorderColor: '#fff', pointBorderWidth: 1.5,
             borderWidth: 2.5,
             yAxisID: 'y1'
           }
@@ -9314,7 +9314,7 @@ function renderCharts() {
         labels: rollingLabels,
         datasets: [
           { label: '% ความสำเร็จ', data: successRates, borderColor: PALETTE[0], backgroundColor: hexToRgba(PALETTE[0], 0.14), fill: true, tension: 0.35, spanGaps: true, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2.2 },
-          { label: 'On-Time Rate', data: onTimeRates, borderColor: '#3b82f6', backgroundColor: hexToRgba('#3b82f6', 0.12), fill: true, tension: 0.35, spanGaps: true, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2.2 }
+          { label: 'On-Time Rate', data: onTimeRates, borderColor: '#5A8FC0', backgroundColor: hexToRgba('#5A8FC0', 0.12), fill: true, tension: 0.35, spanGaps: true, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2.2 }
         ]
       },
       options: {
@@ -9393,7 +9393,7 @@ function renderExecDashboard() {
   if (statusCanvas) {
     charts.execStatus = new Chart(statusCanvas, {
       type: 'doughnut',
-      data: { labels: ['เสร็จแล้ว', 'กำลังดำเนินการ', 'ยังไม่ครบ'], datasets: [{ data: [done, progress, incomplete], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderColor: cs.getPropertyValue('--surface').trim(), borderWidth: 2, borderRadius: 6, spacing: 4, hoverOffset: 9 }] },
+      data: { labels: ['เสร็จแล้ว', 'กำลังดำเนินการ', 'ยังไม่ครบ'], datasets: [{ data: [done, progress, incomplete], backgroundColor: ['#3F7D53', '#C9A227', '#A6443C'], borderColor: cs.getPropertyValue('--surface').trim(), borderWidth: 2, borderRadius: 3, spacing: 3, hoverOffset: 9 }] },
       options: { responsive: true, maintainAspectRatio: false, cutout: '70%', animation: CHART_EASE,
         plugins: { legend: chartLegendCfg(chartText), tooltip: chartTooltipCfg(cs),
           centerText: { text: total.toLocaleString(), label: 'รวม', color: cs.getPropertyValue('--text').trim(), labelColor: chartText, valueSize: 22 } } }
@@ -9415,7 +9415,7 @@ function renderExecDashboard() {
           const base = PALETTE[i % PALETTE.length];
           return makeGradient(ctx, chartArea, hexToRgba(base, 0.5), base, false);
         },
-        borderRadius: 6, borderSkipped: false, maxBarThickness: 26 }] },
+        borderRadius: 3, borderSkipped: false, maxBarThickness: 26 }] },
       options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', animation: CHART_EASE,
         plugins: { legend: { display: false }, tooltip: Object.assign(chartTooltipCfg(cs), { callbacks: { label: ctx => ` ${ctx.raw.toLocaleString()} รายการ` } }) },
         scales: {
@@ -9565,9 +9565,9 @@ function renderSummaryCards(mData, mLabel) {
   // Status bars
   document.getElementById('s-bars-title').textContent = `สัดส่วนสถานะ: ${label}`;
   const bars = [
-    { label:'เสร็จแล้ว', count:done, color:'var(--success)', hex:'#10b981' },
-    { label:'กำลังดำเนินการ', count:progress, color:'var(--warn)', hex:'#f59e0b' },
-    { label:'ยังไม่ครบ', count:incomplete, color:'var(--danger)', hex:'#ef4444' }
+    { label:'เสร็จแล้ว', count:done, color:'var(--success)', hex:'#3F7D53' },
+    { label:'กำลังดำเนินการ', count:progress, color:'var(--warn)', hex:'#C9A227' },
+    { label:'ยังไม่ครบ', count:incomplete, color:'var(--danger)', hex:'#A6443C' }
   ];
   document.getElementById('statusBars').innerHTML = bars.map(b => {
     const p = total ? Math.round(b.count/total*100) : 0;
@@ -9599,7 +9599,7 @@ function renderSummaryCards(mData, mLabel) {
           const base = PALETTE[context.dataIndex % PALETTE.length];
           return makeGradient(ctx, chartArea, hexToRgba(base, 0.5), base, false);
         },
-        borderRadius:6, maxBarThickness:22 }] },
+        borderRadius:3, maxBarThickness:22 }] },
       options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y', animation: CHART_EASE,
         plugins:{legend:{display:false}, tooltip: Object.assign(chartTooltipCfg(cs), { callbacks:{ label: ctx => ` ${ctx.raw.toLocaleString()} รายการ` } })},
         scales:{
@@ -9720,9 +9720,9 @@ function renderModelBreakdown() {
     data: {
       labels: models.map(m => m[0]),
       datasets: [
-        { label: 'เสร็จแล้ว', data: models.map(m => m[1].done), backgroundColor: (context) => makeGradient(context.chart.ctx, context.chart.chartArea, hexToRgba('#10b981',0.4), '#10b981', false), borderRadius: 4, maxBarThickness: 18 },
-        { label: 'กำลังดำเนินการ', data: models.map(m => m[1].progress), backgroundColor: (context) => makeGradient(context.chart.ctx, context.chart.chartArea, hexToRgba('#f59e0b',0.4), '#f59e0b', false), borderRadius: 4, maxBarThickness: 18 },
-        { label: 'ยังไม่ครบ', data: models.map(m => m[1].incomplete), backgroundColor: (context) => makeGradient(context.chart.ctx, context.chart.chartArea, hexToRgba('#ef4444',0.4), '#ef4444', false), borderRadius: 4, maxBarThickness: 18 }
+        { label: 'เสร็จแล้ว', data: models.map(m => m[1].done), backgroundColor: (context) => makeGradient(context.chart.ctx, context.chart.chartArea, hexToRgba('#3F7D53',0.4), '#3F7D53', false), borderRadius: 3, maxBarThickness: 18 },
+        { label: 'กำลังดำเนินการ', data: models.map(m => m[1].progress), backgroundColor: (context) => makeGradient(context.chart.ctx, context.chart.chartArea, hexToRgba('#C9A227',0.4), '#C9A227', false), borderRadius: 3, maxBarThickness: 18 },
+        { label: 'ยังไม่ครบ', data: models.map(m => m[1].incomplete), backgroundColor: (context) => makeGradient(context.chart.ctx, context.chart.chartArea, hexToRgba('#A6443C',0.4), '#A6443C', false), borderRadius: 3, maxBarThickness: 18 }
       ]
     },
     options: {
@@ -11312,10 +11312,10 @@ function renderLeadTime() {
           backgroundColor: (context) => {
             const { ctx, chartArea } = context.chart;
             const v = sorted[context.dataIndex] ? sorted[context.dataIndex].avgLead : 0;
-            const base = v > 20 ? '#ef4444' : v > 10 ? '#f59e0b' : '#10b981';
+            const base = v > 20 ? '#A6443C' : v > 10 ? '#C9A227' : '#3F7D53';
             return makeGradient(ctx, chartArea, hexToRgba(base, 0.35), base, false);
           },
-          borderRadius: 6, borderSkipped: false, maxBarThickness: 24
+          borderRadius: 3, borderSkipped: false, maxBarThickness: 24
         }]
       },
       options: {
@@ -12404,10 +12404,10 @@ function mtRowProgress(m){
   return { pct: total ? Math.round(done/total*100) : 0, done, total };
 }
 function mtProgressColor(pct){
-  if(pct===100) return '#10b981';
+  if(pct===100) return '#3F7D53';
   if(pct>=60)   return 'var(--accent)';
-  if(pct>=30)   return '#f59e0b';
-  return '#6366f1';
+  if(pct>=30)   return '#C9A227';
+  return '#2E5395';
 }
 
 // ── countdown helpers ───────────────────────────────
@@ -13320,7 +13320,7 @@ function renderWpCharts() {
   const data = wpActiveMonth ? wpData.filter(r => wpMonthKey(r.date) === wpActiveMonth) : wpData;
   const cs = getComputedStyle(document.documentElement);
   const chartText = cs.getPropertyValue('--chart-text').trim() || '#64748b';
-  const PALETTE = ['#4C7CF0','#7C5CFF','#00C2A8','#F5A524','#FF5C7A','#22B8CF'];
+  const PALETTE = ['#2E5395','#5A8FC0','#2F8F6E','#C9A227','#8A94A6','#B0673A'];
 
   // Type chart
   const typeMap = {};
@@ -13349,7 +13349,7 @@ function renderWpCharts() {
     const wpStatusTotal = done + inprog + todo;
     wpCharts.status = new Chart(statCanvas, {
       type:'doughnut',
-      data:{ labels:['เสร็จสิ้น','กำลังดำเนินการ','ยังไม่เริ่ม'], datasets:[{ data:[done,inprog,todo], backgroundColor:['#10b981','#f59e0b','#64748b'], borderWidth:0, borderRadius:4, spacing:3, hoverOffset:7 }] },
+      data:{ labels:['เสร็จสิ้น','กำลังดำเนินการ','ยังไม่เริ่ม'], datasets:[{ data:[done,inprog,todo], backgroundColor:['#3F7D53','#C9A227','#8A94A6'], borderWidth:0, borderRadius:3, spacing:3, hoverOffset:7 }] },
       options:{ responsive:true, maintainAspectRatio:false, cutout:'66%', animation: CHART_EASE,
         plugins:{ legend: chartLegendCfg(chartText, 9.5), tooltip: chartTooltipCfg(cs),
           centerText: { text: wpStatusTotal.toLocaleString(), label: 'รวม', color: cs.getPropertyValue('--text').trim(), labelColor: chartText, valueSize: 18 } } }
@@ -13374,7 +13374,7 @@ function renderWpCharts() {
           const base = PALETTE[context.dataIndex % PALETTE.length];
           return makeGradient(ctx, chartArea, hexToRgba(base, 0.5), base, false);
         },
-        borderRadius:6, maxBarThickness:22 }] },
+        borderRadius:3, maxBarThickness:22 }] },
       options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y', animation: CHART_EASE,
         plugins:{legend:{display:false}, tooltip: Object.assign(chartTooltipCfg(cs), { callbacks:{ label: ctx => ` ${ctx.raw.toLocaleString()} รายการ` } })},
         scales:{
