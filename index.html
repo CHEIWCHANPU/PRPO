@@ -10891,7 +10891,14 @@ function renderManuals() {
   }
   grid.innerHTML = list.map(m => {
     const dateStr = m.uploadedAt ? new Date(m.uploadedAt).toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' }) : '';
+    const thumbHtml = m.fileId
+      ? `<div class="manual-thumb" style="margin:-1.1rem -1.2rem 0.9rem;height:150px;background:var(--surface2);display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:14px 14px 0 0;border-bottom:1px solid var(--border)">
+          <img src="https://drive.google.com/thumbnail?id=${m.fileId}&sz=w500" loading="lazy" alt="หน้าแรก ${m.title}" style="width:100%;height:100%;object-fit:cover;object-position:top center;display:block"
+               onerror="this.parentElement.innerHTML='<span style=&quot;font-size:2.6rem;opacity:.5&quot;>${manualCategoryIcon(m.category)}</span>'">
+        </div>`
+      : '';
     return `<div class="supplier-card">
+      ${thumbHtml}
       <div class="supplier-header">
         <div style="display:flex;align-items:center;gap:0.7rem;min-width:0">
           <div class="supplier-avatar" style="background:linear-gradient(135deg,var(--accent),var(--accent2))">${manualCategoryIcon(m.category)}</div>
