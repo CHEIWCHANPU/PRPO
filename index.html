@@ -6879,6 +6879,23 @@ body.light-theme {
 const DEFAULT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxJrjtHhcT8Ar7pzmE2jZKMX-dKl75BnLeNerPAZZVINHd85K7_Fn3AigKg5733TjOdtA/exec';
 const DEFAULT_SHEET_URL   = 'https://docs.google.com/spreadsheets/d/1TaZlcjm9u1D3m-sBW5sTD1df1GIPXlrMHv_A5755bU8/edit?gid=789432946#gid=789432946';
 
+/* ── AUTO-HEAL WEB APP URL ──────────────────────────────────
+   แก้ปัญหา "คนละเครื่อง เชื่อมคนละ URL": ถ้าไฟล์นี้ถูกอัปเดต
+   DEFAULT_WEB_APP_URL เป็นค่าใหม่ (เช่น deploy เวอร์ชันใหม่แล้ว
+   เอาไฟล์นี้ไปแจกให้ทุกคนใหม่) แต่เครื่องนั้นๆ เคยบันทึก URL
+   เก่าไว้ใน localStorage จากก่อนหน้า ให้ล้าง URL เก่าทิ้งอัตโนมัติ
+   แล้วสลับไปใช้ DEFAULT_WEB_APP_URL ตัวล่าสุดในไฟล์ทันที โดยไม่ต้อง
+   เข้าไปตั้งค่าเองทุกเครื่อง — "SAVE ที่ไฟล์นี้ทีเดียว ติดทุกเครื่อง" ──── */
+(function autoHealWebAppUrl() {
+  try {
+    const lastSeenDefault = localStorage.getItem('prpo_default_url_seen');
+    if (lastSeenDefault !== DEFAULT_WEB_APP_URL) {
+      localStorage.removeItem('prpo_url');
+      localStorage.setItem('prpo_default_url_seen', DEFAULT_WEB_APP_URL);
+    }
+  } catch (e) {}
+})();
+
 let WEB_APP_URL = localStorage.getItem('prpo_url') || (DEFAULT_WEB_APP_URL.startsWith('วาง_') ? '' : DEFAULT_WEB_APP_URL);
 let suppliers = [];
 let historyLog = JSON.parse(localStorage.getItem('prpo_history') || '[]');
