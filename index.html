@@ -5176,10 +5176,16 @@ body.light-theme {
     <div class="page active" id="page-home">
       <div class="chart-card" id="todoHomeWidget">
         <div class="chart-header" style="display:flex;align-items:center;justify-content:space-between">
-          <div class="chart-title">✅ To-Do วันนี้</div>
-          <button class="btn btn-ghost" style="padding:0.3rem 0.7rem;font-size:0.75rem" onclick="showPage('todo', document.getElementById('nav-todo'))">ดูทั้งหมด →</button>
+          <div class="chart-title">✅ To-Do</div>
+          <div style="display:flex;align-items:center;gap:0.4rem">
+            <div style="display:flex;flex-direction:column;gap:2px">
+              <button class="btn btn-ghost" onclick="scrollTodoHome(-1)" style="padding:0.15rem 0.5rem;font-size:0.7rem;line-height:1">▲</button>
+              <button class="btn btn-ghost" onclick="scrollTodoHome(1)" style="padding:0.15rem 0.5rem;font-size:0.7rem;line-height:1">▼</button>
+            </div>
+            <button class="btn btn-ghost" style="padding:0.3rem 0.7rem;font-size:0.75rem" onclick="showPage('todo', document.getElementById('nav-todo'))">ดูทั้งหมด →</button>
+          </div>
         </div>
-        <div id="todoHomeList" style="margin-top:0.7rem"></div>
+        <div id="todoHomeList" style="margin-top:0.7rem;max-height:260px;overflow-y:auto;scroll-behavior:smooth"></div>
       </div>
 
       <div class="briefing-panel" id="briefingPanel" style="margin-top:1.1rem">
@@ -11453,6 +11459,12 @@ function pickTodoCategory(cat, btn) {
   if (btn) btn.classList.add('active');
 }
 
+function scrollTodoHome(direction) {
+  const box = document.getElementById('todoHomeList');
+  if (!box) return;
+  box.scrollBy({ top: direction * 76, behavior: 'smooth' });
+}
+
 function renderTodoHomeWidget() {
   const box = document.getElementById('todoHomeList');
   if (!box) return;
@@ -11461,18 +11473,23 @@ function renderTodoHomeWidget() {
   const withMeta2 = todoTasks
     .filter(t => !t.done)
     .map(t => ({ ...t, daysLeft: todoDaysLeft(t.date) }))
-    .filter(t => t.daysLeft !== null && t.daysLeft <= 3) // เลยกำหนด + วันนี้ + ใกล้ครบกำหนด (≤3 วัน)
-    .sort((a, b) => a.daysLeft - b.daysLeft);
+    .sort((a, b) => {
+      if (a.daysLeft === null && b.daysLeft === null) return 0;
+      if (a.daysLeft === null) return 1;   // งานไม่มีวันครบกำหนดไปอยู่ท้ายสุด
+      if (b.daysLeft === null) return -1;
+      return a.daysLeft - b.daysLeft;
+    });
 
   if (!withMeta2.length) {
-    box.innerHTML = `<div class="briefing-empty" style="padding:1.2rem 0">🎉 ไม่มีงานที่ต้องติดตามวันนี้</div>`;
+    box.innerHTML = `<div class="briefing-empty" style="padding:1.2rem 0">🎉 ไม่มีงานที่ต้องติดตามตอนนี้</div>`;
     return;
   }
 
   box.innerHTML = withMeta2.map(t => {
     const info = TODO_CATEGORIES[t.category] || TODO_CATEGORIES.other;
     let ageChip;
-    if (t.daysLeft < 0) ageChip = `<span class="todo-age-chip todo-age-late">🔴 เลยกำหนด ${Math.abs(t.daysLeft)} วัน</span>`;
+    if (t.daysLeft === null) ageChip = '';
+    else if (t.daysLeft < 0) ageChip = `<span class="todo-age-chip todo-age-late">🔴 เลยกำหนด ${Math.abs(t.daysLeft)} วัน</span>`;
     else if (t.daysLeft === 0) ageChip = `<span class="todo-age-chip todo-age-soon">🟡 ครบกำหนดวันนี้</span>`;
     else ageChip = `<span class="todo-age-chip todo-age-ok">🟢 อีก ${t.daysLeft} วัน</span>`;
     return `<div class="todo-item" style="margin-bottom:0.5rem">
