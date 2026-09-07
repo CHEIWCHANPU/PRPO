@@ -5176,7 +5176,7 @@ body.light-theme {
     <div class="page active" id="page-home">
       <div class="chart-card" id="todoHomeWidget">
         <div class="chart-header" style="display:flex;align-items:center;justify-content:space-between">
-          <div class="chart-title">✅ งานที่ต้องรับผิดชอบ</div>
+          <div class="chart-title">📌 งานที่ค้าง / ต้องติดตาม</div>
           <div style="display:flex;align-items:center;gap:0.4rem">
             <div style="display:flex;flex-direction:column;gap:2px">
               <button class="btn btn-ghost" onclick="scrollTodoHome(-1)" style="padding:0.15rem 0.5rem;font-size:0.7rem;line-height:1">▲</button>
@@ -6408,7 +6408,7 @@ body.light-theme {
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:0.6rem">
         <div>
           <div style="font-size:1.15rem;font-weight:700;color:var(--text);font-family:var(--font-display)">✅ To-Do งานประจำวัน</div>
-          <div style="font-size:0.777rem;color:var(--muted);margin-top:0.15rem">บันทึกงานที่ต้องติดตาม เช่น ขอราคา, ติดตาม Maker, ส่งเอกสาร — เลยกำหนดจะแจ้งเตือนอัตโนมัติ</div>
+          <div style="font-size:0.777rem;color:var(--muted);margin-top:0.15rem">บันทึกงานที่ต้องติดตาม เช่น ขอใบเสนอราคา, ติดตาม Maker, ส่งเอกสาร — เลยกำหนดจะแจ้งเตือนอัตโนมัติ</div>
         </div>
       </div>
 
@@ -6418,19 +6418,21 @@ body.light-theme {
 
       <div class="chart-card" style="margin-bottom:1.2rem">
         <div class="form-grid">
-          <div class="form-group full"><label class="form-label">ชื่องาน *</label><input type="text" class="form-input" id="td-title" placeholder="เช่น ขอราคา Part XXX จาก Maker ABC" onkeydown="if(event.key==='Enter')addTodo()"></div>
+          <input type="hidden" id="td-edit-id" value="">
+          <div class="form-group full"><label class="form-label">ชื่องาน *</label><input type="text" class="form-input" id="td-title" placeholder="เช่น ขอใบเสนอราคา Part XXX จาก Maker ABC" onkeydown="if(event.key==='Enter')addTodo()"></div>
           <div class="form-group full">
             <label class="form-label">หมวดหมู่</label>
             <input type="hidden" id="td-category" value="quote">
             <div class="todo-cat-pick" id="todoCatPick">
-              <button type="button" class="todo-cat-pick-btn active" style="--pick-color:#F2A93B" data-cat="quote" onclick="pickTodoCategory('quote',this)">💰 ขอราคา</button>
+              <button type="button" class="todo-cat-pick-btn active" style="--pick-color:#F2A93B" data-cat="quote" onclick="pickTodoCategory('quote',this)">💰 ขอใบเสนอราคา</button>
               <button type="button" class="todo-cat-pick-btn" style="--pick-color:#2F7DFF" data-cat="follow" onclick="pickTodoCategory('follow',this)">📞 ติดตาม Maker</button>
               <button type="button" class="todo-cat-pick-btn" style="--pick-color:#00D4B8" data-cat="doc" onclick="pickTodoCategory('doc',this)">📄 ส่งเอกสาร</button>
               <button type="button" class="todo-cat-pick-btn" style="--pick-color:#7D8AA0" data-cat="other" onclick="pickTodoCategory('other',this)">📌 อื่นๆ</button>
             </div>
           </div>
           <div class="form-group"><label class="form-label">กำหนดวันที่ต้องเสร็จ</label><input type="date" class="form-input" id="td-date"></div>
-          <div class="form-group" style="display:flex;align-items:flex-end;justify-content:flex-end">
+          <div class="form-group" style="display:flex;align-items:flex-end;gap:0.5rem">
+            <button class="btn btn-ghost" id="todoCancelEditBtn" onclick="cancelTodoEdit()" style="display:none">ยกเลิก</button>
             <button class="btn btn-primary" id="td-add-btn" style="width:100%" onclick="addTodo()">+ เพิ่มงาน</button>
           </div>
         </div>
@@ -6466,7 +6468,7 @@ body.light-theme {
         <div id="todoCalGrid" style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px"></div>
       </div>
       <div style="margin-top:1.2rem;font-size:0.714rem;color:var(--muted);text-align:center">
-        💡 รายการ To-Do นี้บันทึกไว้ในเบราว์เซอร์เครื่องนี้เท่านั้น (ยังไม่ sync ขึ้น Google Sheet) — บอกได้ถ้าต้องการให้เชื่อมต่อเซิร์ฟเวอร์เพื่อให้ทุกคนเห็นข้อมูลเดียวกันและใช้งานได้หลายเครื่อง
+        ☁️ ข้อมูล To-Do sync กับ Google Sheet ส่วนกลาง — ทุกคนเห็นรายการเดียวกันและใช้งานได้หลายเครื่อง
       </div>
     </div>
     <!-- /TO-DO PAGE -->
@@ -11327,7 +11329,7 @@ let todoCalDate = new Date();
 let todoLoaded = false;
 
 const TODO_CATEGORIES = {
-  quote:  { label: '💰 ขอราคา',       color: '#F2A93B' },
+  quote:  { label: '💰 ขอใบเสนอราคา',  color: '#F2A93B' },
   follow: { label: '📞 ติดตาม Maker', color: '#2F7DFF' },
   doc:    { label: '📄 ส่งเอกสาร',    color: '#00D4B8' },
   other:  { label: '📌 อื่นๆ',        color: '#7D8AA0' },
@@ -11353,24 +11355,27 @@ async function addTodo() {
   if (!WEB_APP_URL) { alert('ยังไม่ได้ตั้งค่า Web App URL ในเมนู ⚙️ ตั้งค่าระบบ'); return; }
   const category = document.getElementById('td-category').value;
   const date = document.getElementById('td-date').value;
+  const editId = document.getElementById('td-edit-id').value;
   const btn = document.getElementById('td-add-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'กำลังบันทึก...'; }
   try {
+    const payload = editId
+      ? { action: 'updateTodoItem', id: editId, title, category, date }
+      : { action: 'addTodoItem', title, category, date };
     const res = await fetch(WEB_APP_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'addTodoItem', title, category, date })
+      body: JSON.stringify(payload)
     });
     const json = await res.json();
-    if (!json.success) throw new Error(json.error || 'เพิ่มงานไม่สำเร็จ');
-    titleEl.value = '';
-    document.getElementById('td-date').value = '';
+    if (!json.success) throw new Error(json.error || 'บันทึกไม่สำเร็จ');
+    cancelTodoEdit();
     await loadTodoTasks();
     renderTodoList();
   } catch (err) {
-    alert('เพิ่มงานไม่สำเร็จ: ' + err.message);
+    alert('บันทึกไม่สำเร็จ: ' + err.message);
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '+ เพิ่มงาน'; }
+    if (btn) { btn.disabled = false; btn.textContent = document.getElementById('td-edit-id').value ? '💾 บันทึกการแก้ไข' : '+ เพิ่มงาน'; }
   }
 }
 async function toggleTodoDone(id) {
@@ -11459,6 +11464,7 @@ function renderTodoList() {
             ${ageChip}
           </div>
         </div>
+        <button class="icon-btn" onclick="editTodoStart('${t.id}')" title="แก้ไข">✏️</button>
         <button class="icon-btn del" onclick="deleteTodo('${t.id}')" title="ลบ">🗑️</button>
       </div>`;
     }).join('');
@@ -11495,6 +11501,33 @@ function pickTodoCategory(cat, btn) {
   document.getElementById('td-category').value = cat;
   document.querySelectorAll('#todoCatPick .todo-cat-pick-btn').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
+}
+
+function editTodoStart(id) {
+  const t = todoTasks.find(x => x.id === id);
+  if (!t) return;
+  document.getElementById('td-edit-id').value = id;
+  document.getElementById('td-title').value = t.title;
+  document.getElementById('td-date').value = t.date || '';
+  pickTodoCategory(t.category, document.querySelector(`#todoCatPick .todo-cat-pick-btn[data-cat="${t.category}"]`));
+  const btn = document.getElementById('td-add-btn');
+  if (btn) btn.textContent = '💾 บันทึกการแก้ไข';
+  const cancelBtn = document.getElementById('todoCancelEditBtn');
+  if (cancelBtn) cancelBtn.style.display = '';
+  const titleEl = document.getElementById('td-title');
+  titleEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  titleEl.focus();
+}
+
+function cancelTodoEdit() {
+  document.getElementById('td-edit-id').value = '';
+  document.getElementById('td-title').value = '';
+  document.getElementById('td-date').value = '';
+  pickTodoCategory('quote', document.querySelector('#todoCatPick .todo-cat-pick-btn[data-cat="quote"]'));
+  const btn = document.getElementById('td-add-btn');
+  if (btn) btn.textContent = '+ เพิ่มงาน';
+  const cancelBtn = document.getElementById('todoCancelEditBtn');
+  if (cancelBtn) cancelBtn.style.display = 'none';
 }
 
 function scrollTodoHome(direction) {
