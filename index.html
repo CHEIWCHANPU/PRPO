@@ -6431,7 +6431,7 @@ body.light-theme {
           </div>
           <div class="form-group"><label class="form-label">กำหนดวันที่ต้องเสร็จ</label><input type="date" class="form-input" id="td-date"></div>
           <div class="form-group" style="display:flex;align-items:flex-end;justify-content:flex-end">
-            <button class="btn btn-primary" style="width:100%" onclick="addTodo()">+ เพิ่มงาน</button>
+            <button class="btn btn-primary" id="td-add-btn" style="width:100%" onclick="addTodo()">+ เพิ่มงาน</button>
           </div>
         </div>
       </div>
@@ -7115,7 +7115,7 @@ window.addEventListener('DOMContentLoaded', () => {
   initAutoSync();
   initKeyboardShortcuts();
   initNavGroups();
-  renderTodoList();
+  loadTodoTasks().then(renderTodoList);
   document.addEventListener('click', (e) => {
     if (notifOpen && !e.target.closest('#notifPanel') && !e.target.closest('#notifBell')) closeNotif();
     if (accentPopoverOpen && !e.target.closest('#accentPopover') && !e.target.closest('#accentBtn')) closeAccentPopover();
@@ -7582,7 +7582,7 @@ function showPage(name, btn) {
   if (btn) btn.classList.add('active');
   const titles = PAGE_TITLES[getCurrentLang()] || PAGE_TITLES.th;
   document.getElementById('topbarTitle').textContent = titles[name] || name;
-  if (name === 'home') { renderDailyBriefing(); renderTodoHomeWidget(); }
+  if (name === 'home') { renderDailyBriefing(); loadTodoTasks().then(renderTodoHomeWidget); }
   if (name === 'exec') renderExecDashboard();
   if (name === 'summary') renderSummary();
   if (name === 'partmodel') { renderPmSummaryStats(); renderPartModelByModel(); }
@@ -7596,7 +7596,7 @@ function showPage(name, btn) {
   if (name === 'workplan') renderWorkplan();
   if (name === 'payroll') payrollInit();
   if (name === 'manual') loadManualsFromServer();
-  if (name === 'todo') renderTodoList();
+  if (name === 'todo') loadTodoTasks().then(renderTodoList);
 }
 
 /* ── NOTIFICATIONS ── */
@@ -11317,12 +11317,14 @@ function renderManuals() {
 
 /* ══════════════════════════════════════════════════
    ✅ TO-DO งานประจำวัน (ขอราคา / ติดตาม Maker / ส่งเอกสาร ฯลฯ)
-   เก็บไว้ใน localStorage เครื่องนี้เท่านั้น
+   เชื่อมกับ Google Sheet ผ่าน Apps Script (action: getTodos /
+   addTodoItem / updateTodoItem / deleteTodoItem) — sync ข้ามเครื่องได้
 ══════════════════════════════════════════════════ */
 let todoTasks = [];
 let todoFilter = 'all';
 let todoView = 'list';
 let todoCalDate = new Date();
+let todoLoaded = false;
 
 const TODO_CATEGORIES = {
   quote:  { label: '💰 ขอราคา',       color: '#F2A93B' },
@@ -11330,12 +11332,13 @@ const TODO_CATEGORIES = {
   doc:    { label: '📄 ส่งเอกสาร',    color: '#00D4B8' },
   other:  { label: '📌 อื่นๆ',        color: '#7D8AA0' },
 };
-function loadTodoTasks() {
-  try { todoTasks = JSON.parse(localStorage.getItem('todo_tasks') || '[]'); }
-  catch (e) { todoTasks = []; }
-}
-function saveTodoTasks() {
-  localStorage.setItem('todo_tasks', JSON.stringify(todoTasks));
+async function loadTodoTasks() {
+  if (!WEB_APP_URL) return;
+  try {
+    const res = await fetch(WEB_APP_URL + '?action=getTodos');
+    const json = await res.json();
+    if (json.success) { todoTasks = json.data || []; todoLoaded = true; }
+  } catch (e) { /* เก็บของเดิมไว้ถ้า fetch ไม่สำเร็จ (เช่นเน็ตหลุด) */ }
 }
 function todoDaysLeft(dateStr) {
   if (!dateStr) return null;
@@ -11343,32 +11346,68 @@ function todoDaysLeft(dateStr) {
   const today = new Date(); today.setHours(0,0,0,0);
   return Math.round((due - today) / 86400000);
 }
-function addTodo() {
+async function addTodo() {
   const titleEl = document.getElementById('td-title');
   const title = titleEl.value.trim();
   if (!title) { alert('กรุณากรอกชื่องาน'); return; }
+  if (!WEB_APP_URL) { alert('ยังไม่ได้ตั้งค่า Web App URL ในเมนู ⚙️ ตั้งค่าระบบ'); return; }
   const category = document.getElementById('td-category').value;
   const date = document.getElementById('td-date').value;
-  loadTodoTasks();
-  todoTasks.unshift({ id: 'TD' + Date.now(), title, category, date, done: false, createdAt: new Date().toISOString() });
-  saveTodoTasks();
-  titleEl.value = '';
-  document.getElementById('td-date').value = '';
-  renderTodoList();
+  const btn = document.getElementById('td-add-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'กำลังบันทึก...'; }
+  try {
+    const res = await fetch(WEB_APP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'addTodoItem', title, category, date })
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || 'เพิ่มงานไม่สำเร็จ');
+    titleEl.value = '';
+    document.getElementById('td-date').value = '';
+    await loadTodoTasks();
+    renderTodoList();
+  } catch (err) {
+    alert('เพิ่มงานไม่สำเร็จ: ' + err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '+ เพิ่มงาน'; }
+  }
 }
-function toggleTodoDone(id) {
-  loadTodoTasks();
+async function toggleTodoDone(id) {
   const t = todoTasks.find(x => x.id === id);
-  if (t) t.done = !t.done;
-  saveTodoTasks();
+  if (!t) return;
+  const newDone = !t.done;
+  t.done = newDone; // อัปเดตหน้าจอทันทีก่อน (optimistic) แล้วค่อยยิงไป Sheet เบื้องหลัง
   renderTodoList();
+  try {
+    const res = await fetch(WEB_APP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'updateTodoItem', id, done: newDone })
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || 'อัปเดตไม่สำเร็จ');
+  } catch (err) {
+    t.done = !newDone; // ย้อนกลับถ้าล้มเหลว
+    renderTodoList();
+    alert('อัปเดตสถานะไม่สำเร็จ: ' + err.message);
+  }
 }
-function deleteTodo(id) {
+async function deleteTodo(id) {
   if (!confirm('ต้องการลบงานนี้ใช่หรือไม่?')) return;
-  loadTodoTasks();
-  todoTasks = todoTasks.filter(x => x.id !== id);
-  saveTodoTasks();
-  renderTodoList();
+  try {
+    const res = await fetch(WEB_APP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'deleteTodoItem', id })
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || 'ลบไม่สำเร็จ');
+    todoTasks = todoTasks.filter(x => x.id !== id);
+    renderTodoList();
+  } catch (err) {
+    alert('ลบไม่สำเร็จ: ' + err.message);
+  }
 }
 function setTodoFilter(f, btn) {
   todoFilter = f;
@@ -11379,7 +11418,6 @@ function setTodoFilter(f, btn) {
 function renderTodoList() {
   const list = document.getElementById('todoList');
   if (!list) return;
-  loadTodoTasks();
 
   const withMeta = todoTasks.map(t => ({ ...t, daysLeft: todoDaysLeft(t.date) }));
   const filtered = withMeta.filter(t => {
@@ -11468,7 +11506,6 @@ function scrollTodoHome(direction) {
 function renderTodoHomeWidget() {
   const box = document.getElementById('todoHomeList');
   if (!box) return;
-  loadTodoTasks();
 
   const withMeta2 = todoTasks
     .filter(t => !t.done)
@@ -11532,7 +11569,6 @@ function renderTodoCalendar() {
   const grid = document.getElementById('todoCalGrid');
   const titleEl = document.getElementById('todoCalTitle');
   if (!grid || !titleEl) return;
-  loadTodoTasks();
 
   const year = todoCalDate.getFullYear();
   const month = todoCalDate.getMonth();
