@@ -4958,15 +4958,15 @@ body.light-theme {
         <button class="nav-item active" id="nav-home" onclick="showPage('home',this)">
           <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-5h4v5a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1V10"/></svg></span><span class="nav-text" data-i18n="nav_home">หน้าหลัก</span>
         </button>
+        <button class="nav-item" id="nav-todo" onclick="showPage('todo',this)">
+          <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><span class="nav-text" data-i18n="nav_todo">To-Do งานประจำวัน</span>
+          <span class="nav-badge" id="todoNavBadge" style="display:none">0</span>
+        </button>
         <button class="nav-item" id="nav-exec" onclick="showPage('exec',this)" data-tour="nav-exec">
           <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-4-4L3 17"/></svg></span><span class="nav-text" data-i18n="nav_exec">ภาพรวม KPI</span>
         </button>
         <button class="nav-item" id="nav-payroll" onclick="showPage('payroll',this)">
           <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14.01"/><line x1="12" y1="14" x2="12" y2="14.01"/></svg></span><span class="nav-text" data-i18n="nav_payroll">ลงเวลาทำงาน</span>
-        </button>
-        <button class="nav-item" id="nav-todo" onclick="showPage('todo',this)">
-          <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><span class="nav-text" data-i18n="nav_todo">To-Do งานประจำวัน</span>
-          <span class="nav-badge" id="todoNavBadge" style="display:none">0</span>
         </button>
       </div>
     </div>
@@ -5174,7 +5174,15 @@ body.light-theme {
   <main>
     <!-- HOME -->
     <div class="page active" id="page-home">
-      <div class="briefing-panel" id="briefingPanel">
+      <div class="chart-card" id="todoHomeWidget">
+        <div class="chart-header" style="display:flex;align-items:center;justify-content:space-between">
+          <div class="chart-title">✅ To-Do วันนี้</div>
+          <button class="btn btn-ghost" style="padding:0.3rem 0.7rem;font-size:0.75rem" onclick="showPage('todo', document.getElementById('nav-todo'))">ดูทั้งหมด →</button>
+        </div>
+        <div id="todoHomeList" style="margin-top:0.7rem"></div>
+      </div>
+
+      <div class="briefing-panel" id="briefingPanel" style="margin-top:1.1rem">
         <div class="briefing-head">
           <div>
             <div class="briefing-title">📋 งานที่ต้องติดตามวันนี้</div>
@@ -5213,14 +5221,6 @@ body.light-theme {
           </div>
         </div>
         <div class="briefing-body" id="briefingBody"><div class="briefing-empty"><div class="spinner" style="margin:0 auto"></div></div></div>
-      </div>
-
-      <div class="chart-card" id="todoHomeWidget" style="margin-top:1.1rem">
-        <div class="chart-header" style="display:flex;align-items:center;justify-content:space-between">
-          <div class="chart-title">✅ To-Do วันนี้</div>
-          <button class="btn btn-ghost" style="padding:0.3rem 0.7rem;font-size:0.75rem" onclick="showPage('todo', document.getElementById('nav-todo'))">ดูทั้งหมด →</button>
-        </div>
-        <div id="todoHomeList" style="margin-top:0.7rem"></div>
       </div>
     </div>
 
@@ -6371,48 +6371,61 @@ body.light-theme {
     <div class="page" id="page-todo">
       <style>
         .todo-cat-btn.active { background: var(--accent) !important; border-color: var(--accent) !important; color: #fff !important; }
-        .todo-item { display:flex; align-items:flex-start; gap:0.7rem; padding:0.8rem 0.9rem; border:1px solid var(--border); border-radius: var(--r-md,10px); background:var(--surface); margin-bottom:0.6rem; }
-        .todo-item.done { opacity:0.55; }
+        .todo-progress-wrap { height:8px; border-radius:5px; background:var(--surface2); overflow:hidden; border:1px solid var(--border); }
+        .todo-progress-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:5px; transition:width 0.4s ease; }
+        .todo-cat-pick { display:flex; gap:0.4rem; flex-wrap:wrap; }
+        .todo-cat-pick-btn { display:flex; align-items:center; gap:0.35rem; padding:0.45rem 0.8rem; border-radius:9px; border:1.5px solid var(--border); background:var(--surface2); color:var(--muted); font-size:0.78rem; font-weight:600; cursor:pointer; transition:all 0.15s ease; }
+        .todo-cat-pick-btn.active { border-color:var(--pick-color,var(--accent)); background:color-mix(in srgb, var(--pick-color,var(--accent)) 14%, transparent); color:var(--pick-color,var(--accent)); }
+        .todo-item { position:relative; display:flex; align-items:flex-start; gap:0.75rem; padding:0.85rem 0.95rem 0.85rem 1.05rem; border:1px solid var(--border); border-left:3px solid var(--item-color,var(--border)); border-radius:var(--r-md,10px); background:var(--surface); margin-bottom:0.6rem; transition:transform 0.15s ease, box-shadow 0.15s ease; }
+        .todo-item:hover { transform:translateX(2px); box-shadow:0 4px 14px rgba(0,0,0,0.08); }
+        .todo-item.done { opacity:0.5; }
         .todo-item.done .todo-title { text-decoration:line-through; }
-        .todo-check { width:20px; height:20px; border-radius:6px; border:2px solid var(--border); flex-shrink:0; cursor:pointer; display:flex; align-items:center; justify-content:center; margin-top:0.1rem; background:var(--surface2); }
+        .todo-icon-badge { width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:0.9rem; flex-shrink:0; background:color-mix(in srgb, var(--item-color,var(--accent)) 16%, transparent); }
+        .todo-check { width:20px; height:20px; border-radius:6px; border:2px solid var(--border); flex-shrink:0; cursor:pointer; display:flex; align-items:center; justify-content:center; margin-top:0.1rem; background:var(--surface2); transition:all 0.15s ease; }
+        .todo-check:hover { border-color:var(--accent); }
         .todo-check.checked { background:var(--success); border-color:var(--success); color:#fff; }
         .todo-title { font-weight:600; color:var(--text); font-size:0.87rem; }
-        .todo-meta { font-size:0.72rem; color:var(--muted); margin-top:0.2rem; display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center; }
-        .todo-age-chip { padding:0.1rem 0.5rem; border-radius:8px; font-weight:700; font-size:0.68rem; }
+        .todo-meta { font-size:0.72rem; color:var(--muted); margin-top:0.25rem; display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center; }
+        .todo-age-chip { padding:0.12rem 0.55rem; border-radius:8px; font-weight:700; font-size:0.68rem; }
         .todo-age-ok { background:rgba(34,200,127,0.14); color:var(--success); }
         .todo-age-soon { background:rgba(242,169,59,0.16); color:var(--warn); }
         .todo-age-late { background:rgba(255,77,94,0.16); color:var(--danger); }
         .todo-cal-daylabel { text-align:center; font-size:0.7rem; font-weight:700; color:var(--muted); padding:0.3rem 0; }
-        .todo-cal-cell { min-height:82px; border:1px solid var(--border); border-radius:8px; padding:0.35rem; background:var(--surface); display:flex; flex-direction:column; gap:0.15rem; }
+        .todo-cal-cell { min-height:82px; min-width:0; overflow:hidden; border:1px solid var(--border); border-radius:8px; padding:0.35rem; background:var(--surface); display:flex; flex-direction:column; gap:0.15rem; transition:border-color 0.15s ease; }
         .todo-cal-cell.empty { background:transparent; border-color:transparent; }
-        .todo-cal-cell.today { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset; }
+        .todo-cal-cell.today { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset, 0 0 12px color-mix(in srgb, var(--accent) 30%, transparent); }
         .todo-cal-daynum { font-size:0.72rem; font-weight:700; color:var(--muted); }
         .todo-cal-cell.today .todo-cal-daynum { color:var(--accent); }
-        .todo-cal-task { font-size:0.635rem; padding:0.08rem 0.32rem; border-radius:5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; }
+        .todo-cal-task { width:100%; min-width:0; box-sizing:border-box; font-size:0.635rem; padding:0.08rem 0.32rem; border-radius:5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; }
         .todo-cal-more { font-size:0.6rem; color:var(--muted); padding-left:0.3rem; }
       </style>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem;flex-wrap:wrap;gap:0.6rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:0.6rem">
         <div>
-          <div style="font-size:1.1rem;font-weight:700;color:var(--text);font-family:var(--font-display)">✅ To-Do งานประจำวัน</div>
+          <div style="font-size:1.15rem;font-weight:700;color:var(--text);font-family:var(--font-display)">✅ To-Do งานประจำวัน</div>
           <div style="font-size:0.777rem;color:var(--muted);margin-top:0.15rem">บันทึกงานที่ต้องติดตาม เช่น ขอราคา, ติดตาม Maker, ส่งเอกสาร — เลยกำหนดจะแจ้งเตือนอัตโนมัติ</div>
         </div>
       </div>
 
+      <div class="todo-progress-wrap" style="margin-bottom:1.3rem">
+        <div class="todo-progress-fill" id="todoProgressFill" style="width:0%"></div>
+      </div>
+
       <div class="chart-card" style="margin-bottom:1.2rem">
         <div class="form-grid">
-          <div class="form-group full"><label class="form-label">ชื่องาน *</label><input type="text" class="form-input" id="td-title" placeholder="เช่น ขอราคา Part XXX จาก Maker ABC"></div>
-          <div class="form-group">
+          <div class="form-group full"><label class="form-label">ชื่องาน *</label><input type="text" class="form-input" id="td-title" placeholder="เช่น ขอราคา Part XXX จาก Maker ABC" onkeydown="if(event.key==='Enter')addTodo()"></div>
+          <div class="form-group full">
             <label class="form-label">หมวดหมู่</label>
-            <select class="form-input" id="td-category">
-              <option value="quote">💰 ขอราคา</option>
-              <option value="follow">📞 ติดตาม Maker</option>
-              <option value="doc">📄 ส่งเอกสาร</option>
-              <option value="other">📌 อื่นๆ</option>
-            </select>
+            <input type="hidden" id="td-category" value="quote">
+            <div class="todo-cat-pick" id="todoCatPick">
+              <button type="button" class="todo-cat-pick-btn active" style="--pick-color:#F2A93B" data-cat="quote" onclick="pickTodoCategory('quote',this)">💰 ขอราคา</button>
+              <button type="button" class="todo-cat-pick-btn" style="--pick-color:#2F7DFF" data-cat="follow" onclick="pickTodoCategory('follow',this)">📞 ติดตาม Maker</button>
+              <button type="button" class="todo-cat-pick-btn" style="--pick-color:#00D4B8" data-cat="doc" onclick="pickTodoCategory('doc',this)">📄 ส่งเอกสาร</button>
+              <button type="button" class="todo-cat-pick-btn" style="--pick-color:#7D8AA0" data-cat="other" onclick="pickTodoCategory('other',this)">📌 อื่นๆ</button>
+            </div>
           </div>
           <div class="form-group"><label class="form-label">กำหนดวันที่ต้องเสร็จ</label><input type="date" class="form-input" id="td-date"></div>
-          <div class="form-group full" style="display:flex;justify-content:flex-end">
-            <button class="btn btn-primary" onclick="addTodo()">+ เพิ่มงาน</button>
+          <div class="form-group" style="display:flex;align-items:flex-end;justify-content:flex-end">
+            <button class="btn btn-primary" style="width:100%" onclick="addTodo()">+ เพิ่มงาน</button>
           </div>
         </div>
       </div>
@@ -6444,7 +6457,7 @@ body.light-theme {
         <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.75rem;color:var(--muted);margin-bottom:0.7rem;cursor:pointer;user-select:none">
           <input type="checkbox" id="todoShowWP" checked onchange="renderTodoCalendar()"> แสดงแผนงานข้างนอก (Workplan) ด้วย
         </label>
-        <div id="todoCalGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px"></div>
+        <div id="todoCalGrid" style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px"></div>
       </div>
       <div style="margin-top:1.2rem;font-size:0.714rem;color:var(--muted);text-align:center">
         💡 รายการ To-Do นี้บันทึกไว้ในเบราว์เซอร์เครื่องนี้เท่านั้น (ยังไม่ sync ขึ้น Google Sheet) — บอกได้ถ้าต้องการให้เชื่อมต่อเซิร์ฟเวอร์เพื่อให้ทุกคนเห็นข้อมูลเดียวกันและใช้งานได้หลายเครื่อง
@@ -11391,12 +11404,13 @@ function renderTodoList() {
         else ageChip = `<span class="todo-age-chip todo-age-ok">🟢 อีก ${t.daysLeft} วัน</span>`;
       }
       const dateStr = t.date ? new Date(t.date + 'T00:00:00').toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'numeric' }) : '';
-      return `<div class="todo-item ${t.done ? 'done' : ''}">
+      return `<div class="todo-item ${t.done ? 'done' : ''}" style="--item-color:${info.color}">
         <div class="todo-check ${t.done ? 'checked' : ''}" onclick="toggleTodoDone('${t.id}')">${t.done ? '✓' : ''}</div>
+        <div class="todo-icon-badge">${info.label.split(' ')[0]}</div>
         <div style="flex:1;min-width:0">
           <div class="todo-title">${t.title}</div>
           <div class="todo-meta">
-            <span style="color:${info.color}">${info.label}</span>
+            <span style="color:${info.color};font-weight:600">${info.label}</span>
             ${dateStr ? `<span>📅 ${dateStr}</span>` : ''}
             ${ageChip}
           </div>
@@ -11405,6 +11419,21 @@ function renderTodoList() {
       </div>`;
     }).join('');
   }
+
+  // อัปเดตแถบสถิติ + progress bar ด้านบน
+  const total = withMeta.length;
+  const doneCount = withMeta.filter(t => t.done).length;
+  const pendingCount = total - doneCount;
+  const lateCountStat = withMeta.filter(t => !t.done && t.daysLeft !== null && t.daysLeft < 0).length;
+  const pct = total ? Math.round(doneCount / total * 100) : 0;
+  const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  setTxt('td-stat-total', total);
+  setTxt('td-stat-pending', pendingCount);
+  setTxt('td-stat-late', lateCountStat);
+  setTxt('td-stat-done', doneCount);
+  setTxt('td-stat-progress-label', `${pct}% ของทั้งหมด`);
+  const fillEl = document.getElementById('todoProgressFill');
+  if (fillEl) fillEl.style.width = pct + '%';
 
   // อัปเดต badge จำนวนงานเลยกำหนดที่เมนูด้านซ้าย
   const lateCount = withMeta.filter(t => !t.done && t.daysLeft !== null && t.daysLeft < 0).length;
@@ -11416,6 +11445,12 @@ function renderTodoList() {
 
   renderTodoCalendar();
   renderTodoHomeWidget();
+}
+
+function pickTodoCategory(cat, btn) {
+  document.getElementById('td-category').value = cat;
+  document.querySelectorAll('#todoCatPick .todo-cat-pick-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
 }
 
 function renderTodoHomeWidget() {
