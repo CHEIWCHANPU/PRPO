@@ -4964,6 +4964,10 @@ body.light-theme {
         <button class="nav-item" id="nav-payroll" onclick="showPage('payroll',this)">
           <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14.01"/><line x1="12" y1="14" x2="12" y2="14.01"/></svg></span><span class="nav-text" data-i18n="nav_payroll">ลงเวลาทำงาน</span>
         </button>
+        <button class="nav-item" id="nav-todo" onclick="showPage('todo',this)">
+          <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><span class="nav-text" data-i18n="nav_todo">To-Do งานประจำวัน</span>
+          <span class="nav-badge" id="todoNavBadge" style="display:none">0</span>
+        </button>
       </div>
     </div>
     <div class="nav-section-divider"><span class="nav-section-divider-icon">🗂️</span>หมวดหมู่</div>
@@ -5209,6 +5213,14 @@ body.light-theme {
           </div>
         </div>
         <div class="briefing-body" id="briefingBody"><div class="briefing-empty"><div class="spinner" style="margin:0 auto"></div></div></div>
+      </div>
+
+      <div class="chart-card" id="todoHomeWidget" style="margin-top:1.1rem">
+        <div class="chart-header" style="display:flex;align-items:center;justify-content:space-between">
+          <div class="chart-title">✅ To-Do วันนี้</div>
+          <button class="btn btn-ghost" style="padding:0.3rem 0.7rem;font-size:0.75rem" onclick="showPage('todo', document.getElementById('nav-todo'))">ดูทั้งหมด →</button>
+        </div>
+        <div id="todoHomeList" style="margin-top:0.7rem"></div>
       </div>
     </div>
 
@@ -6354,6 +6366,93 @@ body.light-theme {
     <!-- /WORKPLAN PAGE -->
 
     <!-- ═══════════════════════════════════════════════════
+         TO-DO PAGE (งานประจำวัน — ขอราคา/ติดตาม Maker/ส่งเอกสาร ฯลฯ)
+    ═══════════════════════════════════════════════════ -->
+    <div class="page" id="page-todo">
+      <style>
+        .todo-cat-btn.active { background: var(--accent) !important; border-color: var(--accent) !important; color: #fff !important; }
+        .todo-item { display:flex; align-items:flex-start; gap:0.7rem; padding:0.8rem 0.9rem; border:1px solid var(--border); border-radius: var(--r-md,10px); background:var(--surface); margin-bottom:0.6rem; }
+        .todo-item.done { opacity:0.55; }
+        .todo-item.done .todo-title { text-decoration:line-through; }
+        .todo-check { width:20px; height:20px; border-radius:6px; border:2px solid var(--border); flex-shrink:0; cursor:pointer; display:flex; align-items:center; justify-content:center; margin-top:0.1rem; background:var(--surface2); }
+        .todo-check.checked { background:var(--success); border-color:var(--success); color:#fff; }
+        .todo-title { font-weight:600; color:var(--text); font-size:0.87rem; }
+        .todo-meta { font-size:0.72rem; color:var(--muted); margin-top:0.2rem; display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center; }
+        .todo-age-chip { padding:0.1rem 0.5rem; border-radius:8px; font-weight:700; font-size:0.68rem; }
+        .todo-age-ok { background:rgba(34,200,127,0.14); color:var(--success); }
+        .todo-age-soon { background:rgba(242,169,59,0.16); color:var(--warn); }
+        .todo-age-late { background:rgba(255,77,94,0.16); color:var(--danger); }
+        .todo-cal-daylabel { text-align:center; font-size:0.7rem; font-weight:700; color:var(--muted); padding:0.3rem 0; }
+        .todo-cal-cell { min-height:82px; border:1px solid var(--border); border-radius:8px; padding:0.35rem; background:var(--surface); display:flex; flex-direction:column; gap:0.15rem; }
+        .todo-cal-cell.empty { background:transparent; border-color:transparent; }
+        .todo-cal-cell.today { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset; }
+        .todo-cal-daynum { font-size:0.72rem; font-weight:700; color:var(--muted); }
+        .todo-cal-cell.today .todo-cal-daynum { color:var(--accent); }
+        .todo-cal-task { font-size:0.635rem; padding:0.08rem 0.32rem; border-radius:5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; }
+        .todo-cal-more { font-size:0.6rem; color:var(--muted); padding-left:0.3rem; }
+      </style>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem;flex-wrap:wrap;gap:0.6rem">
+        <div>
+          <div style="font-size:1.1rem;font-weight:700;color:var(--text);font-family:var(--font-display)">✅ To-Do งานประจำวัน</div>
+          <div style="font-size:0.777rem;color:var(--muted);margin-top:0.15rem">บันทึกงานที่ต้องติดตาม เช่น ขอราคา, ติดตาม Maker, ส่งเอกสาร — เลยกำหนดจะแจ้งเตือนอัตโนมัติ</div>
+        </div>
+      </div>
+
+      <div class="chart-card" style="margin-bottom:1.2rem">
+        <div class="form-grid">
+          <div class="form-group full"><label class="form-label">ชื่องาน *</label><input type="text" class="form-input" id="td-title" placeholder="เช่น ขอราคา Part XXX จาก Maker ABC"></div>
+          <div class="form-group">
+            <label class="form-label">หมวดหมู่</label>
+            <select class="form-input" id="td-category">
+              <option value="quote">💰 ขอราคา</option>
+              <option value="follow">📞 ติดตาม Maker</option>
+              <option value="doc">📄 ส่งเอกสาร</option>
+              <option value="other">📌 อื่นๆ</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">กำหนดวันที่ต้องเสร็จ</label><input type="date" class="form-input" id="td-date"></div>
+          <div class="form-group full" style="display:flex;justify-content:flex-end">
+            <button class="btn btn-primary" onclick="addTodo()">+ เพิ่มงาน</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="toolbar" style="margin-bottom:0.9rem;flex-wrap:wrap;gap:0.6rem;justify-content:space-between">
+        <div style="display:flex;gap:0.4rem;flex-wrap:wrap">
+          <button class="btn btn-ghost todo-cat-btn active" data-filter="all" onclick="setTodoFilter('all', this)" style="padding:0.4rem 0.9rem;font-size:0.777rem">ทั้งหมด</button>
+          <button class="btn btn-ghost todo-cat-btn" data-filter="pending" onclick="setTodoFilter('pending', this)" style="padding:0.4rem 0.9rem;font-size:0.777rem">ค้างอยู่</button>
+          <button class="btn btn-ghost todo-cat-btn" data-filter="late" onclick="setTodoFilter('late', this)" style="padding:0.4rem 0.9rem;font-size:0.777rem">🔴 เลยกำหนด</button>
+          <button class="btn btn-ghost todo-cat-btn" data-filter="done" onclick="setTodoFilter('done', this)" style="padding:0.4rem 0.9rem;font-size:0.777rem">เสร็จแล้ว</button>
+        </div>
+        <div style="display:flex;gap:0.3rem;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:3px">
+          <button class="btn" id="todoViewListBtn" onclick="setTodoView('list')" style="padding:0.35rem 0.8rem;font-size:0.777rem;border:none;background:var(--accent);color:#fff;border-radius:7px">📋 List</button>
+          <button class="btn" id="todoViewCalBtn" onclick="setTodoView('calendar')" style="padding:0.35rem 0.8rem;font-size:0.777rem;border:none;background:transparent;color:var(--muted);border-radius:7px">📅 ปฏิทิน</button>
+        </div>
+      </div>
+
+      <div id="todoList"></div>
+
+      <div id="todoCalendarWrap" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.8rem;flex-wrap:wrap;gap:0.5rem">
+          <button class="btn btn-ghost" onclick="shiftTodoMonth(-1)" style="padding:0.4rem 0.8rem">◀</button>
+          <div id="todoCalTitle" style="font-weight:700;font-family:var(--font-display);font-size:0.98rem;color:var(--text)"></div>
+          <button class="btn btn-ghost" onclick="shiftTodoMonth(1)" style="padding:0.4rem 0.8rem">▶</button>
+        </div>
+        <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.75rem;color:var(--muted);margin-bottom:0.4rem;cursor:pointer;user-select:none">
+          <input type="checkbox" id="todoShowPR" checked onchange="renderTodoCalendar()"> แสดงกำหนดส่ง PR (จากระบบหลัก) ด้วย
+        </label>
+        <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.75rem;color:var(--muted);margin-bottom:0.7rem;cursor:pointer;user-select:none">
+          <input type="checkbox" id="todoShowWP" checked onchange="renderTodoCalendar()"> แสดงแผนงานข้างนอก (Workplan) ด้วย
+        </label>
+        <div id="todoCalGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px"></div>
+      </div>
+      <div style="margin-top:1.2rem;font-size:0.714rem;color:var(--muted);text-align:center">
+        💡 รายการ To-Do นี้บันทึกไว้ในเบราว์เซอร์เครื่องนี้เท่านั้น (ยังไม่ sync ขึ้น Google Sheet) — บอกได้ถ้าต้องการให้เชื่อมต่อเซิร์ฟเวอร์เพื่อให้ทุกคนเห็นข้อมูลเดียวกันและใช้งานได้หลายเครื่อง
+      </div>
+    </div>
+    <!-- /TO-DO PAGE -->
+
+    <!-- ═══════════════════════════════════════════════════
          WORK MANUAL / BASICS PAGE (คู่มือการทำงาน & พื้นฐานการทำงาน)
     ═══════════════════════════════════════════════════ -->
     <div class="page" id="page-manual">
@@ -6997,6 +7096,7 @@ window.addEventListener('DOMContentLoaded', () => {
   initAutoSync();
   initKeyboardShortcuts();
   initNavGroups();
+  renderTodoList();
   document.addEventListener('click', (e) => {
     if (notifOpen && !e.target.closest('#notifPanel') && !e.target.closest('#notifBell')) closeNotif();
     if (accentPopoverOpen && !e.target.closest('#accentPopover') && !e.target.closest('#accentBtn')) closeAccentPopover();
@@ -7011,7 +7111,7 @@ window.addEventListener('DOMContentLoaded', () => {
 /* ── NAV GROUPS (collapsible) ── */
 // ทุกครั้งที่ล็อกอินใหม่ หมวดหมู่ในเมนูด้านซ้ายจะถูกรีเซ็ตกลับไปที่ค่าเริ่มต้นนี้เสมอ
 // (เมนูหลักเปิดอยู่ ส่วนหมวดอื่นๆ พับเก็บไว้ทั้งหมด) ไม่ใช้ค่าที่จำไว้จากครั้งก่อน
-const DEFAULT_COLLAPSED_NAV_GROUPS = ['track', 'cer', 'modeltracker', 'workplan', 'other', 'manage'];
+const DEFAULT_COLLAPSED_NAV_GROUPS = ['track', 'cer', 'modeltracker', 'workplan', 'manual', 'other', 'manage'];
 function resetNavGroupsToDefault() {
   localStorage.setItem('prpo_nav_collapsed', JSON.stringify(DEFAULT_COLLAPSED_NAV_GROUPS));
   document.querySelectorAll('.nav-group[id^="navGroup-"]').forEach(el => {
@@ -7070,7 +7170,7 @@ function toggleTheme() {
    ส่วนเนื้อหาภายในแต่ละหน้า (ตาราง/ฟอร์ม/กราฟ) ยังเป็นภาษาไทยอยู่ ขยายเพิ่มได้ทีละหน้า */
 const I18N = {
   th: {
-    nav_home: 'หน้าหลัก', nav_exec: 'ภาพรวม KPI', nav_payroll: 'ลงเวลาทำงาน',
+    nav_home: 'หน้าหลัก', nav_exec: 'ภาพรวม KPI', nav_payroll: 'ลงเวลาทำงาน', nav_todo: 'To-Do งานประจำวัน',
     nav_list: 'รายการทั้งหมด', nav_summary: 'สรุปภาพรวม', nav_cer: 'ติดตามใบ CER',
     nav_workplan: 'แผนงานข้างนอก', nav_manual: 'คู่มือการทำงาน', nav_setup: 'ตั้งค่า', nav_collapse: 'ย่อเมนู',
     group_main: 'เมนูหลัก', group_track: 'ติดตาม PART PR', group_cer: 'ติดตามใบ CER',
@@ -7078,7 +7178,7 @@ const I18N = {
     group_manual: 'คู่มือการทำงาน &amp; พื้นฐานการทำงาน', group_maker: 'ข้อมูล MAKER', group_settings: 'จัดการ',
   },
   en: {
-    nav_home: 'Home', nav_exec: 'KPI Overview', nav_payroll: 'Time Attendance',
+    nav_home: 'Home', nav_exec: 'KPI Overview', nav_payroll: 'Time Attendance', nav_todo: 'To-Do List',
     nav_list: 'All Items', nav_summary: 'Summary', nav_cer: 'CER Tracking',
     nav_workplan: 'Field Workplan', nav_manual: 'Work Manual', nav_setup: 'Settings', nav_collapse: 'Collapse',
     group_main: 'Main Menu', group_track: 'Track Part PR', group_cer: 'CER Tracking',
@@ -7087,8 +7187,8 @@ const I18N = {
   }
 };
 const PAGE_TITLES = {
-  th: { home:'🏠 หน้าหลัก', exec:'🎯 ภาพรวม KPI', dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', partmodel:'🧩 PART MODEL', summary:'📈 สรุปภาพรวม', gantt:'📅 Timeline / Gantt', setup:'⚙️ ตั้งค่าระบบ', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis', leaderboard:'🏆 Maker Leaderboard', cer:'📄 ติดตามใบ CER', modeltracker:'🗂️ Model Tracker', workplan:'📅 ตารางแผนงานข้างนอก', payroll:'⏱️ ลงเวลา & ค่าแรง', manual:'📚 คู่มือการทำงาน & พื้นฐานการทำงาน' },
-  en: { home:'🏠 Home', exec:'🎯 KPI Overview', dashboard:'📊 Dashboard', list:'📋 All Items', partmodel:'🧩 PART MODEL', summary:'📈 Summary', gantt:'📅 Timeline / Gantt', setup:'⚙️ System Settings', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis', leaderboard:'🏆 Maker Leaderboard', cer:'📄 CER Tracking', modeltracker:'🗂️ Model Tracker', workplan:'📅 Field Workplan Schedule', payroll:'⏱️ Time & Wages', manual:'📚 Work Manual & Basics' }
+  th: { home:'🏠 หน้าหลัก', exec:'🎯 ภาพรวม KPI', dashboard:'📊 Dashboard', list:'📋 รายการทั้งหมด', partmodel:'🧩 PART MODEL', summary:'📈 สรุปภาพรวม', gantt:'📅 Timeline / Gantt', setup:'⚙️ ตั้งค่าระบบ', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis', leaderboard:'🏆 Maker Leaderboard', cer:'📄 ติดตามใบ CER', modeltracker:'🗂️ Model Tracker', workplan:'📅 ตารางแผนงานข้างนอก', payroll:'⏱️ ลงเวลา & ค่าแรง', manual:'📚 คู่มือการทำงาน & พื้นฐานการทำงาน', todo:'✅ To-Do งานประจำวัน' },
+  en: { home:'🏠 Home', exec:'🎯 KPI Overview', dashboard:'📊 Dashboard', list:'📋 All Items', partmodel:'🧩 PART MODEL', summary:'📈 Summary', gantt:'📅 Timeline / Gantt', setup:'⚙️ System Settings', supplier:'🏭 Supplier Database', history:'📝 History Log', leadtime:'⏱️ Lead Time Analysis', leaderboard:'🏆 Maker Leaderboard', cer:'📄 CER Tracking', modeltracker:'🗂️ Model Tracker', workplan:'📅 Field Workplan Schedule', payroll:'⏱️ Time & Wages', manual:'📚 Work Manual & Basics', todo:'✅ To-Do List' }
 };
 function getCurrentLang() { return localStorage.getItem('prpo_lang') || 'th'; }
 function applyLanguage(lang) {
@@ -7463,7 +7563,7 @@ function showPage(name, btn) {
   if (btn) btn.classList.add('active');
   const titles = PAGE_TITLES[getCurrentLang()] || PAGE_TITLES.th;
   document.getElementById('topbarTitle').textContent = titles[name] || name;
-  if (name === 'home') renderDailyBriefing();
+  if (name === 'home') { renderDailyBriefing(); renderTodoHomeWidget(); }
   if (name === 'exec') renderExecDashboard();
   if (name === 'summary') renderSummary();
   if (name === 'partmodel') { renderPmSummaryStats(); renderPartModelByModel(); }
@@ -7477,6 +7577,7 @@ function showPage(name, btn) {
   if (name === 'workplan') renderWorkplan();
   if (name === 'payroll') payrollInit();
   if (name === 'manual') loadManualsFromServer();
+  if (name === 'todo') renderTodoList();
 }
 
 /* ── NOTIFICATIONS ── */
@@ -11193,6 +11294,273 @@ function renderManuals() {
       </div>
     </div>`;
   }).join('');
+}
+
+/* ══════════════════════════════════════════════════
+   ✅ TO-DO งานประจำวัน (ขอราคา / ติดตาม Maker / ส่งเอกสาร ฯลฯ)
+   เก็บไว้ใน localStorage เครื่องนี้เท่านั้น
+══════════════════════════════════════════════════ */
+let todoTasks = [];
+let todoFilter = 'all';
+let todoView = 'list';
+let todoCalDate = new Date();
+
+const TODO_CATEGORIES = {
+  quote:  { label: '💰 ขอราคา',       color: '#F2A93B' },
+  follow: { label: '📞 ติดตาม Maker', color: '#2F7DFF' },
+  doc:    { label: '📄 ส่งเอกสาร',    color: '#00D4B8' },
+  other:  { label: '📌 อื่นๆ',        color: '#7D8AA0' },
+};
+function loadTodoTasks() {
+  try { todoTasks = JSON.parse(localStorage.getItem('todo_tasks') || '[]'); }
+  catch (e) { todoTasks = []; }
+}
+function saveTodoTasks() {
+  localStorage.setItem('todo_tasks', JSON.stringify(todoTasks));
+}
+function todoDaysLeft(dateStr) {
+  if (!dateStr) return null;
+  const due = new Date(dateStr + 'T00:00:00');
+  const today = new Date(); today.setHours(0,0,0,0);
+  return Math.round((due - today) / 86400000);
+}
+function addTodo() {
+  const titleEl = document.getElementById('td-title');
+  const title = titleEl.value.trim();
+  if (!title) { alert('กรุณากรอกชื่องาน'); return; }
+  const category = document.getElementById('td-category').value;
+  const date = document.getElementById('td-date').value;
+  loadTodoTasks();
+  todoTasks.unshift({ id: 'TD' + Date.now(), title, category, date, done: false, createdAt: new Date().toISOString() });
+  saveTodoTasks();
+  titleEl.value = '';
+  document.getElementById('td-date').value = '';
+  renderTodoList();
+}
+function toggleTodoDone(id) {
+  loadTodoTasks();
+  const t = todoTasks.find(x => x.id === id);
+  if (t) t.done = !t.done;
+  saveTodoTasks();
+  renderTodoList();
+}
+function deleteTodo(id) {
+  if (!confirm('ต้องการลบงานนี้ใช่หรือไม่?')) return;
+  loadTodoTasks();
+  todoTasks = todoTasks.filter(x => x.id !== id);
+  saveTodoTasks();
+  renderTodoList();
+}
+function setTodoFilter(f, btn) {
+  todoFilter = f;
+  document.querySelectorAll('.todo-cat-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderTodoList();
+}
+function renderTodoList() {
+  const list = document.getElementById('todoList');
+  if (!list) return;
+  loadTodoTasks();
+
+  const withMeta = todoTasks.map(t => ({ ...t, daysLeft: todoDaysLeft(t.date) }));
+  const filtered = withMeta.filter(t => {
+    if (todoFilter === 'pending') return !t.done;
+    if (todoFilter === 'late') return !t.done && t.daysLeft !== null && t.daysLeft < 0;
+    if (todoFilter === 'done') return t.done;
+    return true;
+  }).sort((a, b) => {
+    if (a.done !== b.done) return a.done ? 1 : -1;
+    if (a.date && b.date) return a.date.localeCompare(b.date);
+    if (a.date) return -1;
+    if (b.date) return 1;
+    return b.createdAt.localeCompare(a.createdAt);
+  });
+
+  if (!filtered.length) {
+    list.innerHTML = `<div class="mt-empty-state">
+      <div style="font-size:2.3rem;margin-bottom:0.5rem;opacity:0.5">✅</div>
+      ${todoTasks.length ? 'ไม่พบงานในตัวกรองนี้' : 'ยังไม่มีงานบันทึกไว้ — เพิ่มงานแรกของคุณด้านบนได้เลย'}
+    </div>`;
+  } else {
+    list.innerHTML = filtered.map(t => {
+      const info = TODO_CATEGORIES[t.category] || TODO_CATEGORIES.other;
+      let ageChip = '';
+      if (!t.done && t.daysLeft !== null) {
+        if (t.daysLeft < 0) ageChip = `<span class="todo-age-chip todo-age-late">🔴 เลยกำหนด ${Math.abs(t.daysLeft)} วัน</span>`;
+        else if (t.daysLeft <= 1) ageChip = `<span class="todo-age-chip todo-age-soon">🟡 ${t.daysLeft === 0 ? 'ครบกำหนดวันนี้' : 'พรุ่งนี้ครบกำหนด'}</span>`;
+        else ageChip = `<span class="todo-age-chip todo-age-ok">🟢 อีก ${t.daysLeft} วัน</span>`;
+      }
+      const dateStr = t.date ? new Date(t.date + 'T00:00:00').toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'numeric' }) : '';
+      return `<div class="todo-item ${t.done ? 'done' : ''}">
+        <div class="todo-check ${t.done ? 'checked' : ''}" onclick="toggleTodoDone('${t.id}')">${t.done ? '✓' : ''}</div>
+        <div style="flex:1;min-width:0">
+          <div class="todo-title">${t.title}</div>
+          <div class="todo-meta">
+            <span style="color:${info.color}">${info.label}</span>
+            ${dateStr ? `<span>📅 ${dateStr}</span>` : ''}
+            ${ageChip}
+          </div>
+        </div>
+        <button class="icon-btn del" onclick="deleteTodo('${t.id}')" title="ลบ">🗑️</button>
+      </div>`;
+    }).join('');
+  }
+
+  // อัปเดต badge จำนวนงานเลยกำหนดที่เมนูด้านซ้าย
+  const lateCount = withMeta.filter(t => !t.done && t.daysLeft !== null && t.daysLeft < 0).length;
+  const badge = document.getElementById('todoNavBadge');
+  if (badge) {
+    if (lateCount > 0) { badge.textContent = lateCount; badge.style.display = ''; }
+    else badge.style.display = 'none';
+  }
+
+  renderTodoCalendar();
+  renderTodoHomeWidget();
+}
+
+function renderTodoHomeWidget() {
+  const box = document.getElementById('todoHomeList');
+  if (!box) return;
+  loadTodoTasks();
+
+  const withMeta2 = todoTasks
+    .filter(t => !t.done)
+    .map(t => ({ ...t, daysLeft: todoDaysLeft(t.date) }))
+    .filter(t => t.daysLeft !== null && t.daysLeft <= 3) // เลยกำหนด + วันนี้ + ใกล้ครบกำหนด (≤3 วัน)
+    .sort((a, b) => a.daysLeft - b.daysLeft);
+
+  if (!withMeta2.length) {
+    box.innerHTML = `<div class="briefing-empty" style="padding:1.2rem 0">🎉 ไม่มีงานที่ต้องติดตามวันนี้</div>`;
+    return;
+  }
+
+  box.innerHTML = withMeta2.map(t => {
+    const info = TODO_CATEGORIES[t.category] || TODO_CATEGORIES.other;
+    let ageChip;
+    if (t.daysLeft < 0) ageChip = `<span class="todo-age-chip todo-age-late">🔴 เลยกำหนด ${Math.abs(t.daysLeft)} วัน</span>`;
+    else if (t.daysLeft === 0) ageChip = `<span class="todo-age-chip todo-age-soon">🟡 ครบกำหนดวันนี้</span>`;
+    else ageChip = `<span class="todo-age-chip todo-age-ok">🟢 อีก ${t.daysLeft} วัน</span>`;
+    return `<div class="todo-item" style="margin-bottom:0.5rem">
+      <div class="todo-check" onclick="toggleTodoDone('${t.id}'); renderTodoHomeWidget();"></div>
+      <div style="flex:1;min-width:0">
+        <div class="todo-title">${t.title}</div>
+        <div class="todo-meta">
+          <span style="color:${info.color}">${info.label}</span>
+          ${ageChip}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setTodoView(view) {
+  todoView = view;
+  const listBtn = document.getElementById('todoViewListBtn');
+  const calBtn = document.getElementById('todoViewCalBtn');
+  const listEl = document.getElementById('todoList');
+  const calEl = document.getElementById('todoCalendarWrap');
+  const isCal = view === 'calendar';
+  if (listEl) listEl.style.display = isCal ? 'none' : '';
+  if (calEl) calEl.style.display = isCal ? '' : 'none';
+  if (listBtn) { listBtn.style.background = isCal ? 'transparent' : 'var(--accent)'; listBtn.style.color = isCal ? 'var(--muted)' : '#fff'; }
+  if (calBtn) { calBtn.style.background = isCal ? 'var(--accent)' : 'transparent'; calBtn.style.color = isCal ? '#fff' : 'var(--muted)'; }
+  if (isCal) renderTodoCalendar();
+}
+
+function shiftTodoMonth(delta) {
+  todoCalDate = new Date(todoCalDate.getFullYear(), todoCalDate.getMonth() + delta, 1);
+  renderTodoCalendar();
+}
+
+const TODO_MONTH_NAMES_TH = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+function toDateKey(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function renderTodoCalendar() {
+  const grid = document.getElementById('todoCalGrid');
+  const titleEl = document.getElementById('todoCalTitle');
+  if (!grid || !titleEl) return;
+  loadTodoTasks();
+
+  const year = todoCalDate.getFullYear();
+  const month = todoCalDate.getMonth();
+  titleEl.textContent = `${TODO_MONTH_NAMES_TH[month]} ${year + 543}`;
+
+  // จัดกลุ่มงานตามวันที่ (คีย์ yyyy-mm-dd) เฉพาะงานที่มีวันครบกำหนด
+  const byDate = {};
+  todoTasks.forEach(t => {
+    if (!t.date) return;
+    if (!byDate[t.date]) byDate[t.date] = [];
+    byDate[t.date].push({ type: 'todo', title: t.title, done: t.done, category: t.category });
+  });
+
+  // รวมกำหนดส่ง PR จากระบบหลักเข้ามาด้วย (ถ้าติ๊กเลือกไว้)
+  const showPR = document.getElementById('todoShowPR');
+  if (showPR && showPR.checked && Array.isArray(allData)) {
+    allData.forEach(r => {
+      const d = parseThaiDate(r.dueDate);
+      if (!d) return;
+      const key = toDateKey(d);
+      if (!byDate[key]) byDate[key] = [];
+      const isDone = !!(r.status && r.status.includes('เสร็จแล้ว'));
+      byDate[key].push({ type: 'pr', title: `${r.partNo || '—'} · ${r.maker || ''}`, done: isDone });
+    });
+  }
+
+  // รวมแผนงานข้างนอก (Workplan) เข้ามาด้วย (ถ้าติ๊กเลือกไว้)
+  const showWP = document.getElementById('todoShowWP');
+  if (showWP && showWP.checked && Array.isArray(wpData)) {
+    wpData.forEach(r => {
+      const d = wpParseDate(r.date);
+      if (!d) return;
+      const key = toDateKey(d);
+      if (!byDate[key]) byDate[key] = [];
+      const isDone = r.status === 'เสร็จสิ้น';
+      const label = [r.name, r.location].filter(Boolean).join(' · ') || 'แผนงานข้างนอก';
+      byDate[key].push({ type: 'wp', title: label, done: isDone });
+    });
+  }
+
+  const firstOfMonth = new Date(year, month, 1);
+  const startOffset = firstOfMonth.getDay(); // 0 = อาทิตย์
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const todayKey = toDateKey(new Date());
+
+  let html = ['อา','จ','อ','พ','พฤ','ศ','ส'].map(d => `<div class="todo-cal-daylabel">${d}</div>`).join('');
+  for (let i = 0; i < startOffset; i++) html += `<div class="todo-cal-cell empty"></div>`;
+  for (let day = 1; day <= daysInMonth; day++) {
+    const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const tasks = (byDate[key] || []).slice().sort((a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0));
+    const isToday = key === todayKey;
+    const shown = tasks.slice(0, 4);
+    const more = tasks.length - shown.length;
+    const taskHtml = shown.map(t => {
+      let style;
+      if (t.type === 'pr') {
+        style = t.done
+          ? `background:var(--surface2);color:var(--muted);text-decoration:line-through`
+          : `background:rgba(255,77,94,0.16);color:var(--danger)`;
+        return `<div class="todo-cal-task" style="${style}" title="PR: ${t.title}">📦 ${t.title}</div>`;
+      }
+      if (t.type === 'wp') {
+        style = t.done
+          ? `background:var(--surface2);color:var(--muted);text-decoration:line-through`
+          : `background:rgba(139,133,240,0.18);color:#8B85F0`;
+        return `<div class="todo-cal-task" style="${style}" title="แผนงานข้างนอก: ${t.title}">🚗 ${t.title}</div>`;
+      }
+      const info = TODO_CATEGORIES[t.category] || TODO_CATEGORIES.other;
+      style = t.done
+        ? `background:var(--surface2);color:var(--muted);text-decoration:line-through`
+        : `background:${info.color}22;color:${info.color}`;
+      return `<div class="todo-cal-task" style="${style}" title="${t.title}">${t.title}</div>`;
+    }).join('');
+    html += `<div class="todo-cal-cell ${isToday ? 'today' : ''}">
+      <div class="todo-cal-daynum">${day}</div>
+      ${taskHtml}
+      ${more > 0 ? `<div class="todo-cal-more">+${more} เพิ่มเติม</div>` : ''}
+    </div>`;
+  }
+  grid.innerHTML = html;
 }
 
 function renderSuppliers() {
