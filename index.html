@@ -4886,9 +4886,7 @@ body::after {
 
 /* การ์ดหลักทุกใบ: พื้นผิวกระจกโปร่งแสง (glassmorphism) + เส้นขอบไล่สีบางๆ ที่มองเห็นจริง */
 .chart-card, .exec-panel, .exec-kpi-card, .stat-card, .table-wrap, .briefing-panel {
-  background: color-mix(in srgb, var(--surface) 82%, transparent) !important;
-  backdrop-filter: blur(16px) saturate(150%);
-  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  background: color-mix(in srgb, var(--surface) 96%, transparent) !important;
   border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border)) !important;
   transition: transform 0.28s cubic-bezier(.4,0,.2,1), box-shadow 0.28s cubic-bezier(.4,0,.2,1), border-color 0.28s ease !important;
 }
@@ -4953,6 +4951,100 @@ body::after {
   50% { filter: drop-shadow(0 0 14px color-mix(in srgb, var(--accent) 55%, transparent)); }
 }
 @media (prefers-reduced-motion: reduce) { .logo-icon { animation: none !important; } }
+
+/* ══════════════════════════════════════════════════════════════
+   EXECUTIVE BUTTON STYLE
+   ปุ่มเดิมสะสมเลเยอร์ gradient ไล่สี + แสง glow สี accent + shine
+   sweep ตอน hover มาหลายรอบ ทำให้ดูเป็นแอปเกม/gadget มากกว่า
+   ซอฟต์แวร์องค์กร บล็อกนี้เป็นตัวสุดท้ายในสไตล์ชีต (และใช้
+   specificity สูงพอ) เพื่อรีเซ็ตปุ่มทั้งหมดให้เป็นสีทึบ เงาบางๆ
+   นิ่งสงบ แบบซอฟต์แวร์องค์กรระดับ enterprise (ไม่ไล่สี ไม่เรืองแสง
+   ไม่มี sweep แวบเมื่อ hover)
+   ══════════════════════════════════════════════════════════════ */
+.btn.btn-primary.btn-primary::after,
+.wl-btn.wl-btn::before {
+  content: none !important;
+  display: none !important;
+}
+
+.wl-btn.wl-btn,
+.wl-right .wl-btn.wl-btn {
+  background: var(--accent) !important;
+  color: #fff !important;
+  border: 1px solid color-mix(in srgb, var(--accent) 82%, black) !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.16) !important;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+.wl-btn.wl-btn:hover,
+.wl-right .wl-btn.wl-btn:hover {
+  background: color-mix(in srgb, var(--accent) 88%, black) !important;
+  opacity: 1 !important;
+  transform: none !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.22) !important;
+}
+.wl-btn.wl-btn:active { transform: none !important; }
+
+.btn.btn-primary.btn-primary,
+.btn.btn-secondary.btn-secondary,
+.btn.btn-danger.btn-danger,
+.btn.btn-ghost.btn-ghost {
+  background-image: none !important;
+  background-size: auto !important;
+  background-position: 0 0 !important;
+  filter: none !important;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease !important;
+}
+.btn.btn-primary.btn-primary,
+.btn.btn-secondary.btn-secondary,
+.btn.btn-danger.btn-danger,
+.btn.btn-ghost.btn-ghost,
+.modal-foot .btn.btn-primary.btn-primary {
+  border-radius: 8px !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.14) !important;
+}
+.btn:not(:disabled):hover, .btn:not(:disabled):active {
+  transform: none !important;
+}
+
+.btn.btn-primary.btn-primary,
+.modal-foot .btn.btn-primary.btn-primary {
+  background: var(--accent) !important;
+  border: 1px solid color-mix(in srgb, var(--accent) 82%, black) !important;
+  color: #fff !important;
+}
+.btn.btn-primary.btn-primary:hover,
+.modal-foot .btn.btn-primary.btn-primary:hover {
+  background: color-mix(in srgb, var(--accent) 88%, black) !important;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important;
+}
+.btn.btn-primary.btn-primary:active {
+  background: color-mix(in srgb, var(--accent) 76%, black) !important;
+}
+
+.btn.btn-danger.btn-danger {
+  background: var(--danger) !important;
+  border: 1px solid color-mix(in srgb, var(--danger) 82%, black) !important;
+  color: #fff !important;
+}
+.btn.btn-danger.btn-danger:hover {
+  background: color-mix(in srgb, var(--danger) 88%, black) !important;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important;
+}
+
+.btn.btn-secondary.btn-secondary,
+.btn.btn-ghost.btn-ghost {
+  background: var(--surface2) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important;
+  box-shadow: none !important;
+}
+.btn.btn-ghost.btn-ghost { background: transparent !important; color: var(--muted) !important; }
+.btn.btn-secondary.btn-secondary:hover,
+.btn.btn-ghost.btn-ghost:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border)) !important;
+  color: var(--text) !important;
+  box-shadow: none !important;
+}
 </style>
 </head>
 <body class="light-theme">
@@ -12314,9 +12406,9 @@ function renderCsMonthlyChart(year, curRows, prevRows) {
     data: {
       labels: MONTH_NAMES,
       datasets: [
-        { label: year + ' (cumulative)', data: cumCur, borderColor: '#2F7DFF', backgroundColor: hexToRgba('#2F7DFF', 0.08), fill: true, tension: 0.35, pointRadius: 4, pointHoverRadius: 6, borderWidth: 2.5 },
-        { label: (year-1) + ' (cumulative)', data: cumPrev, borderColor: '#7D8AA0', backgroundColor: 'transparent', fill: false, tension: 0.35, pointRadius: 3, pointHoverRadius: 5, borderWidth: 1.8, borderDash: [6, 3] },
-        { label: year + ' (monthly)', data: monthlyCur, type: 'bar', backgroundColor: hexToRgba('#2F7DFF', 0.22), borderRadius: 4, maxBarThickness: 18, order: 2 }
+        { label: year + ' (cumulative)', data: cumCur, borderColor: '#2E5395', backgroundColor: hexToRgba('#2E5395', 0.08), fill: true, tension: 0.35, pointRadius: 4, pointHoverRadius: 6, borderWidth: 2.5 },
+        { label: (year-1) + ' (cumulative)', data: cumPrev, borderColor: '#8A94A6', backgroundColor: 'transparent', fill: false, tension: 0.35, pointRadius: 3, pointHoverRadius: 5, borderWidth: 1.8, borderDash: [6, 3] },
+        { label: year + ' (monthly)', data: monthlyCur, type: 'bar', backgroundColor: hexToRgba('#2E5395', 0.22), borderRadius: 4, maxBarThickness: 18, order: 2 }
       ]
     },
     options: {
@@ -12343,7 +12435,7 @@ function renderCsPlantChart(rows) {
     map[p] = (map[p] || 0) + csRowSaving(r).total;
   });
   const entries = Object.entries(map).sort((a, b) => b[1] - a[1]);
-  const donutColors = ['#2F7DFF', '#00D4B8', '#F2A93B', '#FF4D5E', '#7D8AA0', '#5A8FC0', '#B0673A', '#7A9E7E'];
+  const donutColors = ['#2E5395', '#5A8FC0', '#2F8F6E', '#C9A227', '#8A94A6', '#B0673A', '#5C6F8A', '#7A9E7E'];
   const cs = getComputedStyle(document.body);
   const chartText = cs.getPropertyValue('--muted').trim();
   destroyChart('csPlant');
@@ -12384,8 +12476,8 @@ function renderCsModelChart(rows) {
       datasets: [{ data: entries.map(e => e[1]),
         backgroundColor: (ctx) => {
           const { ctx: c, chartArea } = ctx.chart;
-          if (!chartArea) return '#2F7DFF';
-          return makeGradient(c, chartArea, hexToRgba('#2F7DFF', 0.45), '#2F7DFF', true);
+          if (!chartArea) return '#2E5395';
+          return makeGradient(c, chartArea, hexToRgba('#2E5395', 0.45), '#2E5395', true);
         },
         borderRadius: 5, maxBarThickness: 30 }]
     },
@@ -12423,8 +12515,8 @@ function renderCsMakerChart(rows) {
       datasets: [{ data: entries.map(e => e[1]),
         backgroundColor: (ctx) => {
           const { ctx: c, chartArea } = ctx.chart;
-          if (!chartArea) return '#00D4B8';
-          return makeGradient(c, chartArea, hexToRgba('#00D4B8', 0.4), '#00D4B8', true);
+          if (!chartArea) return '#5A8FC0';
+          return makeGradient(c, chartArea, hexToRgba('#5A8FC0', 0.4), '#5A8FC0', true);
         },
         borderRadius: 5, maxBarThickness: 28 }]
     },
@@ -12462,8 +12554,8 @@ function renderCsMarginChart(rows) {
     data: {
       labels: entries.map(e => e.model),
       datasets: [
-        { label: 'Cost Customer (avg)', data: entries.map(e => +e.custAvg.toFixed(2)), backgroundColor: hexToRgba('#F2A93B', 0.75), borderRadius: 4, maxBarThickness: 16 },
-        { label: 'Maker After (avg)', data: entries.map(e => +e.afterAvg.toFixed(2)), backgroundColor: hexToRgba('#2F7DFF', 0.75), borderRadius: 4, maxBarThickness: 16 },
+        { label: 'Cost Customer (avg)', data: entries.map(e => +e.custAvg.toFixed(2)), backgroundColor: hexToRgba('#C9A227', 0.75), borderRadius: 4, maxBarThickness: 16 },
+        { label: 'Maker After (avg)', data: entries.map(e => +e.afterAvg.toFixed(2)), backgroundColor: hexToRgba('#2E5395', 0.75), borderRadius: 4, maxBarThickness: 16 },
         { label: 'Margin', data: entries.map(e => +(e.custAvg - e.afterAvg).toFixed(2)), type: 'line', borderColor: '#2F8F6E', borderWidth: 2.2, pointRadius: 4, pointBackgroundColor: '#2F8F6E', fill: false, tension: 0.3, order: 0 }
       ]
     },
@@ -12517,8 +12609,8 @@ function exportCsPdf() {
 <title>Cost Saving Report ${yearSel}</title>
 <style>
   body { font-family: 'Segoe UI', Tahoma, sans-serif; padding: 40px; color: #1a1a2e; max-width: 800px; margin: 0 auto; }
-  h1 { font-size: 22px; border-bottom: 3px solid #2F7DFF; padding-bottom: 8px; margin-bottom: 6px; }
-  h2 { font-size: 15px; color: #555; margin-top: 28px; margin-bottom: 10px; border-left: 4px solid #2F7DFF; padding-left: 10px; }
+  h1 { font-size: 22px; border-bottom: 3px solid #2E5395; padding-bottom: 8px; margin-bottom: 6px; }
+  h2 { font-size: 15px; color: #555; margin-top: 28px; margin-bottom: 10px; border-left: 4px solid #2E5395; padding-left: 10px; }
   .sub { font-size: 12px; color: #888; margin-bottom: 20px; }
   .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0; }
   .kpi { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; text-align: center; }
@@ -12628,7 +12720,7 @@ function renderCsKpiMonitor(rows, year) {
         {
           label: 'Rate (%)',
           data: rates,
-          backgroundColor: rates.map(r => r >= TARGET_PCT ? hexToRgba('#2F8F6E', 0.8) : hexToRgba('#2F7DFF', 0.7)),
+          backgroundColor: rates.map(r => r >= TARGET_PCT ? hexToRgba('#2F8F6E', 0.8) : hexToRgba('#2E5395', 0.7)),
           borderRadius: 4,
           maxBarThickness: 32,
           order: 2
@@ -12637,7 +12729,7 @@ function renderCsKpiMonitor(rows, year) {
           label: 'Target ' + TARGET_PCT + '%',
           data: Array(12).fill(TARGET_PCT),
           type: 'line',
-          borderColor: '#FF4D5E',
+          borderColor: '#A6443C',
           borderWidth: 2,
           borderDash: [6, 3],
           pointRadius: 0,
@@ -12671,7 +12763,7 @@ function renderCsKpiMonitor(rows, year) {
           if (!val) return;
           ctx.save();
           ctx.font = "700 10px 'IBM Plex Mono', monospace";
-          ctx.fillStyle = val >= TARGET_PCT ? '#2F8F6E' : '#2F7DFF';
+          ctx.fillStyle = val >= TARGET_PCT ? '#2F8F6E' : '#2E5395';
           ctx.textAlign = 'center';
           ctx.fillText(val.toFixed(1) + '%', point.x, point.y - 8);
           ctx.restore();
