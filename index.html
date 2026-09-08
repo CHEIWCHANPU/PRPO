@@ -6803,6 +6803,25 @@ body::after {
         </div>
       </div>
 
+      <!-- KPI MONITORING: MONTHLY RATE vs TARGET -->
+      <div class="chart-card" style="margin-bottom:1.2rem">
+        <div class="chart-title" style="font-size:0.85rem;margin-bottom:0.8rem">KPI Monitoring Report — Negotiation Rate vs Target</div>
+        <div class="cs-table-wrap" style="max-height:none;margin-bottom:1rem">
+          <table class="cs-table" id="csKpiTable">
+            <thead>
+              <tr>
+                <th>Metric</th>
+                <th>JAN</th><th>FEB</th><th>MAR</th><th>APR</th><th>MAY</th><th>JUN</th>
+                <th>JUL</th><th>AUG</th><th>SEP</th><th>OCT</th><th>NOV</th><th>DEC</th>
+                <th style="background:var(--accent);color:#fff">TOTAL</th>
+              </tr>
+            </thead>
+            <tbody id="csKpiTableBody"></tbody>
+          </table>
+        </div>
+        <div class="chart-wrap" style="height:300px"><canvas id="csKpiMonitorChart"></canvas></div>
+      </div>
+
       <!-- TABLE -->
       <div class="chart-card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.8rem;flex-wrap:wrap;gap:0.5rem">
@@ -12217,6 +12236,7 @@ function renderCostSavingPage() {
   renderCsMonthlyChart(year, cur.rows, prev.rows);
   renderCsPlantChart(cur.rows);
   renderCsModelChart(cur.rows);
+  renderCsKpiMonitor(cur.rows, year);
   renderCsTable(cur.rows);
 }
 
@@ -12334,6 +12354,116 @@ function renderCsModelChart(rows) {
         y: { ticks: { color: chartText, font: { size: 9.5, family: "'Sarabun',sans-serif", weight: '600' } }, grid: { display: false }, border: { display: false } }
       }
     }
+  });
+}
+
+function renderCsKpiMonitor(rows, year) {
+  const body = document.getElementById('csKpiTableBody');
+  const canvas = document.getElementById('csKpiMonitorChart');
+  if (!body || !canvas) return;
+
+  const TARGET_PCT = 20; // เป้าหมาย % ที่ตั้งไว้ (ปรับได้)
+
+  // จัดกลุ่มรายเดือน
+  const monthly = Array.from({ length: 12 }, () => ({ total: 0, onTarget: 0, totalSaving: 0 }));
+  rows.forEach(r => {
+    if (!r.goDate) return;
+    const m = new Date(r.goDate).getMonth();
+    monthly[m].total++;
+    if (r.onOff === 'ON') monthly[m].onTarget++;
+    monthly[m].totalSaving += csRowSaving(r).total;
+  });
+
+  const rates = monthly.map(m => m.total ? Math.round(m.onTarget / m.total * 1000) / 10 : 0);
+  const totals = { total: 0, onTarget: 0, saving: 0 };
+  monthly.forEach(m => { totals.total += m.total; totals.onTarget += m.onTarget; totals.saving += m.totalSaving; });
+  const totalRate = totals.total ? Math.round(totals.onTarget / totals.total * 1000) / 10 : 0;
+
+  const MONTHS_SHORT = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const fmtCell = (v, isRate) => isRate ? (v ? v.toFixed(1) : '0.0') : v.toLocaleString();
+
+  // render table
+  const makeRow = (label, values, totalVal, style) => {
+    return `<tr${style ? ' style="'+style+'"' : ''}>
+      <td style="font-weight:700">${label}</td>
+      ${values.map(v => `<td style="text-align:center;font-family:var(--mono)">${v}</td>`).join('')}
+      <td style="text-align:center;font-family:var(--mono);font-weight:700;background:color-mix(in srgb, var(--accent) 8%, transparent)">${totalVal}</td>
+    </tr>`;
+  };
+
+  body.innerHTML =
+    makeRow('Items', monthly.map(m => m.total), totals.total) +
+    makeRow('On-Target', monthly.map(m => m.onTarget), totals.onTarget) +
+    makeRow('Rate (%)',
+      rates.map(r => `<span style="color:${r >= TARGET_PCT ? 'var(--success)' : r > 0 ? 'var(--danger)' : 'var(--muted)'};font-weight:700">${r.toFixed(1)}</span>`),
+      `<span style="color:${totalRate >= TARGET_PCT ? 'var(--success)' : 'var(--danger)'}; font-weight:700">${totalRate.toFixed(1)}</span>`,
+      'background:color-mix(in srgb, var(--surface2) 60%, transparent)') +
+    makeRow('Target (%)', monthly.map(() => TARGET_PCT), TARGET_PCT, 'color:var(--muted)') +
+    makeRow('Saving (THB)', monthly.map(m => m.totalSaving ? csFormatBaht(m.totalSaving) : '—'), csFormatBaht(totals.saving));
+
+  // render chart: bar = rate, line = target
+  const cs = getComputedStyle(document.body);
+  const chartText = cs.getPropertyValue('--muted').trim();
+  const gridColor = cs.getPropertyValue('--surface2').trim();
+  destroyChart('csKpiMonitor');
+  charts.csKpiMonitor = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: MONTHS_SHORT,
+      datasets: [
+        {
+          label: 'Rate (%)',
+          data: rates,
+          backgroundColor: rates.map(r => r >= TARGET_PCT ? hexToRgba('#2F8F6E', 0.8) : hexToRgba('#2F7DFF', 0.7)),
+          borderRadius: 4,
+          maxBarThickness: 32,
+          order: 2
+        },
+        {
+          label: 'Target ' + TARGET_PCT + '%',
+          data: Array(12).fill(TARGET_PCT),
+          type: 'line',
+          borderColor: '#FF4D5E',
+          borderWidth: 2,
+          borderDash: [6, 3],
+          pointRadius: 0,
+          fill: false,
+          order: 1
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: CHART_EASE,
+      interaction: { mode: 'index', intersect: false },
+      layout: { padding: { top: 18 } },
+      plugins: {
+        legend: chartLegendCfg(chartText),
+        tooltip: Object.assign(chartTooltipCfg(cs), {
+          callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + ctx.raw.toFixed(1) + '%' }
+        })
+      },
+      scales: {
+        x: { ticks: { color: chartText, font: { size: 9.5, family: "'Sarabun',sans-serif", weight: '600' } }, grid: { display: false }, border: { display: false } },
+        y: { beginAtZero: true, max: 100, ticks: { color: chartText, font: { size: 9, family: "'IBM Plex Mono',monospace" }, callback: v => v + '%', stepSize: 20 }, grid: { color: gridColor, drawTicks: false, lineWidth: 1, borderDash: [3, 4] }, border: { display: false } }
+      }
+    },
+    plugins: [{
+      id: 'csKpiValueLabels',
+      afterDatasetsDraw(chart) {
+        const { ctx } = chart;
+        const meta = chart.getDatasetMeta(0); // bar dataset
+        meta.data.forEach((point, i) => {
+          const val = chart.data.datasets[0].data[i];
+          if (!val) return;
+          ctx.save();
+          ctx.font = "700 10px 'IBM Plex Mono', monospace";
+          ctx.fillStyle = val >= TARGET_PCT ? '#2F8F6E' : '#2F7DFF';
+          ctx.textAlign = 'center';
+          ctx.fillText(val.toFixed(1) + '%', point.x, point.y - 8);
+          ctx.restore();
+        });
+      }
+    }]
   });
 }
 
