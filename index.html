@@ -6728,8 +6728,12 @@ body::after {
         .cs-sheet-chip { display:inline-flex; align-items:center; gap:0.35rem; padding:0.35rem 0.7rem; border:1.5px solid var(--border); border-radius:8px; font-size:0.78rem; cursor:pointer; margin:0.25rem; background:var(--surface2); }
         .cs-sheet-chip.active { border-color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, transparent); color:var(--accent); font-weight:700; }
         .cs-table-wrap { max-height:520px; overflow:auto; border:1px solid var(--border); border-radius:10px; }
-        .cs-table { min-width:1100px; border-collapse:collapse; font-size:0.78rem; }
-        .cs-table th, .cs-table td { white-space:nowrap; padding:0.5rem 0.65rem; }
+        .cs-table { min-width:1400px; border-collapse:collapse; font-size:0.75rem; table-layout:fixed; }
+        .cs-table th, .cs-table td { white-space:nowrap; padding:0.5rem 0.55rem; overflow:hidden; text-overflow:ellipsis; }
+        .cs-table .col-model { width:70px; } .cs-table .col-part { width:180px; } .cs-table .col-partno { width:130px; }
+        .cs-table .col-maker { width:110px; } .cs-table .col-num { width:80px; text-align:right; } .cs-table .col-total { width:95px; text-align:right; }
+        .cs-table .col-target { width:65px; } .cs-table .col-status { width:50px; } .cs-table .col-date { width:90px; }
+        .cs-table .col-plant { width:55px; } .cs-table .col-act { width:60px; }
         .cs-table th { position:sticky; top:0; background:var(--surface2); color:var(--muted); font-weight:700; text-align:left; padding:0.55rem 0.7rem; border-bottom:1px solid var(--border); white-space:nowrap; font-size:0.7rem; letter-spacing:0.03em; text-transform:uppercase; }
         .cs-table td { padding:0.5rem 0.7rem; border-bottom:1px solid var(--border); white-space:nowrap; }
         .cs-table tr:hover td { background:var(--surface2); }
@@ -6874,9 +6878,9 @@ body::after {
           <table class="cs-table">
             <thead>
               <tr>
-                <th>Model</th><th>Part Name</th><th>Part No</th><th>Maker</th>
-                <th style="text-align:right">Before</th><th style="text-align:right">After</th><th style="text-align:right">Saving/Unit</th><th style="text-align:right">Volume</th>
-                <th style="text-align:right">Total Saving</th><th>Target</th><th>Status</th><th>GO Date</th><th>Plant</th><th></th>
+                <th class="col-model">Model</th><th class="col-part">Part Name</th><th class="col-partno">Part No</th><th class="col-maker">Maker</th>
+                <th class="col-num">Before</th><th class="col-num">After</th><th class="col-num">Save/Unit</th><th class="col-num">Volume</th>
+                <th class="col-total">Total Save</th><th class="col-target">Target</th><th class="col-status">ON/OFF</th><th class="col-date">GO Date</th><th class="col-plant">Plant</th><th class="col-act"></th>
               </tr>
             </thead>
             <tbody id="csTableBody"></tbody>
