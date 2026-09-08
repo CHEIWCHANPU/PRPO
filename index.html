@@ -6750,12 +6750,38 @@ body::after {
           <div style="font-size:0.75rem;color:var(--muted);margin-top:0.15rem">ยอดประหยัดจากการต่อรองราคา — เทียบ KPI ปีต่อปี</div>
         </div>
         <div style="display:flex;align-items:center;gap:0.5rem">
-          <button class="btn btn-ghost" onclick="openCsUploadModal()" title="นำเข้าจาก Excel" style="padding:0.45rem 0.7rem;font-size:0.8rem">Upload Excel</button>
+          <button class="btn btn-ghost" onclick="exportCsPdf()" style="padding:0.45rem 0.7rem;font-size:0.8rem">Export PDF</button>
+          <button class="btn btn-ghost" onclick="openCsUploadModal()" style="padding:0.45rem 0.7rem;font-size:0.8rem">Upload Excel</button>
           <select id="csYearSelect" onchange="renderCostSavingPage()" style="
             background:var(--surface2);border:1px solid var(--border);border-radius:7px;
             color:var(--text);font-size:0.82rem;padding:0.4rem 0.7rem;
             font-family:var(--mono);cursor:pointer;outline:none;"></select>
         </div>
+      </div>
+
+      <!-- ANNUAL TARGET -->
+      <div class="chart-card" style="margin-bottom:1.2rem;padding:1rem 1.4rem !important">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.6rem;flex-wrap:wrap;gap:0.5rem">
+          <div>
+            <div style="font-size:0.8rem;font-weight:700;color:var(--text);letter-spacing:0.02em">ANNUAL SAVING TARGET</div>
+            <div style="font-size:0.7rem;color:var(--muted)">ตั้งเป้าหมายยอดประหยัดรวมในปีที่เลือก</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.5rem">
+            <span style="font-size:0.75rem;color:var(--muted)">Target:</span>
+            <input type="number" id="csAnnualTarget" value="5000000" step="100000" min="0" style="
+              width:140px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;
+              color:var(--text);font-size:0.85rem;padding:0.35rem 0.6rem;font-family:var(--mono);
+              text-align:right;outline:none;" oninput="renderCsTargetBar()">
+            <span style="font-size:0.75rem;color:var(--muted)">THB</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.8rem">
+          <div style="flex:1;height:14px;border-radius:8px;background:var(--surface2);overflow:hidden;border:1px solid var(--border)">
+            <div id="csTargetFill" style="height:100%;border-radius:8px;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;transition:width 0.5s ease"></div>
+          </div>
+          <div id="csTargetPct" style="font-family:var(--mono);font-size:1rem;font-weight:700;min-width:55px;text-align:right;color:var(--text)">0%</div>
+        </div>
+        <div id="csTargetSub" style="font-size:0.72rem;color:var(--muted);margin-top:0.4rem;text-align:right"></div>
       </div>
 
       <!-- KPI ROW -->
@@ -6800,6 +6826,18 @@ body::after {
         <div class="chart-card">
           <div class="chart-title" style="font-size:0.85rem">Top Model — Highest Saving</div>
           <div class="chart-wrap" style="height:280px"><canvas id="csModelChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- CHARTS ROW 3: TOP MAKER + MARGIN ANALYSIS -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1.2rem">
+        <div class="chart-card">
+          <div class="chart-title" style="font-size:0.85rem">Top Maker — Highest Saving</div>
+          <div class="chart-wrap" style="height:280px"><canvas id="csMakerChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title" style="font-size:0.85rem">Margin Analysis — Cost Customer vs Maker After</div>
+          <div class="chart-wrap" style="height:280px"><canvas id="csMarginChart"></canvas></div>
         </div>
       </div>
 
@@ -12236,7 +12274,10 @@ function renderCostSavingPage() {
   renderCsMonthlyChart(year, cur.rows, prev.rows);
   renderCsPlantChart(cur.rows);
   renderCsModelChart(cur.rows);
+  renderCsMakerChart(cur.rows);
+  renderCsMarginChart(cur.rows);
   renderCsKpiMonitor(cur.rows, year);
+  renderCsTargetBar();
   renderCsTable(cur.rows);
 }
 
@@ -12355,6 +12396,174 @@ function renderCsModelChart(rows) {
       }
     }
   });
+}
+
+function renderCsMakerChart(rows) {
+  const canvas = document.getElementById('csMakerChart');
+  if (!canvas) return;
+  const map = {};
+  rows.forEach(r => {
+    const m = (r.goMaker || 'N/A').toString().trim() || 'N/A';
+    map[m] = (map[m] || 0) + csRowSaving(r).total;
+  });
+  const entries = Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  const cs = getComputedStyle(document.body);
+  const chartText = cs.getPropertyValue('--muted').trim();
+  const gridColor = cs.getPropertyValue('--surface2').trim();
+  destroyChart('csMaker');
+  charts.csMaker = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: entries.map(e => e[0]),
+      datasets: [{ data: entries.map(e => e[1]),
+        backgroundColor: (ctx) => {
+          const { ctx: c, chartArea } = ctx.chart;
+          if (!chartArea) return '#00D4B8';
+          return makeGradient(c, chartArea, hexToRgba('#00D4B8', 0.4), '#00D4B8', true);
+        },
+        borderRadius: 5, maxBarThickness: 28 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: CHART_EASE, indexAxis: 'y',
+      plugins: { legend: { display: false }, tooltip: Object.assign(chartTooltipCfg(cs), { callbacks: { label: ctx => ' ' + Math.round(ctx.raw).toLocaleString() + ' THB' } }) },
+      scales: {
+        x: { beginAtZero: true, ticks: { color: chartText, font: { size: 9, family: "'IBM Plex Mono',monospace" }, callback: v => csFormatBaht(v) }, grid: { color: gridColor, drawTicks: false, lineWidth: 1, borderDash: [3, 4] }, border: { display: false } },
+        y: { ticks: { color: chartText, font: { size: 9.5, family: "'Sarabun',sans-serif", weight: '600' } }, grid: { display: false }, border: { display: false } }
+      }
+    }
+  });
+}
+
+function renderCsMarginChart(rows) {
+  const canvas = document.getElementById('csMarginChart');
+  if (!canvas) return;
+  const modelMap = {};
+  rows.forEach(r => {
+    const m = (r.model || 'N/A').toString().trim() || 'N/A';
+    if (!modelMap[m]) modelMap[m] = { custTotal: 0, afterTotal: 0, count: 0 };
+    const cust = parseFloat(r.costCustomer) || 0;
+    const after = parseFloat(r.makerAfter) || 0;
+    if (cust > 0) { modelMap[m].custTotal += cust; modelMap[m].afterTotal += after; modelMap[m].count++; }
+  });
+  const entries = Object.entries(modelMap).filter(([, v]) => v.count > 0).map(([k, v]) => ({
+    model: k, custAvg: v.custTotal / v.count, afterAvg: v.afterTotal / v.count
+  })).sort((a, b) => (b.custAvg - b.afterAvg) - (a.custAvg - a.afterAvg)).slice(0, 10);
+
+  const cs = getComputedStyle(document.body);
+  const chartText = cs.getPropertyValue('--muted').trim();
+  destroyChart('csMargin');
+  charts.csMargin = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: entries.map(e => e.model),
+      datasets: [
+        { label: 'Cost Customer (avg)', data: entries.map(e => +e.custAvg.toFixed(2)), backgroundColor: hexToRgba('#F2A93B', 0.75), borderRadius: 4, maxBarThickness: 16 },
+        { label: 'Maker After (avg)', data: entries.map(e => +e.afterAvg.toFixed(2)), backgroundColor: hexToRgba('#2F7DFF', 0.75), borderRadius: 4, maxBarThickness: 16 },
+        { label: 'Margin', data: entries.map(e => +(e.custAvg - e.afterAvg).toFixed(2)), type: 'line', borderColor: '#2F8F6E', borderWidth: 2.2, pointRadius: 4, pointBackgroundColor: '#2F8F6E', fill: false, tension: 0.3, order: 0 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: CHART_EASE,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: chartLegendCfg(chartText),
+        tooltip: Object.assign(chartTooltipCfg(cs), { callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + ctx.raw.toLocaleString() + ' THB' } })
+      },
+      scales: {
+        x: { ticks: { color: chartText, font: { size: 8.5, family: "'Sarabun',sans-serif" }, maxRotation: 35 }, grid: { display: false }, border: { display: false } },
+        y: { beginAtZero: true, ticks: { color: chartText, font: { size: 9, family: "'IBM Plex Mono',monospace" } }, grid: { color: cs.getPropertyValue('--surface2').trim(), drawTicks: false, lineWidth: 1, borderDash: [3, 4] }, border: { display: false } }
+      }
+    }
+  });
+}
+
+function renderCsTargetBar() {
+  const targetInput = document.getElementById('csAnnualTarget');
+  const target = parseFloat(targetInput ? targetInput.value : 0) || 0;
+  const actual = costSavingData.reduce((s, r) => {
+    const yearSel = parseInt(document.getElementById('csYearSelect')?.value || new Date().getFullYear());
+    if (!r.goDate || new Date(r.goDate).getFullYear() !== yearSel) return s;
+    return s + csRowSaving(r).total;
+  }, 0);
+  const pct = target > 0 ? Math.min(Math.round(actual / target * 100), 999) : 0;
+  const fillEl = document.getElementById('csTargetFill');
+  const pctEl = document.getElementById('csTargetPct');
+  const subEl = document.getElementById('csTargetSub');
+  if (fillEl) fillEl.style.width = Math.min(pct, 100) + '%';
+  if (pctEl) { pctEl.textContent = pct + '%'; pctEl.style.color = pct >= 100 ? 'var(--success)' : pct >= 70 ? 'var(--text)' : 'var(--danger)'; }
+  if (subEl) subEl.textContent = Math.round(actual).toLocaleString() + ' / ' + Math.round(target).toLocaleString() + ' THB' + (pct >= 100 ? ' — Target achieved' : '');
+}
+
+function exportCsPdf() {
+  const yearSel = document.getElementById('csYearSelect')?.value || new Date().getFullYear();
+  const cur = csComputeYearStats(parseInt(yearSel));
+  const prev = csComputeYearStats(parseInt(yearSel) - 1);
+  const fmt0 = n => Math.round(n).toLocaleString('en-US');
+
+  const topModels = {};
+  cur.rows.forEach(r => { const m = r.model || 'N/A'; topModels[m] = (topModels[m] || 0) + csRowSaving(r).total; });
+  const top5Models = Object.entries(topModels).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+  const topMakers = {};
+  cur.rows.forEach(r => { const m = r.goMaker || 'N/A'; topMakers[m] = (topMakers[m] || 0) + csRowSaving(r).total; });
+  const top5Makers = Object.entries(topMakers).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>Cost Saving Report ${yearSel}</title>
+<style>
+  body { font-family: 'Segoe UI', Tahoma, sans-serif; padding: 40px; color: #1a1a2e; max-width: 800px; margin: 0 auto; }
+  h1 { font-size: 22px; border-bottom: 3px solid #2F7DFF; padding-bottom: 8px; margin-bottom: 6px; }
+  h2 { font-size: 15px; color: #555; margin-top: 28px; margin-bottom: 10px; border-left: 4px solid #2F7DFF; padding-left: 10px; }
+  .sub { font-size: 12px; color: #888; margin-bottom: 20px; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0; }
+  .kpi { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; text-align: center; }
+  .kpi-val { font-size: 22px; font-weight: 700; color: #1e3a8a; }
+  .kpi-label { font-size: 11px; color: #64748b; margin-top: 4px; }
+  .kpi-trend { font-size: 10px; margin-top: 3px; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; }
+  th { background: #1e3a8a; color: #fff; padding: 7px 10px; text-align: left; }
+  td { padding: 6px 10px; border-bottom: 1px solid #e2e8f0; }
+  tr:nth-child(even) td { background: #f8fafc; }
+  .right { text-align: right; }
+  .green { color: #16a34a; font-weight: 700; }
+  .footer { margin-top: 30px; text-align: center; font-size: 10px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 10px; }
+  @media print { body { padding: 20px; } }
+</style></head><body>
+<h1>COST SAVING REPORT — ${yearSel}</h1>
+<div class="sub">Generated ${new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' })} | PURCHASE-EN-CCIP</div>
+
+<div class="kpi-grid">
+  <div class="kpi"><div class="kpi-val">${fmt0(cur.totalSaving)}</div><div class="kpi-label">Total Saving (THB)</div><div class="kpi-trend" style="color:${cur.totalSaving >= prev.totalSaving ? '#16a34a' : '#dc2626'}">${cur.totalSaving >= prev.totalSaving ? '▲' : '▼'} vs ${fmt0(prev.totalSaving)} prev year</div></div>
+  <div class="kpi"><div class="kpi-val">${cur.count}</div><div class="kpi-label">Items</div></div>
+  <div class="kpi"><div class="kpi-val">${cur.count ? Math.round(cur.onRate) + '%' : '—'}</div><div class="kpi-label">On-Target Rate</div></div>
+  <div class="kpi"><div class="kpi-val">${cur.count ? cur.avgPct.toFixed(1) + '%' : '—'}</div><div class="kpi-label">Avg. Negotiation</div></div>
+</div>
+
+<h2>Top 5 Models</h2>
+<table><tr><th>#</th><th>Model</th><th class="right">Total Saving (THB)</th></tr>
+${top5Models.map(([m, v], i) => '<tr><td>' + (i+1) + '</td><td>' + m + '</td><td class="right green">' + fmt0(v) + '</td></tr>').join('')}
+</table>
+
+<h2>Top 5 Makers</h2>
+<table><tr><th>#</th><th>Maker</th><th class="right">Total Saving (THB)</th></tr>
+${top5Makers.map(([m, v], i) => '<tr><td>' + (i+1) + '</td><td>' + m + '</td><td class="right green">' + fmt0(v) + '</td></tr>').join('')}
+</table>
+
+<h2>All Records (${cur.count} items)</h2>
+<table><tr><th>Model</th><th>Part Name</th><th>Maker</th><th class="right">Before</th><th class="right">After</th><th class="right">Saving</th><th class="right">Volume</th><th class="right">Total</th><th>Status</th></tr>
+${cur.rows.sort((a, b) => csRowSaving(b).total - csRowSaving(a).total).map(r => {
+    const s = csRowSaving(r);
+    return '<tr><td>' + (r.model||'') + '</td><td>' + (r.partName||'') + '</td><td>' + (r.goMaker||'') + '</td><td class="right">' + s.before.toLocaleString() + '</td><td class="right">' + s.after.toLocaleString() + '</td><td class="right">' + s.perUnit.toLocaleString() + '</td><td class="right">' + s.vol.toLocaleString() + '</td><td class="right green">' + Math.round(s.total).toLocaleString() + '</td><td>' + (r.onOff||'') + '</td></tr>';
+  }).join('')}
+</table>
+
+<div class="footer">PURCHASE-EN-CCIP | Cost Saving Report | Auto-generated</div>
+</body></html>`;
+
+  const w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(() => w.print(), 600);
 }
 
 function renderCsKpiMonitor(rows, year) {
