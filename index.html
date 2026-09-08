@@ -6728,7 +6728,8 @@ body::after {
         .cs-sheet-chip { display:inline-flex; align-items:center; gap:0.35rem; padding:0.35rem 0.7rem; border:1.5px solid var(--border); border-radius:8px; font-size:0.78rem; cursor:pointer; margin:0.25rem; background:var(--surface2); }
         .cs-sheet-chip.active { border-color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, transparent); color:var(--accent); font-weight:700; }
         .cs-table-wrap { max-height:520px; overflow:auto; border:1px solid var(--border); border-radius:10px; }
-        .cs-table { width:100%; border-collapse:collapse; font-size:0.78rem; }
+        .cs-table { min-width:1100px; border-collapse:collapse; font-size:0.78rem; }
+        .cs-table th, .cs-table td { white-space:nowrap; padding:0.5rem 0.65rem; }
         .cs-table th { position:sticky; top:0; background:var(--surface2); color:var(--muted); font-weight:700; text-align:left; padding:0.55rem 0.7rem; border-bottom:1px solid var(--border); white-space:nowrap; font-size:0.7rem; letter-spacing:0.03em; text-transform:uppercase; }
         .cs-table td { padding:0.5rem 0.7rem; border-bottom:1px solid var(--border); white-space:nowrap; }
         .cs-table tr:hover td { background:var(--surface2); }
@@ -12698,12 +12699,12 @@ function renderCsTable(rows) {
       '<td>' + (r.partName || '') + '</td>' +
       '<td>' + (r.partNo || '') + '</td>' +
       '<td>' + (r.goMaker || '') + '</td>' +
-      '<td style="text-align:right;font-family:var(--mono)">' + s.before.toLocaleString() + '</td>' +
-      '<td style="text-align:right;font-family:var(--mono)">' + s.after.toLocaleString() + '</td>' +
-      '<td style="text-align:right;font-family:var(--mono);color:' + (s.perUnit > 0 ? 'var(--success)' : s.perUnit < 0 ? 'var(--danger)' : '') + '">' + s.perUnit.toLocaleString() + '</td>' +
+      '<td style="text-align:right;font-family:var(--mono)">' + (+s.before.toFixed(2)).toLocaleString() + '</td>' +
+      '<td style="text-align:right;font-family:var(--mono)">' + (+s.after.toFixed(2)).toLocaleString() + '</td>' +
+      '<td style="text-align:right;font-family:var(--mono);color:' + (s.perUnit > 0 ? 'var(--success)' : s.perUnit < 0 ? 'var(--danger)' : '') + '">' + (+s.perUnit.toFixed(2)).toLocaleString() + '</td>' +
       '<td style="text-align:right;font-family:var(--mono)">' + s.vol.toLocaleString() + '</td>' +
       '<td style="text-align:right;font-family:var(--mono);font-weight:700;color:var(--success)">' + Math.round(s.total).toLocaleString() + '</td>' +
-      '<td style="font-family:var(--mono)">' + (r.target || '') + '</td>' +
+      '<td style="font-family:var(--mono)">' + (r.target ? parseFloat(r.target).toFixed(2) : '') + '</td>' +
       '<td class="' + (r.onOff === 'ON' ? 'cs-on' : 'cs-off') + '">' + (r.onOff || '') + '</td>' +
       '<td>' + dateStr + '</td>' +
       '<td>' + (r.plant || '') + '</td>' +
