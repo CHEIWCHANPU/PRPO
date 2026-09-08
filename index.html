@@ -6728,14 +6728,14 @@ body::after {
         .cs-sheet-chip { display:inline-flex; align-items:center; gap:0.35rem; padding:0.35rem 0.7rem; border:1.5px solid var(--border); border-radius:8px; font-size:0.78rem; cursor:pointer; margin:0.25rem; background:var(--surface2); }
         .cs-sheet-chip.active { border-color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, transparent); color:var(--accent); font-weight:700; }
         .cs-table-wrap { max-height:520px; overflow:auto; border:1px solid var(--border); border-radius:10px; }
-        .cs-table { min-width:1400px; border-collapse:collapse; font-size:0.75rem; table-layout:fixed; }
+        .cs-table { min-width:1400px; border-collapse:separate; border-spacing:0; font-size:0.75rem; table-layout:fixed; }
         .cs-table th, .cs-table td { white-space:nowrap; padding:0.5rem 0.55rem; overflow:hidden; text-overflow:ellipsis; }
         .cs-table .col-model { width:70px; } .cs-table .col-part { width:180px; } .cs-table .col-partno { width:130px; }
         .cs-table .col-maker { width:110px; } .cs-table .col-num { width:80px; text-align:right; } .cs-table .col-total { width:95px; text-align:right; }
         .cs-table .col-target { width:65px; } .cs-table .col-status { width:50px; } .cs-table .col-date { width:90px; }
         .cs-table .col-plant { width:55px; } .cs-table .col-act { width:60px; }
-        .cs-table th { position:sticky; top:0; background:var(--surface2); color:var(--muted); font-weight:700; text-align:left; padding:0.55rem 0.7rem; border-bottom:1px solid var(--border); white-space:nowrap; font-size:0.7rem; letter-spacing:0.03em; text-transform:uppercase; }
-        .cs-table td { padding:0.5rem 0.7rem; border-bottom:1px solid var(--border); white-space:nowrap; }
+        .cs-table th { position:sticky; top:0; z-index:5; background:var(--surface2); background-clip:padding-box; color:var(--muted); font-weight:700; text-align:left; padding:0.55rem 0.7rem; border-bottom:1px solid var(--border); white-space:nowrap; font-size:0.7rem; letter-spacing:0.03em; text-transform:uppercase; }
+        .cs-table td { padding:0.5rem 0.7rem; border-bottom:1px solid var(--border); white-space:nowrap; position:relative; z-index:0; background:var(--surface); }
         .cs-table tr:hover td { background:var(--surface2); }
         .cs-on { color:var(--success); font-weight:700; }
         .cs-off { color:var(--danger); font-weight:700; }
