@@ -2429,11 +2429,20 @@
  display:flex; align-items:center; justify-content:space-between;
  flex-wrap:wrap; gap:0.6rem; margin-bottom:0.75rem;
  }
- .wp-month-tabs { display:flex; gap:0.35rem; flex-wrap:wrap; }
+ .wp-month-tabs {
+ display:flex; gap:0.35rem; flex-wrap:nowrap;
+ overflow-x:auto; overflow-y:hidden; padding-bottom:0.35rem;
+ scrollbar-width:thin; scrollbar-color:var(--border2) transparent;
+ min-width:0; flex:1 1 260px;
+ }
+ .wp-month-tabs::-webkit-scrollbar { height:5px; }
+ .wp-month-tabs::-webkit-scrollbar-thumb { background:var(--border2); border-radius:3px; }
+ .wp-month-tabs::-webkit-scrollbar-track { background:transparent; }
  .wp-month-tab {
- padding:0.28rem 0.78rem; border-radius:4px; font-size: 0.756rem;
+ padding:0.28rem 0.7rem; border-radius:4px; font-size: 0.72rem;
  font-family:var(--mono); font-weight:600; cursor:pointer; border:1px solid var(--border);
  background:var(--surface2); color:var(--muted); transition:all 0.15s;
+ flex:0 0 auto; white-space:nowrap;
  }
  .wp-month-tab.active { background:var(--glow-accent); border-color:var(--accent); color:var(--accent); }
  .wp-month-tab.has-data { color:var(--text); }
