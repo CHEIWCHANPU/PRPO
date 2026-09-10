@@ -4115,8 +4115,9 @@
  border-color: var(--border) !important;
  }
 
- /* Icon chips inside cards: soft glow ring for a lifted "badge" look */
- .stat-icon-wrap, .exec-kpi-icon, .cer-stat-card .stat-icon-wrap, .mt-kpi-icon, .wp-kpi-icon {
+ /* Icon chips inside cards: soft glow ring for a lifted "badge" look
+ (wp-kpi-icon ไม่มีกล่องพื้นหลังของตัวเอง เอา shadow ออกไม่งั้นจะเห็นเป็นกรอบสี่เหลี่ยมลอยรอบไอคอนเปล่าๆ) */
+ .stat-icon-wrap, .exec-kpi-icon, .cer-stat-card .stat-icon-wrap, .mt-kpi-icon {
  box-shadow: 0 3px 10px rgba(0,0,0,0.18), 0 0 0 1px rgba(255,255,255,0.05) inset;
  }
 
