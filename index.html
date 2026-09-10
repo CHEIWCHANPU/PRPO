@@ -4606,7 +4606,7 @@ body {
  background: var(--rail-active-bg) !important; color: var(--rail-active-text) !important;
  border: 1px solid rgba(124,140,255,0.32) !important; box-shadow: none !important; font-weight: 600 !important;
 }
-.nav-icon { color: var(--rail-text-dim) !important; }
+.nav-icon { color: #fff !important; }
 .nav-item.active .nav-icon, .nav-item.active .nav-icon svg { color: var(--rail-active-text) !important; }
 .nav-item.active::before { content: none !important; display: none !important; }
 .nav-item:hover .nav-icon { color: var(--rail-text) !important; }
@@ -6643,7 +6643,7 @@ body::after {
  </div>
  </div>
  <div class="form-group"><label class="form-label">กำหนดวันที่ต้องเสร็จ</label><input type="date" class="form-input" id="td-date"></div>
- <div class="form-group" style="display:flex;align-items:flex-end;gap:0.5rem">
+ <div class="form-group" style="display:flex;flex-direction:row;align-items:flex-end;gap:0.5rem">
  <button class="btn btn-ghost" id="todoCancelEditBtn" onclick="cancelTodoEdit()" style="display:none">ยกเลิก</button>
  <button class="btn btn-primary" id="td-add-btn" style="width:100%" onclick="addTodo()">+ เพิ่มงาน</button>
  </div>
