@@ -3487,7 +3487,7 @@
  .exec-hero-sub { font-size: 0.788rem; color: var(--muted); margin-top: 0.4rem; }
  .exec-hero-right { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; flex-shrink: 0; }
  .exec-health-ring { position: relative; width: 90px; height: 90px; }
- .exec-health-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+ .exec-health-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
  .exec-ring-bg { fill: none; stroke: var(--border); stroke-width: 8; }
  .exec-ring-fg {
  fill: none; stroke: var(--accent); stroke-width: 8;
@@ -6231,7 +6231,7 @@ body::after {
  .todo-item:hover { transform:translateX(2px); box-shadow:0 4px 14px rgba(0,0,0,0.08); }
  .todo-item.done { opacity:0.5; }
  .todo-item.done .todo-title { text-decoration:line-through; }
- .todo-icon-badge { width:30px; height:30px; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:0.9rem; flex-shrink:0; background:color-mix(in srgb, var(--item-color,var(--accent)) 16%, transparent); }
+ .todo-icon-badge { min-width:30px; height:24px; padding:0 0.5rem; border-radius:5px; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:700; white-space:nowrap; flex-shrink:0; background:color-mix(in srgb, var(--item-color,var(--accent)) 16%, transparent); color:var(--item-color,var(--accent)); }
  .todo-check { width:20px; height:20px; border-radius:6px; border:2px solid var(--border); flex-shrink:0; cursor:pointer; display:flex; align-items:center; justify-content:center; margin-top:0.1rem; background:var(--surface2); transition:all 0.15s ease; }
  .todo-check:hover { border-color:var(--accent); }
  .todo-check.checked { background:var(--success); border-color:var(--success); color:#fff; }
@@ -8169,7 +8169,7 @@ function renderDailyBriefing() {
 /* ── DATA LOAD ── */
 // คืนค่า true/false บอกว่าซิงค์ "จริง" สำเร็จหรือไม่ (ไม่ใช่แค่ว่ามีข้อมูลมาแสดงหรือเปล่า)
 // เพื่อให้โค้ดที่เรียกใช้ (เช่น syncData) รู้สถานะจริงและไม่แสดงข้อความ "สำเร็จ" หลอกๆ
-async function loadData(forceRefresh = false) {
+async function loadData(forceRefresh = false, silent = false) {
  if (!WEB_APP_URL) { allData = DEMO; processData(); showToast('ℹ ใช้ข้อมูลตัวอย่าง — ตั้งค่า URL ใน Setup', 'info'); return false; }
 
  const lastSyncEl = document.getElementById('lastSync');
@@ -8184,12 +8184,13 @@ async function loadData(forceRefresh = false) {
  return 'แคช' + (ageMin > 0 ? ' (' + ageMin + ' นาทีที่แล้ว)' : ' (เมื่อกี้)');
  };
 
- // ── มีแคชอยู่แล้วและไม่ได้สั่ง force refresh → ใช้แคชเลย ไม่ยิง fetch ไปที่ Sheet อีก
- // เปิดลิงก์ครั้งต่อไปจะเห็นข้อมูลทันทีโดยไม่ต้องรอโหลด — กด "Sync" เองเมื่อไหร่ก็ได้ข้อมูลใหม่ ──
+ // ── มีแคชอยู่แล้วและไม่ได้สั่ง force refresh → แสดงแคชทันที (เปิดหน้าเร็ว) แล้วซิงค์ข้อมูลสดจาก
+ // Sheet ต่อเบื้องหลังให้อัตโนมัติทุกครั้งที่เปิด/รีเฟรชหน้า ไม่ต้องรอกดปุ่ม Sync เอง ──
  if (cached && !forceRefresh) {
  allData = JSON.parse(cached);
  processData();
  setSyncLabel(cacheAgeLabel());
+ loadData(true, true).catch(() => {});
  return true;
  }
 
@@ -8203,7 +8204,7 @@ async function loadData(forceRefresh = false) {
  localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
  setSyncLabel('ซิงค์ล่าสุด: ' + String(json.updated).split(' ')[0]);
  processData();
- if (forceRefresh) showToast('Sync สำเร็จ', 'success');
+ if (forceRefresh && !silent) showToast('Sync สำเร็จ', 'success');
  return true;
  } else {
  if (cached) {
@@ -8212,17 +8213,17 @@ async function loadData(forceRefresh = false) {
  allData = DEMO; processData();
  setSyncLabel('❌ เชื่อมต่อไม่ได้ (ใช้ข้อมูลตัวอย่าง)');
  }
- showToast('❌ โหลดข้อมูลไม่สำเร็จ: ' + (json.error || 'ไม่ทราบสาเหตุ'), 'error');
+ if (!silent) showToast('❌ โหลดข้อมูลไม่สำเร็จ: ' + (json.error || 'ไม่ทราบสาเหตุ'), 'error');
  return false;
  }
  } catch (e) {
  if (cached) {
  setSyncLabel(cacheAgeLabel() + ' · เชื่อมต่อไม่ได้');
- showToast('❌ เชื่อมต่อ Sheet ไม่ได้ — แสดงข้อมูลแคชเดิมไว้ก่อน', 'error');
+ if (!silent) showToast('❌ เชื่อมต่อ Sheet ไม่ได้ — แสดงข้อมูลแคชเดิมไว้ก่อน', 'error');
  } else {
  allData = DEMO; processData();
  setSyncLabel('❌ เชื่อมต่อไม่ได้ (ใช้ข้อมูลตัวอย่าง)');
- showToast('❌ ไม่สามารถเชื่อมต่อ — ใช้ข้อมูล Demo', 'error');
+ if (!silent) showToast('❌ ไม่สามารถเชื่อมต่อ — ใช้ข้อมูล Demo', 'error');
  }
  return false;
  }
@@ -9000,7 +9001,7 @@ function cerOverallStatus(r) {
 
 const CER_CACHE_TTL = 5 * 60 * 1000; // 5 นาที — เท่ากับ cache ของ PR/PO (loadData)
 
-async function loadCerData(forceRefresh = false) {
+async function loadCerData(forceRefresh = false, silent = false) {
  if (!WEB_APP_URL) {
  if (!cerLoaded) {
  const local = JSON.parse(localStorage.getItem('cer_data') || 'null');
@@ -9012,7 +9013,8 @@ async function loadCerData(forceRefresh = false) {
  return;
  }
 
- // ── มีแคชอยู่แล้ว (จากรอบก่อนหรือจาก localStorage) และไม่ได้สั่ง force → ใช้แคชเลย ไม่ยิง fetch ซ้ำ ──
+ // ── มีแคชอยู่แล้ว (จากรอบก่อนหรือจาก localStorage) และไม่ได้สั่ง force → แสดงแคชทันที
+ // แล้วซิงค์ข้อมูลสดจาก Sheet เบื้องหลังให้อัตโนมัติทุกครั้งที่เปิดหน้า ──
  if (!forceRefresh) {
  if (!cerLoaded) {
  const local = JSON.parse(localStorage.getItem('cer_data') || 'null');
@@ -9021,6 +9023,7 @@ async function loadCerData(forceRefresh = false) {
  if (cerLoaded) {
  buildNotifications();
  renderDailyBriefing();
+ loadCerData(true, true).catch(() => {});
  return;
  }
  }
@@ -10810,7 +10813,7 @@ function initKeyboardShortcuts() {
  if (e.key === 's' || e.key === 'S') { e.preventDefault(); syncData(); }
  // ? — hint toast
  if (e.key === '?') {
- showToast({ icon:'', title:'Keyboard Shortcuts', sub:'/ = ค้นหา · N = เพิ่มรายการ · S = Sync · Esc = ปิด' }, 'info', 5000);
+ showToast({ icon:'⌨️', title:'Keyboard Shortcuts', sub:'/ = ค้นหา · N = เพิ่มรายการ · S = Sync · Esc = ปิด' }, 'info', 5000);
  }
  });
 }
@@ -10906,7 +10909,7 @@ function showResultModal(title, type = 'success', sub = '', onClose = null) {
  const subEl = document.getElementById('resultModalSub');
  const btnEl = document.getElementById('resultModalBtn');
  overlay.className = 'result-modal-overlay open ' + type;
- iconWrap.textContent = type === 'success' ? '' : (type === 'error' ? '' : '');
+ iconWrap.textContent = type === 'success' ? '✓' : (type === 'error' ? '✕' : (type === 'warn' ? '!' : 'i'));
  titleEl.textContent = title;
  if (sub) { subEl.textContent = sub; subEl.style.display = 'block'; }
  else { subEl.style.display = 'none'; }
@@ -10942,8 +10945,8 @@ function showDueAlerts() {
  });
  // แสดงแบบ stagger ทีละรายการ
  const items = [
- ...urgent.map(r => ({ r, cls:'urgent', icon:'', chip: r.daysLeft < 0 ? `เกิน ${Math.abs(r.daysLeft)} วัน` : 'วันนี้!' })),
- ...warn.map(r => ({ r, cls:'warndue', icon:'', chip: `▲ เหลือ ${r.daysLeft} วัน` }))
+ ...urgent.map(r => ({ r, cls:'urgent', icon:'🔴', chip: r.daysLeft < 0 ? `เกิน ${Math.abs(r.daysLeft)} วัน` : 'วันนี้!' })),
+ ...warn.map(r => ({ r, cls:'warndue', icon:'⚠️', chip: `▲ เหลือ ${r.daysLeft} วัน` }))
  ];
  items.slice(0, 5).forEach((item, i) => {
  setTimeout(() => {
@@ -11047,7 +11050,7 @@ async function clearHistory() {
 ══════════════════════════════════════════════════════ */
 
 /* ── โหลด Supplier จาก Sheet ── */
-async function loadSuppliers(forceRefresh = false) {
+async function loadSuppliers(forceRefresh = false, silent = false) {
  if (!WEB_APP_URL) {
  // Demo data ถ้ายังไม่ได้ตั้ง URL
  suppliers = JSON.parse(localStorage.getItem('prpo_suppliers') || '[]');
@@ -11055,12 +11058,13 @@ async function loadSuppliers(forceRefresh = false) {
  renderDailyBriefing();
  return;
  }
- // ── มีแคชอยู่แล้วและไม่ได้สั่ง force → ใช้แคชเลย ไม่ยิง fetch ซ้ำ ──
+ // ── มีแคชอยู่แล้วและไม่ได้สั่ง force → แสดงแคชทันที แล้วซิงค์เบื้องหลังอัตโนมัติทุกครั้งที่เปิดหน้า ──
  const cached = localStorage.getItem('prpo_suppliers');
  if (cached && !forceRefresh) {
  suppliers = JSON.parse(cached);
  renderSuppliers();
  renderDailyBriefing();
+ loadSuppliers(true, true).catch(() => {});
  return;
  }
  try {
@@ -11073,13 +11077,13 @@ async function loadSuppliers(forceRefresh = false) {
  renderDailyBriefing();
  } else {
  if (cached) { suppliers = JSON.parse(cached); renderSuppliers(); renderDailyBriefing(); }
- showToast('❌ โหลด Supplier ไม่สำเร็จ: ' + json.error, 'error');
+ if (!silent) showToast('❌ โหลด Supplier ไม่สำเร็จ: ' + json.error, 'error');
  }
  } catch(e) {
  suppliers = JSON.parse(localStorage.getItem('prpo_suppliers') || '[]');
  renderSuppliers();
  renderDailyBriefing();
- showToast('❌ ไม่สามารถโหลด Supplier จาก Sheet', 'error');
+ if (!silent) showToast('❌ ไม่สามารถโหลด Supplier จาก Sheet', 'error');
  }
 }
 
@@ -12113,16 +12117,57 @@ function renderCsPlantChart(rows) {
  const donutColors = ['#2E5395', '#5A8FC0', '#2F8F6E', '#C9A227', '#8A94A6', '#B0673A', '#5C6F8A', '#7A9E7E'];
  const cs = getComputedStyle(document.body);
  const chartText = cs.getPropertyValue('--muted').trim();
+ const textColor = cs.getPropertyValue('--text').trim();
+ const cardBg = cs.getPropertyValue('--surface').trim();
+ const total = entries.reduce((s, e) => s + e[1], 0);
+ const topPlant = entries[0];
  destroyChart('csPlant');
+
+ // ── ปลั๊กอินวาดตัวเลขรวม + Plant อันดับ 1 ไว้กลางโดนัท ให้ดูมีมิติขึ้น ──
+ const centerTextPlugin = {
+ id: 'csPlantCenterText',
+ afterDraw(chart) {
+ const { ctx, chartArea } = chart;
+ if (!chartArea) return;
+ const cx = (chartArea.left + chartArea.right) / 2;
+ const cy = (chartArea.top + chartArea.bottom) / 2;
+ ctx.save();
+ ctx.textAlign = 'center';
+ ctx.textBaseline = 'middle';
+ ctx.font = "800 1.35rem 'IBM Plex Mono',monospace";
+ ctx.fillStyle = textColor;
+ ctx.fillText(csFormatBaht(total), cx, cy - 11);
+ ctx.font = "600 0.68rem 'Sarabun',sans-serif";
+ ctx.fillStyle = chartText;
+ ctx.fillText('รวม Saving ทั้งหมด', cx, cy + 11);
+ if (topPlant) {
+ ctx.font = "700 0.66rem 'Sarabun',sans-serif";
+ ctx.fillStyle = donutColors[0];
+ ctx.fillText('Top: ' + topPlant[0], cx, cy + 27);
+ }
+ ctx.restore();
+ }
+ };
+
  charts.csPlant = new Chart(canvas, {
  type: 'doughnut',
+ plugins: [centerTextPlugin],
  data: {
  labels: entries.map(e => e[0]),
- datasets: [{ data: entries.map(e => e[1]), backgroundColor: entries.map((_, i) => donutColors[i % donutColors.length]), borderWidth: 0, hoverOffset: 8 }]
+ datasets: [{
+ data: entries.map(e => e[1]),
+ backgroundColor: entries.map((_, i) => donutColors[i % donutColors.length]),
+ borderWidth: 3,
+ borderColor: cardBg,
+ borderRadius: 6,
+ spacing: 2,
+ hoverOffset: 10,
+ hoverBorderWidth: 4
+ }]
  },
  options: {
- responsive: true, maintainAspectRatio: false, animation: CHART_EASE,
- cutout: '62%',
+ responsive: true, maintainAspectRatio: false, animation: { ...CHART_EASE, animateRotate: true, animateScale: true },
+ cutout: '68%',
  plugins: {
  legend: { position: 'right', labels: { color: chartText, font: { size: 10, family: "'Sarabun',sans-serif" }, padding: 12, usePointStyle: true, pointStyleWidth: 10 } },
  tooltip: { callbacks: { label: ctx => ' ' + ctx.label + ': ' + Math.round(ctx.raw).toLocaleString() + ' THB (' + (ctx.raw / entries.reduce((s, e) => s + e[1], 0) * 100).toFixed(1) + '%)' } }
@@ -13069,11 +13114,11 @@ function renderLeadTime() {
  MAKER LEADERBOARD + TEAM STREAK / BADGES
 ══════════════════════════════════════════════════════ */
 const STREAK_BADGES = [
- { req: 5, icon: '', name: 'มือใหม่ไฟแรง' },
- { req: 10, icon: '', name: 'มือโปร' },
- { req: 25, icon: '', name: 'มือฉมัง' },
- { req: 50, icon: '', name: 'เทพจัดซื้อ' },
- { req: 100, icon: '', name: 'ตำนานจัดซื้อ' }
+ { req: 5, icon: '🌱', name: 'มือใหม่ไฟแรง' },
+ { req: 10, icon: '🎯', name: 'มือโปร' },
+ { req: 25, icon: '🔥', name: 'มือฉมัง' },
+ { req: 50, icon: '👑', name: 'เทพจัดซื้อ' },
+ { req: 100, icon: '🏆', name: 'ตำนานจัดซื้อ' }
 ];
 let leaderboardPage = 1;
 
@@ -14653,13 +14698,14 @@ let wpInited = false;
 let wpLoading = false;
 
 // โหลดข้อมูลจาก Sheet "workplan" — แทนที่ loadWpData() แบบ localStorage เดิม
-async function wpLoadData(forceRefresh = false) {
+async function wpLoadData(forceRefresh = false, silent = false) {
  if (!WEB_APP_URL) { wpData = []; return; }
  const CACHE_KEY = 'prpo_wp_cache';
- // ── มีแคชอยู่แล้วและไม่ได้สั่ง force → ใช้แคชเลย ไม่ยิง fetch ซ้ำ ──
+ // ── มีแคชอยู่แล้วและไม่ได้สั่ง force → แสดงแคชทันที แล้วซิงค์เบื้องหลังอัตโนมัติทุกครั้งที่เปิดหน้า ──
  const cached = localStorage.getItem(CACHE_KEY);
  if (cached && !forceRefresh) {
  wpData = JSON.parse(cached);
+ wpLoadData(true, true).then(() => { if (document.getElementById('page-workplan')?.classList.contains('active')) renderWorkplan(); }).catch(() => {});
  return;
  }
  wpLoading = true;
@@ -14671,11 +14717,11 @@ async function wpLoadData(forceRefresh = false) {
  localStorage.setItem(CACHE_KEY, JSON.stringify(wpData));
  } else {
  if (cached) wpData = JSON.parse(cached);
- showToast('❌ โหลดตารางแผนงานไม่สำเร็จ: ' + (json.error||''), 'error');
+ if (!silent) showToast('❌ โหลดตารางแผนงานไม่สำเร็จ: ' + (json.error||''), 'error');
  }
  } catch(e) {
  if (cached) wpData = JSON.parse(cached);
- showToast('❌ เชื่อมต่อตารางแผนงานไม่สำเร็จ', 'error');
+ if (!silent) showToast('❌ เชื่อมต่อตารางแผนงานไม่สำเร็จ', 'error');
  } finally {
  wpLoading = false;
  }
