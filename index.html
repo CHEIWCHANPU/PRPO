@@ -956,6 +956,12 @@
  .cer-stat-card.warn .cer-stat-value { color: var(--warn); }
  .cer-stat-card.danger .cer-stat-value { color: var(--danger); }
  .cer-stat-meta { font-size: 0.683rem; color: var(--muted); }
+ .cer-stat-card.line-test { background: linear-gradient(135deg, rgba(6,199,85,0.08), var(--surface)); }
+ .cer-stat-card.line-test::before { background: linear-gradient(90deg, #06C755, #00b34f); }
+ .cer-stat-card.line-test:hover { border-color: #06C755; }
+ .cer-stat-card.line-test .cer-stat-value { color: #06C755; font-family: var(--font, inherit); font-size: 1.1rem; }
+ .cer-stat-card.line-test:active { transform: scale(0.97); }
+ .cer-stat-card.line-test.loading { pointer-events: none; opacity: 0.75; }
  @media (max-width: 1100px) { .cer-stat-grid { grid-template-columns: repeat(3,1fr); } }
  @media (max-width: 640px) { .cer-stat-grid { grid-template-columns: repeat(2,1fr); } }
 
@@ -5874,6 +5880,11 @@ body::after {
  <div class="cer-stat-value" id="cer-cnt-expired">—</div>
  <div class="cer-stat-meta">ต้องดำเนินการ</div>
  </div>
+ <div class="cer-stat-card line-test" id="cer-stat-linetest" onclick="testLineAlert(this)">
+ <div class="cer-stat-label">💬 LINE ALERT</div>
+ <div class="cer-stat-value" id="cer-linetest-value">ทดสอบ</div>
+ <div class="cer-stat-meta">กดเพื่อส่งแจ้งเตือนทันที</div>
+ </div>
  </div>
 
  <div class="cer-fetch-error" id="cerFetchError" style="display:none">
@@ -9146,6 +9157,33 @@ function filterCerByStat(type) {
 
  cerCurrentPage = 1;
  renderCerTable();
+}
+
+// ── ปุ่มทดสอบแจ้งเตือน LINE — กดแล้วยิงการ์ดสรุป + การ์ดแจ้งเตือนเข้ากลุ่มทันที ──
+async function testLineAlert(el) {
+ if (el.classList.contains('loading')) return;
+ el.classList.add('loading');
+ const valueEl = document.getElementById('cer-linetest-value');
+ const metaEl = el.querySelector('.cer-stat-meta');
+ const originalValue = valueEl.textContent;
+ const originalMeta = metaEl.textContent;
+ valueEl.innerHTML = '<div class="spinner" style="margin:2px auto"></div>';
+ metaEl.textContent = 'กำลังส่ง...';
+ try {
+ const res = await fetch(WEB_APP_URL + '?action=testLineAlert');
+ const json = await res.json();
+ if (json && json.ok) {
+ showResultModal('ส่งแจ้งเตือน LINE สำเร็จ', 'success', json.message || 'ตรวจสอบข้อความในกลุ่ม LINE ได้เลย');
+ } else {
+ showResultModal('ส่งแจ้งเตือนไม่สำเร็จ', 'error', (json && json.error) || 'ไม่ทราบสาเหตุ กรุณาลองใหม่');
+ }
+ } catch (err) {
+ showResultModal('เชื่อมต่อไม่สำเร็จ', 'error', String(err));
+ } finally {
+ valueEl.textContent = originalValue;
+ metaEl.textContent = originalMeta;
+ el.classList.remove('loading');
+ }
 }
 
 function renderCerStats() {
