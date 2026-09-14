@@ -9170,12 +9170,16 @@ async function testLineAlert(el) {
  valueEl.innerHTML = '<div class="spinner" style="margin:2px auto"></div>';
  metaEl.textContent = 'กำลังส่ง...';
  try {
- const res = await fetch(WEB_APP_URL + '?action=testLineAlert');
- const json = await res.json();
- if (json && json.ok) {
- showResultModal('ส่งแจ้งเตือน LINE สำเร็จ', 'success', json.message || 'ตรวจสอบข้อความในกลุ่ม LINE ได้เลย');
+ const [weeklyRes, dailyRes] = await Promise.all([
+ fetch(WEB_APP_URL + '?action=lineWeeklyTest').then(r => r.json()),
+ fetch(WEB_APP_URL + '?action=lineDailyTest').then(r => r.json()),
+ ]);
+ const allOk = weeklyRes && weeklyRes.success && dailyRes && dailyRes.success;
+ if (allOk) {
+ showResultModal('ส่งแจ้งเตือน LINE สำเร็จ', 'success', 'ส่งทั้งการ์ดสรุปรายสัปดาห์และการ์ดแจ้งเตือนแล้ว ตรวจสอบในไลน์กลุ่มได้เลย');
  } else {
- showResultModal('ส่งแจ้งเตือนไม่สำเร็จ', 'error', (json && json.error) || 'ไม่ทราบสาเหตุ กรุณาลองใหม่');
+ const errMsg = (weeklyRes && weeklyRes.error) || (dailyRes && dailyRes.error) || 'ไม่ทราบสาเหตุ กรุณาลองใหม่';
+ showResultModal('ส่งแจ้งเตือนไม่สำเร็จ', 'error', errMsg);
  }
  } catch (err) {
  showResultModal('เชื่อมต่อไม่สำเร็จ', 'error', String(err));
