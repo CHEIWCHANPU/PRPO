@@ -4642,6 +4642,57 @@ body::after {
  box-shadow: none !important;
 }
 </style>
+
+<style id="perf-mode-override">
+/* ============================================================
+   PERFORMANCE MODE — ลดเอฟเฟกต์ที่กิน CPU/GPU เพื่อให้เลื่อนหน้าจอลื่นขึ้น
+   (เพิ่มตามคำขอ: ลด animation และเอฟเฟกต์เบลอ/ขอบต่างๆ)
+   ============================================================ */
+
+/* 1) ปิด backdrop-filter (เบลอพื้นหลังหลังเมนู/โมดัล) — ตัวกิน GPU มากที่สุดตอนสกอลล์ */
+*, *::before, *::after {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* 2) ปิดเอฟเฟกต์ filter (เบลอ/saturate ฯลฯ) ที่ใช้ตกแต่งเฉยๆ */
+*, *::before, *::after {
+  filter: none !important;
+}
+
+/* 3) ทำให้ animation ทุกตัวจบเกือบทันทีและวนแค่รอบเดียว
+      (ใช้ duration สั้นมากแทนปิดสนิท เพื่อไม่ให้โค้ดที่รอ event 'animationend' ค้าง) */
+*, *::before, *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  animation-delay: 0s !important;
+}
+
+/* 4) ทำให้ transition (hover / เปลี่ยนสี / ขยับ) ไวขึ้นมาก แทบไม่มีระยะเวลาไล่เฟรม */
+*, *::before, *::after {
+  transition-duration: 0.01ms !important;
+  transition-delay: 0s !important;
+}
+
+/* 5) ปิด smooth-scroll ทั้งหมด (ทั้งจาก CSS และ inline style) ซึ่งคำนวณเฟรมต่อเนื่องตอนเลื่อน */
+*, html {
+  scroll-behavior: auto !important;
+}
+
+/* 6) ตัดเงาทั้งหมด (box-shadow / text-shadow) ออก — ยิ่งเยอะยิ่งใช้เวลาคำนวณ paint ต่อเฟรมเวลาเลื่อนจอ */
+*, *::before, *::after {
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+/* 7) ปิด mask / clip-path / 3D perspective ที่ใช้ตกแต่งขอบ */
+*, *::before, *::after {
+  mask: none !important;
+  -webkit-mask: none !important;
+  clip-path: none !important;
+  perspective: none !important;
+}
+</style>
 </head>
 <body class="light-theme">
 
@@ -8312,22 +8363,12 @@ function sanitizeDateStr(val) {
 }
 let dueAlertsShown = false;
 
-// ── Animated count-up สำหรับตัวเลข KPI (ทำให้ตัวเลขไล่นับขึ้นแทนการเปลี่ยนแบบกระตุก) ──
+// ── Animated count-up สำหรับตัวเลข KPI (ปิดการไล่นับแบบ requestAnimationFrame เพื่อลดภาระ CPU/รีเพนต์ทุกเฟรม — ตั้งค่าทันทีแทน) ──
 function animateCountUp(el, endVal, duration = 650) {
  if (!el) return;
- const startVal = Number(el.dataset.rawValue || 0);
  const end = Number(endVal) || 0;
- if (startVal === end) { el.textContent = end; el.dataset.rawValue = end; return; }
- const startTime = performance.now();
- function tick(now) {
- const p = Math.min((now - startTime) / duration, 1);
- const eased = 1 - Math.pow(1 - p, 3); // ease-out cubic
- const current = Math.round(startVal + (end - startVal) * eased);
- el.textContent = current;
- if (p < 1) requestAnimationFrame(tick);
- else { el.textContent = end; el.dataset.rawValue = end; }
- }
- requestAnimationFrame(tick);
+ el.textContent = end;
+ el.dataset.rawValue = end;
 }
 
 // ── แสดงเทรนด์เทียบกับข้อมูลครั้งก่อนที่เคยโหลด (เก็บสถานะจริงใน localStorage ไม่ใช่ข้อมูลสมมติ) ──
@@ -11794,7 +11835,7 @@ function editTodoStart(id) {
  const cancelBtn = document.getElementById('todoCancelEditBtn');
  if (cancelBtn) cancelBtn.style.display = '';
  const titleEl = document.getElementById('td-title');
- titleEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+ titleEl.scrollIntoView({ behavior: 'auto', block: 'center' });
  titleEl.focus();
 }
 
@@ -11812,7 +11853,7 @@ function cancelTodoEdit() {
 function scrollTodoHome(direction) {
  const box = document.getElementById('todoHomeList');
  if (!box) return;
- box.scrollBy({ top: direction * 76, behavior: 'smooth' });
+ box.scrollBy({ top: direction * 76, behavior: 'auto' });
 }
 
 function renderTodoHomeWidget() {
@@ -13638,8 +13679,9 @@ function renderLeaderboard() {
 <script>
 /* ── WELCOME SCREEN / LOGIN FORM ── */
 
-/* Subtle 3D tilt + light-follow on the login card — desktop pointer only, respects reduced motion */
+/* Subtle 3D tilt + light-follow on the login card — ปิดใช้งานเพื่อลดภาระ CPU ตอนขยับเมาส์ (มติผู้ใช้: ลดเอฟเฟกต์ทั้งหมดที่กระทบความลื่นไหล) */
 (function initWlCardTilt(){
+ return; // effect disabled for performance
  var card = document.querySelector('.wl-card');
  if (!card) return;
  var prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -16021,7 +16063,7 @@ function prGoToToday(){
 }
 function prScrollToToday(){
  const el=document.querySelector('#pr-day-tbody tr[data-today="1"]');
- if(el) el.scrollIntoView({block:'center', behavior:'smooth'});
+ if(el) el.scrollIntoView({block:'center', behavior:'auto'});
 }
 
 /* ── FILL WORKDAYS (เติม WD=1 ให้วันจ-ส ที่ยังว่างในรอบปัจจุบัน โดยไม่แตะวันที่กรอกไว้แล้ว) ── */
