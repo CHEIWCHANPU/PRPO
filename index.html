@@ -962,6 +962,14 @@
  .cer-stat-card.line-test .cer-stat-value { color: #06C755; font-family: var(--font, inherit); font-size: 1.1rem; }
  .cer-stat-card.line-test:active { transform: scale(0.97); }
  .cer-stat-card.line-test.loading { pointer-events: none; opacity: 0.75; }
+ .cer-stat-card.verify { background: linear-gradient(135deg, rgba(99,102,241,0.08), var(--surface)); }
+ .cer-stat-card.verify::before { background: linear-gradient(90deg, #6366f1, #818cf8); }
+ .cer-stat-card.verify:hover { border-color: #6366f1; }
+ .cer-stat-card.verify .cer-stat-value { color: #6366f1; font-family: var(--font, inherit); font-size: 1rem; }
+ .cer-stat-card.verify:active { transform: scale(0.97); }
+ .gv-source-card { border: 1px solid var(--border); border-radius: var(--r-md); padding: 0.9rem 1rem; display: flex; flex-direction: column; gap: 0.5rem; background: var(--surface2, var(--surface)); }
+ .gv-source-title { font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem; }
+ .gv-source-desc { font-size: 0.72rem; color: var(--muted); line-height: 1.5; }
  @media (max-width: 1100px) { .cer-stat-grid { grid-template-columns: repeat(3,1fr); } }
  @media (max-width: 640px) { .cer-stat-grid { grid-template-columns: repeat(2,1fr); } }
 
@@ -5936,6 +5944,11 @@ body::after {
  <div class="cer-stat-value" id="cer-linetest-value">ทดสอบ</div>
  <div class="cer-stat-meta">กดเพื่อส่งแจ้งเตือนทันที</div>
  </div>
+ <div class="cer-stat-card verify" id="cer-stat-verify" onclick="openGlobalVerifyModal()">
+ <div class="cer-stat-label">🌐 ตรวจสอบสากล</div>
+ <div class="cer-stat-value">ISO / IATF</div>
+ <div class="cer-stat-meta">เช็คกับฐานข้อมูลทางการ</div>
+ </div>
  </div>
 
  <div class="cer-fetch-error" id="cerFetchError" style="display:none">
@@ -7162,6 +7175,38 @@ body::after {
  <div class="modal-footer">
  <button class="btn btn-ghost" onclick="closeModal()">ยกเลิก</button>
  <button class="btn btn-primary" onclick="saveItem()">บันทึก</button>
+ </div>
+ </div>
+</div>
+
+<div class="modal-overlay" id="globalVerifyModalOverlay">
+ <div class="modal" style="max-width:520px">
+ <div class="modal-header">
+ <div class="modal-title">🌐 ตรวจสอบใบรับรอง ISO / IATF สากล</div>
+ <button class="modal-close" onclick="closeGlobalVerifyModal()"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+ </div>
+ <div class="modal-body" style="display:flex;flex-direction:column;gap:0.9rem">
+ <div style="font-size:0.72rem;color:var(--muted);line-height:1.5">
+ ระบบยังไม่มีฐานข้อมูลกลางที่เชื่อมตรวจสอบอัตโนมัติแบบ real-time ได้ (เว็บทางการต้องล็อกอิน/ไม่เปิด API ให้ดึงข้อมูลฟรี) — ปุ่มด้านล่างจะคัดลอกชื่อบริษัทให้อัตโนมัติ แล้วพาไปค้นหาที่ฐานข้อมูลทางการโดยตรง เพื่อผลที่ถูกต้องแม่นยำที่สุด
+ </div>
+ <div class="form-group">
+ <label class="form-label">ชื่อบริษัทที่ต้องการตรวจสอบ</label>
+ <input type="text" class="form-input" id="gvCompanyName" placeholder="พิมพ์หรือวางชื่อบริษัท...">
+ </div>
+ <div class="gv-source-card">
+ <div class="gv-source-title">📋 ISO 9001 / 14001 / อื่นๆ — IAF CertSearch</div>
+ <div class="gv-source-desc">ฐานข้อมูลกลางที่ได้รับการรับรองจาก International Accreditation Forum (IAF) รวมใบรับรองที่ได้รับการรับรองระบบ (accredited) จากทั่วโลก</div>
+ <button class="btn btn-primary" style="width:100%" onclick="gvCopyAndOpen('https://www.iafcertsearch.org/search/certified-entities')">คัดลอกชื่อ &amp; เปิด IAF CertSearch</button>
+ </div>
+ <div class="gv-source-card">
+ <div class="gv-source-title">🚗 IATF 16949 — IATF Customer Portal</div>
+ <div class="gv-source-desc">ฐานข้อมูลทางการของ IATF สำหรับตรวจสอบใบรับรองระบบคุณภาพยานยนต์ IATF 16949 โดยเฉพาะ (แยกจาก IAF CertSearch)</div>
+ <button class="btn btn-primary" style="width:100%" onclick="gvCopyAndOpen('https://iatf-customerportal.org/')">คัดลอกชื่อ &amp; เปิด IATF Portal</button>
+ </div>
+ <div id="gvCopyNotice" style="display:none;font-size:0.72rem;color:var(--success)">✓ คัดลอกชื่อบริษัทแล้ว — วางในช่องค้นหาของเว็บที่เปิดขึ้นมาได้เลย</div>
+ </div>
+ <div class="modal-footer">
+ <button class="btn btn-ghost" onclick="closeGlobalVerifyModal()">ปิด</button>
  </div>
  </div>
 </div>
@@ -9399,6 +9444,7 @@ function renderCerTable() {
  <td class="date-cell">${r.iatfDate || '—'}</td>
  <td>${overallBadge}</td>
  <td><div class="row-actions" style="opacity:1">
+ <button class="icon-btn" title="ตรวจสอบสากล (ISO/IATF)" onclick="openGlobalVerifyModal('${String(r.name || '').replace(/'/g, "\\'")}')"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></button>
  <button class="icon-btn" title="แก้ไข" onclick="openCerModal('${r.rowIndex}')"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
  <button class="icon-btn del" title="ลบ" onclick="deleteCerItem('${r.rowIndex}')"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
  </div></td>
@@ -9550,6 +9596,26 @@ async function deleteCerItem(rowIndex) {
  } catch (e) {
  showToast('ซิงค์ Sheet ไม่สำเร็จ: ' + e.message, 'error');
  }
+}
+
+/* ── ตรวจสอบ ISO / IATF สากล (ลิงก์ไปฐานข้อมูลทางการ) ── */
+function openGlobalVerifyModal(name) {
+ document.getElementById('gvCompanyName').value = name || '';
+ document.getElementById('gvCopyNotice').style.display = 'none';
+ document.getElementById('globalVerifyModalOverlay').classList.add('open');
+}
+function closeGlobalVerifyModal() {
+ document.getElementById('globalVerifyModalOverlay').classList.remove('open');
+}
+async function gvCopyAndOpen(url) {
+ const name = document.getElementById('gvCompanyName').value.trim();
+ if (name) {
+ try {
+ await navigator.clipboard.writeText(name);
+ document.getElementById('gvCopyNotice').style.display = 'block';
+ } catch (e) { /* clipboard อาจไม่พร้อมใช้งาน — ยังคงเปิดหน้าค้นหาให้ปกติ */ }
+ }
+ window.open(url, '_blank', 'noopener');
 }
 
 /* ── โหลดข้อมูลบริษัทจาก Excel (CER page) ── */
