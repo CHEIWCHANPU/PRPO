@@ -5984,6 +5984,7 @@ body::after {
  <option value="none">— ไม่มี</option>
  <option value="danger">หมดอายุแล้ว</option>
  </select>
+ <button class="btn btn-ghost" onclick="openCerUploadModal()" style="white-space:nowrap">⬆ โหลด Excel</button>
  <button class="btn btn-primary" onclick="openCerModal()" style="white-space:nowrap">+ เพิ่มบริษัท</button>
  </div>
 
@@ -9448,6 +9449,177 @@ async function deleteCerItem(rowIndex) {
  }
  } catch (e) {
  showToast('ซิงค์ Sheet ไม่สำเร็จ: ' + e.message, 'error');
+ }
+}
+
+/* ── โหลดข้อมูลบริษัทจาก Excel (CER page) ── */
+let cerWorkbook = null;
+let cerSelectedSheets = new Set();
+let cerPendingImportRows = [];
+
+const CER_HAS_OPTIONS = ['มี', 'ไม่มี', 'กำลังติดตาม', 'มีใบรับรองชั่วคราว'];
+
+function openCerUploadModal() {
+ document.getElementById('cerUploadModalOverlay').classList.add('open');
+}
+function closeCerUploadModal() {
+ document.getElementById('cerUploadModalOverlay').classList.remove('open');
+ document.getElementById('cerSheetPicker').style.display = 'none';
+ document.getElementById('cerPreviewTableWrap').style.display = 'none';
+ document.getElementById('cerFileInput').value = '';
+ cerWorkbook = null; cerSelectedSheets = new Set(); cerPendingImportRows = [];
+}
+
+function cerHandleFile(file) {
+ if (!file) return;
+ const reader = new FileReader();
+ reader.onload = (e) => {
+ const data = new Uint8Array(e.target.result);
+ cerWorkbook = XLSX.read(data, { type: 'array', cellDates: true });
+ cerSelectedSheets = new Set([cerWorkbook.SheetNames[0]]); // เลือกชีตแรกให้อัตโนมัติ
+ const chipBox = document.getElementById('cerSheetChips');
+ chipBox.innerHTML = cerWorkbook.SheetNames.map((name, i) =>
+ `<span class="cs-sheet-chip${i === 0 ? ' active' : ''}" onclick="cerToggleSheet('${name.replace(/'/g, "\\'")}', this)">${name}</span>`
+ ).join('');
+ document.getElementById('cerSheetPicker').style.display = '';
+ cerUpdatePreview();
+ };
+ reader.readAsArrayBuffer(file);
+}
+
+// รับได้ทั้ง Date object จาก Excel และสตริง แล้วแปลงเป็นรูปแบบ d/m/yyyy ให้ตรงกับที่หน้าเว็บใช้ (ดูฟังก์ชัน cerExpiryState)
+function cerNormalizeDateStr(val) {
+ if (!val && val !== 0) return '';
+ let d;
+ if (val instanceof Date) {
+ d = val;
+ } else {
+ const s = String(val).trim();
+ if (!s) return '';
+ // รองรับรูปแบบ d/m/yyyy หรือ d-m-yyyy ที่กรอกมาเป็นข้อความอยู่แล้ว
+ const m1 = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+ if (m1) return `${parseInt(m1[1],10)}/${parseInt(m1[2],10)}/${m1[3]}`;
+ d = new Date(s);
+ }
+ if (isNaN(d)) return '';
+ return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+}
+
+// แปลงค่าสถานะจากไฟล์ Excel ให้ตรงกับ 4 ตัวเลือกที่ระบบรองรับ
+function cerNormalizeHasStr(val, hasDate) {
+ const s = String(val || '').trim();
+ if (!s) return hasDate ? 'มี' : 'ไม่มี';
+ if (CER_HAS_OPTIONS.includes(s)) return s;
+ if (s.includes('ชั่วคราว')) return 'มีใบรับรองชั่วคราว';
+ if (s.includes('ติดตาม')) return 'กำลังติดตาม';
+ if (s.includes('ไม่')) return 'ไม่มี';
+ if (s.toLowerCase() === 'yes' || s.toLowerCase() === 'y' || s === '1' || s.toLowerCase() === 'true') return 'มี';
+ if (s.toLowerCase() === 'no' || s.toLowerCase() === 'n' || s === '0' || s.toLowerCase() === 'false') return 'ไม่มี';
+ return hasDate ? 'มี' : 'ไม่มี';
+}
+
+function cerFindCol(headerRow, keywords) {
+ for (let i = 0; i < headerRow.length; i++) {
+ const h = String(headerRow[i] || '').trim();
+ if (keywords.some(k => h.includes(k))) return i;
+ }
+ return -1;
+}
+
+function cerParseSheet(sheetName) {
+ const ws = cerWorkbook.Sheets[sheetName];
+ const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+ if (!raw.length) return [];
+ const header = raw[0];
+ const col = {
+ id: cerFindCol(header, ['ID']),
+ name: cerFindCol(header, ['ชื่อบริษัท', 'บริษัท', 'Name', 'Company']),
+ iso9001Has: cerFindCol(header, ['ISO 9001', 'ISO9001']),
+ iso9001Date: cerFindCol(header, ['วันหมดอายุ ISO 9001', 'ISO 9001 วันหมดอายุ', 'ISO9001 Expiry', 'ISO9001Date']),
+ iso14001Has: cerFindCol(header, ['ISO 14001', 'ISO14001']),
+ iso14001Date: cerFindCol(header, ['วันหมดอายุ ISO 14001', 'ISO 14001 วันหมดอายุ', 'ISO14001 Expiry', 'ISO14001Date']),
+ iatfHas: cerFindCol(header, ['IATF']),
+ iatfDate: cerFindCol(header, ['วันหมดอายุ IATF', 'IATF วันหมดอายุ', 'IATF Expiry', 'IatfDate']),
+ };
+ // ถ้าหาคอลัมน์ชื่อบริษัทไม่เจอ ใช้ตำแหน่งคอลัมน์ที่ 2 (index 1) เป็นค่าเริ่มต้น (คอลัมน์แรกมักเป็น ID)
+ if (col.name === -1) col.name = header.length > 1 ? 1 : 0;
+
+ const rows = [];
+ for (let i = 1; i < raw.length; i++) {
+ const row = raw[i];
+ if (!row) continue;
+ const name = col.name >= 0 ? String(row[col.name] || '').trim() : '';
+ if (!name) continue; // ข้ามแถวว่าง/ไม่มีชื่อบริษัท
+ const iso9001Date = col.iso9001Date >= 0 ? cerNormalizeDateStr(row[col.iso9001Date]) : '';
+ const iso14001Date = col.iso14001Date >= 0 ? cerNormalizeDateStr(row[col.iso14001Date]) : '';
+ const iatfDate = col.iatfDate >= 0 ? cerNormalizeDateStr(row[col.iatfDate]) : '';
+ rows.push({
+ id: col.id >= 0 ? String(row[col.id] || '').trim() : '',
+ name,
+ iso9001Has: cerNormalizeHasStr(col.iso9001Has >= 0 ? row[col.iso9001Has] : '', !!iso9001Date),
+ iso9001Date,
+ iso14001Has: cerNormalizeHasStr(col.iso14001Has >= 0 ? row[col.iso14001Has] : '', !!iso14001Date),
+ iso14001Date,
+ iatfHas: cerNormalizeHasStr(col.iatfHas >= 0 ? row[col.iatfHas] : '', !!iatfDate),
+ iatfDate,
+ });
+ }
+ return rows;
+}
+
+function cerToggleSheet(name, el) {
+ if (cerSelectedSheets.has(name)) { cerSelectedSheets.delete(name); el.classList.remove('active'); }
+ else { cerSelectedSheets.add(name); el.classList.add('active'); }
+ cerUpdatePreview();
+}
+
+function cerUpdatePreview() {
+ cerPendingImportRows = [];
+ cerSelectedSheets.forEach(name => { cerPendingImportRows = cerPendingImportRows.concat(cerParseSheet(name)); });
+ const info = document.getElementById('cerPreviewInfo');
+ const btn = document.getElementById('cerImportBtn');
+ const tableWrap = document.getElementById('cerPreviewTableWrap');
+ const tableBody = document.getElementById('cerPreviewTableBody');
+ if (cerPendingImportRows.length) {
+ info.innerHTML = `พบข้อมูลบริษัทที่พร้อมนำเข้า <b>${cerPendingImportRows.length}</b> รายการ จาก ${cerSelectedSheets.size} ชีตที่เลือก`;
+ btn.disabled = false;
+ tableWrap.style.display = '';
+ tableBody.innerHTML = cerPendingImportRows.slice(0, 20).map(r => `<tr>
+ <td style="padding:0.3rem;border-top:1px solid var(--border)">${r.name}</td>
+ <td style="padding:0.3rem;border-top:1px solid var(--border)">${r.iso9001Has}${r.iso9001Date ? ' · ' + r.iso9001Date : ''}</td>
+ <td style="padding:0.3rem;border-top:1px solid var(--border)">${r.iso14001Has}${r.iso14001Date ? ' · ' + r.iso14001Date : ''}</td>
+ <td style="padding:0.3rem;border-top:1px solid var(--border)">${r.iatfHas}${r.iatfDate ? ' · ' + r.iatfDate : ''}</td>
+ </tr>`).join('') + (cerPendingImportRows.length > 20 ? `<tr><td colspan="4" style="padding:0.3rem;color:var(--muted)">…และอีก ${cerPendingImportRows.length - 20} รายการ</td></tr>` : '');
+ } else {
+ info.textContent = cerSelectedSheets.size ? 'ไม่พบข้อมูลในชีตที่เลือก (ตรวจสอบว่าแถวแรกเป็นหัวตาราง และมีคอลัมน์ชื่อบริษัท)' : 'ยังไม่ได้เลือกชีต';
+ btn.disabled = true;
+ tableWrap.style.display = 'none';
+ }
+}
+
+async function cerImportSelected() {
+ if (!cerPendingImportRows.length) return;
+ if (!WEB_APP_URL) { alert('ยังไม่ได้ตั้งค่า Web App URL ในเมนู  ตั้งค่าระบบ'); return; }
+ const btn = document.getElementById('cerImportBtn');
+ btn.disabled = true; btn.textContent = 'กำลังนำเข้า...';
+ try {
+ const res = await fetch(WEB_APP_URL, {
+ method: 'POST',
+ headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+ body: JSON.stringify({ action: 'bulkImportCer', rows: cerPendingImportRows })
+ });
+ const json = await res.json();
+ if (json.imported === undefined && json.success === undefined) {
+ throw new Error('เซิร์ฟเวอร์ยังไม่รู้จัก action "bulkImportCer" — ต้องเพิ่มฟังก์ชันนี้ใน Apps Script (Router.gs) ก่อน แล้ว Deploy เป็น "New version"');
+ }
+ if (!json.success) throw new Error(json.error || 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุจากฝั่งเซิร์ฟเวอร์');
+ showResultModal('นำเข้าข้อมูลสำเร็จ', 'success', `นำเข้า ${json.imported} รายการ`);
+ closeCerUploadModal();
+ await loadCerPage(true);
+ } catch (err) {
+ showResultModal('นำเข้าไม่สำเร็จ', 'error', err.message);
+ } finally {
+ btn.disabled = false; btn.textContent = 'นำเข้าข้อมูลที่เลือก';
  }
 }
 
@@ -13565,6 +13737,41 @@ function renderLeaderboard() {
  <div class="modal-footer">
  <button class="btn btn-ghost" onclick="closeCerModal()">ยกเลิก</button>
  <button class="btn btn-primary" onclick="saveCer()">บันทึก</button>
+ </div>
+ </div>
+</div>
+
+<!-- CER: UPLOAD EXCEL MODAL -->
+<div class="modal-overlay" id="cerUploadModalOverlay">
+ <div class="modal" style="max-width:560px">
+ <div class="modal-header">
+ <div class="modal-title">โหลดข้อมูลบริษัทจาก Excel</div>
+ <button class="modal-close" onclick="closeCerUploadModal()"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+ </div>
+ <div class="modal-body">
+ <div class="cs-upload-zone" id="cerUploadZone" onclick="document.getElementById('cerFileInput').click()">
+ <input type="file" id="cerFileInput" accept=".xlsx,.xls" style="display:none" onchange="cerHandleFile(this.files[0])">
+ <div style="font-size:2rem;margin-bottom:0.4rem">↑</div>
+ <div style="font-weight:600;color:var(--text)">คลิกเพื่อเลือกไฟล์ Excel (.xlsx / .xls)</div>
+ <div style="font-size:0.72rem;color:var(--muted);margin-top:0.3rem">คอลัมน์ที่รองรับ (แถวแรกเป็นหัวตาราง): ชื่อบริษัท, ISO 9001, วันหมดอายุ ISO 9001, ISO 14001, วันหมดอายุ ISO 14001, IATF 16949, วันหมดอายุ IATF 16949 — ค่าสถานะ: มี / ไม่มี / กำลังติดตาม / มีใบรับรองชั่วคราว</div>
+ </div>
+ <div id="cerSheetPicker" style="margin-top:1rem;display:none">
+ <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.3rem">เลือกชีตที่จะนำเข้า:</div>
+ <div id="cerSheetChips"></div>
+ <div id="cerPreviewInfo" style="margin-top:0.8rem;font-size:0.82rem;color:var(--text)"></div>
+ <div id="cerPreviewTableWrap" style="margin-top:0.6rem;max-height:220px;overflow:auto;display:none">
+ <table style="width:100%;font-size:0.72rem;border-collapse:collapse">
+ <thead><tr style="text-align:left;color:var(--muted)">
+ <th style="padding:0.3rem">ชื่อบริษัท</th><th style="padding:0.3rem">ISO 9001</th><th style="padding:0.3rem">ISO 14001</th><th style="padding:0.3rem">IATF</th>
+ </tr></thead>
+ <tbody id="cerPreviewTableBody"></tbody>
+ </table>
+ </div>
+ </div>
+ </div>
+ <div class="modal-footer">
+ <button class="btn btn-ghost" onclick="closeCerUploadModal()">ปิด</button>
+ <button class="btn btn-primary" id="cerImportBtn" onclick="cerImportSelected()" disabled>นำเข้าข้อมูลที่เลือก</button>
  </div>
  </div>
 </div>
