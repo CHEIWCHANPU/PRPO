@@ -13121,9 +13121,17 @@ function csParseSheet(sheetName) {
  if (!row) continue;
  const partName = row[7];
  if (!partName) continue; // ข้ามแถวว่าง/แถว template ที่ยังไม่กรอก
+ const makerBefore = row[3] || '';
+ // TARGET ปกติ Excel คำนวณมาให้แล้ว (สูตรต้นฉบับ: =ก่อนต่อรอง-(ก่อนต่อรอง*20/100))
+ // ถ้าช่องนี้ว่าง (เช่น ไฟล์ไม่มีสูตร/ก็อปมาเป็นค่าเปล่า) ให้คำนวณ fallback ด้วยสูตรเดียวกัน
+ let target = row[5];
+ if ((target === undefined || target === null || target === '') && makerBefore !== '') {
+ const beforeNum = parseFloat(makerBefore);
+ if (!isNaN(beforeNum)) target = beforeNum - (beforeNum * 20 / 100);
+ }
  rows.push({
- model: row[1] || '', costCustomer: row[2] || '', makerBefore: row[3] || '',
- makerAfter: row[4] || '', target: row[5] || '', onOff: row[6] || '',
+ model: row[1] || '', costCustomer: row[2] || '', makerBefore: makerBefore,
+ makerAfter: row[4] || '', target: target || '', onOff: row[6] || '',
  partName: partName, partNo: row[8] || '', goMaker: row[9] || '',
  goDate: csNormalizeDate(row[10]), volume: row[11] || '', plant: row[13] || '',
  work: row[14] || '', remark: row[15] || ''
