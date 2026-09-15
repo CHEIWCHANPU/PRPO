@@ -9618,12 +9618,22 @@ function cerNormalizeHasStr(val, hasDate) {
  return hasDate ? 'มี' : 'ไม่มี';
 }
 
-function cerFindCol(headerRow, keywords) {
- for (let i = 0; i < headerRow.length; i++) {
- const h = String(headerRow[i] || '').trim();
- if (keywords.some(k => h.includes(k))) return i;
+function cerFindCol(headerRow, keywords, fromIndex) {
+ fromIndex = fromIndex || 0;
+ for (let i = fromIndex; i < headerRow.length; i++) {
+ const h = String(headerRow[i] || '').trim().toLowerCase();
+ if (keywords.some(k => h.includes(k.toLowerCase()))) return i;
  }
  return -1;
+}
+
+// แปลงค่า has_X (boolean True/False จาก Excel) + Year/Month/Day แยกคอลัมน์ ให้เป็น {has, date}
+function cerParseHasYMD(hasVal, year, month, day) {
+ const hasBool = hasVal === true || String(hasVal).trim().toLowerCase() === 'true' || String(hasVal).trim() === '1';
+ if (!hasBool) return { has: 'ไม่มี', date: '' };
+ const y = parseInt(year, 10), m = parseInt(month, 10), d = parseInt(day, 10);
+ if (!y || !m || !d) return { has: 'กำลังติดตาม', date: '' }; // มีใบรับรองแต่ยังไม่ระบุวันหมดอายุ
+ return { has: 'มี', date: d + '/' + m + '/' + y };
 }
 
 function cerParseSheet(sheetName) {
@@ -9631,6 +9641,38 @@ function cerParseSheet(sheetName) {
  const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
  if (!raw.length) return [];
  const header = raw[0];
+
+ // ── รูปแบบที่ 2: id, maker_name, has_iso_9001, Year, Month, Day, has_iso_14001, Year, Month, Day, has_iatf_16949, Year, Month, Day ──
+ const hasIso9001Col = cerFindCol(header, ['has_iso_9001', 'has iso 9001', 'iso9001']);
+ const isHasYmdFormat = hasIso9001Col >= 0 && cerFindCol(header, ['year'], hasIso9001Col + 1) === hasIso9001Col + 1;
+
+ if (isHasYmdFormat) {
+ const nameCol = cerFindCol(header, ['maker_name', 'company', 'name', 'ชื่อบริษัท', 'บริษัท']);
+ const iso9001Col = hasIso9001Col;
+ const iso14001Col = cerFindCol(header, ['has_iso_14001', 'has iso 14001', 'iso14001'], iso9001Col + 1);
+ const iatfCol = cerFindCol(header, ['has_iatf', 'iatf'], iso14001Col >= 0 ? iso14001Col + 1 : iso9001Col + 1);
+
+ const rows = [];
+ for (let i = 1; i < raw.length; i++) {
+ const row = raw[i];
+ if (!row) continue;
+ const name = nameCol >= 0 ? String(row[nameCol] || '').trim() : '';
+ if (!name) continue;
+ const iso9001 = iso9001Col >= 0 ? cerParseHasYMD(row[iso9001Col], row[iso9001Col + 1], row[iso9001Col + 2], row[iso9001Col + 3]) : { has: 'ไม่มี', date: '' };
+ const iso14001 = iso14001Col >= 0 ? cerParseHasYMD(row[iso14001Col], row[iso14001Col + 1], row[iso14001Col + 2], row[iso14001Col + 3]) : { has: 'ไม่มี', date: '' };
+ const iatf = iatfCol >= 0 ? cerParseHasYMD(row[iatfCol], row[iatfCol + 1], row[iatfCol + 2], row[iatfCol + 3]) : { has: 'ไม่มี', date: '' };
+ rows.push({
+ id: '', // ให้ backend สร้าง ID รูปแบบ CC-XXX ให้เอง (คอลัมน์ id ในไฟล์นี้เป็นแค่เลขลำดับแถว ไม่ใช่รหัสบริษัทของระบบ)
+ name,
+ iso9001Has: iso9001.has, iso9001Date: iso9001.date,
+ iso14001Has: iso14001.has, iso14001Date: iso14001.date,
+ iatfHas: iatf.has, iatfDate: iatf.date,
+ });
+ }
+ return rows;
+ }
+
+ // ── รูปแบบที่ 1 (ค่าเริ่มต้น): ชื่อบริษัท, ISO 9001, วันหมดอายุ ISO 9001, ... ── */
  const col = {
  id: cerFindCol(header, ['ID']),
  name: cerFindCol(header, ['ชื่อบริษัท', 'บริษัท', 'Name', 'Company']),
