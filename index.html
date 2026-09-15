@@ -6520,6 +6520,9 @@ body::after {
  <div style="display:flex;align-items:center;gap:0.5rem">
  <button class="btn btn-ghost" onclick="exportCsPdf()" style="padding:0.45rem 0.7rem;font-size:0.8rem">Export PDF</button>
  <button class="btn btn-ghost" onclick="openCsUploadModal()" style="padding:0.45rem 0.7rem;font-size:0.8rem">Upload Excel</button>
+ <button class="btn btn-ghost" onclick="openCsClearModal()" style="padding:0.45rem 0.7rem;font-size:0.8rem;color:var(--danger)">🗑 ล้างข้อมูลทั้งหมด</button>
+ <button class="btn btn-ghost" id="csAllYearsBtn" onclick="toggleCsAllYearsView()" style="padding:0.45rem 0.7rem;font-size:0.8rem">📊 ภาพรวมทุกปี</button>
+ <button class="btn btn-ghost" onclick="openCsCompareModal()" style="padding:0.45rem 0.7rem;font-size:0.8rem">⇄ เปรียบเทียบปี</button>
  <select id="csYearSelect" onchange="renderCostSavingPage()" style="
  background:var(--surface2);border:1px solid var(--border);border-radius:4px;
  color:var(--text);font-size:0.82rem;padding:0.4rem 0.7rem;
@@ -6527,6 +6530,8 @@ body::after {
  </div>
  </div>
 
+ <!-- PER-YEAR VIEW (ค่าเริ่มต้น) -->
+ <div id="csPerYearView">
  <!-- ANNUAL TARGET -->
  <div class="chart-card" style="margin-bottom:1.2rem;padding:1rem 1.4rem !important">
  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.6rem;flex-wrap:wrap;gap:0.5rem">
@@ -6651,6 +6656,50 @@ body::after {
  </div>
  </div>
  </div>
+ <!-- /csPerYearView -->
+
+ <!-- ALL-YEARS OVERVIEW VIEW (ซ่อนไว้ก่อน สลับด้วยปุ่ม "ภาพรวมทุกปี") -->
+ <div id="csAllYearsView" style="display:none">
+ <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:1rem;margin-bottom:1.3rem">
+ <div class="chart-card cs-hero">
+ <div style="width:52px;height:52px;border-radius:4px;display:flex;align-items:center;justify-content:center;background:rgba(34,200,127,0.14);color:var(--success);font-size:1.5rem;flex-shrink:0">$</div>
+ <div>
+ <div class="cs-hero-number" id="cs-ay-total">—</div>
+ <div class="cs-hero-sub">Total Cost Saving ทุกปีรวมกัน (THB)</div>
+ </div>
+ </div>
+ <div class="chart-card" style="display:flex;flex-direction:column;justify-content:center;padding:1rem 1.2rem !important">
+ <div class="cs-mini" id="cs-ay-count">—</div>
+ <div style="font-size:0.72rem;color:var(--muted);margin-top:0.2rem">Items ทั้งหมด</div>
+ </div>
+ <div class="chart-card" style="display:flex;flex-direction:column;justify-content:center;padding:1rem 1.2rem !important">
+ <div class="cs-mini" id="cs-ay-years">—</div>
+ <div style="font-size:0.72rem;color:var(--muted);margin-top:0.2rem">จำนวนปีที่มีข้อมูล</div>
+ </div>
+ <div class="chart-card" style="display:flex;flex-direction:column;justify-content:center;padding:1rem 1.2rem !important">
+ <div class="cs-mini" id="cs-ay-bestyear" style="font-size:1.1rem">—</div>
+ <div style="font-size:0.72rem;color:var(--muted);margin-top:0.2rem">ปีที่ประหยัดได้สูงสุด</div>
+ </div>
+ </div>
+
+ <div class="chart-card" style="margin-bottom:1.2rem">
+ <div class="chart-title" style="font-size:0.85rem">Total Saving แยกตามปี (ทุกปีที่มีข้อมูล)</div>
+ <div class="chart-wrap" style="height:320px"><canvas id="csAllYearsChart"></canvas></div>
+ </div>
+
+ <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1.2rem">
+ <div class="chart-card">
+ <div class="chart-title" style="font-size:0.85rem">Saving by Plant (ทุกปีรวมกัน)</div>
+ <div class="chart-wrap" style="height:280px"><canvas id="csAyPlantChart"></canvas></div>
+ </div>
+ <div class="chart-card">
+ <div class="chart-title" style="font-size:0.85rem">Top Model — Highest Saving (ทุกปีรวมกัน)</div>
+ <div class="chart-wrap" style="height:280px"><canvas id="csAyModelChart"></canvas></div>
+ </div>
+ </div>
+ </div>
+ <!-- /csAllYearsView -->
+ </div>
  <!-- /COST SAVING PAGE -->
 
  <!-- COST SAVING: UPLOAD MODAL -->
@@ -6676,6 +6725,57 @@ body::after {
  <div class="modal-footer">
  <button class="btn btn-ghost" onclick="closeCsUploadModal()">Close</button>
  <button class="btn btn-primary" id="csImportBtn" onclick="csImportSelected()" disabled>Import Selected</button>
+ </div>
+ </div>
+ </div>
+
+ <!-- COST SAVING: COMPARE YEARS MODAL -->
+ <div class="modal-overlay" id="csCompareModalOverlay">
+ <div class="modal" style="max-width:720px">
+ <div class="modal-header">
+ <div class="modal-title">เปรียบเทียบปี</div>
+ <button class="modal-close" onclick="closeCsCompareModal()"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+ </div>
+ <div class="modal-body">
+ <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.5rem">เลือกปีที่ต้องการเปรียบเทียบ (เลือกได้มากกว่า 2 ปี):</div>
+ <div id="csCompareChips"></div>
+ <div id="csComparePreviewInfo" style="margin-top:0.6rem;font-size:0.82rem;color:var(--text)"></div>
+ <div id="csCompareChartWrap" style="margin-top:1rem;height:260px;display:none"><canvas id="csCompareChart"></canvas></div>
+ <div id="csCompareTableWrap" style="margin-top:1rem;overflow-x:auto;display:none">
+ <table style="width:100%;font-size:0.78rem;border-collapse:collapse">
+ <thead><tr style="text-align:right;color:var(--muted)">
+ <th style="padding:0.4rem 0.6rem;text-align:left">ปี</th>
+ <th style="padding:0.4rem 0.6rem">Total Saving (THB)</th>
+ <th style="padding:0.4rem 0.6rem">Items</th>
+ <th style="padding:0.4rem 0.6rem">On-Target Rate</th>
+ <th style="padding:0.4rem 0.6rem">Avg. Negotiation</th>
+ <th style="padding:0.4rem 0.6rem;text-align:left">เทียบปีก่อนหน้า</th>
+ </tr></thead>
+ <tbody id="csCompareTableBody"></tbody>
+ </table>
+ </div>
+ </div>
+ <div class="modal-footer">
+ <button class="btn btn-ghost" onclick="closeCsCompareModal()">ปิด</button>
+ </div>
+ </div>
+ </div>
+
+ <!-- COST SAVING: CLEAR ALL DATA MODAL -->
+ <div class="modal-overlay" id="csClearModalOverlay">
+ <div class="modal" style="max-width:460px">
+ <div class="modal-header">
+ <div class="modal-title" style="color:var(--danger)">⚠️ ล้างข้อมูล Cost Saving ทั้งหมด</div>
+ <button class="modal-close" onclick="closeCsClearModal()"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+ </div>
+ <div class="modal-body">
+ <div style="font-size:0.85rem;color:var(--text);margin-bottom:0.8rem">การกระทำนี้จะลบรายการ Cost Saving <b id="csClearCount">0</b> รายการทั้งหมดออกจาก Google Sheet แบบถาวร ย้อนกลับไม่ได้</div>
+ <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.8rem">พิมพ์คำว่า <b>ล้างข้อมูล</b> ด้านล่าง เพื่อยืนยัน:</div>
+ <input type="text" class="form-input" id="csClearConfirmInput" placeholder="พิมพ์ ล้างข้อมูล เพื่อยืนยัน" oninput="document.getElementById('csClearConfirmBtn').disabled = this.value.trim() !== 'ล้างข้อมูล'">
+ </div>
+ <div class="modal-footer">
+ <button class="btn btn-ghost" onclick="closeCsClearModal()">ยกเลิก</button>
+ <button class="btn btn-primary" id="csClearConfirmBtn" onclick="confirmCsClearAll()" disabled style="background:var(--danger);border-color:var(--danger)">ลบทั้งหมด</button>
  </div>
  </div>
  </div>
@@ -12332,6 +12432,181 @@ function renderCostSavingPage() {
  renderCsTable(cur.rows);
 }
 
+/* ══════════════════════════════════════════════════
+ ภาพรวมทุกปี (ALL-YEARS OVERVIEW)
+══════════════════════════════════════════════════ */
+
+function csGetAllYears() {
+ const years = Array.from(new Set(costSavingData.filter(r => r.goDate).map(r => new Date(r.goDate).getFullYear())));
+ years.sort((a, b) => a - b);
+ return years;
+}
+
+function toggleCsAllYearsView() {
+ const perYear = document.getElementById('csPerYearView');
+ const allYears = document.getElementById('csAllYearsView');
+ const btn = document.getElementById('csAllYearsBtn');
+ const yearSelect = document.getElementById('csYearSelect');
+ const isShowingAllYears = allYears.style.display !== 'none';
+ if (isShowingAllYears) {
+ allYears.style.display = 'none';
+ perYear.style.display = '';
+ if (yearSelect) yearSelect.style.display = '';
+ btn.textContent = '📊 ภาพรวมทุกปี';
+ } else {
+ perYear.style.display = 'none';
+ allYears.style.display = '';
+ if (yearSelect) yearSelect.style.display = 'none';
+ btn.textContent = '← กลับไปดูรายปี';
+ renderCsAllYearsView();
+ }
+}
+
+function renderCsAllYearsView() {
+ const years = csGetAllYears();
+ const fmt0 = n => Math.round(n).toLocaleString('en-US');
+ const yearStats = years.map(y => csComputeYearStats(y));
+ const grandTotal = yearStats.reduce((s, y) => s + y.totalSaving, 0);
+ const grandCount = yearStats.reduce((s, y) => s + y.count, 0);
+ let bestIdx = 0;
+ yearStats.forEach((y, i) => { if (y.totalSaving > yearStats[bestIdx].totalSaving) bestIdx = i; });
+
+ document.getElementById('cs-ay-total').textContent = fmt0(grandTotal);
+ document.getElementById('cs-ay-count').textContent = grandCount.toLocaleString();
+ document.getElementById('cs-ay-years').textContent = years.length ? years.length : '—';
+ document.getElementById('cs-ay-bestyear').textContent = (years.length && yearStats[bestIdx].totalSaving > 0)
+ ? years[bestIdx] + ' (' + csFormatBaht(yearStats[bestIdx].totalSaving) + ')' : '—';
+
+ const allRows = costSavingData.filter(r => r.goDate);
+
+ const canvas = document.getElementById('csAllYearsChart');
+ if (canvas) {
+ const cs = getComputedStyle(document.body);
+ const chartText = cs.getPropertyValue('--muted').trim();
+ const gridColor = cs.getPropertyValue('--surface2').trim();
+ destroyChart('csAllYears');
+ charts.csAllYears = new Chart(canvas, {
+ type: 'bar',
+ data: {
+ labels: years.map(String),
+ datasets: [{
+ label: 'Total Saving (THB)',
+ data: yearStats.map(y => y.totalSaving),
+ backgroundColor: hexToRgba('#2E5395', 0.55),
+ borderRadius: 6, maxBarThickness: 56
+ }]
+ },
+ options: {
+ responsive: true, maintainAspectRatio: false, animation: CHART_EASE,
+ plugins: {
+ legend: { display: false },
+ tooltip: Object.assign(chartTooltipCfg(cs), { callbacks: { label: ctx => ' ' + Math.round(ctx.raw).toLocaleString() + ' THB (' + yearStats[ctx.dataIndex].count + ' รายการ)' } })
+ },
+ scales: {
+ x: { ticks: { color: chartText, font: { size: 11, family: "'IBM Plex Mono',monospace" } }, grid: { display: false }, border: { display: false } },
+ y: { beginAtZero: true, ticks: { color: chartText, font: { size: 9, family: "'IBM Plex Mono',monospace" }, callback: v => csFormatBaht(v) }, grid: { color: gridColor, drawTicks: false, lineWidth: 1, borderDash: [3, 4] }, border: { display: false } }
+ }
+ }
+ });
+ }
+
+ // Plant / Model breakdown ใช้ข้อมูลทุกปีรวมกัน — reuse ฟังก์ชันเดิมแต่วาดลง canvas คนละตัว
+ renderCsPlantChart(allRows, 'csAyPlantChart', 'csAyPlant');
+ renderCsModelChart(allRows, 'csAyModelChart', 'csAyModel');
+}
+
+/* ══════════════════════════════════════════════════
+ เปรียบเทียบปี (COMPARE YEARS)
+══════════════════════════════════════════════════ */
+let csCompareYears = new Set();
+
+function openCsCompareModal() {
+ const years = csGetAllYears();
+ const chipBox = document.getElementById('csCompareChips');
+ if (!csCompareYears.size && years.length) {
+ // ค่าเริ่มต้น: เลือกปีล่าสุด 2 ปี ให้อัตโนมัติ
+ years.slice(-2).forEach(y => csCompareYears.add(y));
+ }
+ chipBox.innerHTML = years.map(y =>
+ `<span class="cs-sheet-chip${csCompareYears.has(y) ? ' active' : ''}" onclick="csToggleCompareYear(${y}, this)">ปี ${y}</span>`
+ ).join('');
+ document.getElementById('csCompareModalOverlay').classList.add('open');
+ renderCsCompareResult();
+}
+function closeCsCompareModal() {
+ document.getElementById('csCompareModalOverlay').classList.remove('open');
+}
+function csToggleCompareYear(year, el) {
+ if (csCompareYears.has(year)) { csCompareYears.delete(year); el.classList.remove('active'); }
+ else { csCompareYears.add(year); el.classList.add('active'); }
+ renderCsCompareResult();
+}
+
+function renderCsCompareResult() {
+ const years = Array.from(csCompareYears).sort((a, b) => a - b);
+ const info = document.getElementById('csComparePreviewInfo');
+ const chartWrap = document.getElementById('csCompareChartWrap');
+ const tableWrap = document.getElementById('csCompareTableWrap');
+ if (years.length < 2) {
+ info.textContent = 'เลือกอย่างน้อย 2 ปี เพื่อเปรียบเทียบ';
+ chartWrap.style.display = 'none';
+ tableWrap.style.display = 'none';
+ return;
+ }
+ info.textContent = '';
+ chartWrap.style.display = '';
+ tableWrap.style.display = '';
+
+ const fmt0 = n => Math.round(n).toLocaleString('en-US');
+ const stats = years.map(y => ({ year: y, ...csComputeYearStats(y) }));
+
+ const canvas = document.getElementById('csCompareChart');
+ const cs = getComputedStyle(document.body);
+ const chartText = cs.getPropertyValue('--muted').trim();
+ const gridColor = cs.getPropertyValue('--surface2').trim();
+ const palette = ['#2E5395', '#2F8F6E', '#C9A227', '#B0673A', '#5C6F8A', '#8A94A6'];
+ destroyChart('csCompare');
+ charts.csCompare = new Chart(canvas, {
+ type: 'bar',
+ data: {
+ labels: years.map(String),
+ datasets: [{
+ label: 'Total Saving (THB)',
+ data: stats.map(s => s.totalSaving),
+ backgroundColor: years.map((_, i) => hexToRgba(palette[i % palette.length], 0.6)),
+ borderRadius: 6, maxBarThickness: 70
+ }]
+ },
+ options: {
+ responsive: true, maintainAspectRatio: false, animation: CHART_EASE,
+ plugins: {
+ legend: { display: false },
+ tooltip: Object.assign(chartTooltipCfg(cs), { callbacks: { label: ctx => ' ' + Math.round(ctx.raw).toLocaleString() + ' THB' } })
+ },
+ scales: {
+ x: { ticks: { color: chartText, font: { size: 11, family: "'IBM Plex Mono',monospace" } }, grid: { display: false }, border: { display: false } },
+ y: { beginAtZero: true, ticks: { color: chartText, font: { size: 9, family: "'IBM Plex Mono',monospace" }, callback: v => csFormatBaht(v) }, grid: { color: gridColor, drawTicks: false, lineWidth: 1, borderDash: [3, 4] }, border: { display: false } }
+ }
+ }
+ });
+
+ const tbody = document.getElementById('csCompareTableBody');
+ tbody.innerHTML = stats.map((s, i) => {
+ const prevS = i > 0 ? stats[i - 1] : null;
+ const diffTxt = prevS
+ ? ((s.totalSaving - prevS.totalSaving) >= 0 ? '▲ +' : '▼ ') + fmt0(Math.abs(s.totalSaving - prevS.totalSaving)) + ' บาท เทียบปีก่อนหน้าในตาราง'
+ : '—';
+ return `<tr>
+ <td style="padding:0.4rem 0.6rem;border-top:1px solid var(--border);font-weight:700">ปี ${s.year}</td>
+ <td style="padding:0.4rem 0.6rem;border-top:1px solid var(--border);text-align:right">${fmt0(s.totalSaving)}</td>
+ <td style="padding:0.4rem 0.6rem;border-top:1px solid var(--border);text-align:right">${s.count.toLocaleString()}</td>
+ <td style="padding:0.4rem 0.6rem;border-top:1px solid var(--border);text-align:right">${s.count ? Math.round(s.onRate) + '%' : '—'}</td>
+ <td style="padding:0.4rem 0.6rem;border-top:1px solid var(--border);text-align:right">${s.count ? s.avgPct.toFixed(1) + '%' : '—'}</td>
+ <td style="padding:0.4rem 0.6rem;border-top:1px solid var(--border);font-size:0.72rem;color:var(--muted)">${diffTxt}</td>
+ </tr>`;
+ }).join('');
+}
+
 function csFormatBaht(v) {
  const abs = Math.abs(v);
  if (abs >= 1000000) return (v / 1000000).toFixed(1) + 'M';
@@ -12380,8 +12655,8 @@ function renderCsMonthlyChart(year, curRows, prevRows) {
  });
 }
 
-function renderCsPlantChart(rows) {
- const canvas = document.getElementById('csPlantChart');
+function renderCsPlantChart(rows, canvasId = 'csPlantChart', chartKey = 'csPlant') {
+ const canvas = document.getElementById(canvasId);
  if (!canvas) return;
  const map = {};
  rows.forEach(r => {
@@ -12396,7 +12671,7 @@ function renderCsPlantChart(rows) {
  const cardBg = cs.getPropertyValue('--surface').trim();
  const total = entries.reduce((s, e) => s + e[1], 0);
  const topPlant = entries[0];
- destroyChart('csPlant');
+ destroyChart(chartKey);
 
  // ── ปลั๊กอินวาดตัวเลขรวม + Plant อันดับ 1 ไว้กลางโดนัท ให้ดูมีมิติขึ้น ──
  const centerTextPlugin = {
@@ -12424,7 +12699,7 @@ function renderCsPlantChart(rows) {
  }
  };
 
- charts.csPlant = new Chart(canvas, {
+ charts[chartKey] = new Chart(canvas, {
  type: 'doughnut',
  plugins: [centerTextPlugin],
  data: {
@@ -12451,8 +12726,8 @@ function renderCsPlantChart(rows) {
  });
 }
 
-function renderCsModelChart(rows) {
- const canvas = document.getElementById('csModelChart');
+function renderCsModelChart(rows, canvasId = 'csModelChart', chartKey = 'csModel') {
+ const canvas = document.getElementById(canvasId);
  if (!canvas) return;
  const map = {};
  rows.forEach(r => {
@@ -12463,8 +12738,8 @@ function renderCsModelChart(rows) {
  const cs = getComputedStyle(document.body);
  const chartText = cs.getPropertyValue('--muted').trim();
  const gridColor = cs.getPropertyValue('--surface2').trim();
- destroyChart('csModel');
- charts.csModel = new Chart(canvas, {
+ destroyChart(chartKey);
+ charts[chartKey] = new Chart(canvas, {
  type: 'bar',
  data: {
  labels: entries.map(e => e[0]),
@@ -12863,14 +13138,35 @@ function csToggleSheet(name, el) {
  csUpdatePreview();
 }
 
+// สร้าง key เฉพาะของแต่ละรายการ ใช้เช็คว่าซ้ำกับที่มีอยู่แล้วหรือไม่ (MODEL + PART NO + GO DATE)
+function csRowKey(r) {
+ const norm = v => String(v == null ? '' : v).trim().toLowerCase();
+ return norm(r.model) + '|' + norm(r.partNo) + '|' + norm(r.goDate);
+}
+
 function csUpdatePreview() {
+ let allRows = [];
+ csSelectedSheets.forEach(name => { allRows = allRows.concat(csParseSheet(name)); });
+
+ // เช็คซ้ำกับข้อมูลที่มีอยู่แล้วในระบบ + ซ้ำกันเองภายในไฟล์ที่กำลังจะนำเข้า
+ const existingKeys = new Set(costSavingData.map(csRowKey));
+ const seenInBatch = new Set();
  csPendingImportRows = [];
- csSelectedSheets.forEach(name => { csPendingImportRows = csPendingImportRows.concat(csParseSheet(name)); });
+ let dupCount = 0;
+ allRows.forEach(r => {
+ const key = csRowKey(r);
+ if (existingKeys.has(key) || seenInBatch.has(key)) { dupCount++; return; }
+ seenInBatch.add(key);
+ csPendingImportRows.push(r);
+ });
+
  const info = document.getElementById('csPreviewInfo');
  const btn = document.getElementById('csImportBtn');
- if (csPendingImportRows.length) {
- info.innerHTML = `พบข้อมูลที่พร้อมนำเข้า <b>${csPendingImportRows.length}</b> รายการ จาก ${csSelectedSheets.size} ชีตที่เลือก`;
- btn.disabled = false;
+ if (csPendingImportRows.length || dupCount) {
+ info.innerHTML = `พบข้อมูลใหม่ที่พร้อมนำเข้า <b>${csPendingImportRows.length}</b> รายการ` +
+ (dupCount ? ` · ข้ามรายการซ้ำ <b style="color:var(--muted)">${dupCount}</b> รายการ (มีอยู่แล้วในระบบ หรือซ้ำกันในไฟล์)` : '') +
+ ` จาก ${csSelectedSheets.size} ชีตที่เลือก`;
+ btn.disabled = !csPendingImportRows.length;
  } else {
  info.textContent = csSelectedSheets.size ? 'ไม่พบข้อมูลในชีตที่เลือก (รูปแบบคอลัมน์อาจไม่ตรงกับเทมเพลตนี้)' : 'ยังไม่ได้เลือกชีต';
  btn.disabled = true;
@@ -12904,6 +13200,43 @@ async function csImportSelected() {
  alert('นำเข้าไม่สำเร็จ: ' + err.message);
  } finally {
  btn.disabled = false; btn.textContent = '⬆ นำเข้าข้อมูลที่เลือก';
+ }
+}
+
+/* ── ล้างข้อมูล Cost Saving ทั้งหมด ── */
+function openCsClearModal() {
+ document.getElementById('csClearCount').textContent = costSavingData.length.toLocaleString();
+ document.getElementById('csClearConfirmInput').value = '';
+ document.getElementById('csClearConfirmBtn').disabled = true;
+ document.getElementById('csClearModalOverlay').classList.add('open');
+}
+function closeCsClearModal() {
+ document.getElementById('csClearModalOverlay').classList.remove('open');
+}
+async function confirmCsClearAll() {
+ if (!WEB_APP_URL) { alert('ยังไม่ได้ตั้งค่า Web App URL ในเมนู  ตั้งค่าระบบ'); return; }
+ const btn = document.getElementById('csClearConfirmBtn');
+ btn.disabled = true; btn.textContent = 'กำลังลบ...';
+ try {
+ const res = await fetch(WEB_APP_URL, {
+ method: 'POST',
+ headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+ body: JSON.stringify({ action: 'clearAllCostSaving' })
+ });
+ const json = await res.json();
+ if (json.success === undefined) {
+ throw new Error('เซิร์ฟเวอร์ยังไม่รู้จัก action "clearAllCostSaving" — ต้องเพิ่มฟังก์ชันนี้ใน Apps Script (Router.gs + 17_CostSaving.gs) ก่อน แล้ว Deploy เป็น "New version"');
+ }
+ if (!json.success) throw new Error(json.error || 'ลบข้อมูลไม่สำเร็จ');
+ costSavingData = [];
+ closeCsClearModal();
+ renderCostSavingPage();
+ showToast(`ล้างข้อมูลสำเร็จ (ลบไป ${json.deleted !== undefined ? json.deleted : ''} รายการ)`, 'success');
+ } catch (err) {
+ alert('ล้างข้อมูลไม่สำเร็จ: ' + err.message);
+ } finally {
+ btn.textContent = 'ลบทั้งหมด';
+ btn.disabled = document.getElementById('csClearConfirmInput').value.trim() !== 'ล้างข้อมูล';
  }
 }
 
