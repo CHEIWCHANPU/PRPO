@@ -7995,14 +7995,14 @@ function renderDailyBriefing() {
  document.getElementById('brief-total').textContent = allDaysLeft.length;
 
  const body = document.getElementById('briefingBody');
+ const panelEl = document.getElementById('briefingPanel');
  if (!allDaysLeft.length) {
- body.innerHTML = '';
- body.style.display = 'none';
+ if (panelEl) panelEl.style.display = 'none';
  const cerWidgetEmpty = document.getElementById('briefingCerWidget');
  if (cerWidgetEmpty) cerWidgetEmpty.style.display = 'none';
  return;
  }
- body.style.display = '';
+ if (panelEl) panelEl.style.display = '';
 
  const sections = [];
  let cerSectionHtml = '';
