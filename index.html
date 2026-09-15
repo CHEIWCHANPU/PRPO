@@ -7996,11 +7996,13 @@ function renderDailyBriefing() {
 
  const body = document.getElementById('briefingBody');
  if (!allDaysLeft.length) {
- body.innerHTML = `<div class="briefing-empty">ไม่มีงานเลยกำหนดหรือใกล้ครบกำหนดใน ${BRIEFING_LEAD_DAYS} วันนี้ (ทุกหมวดหมู่) — ติดตามตามปกติได้เลย</div>`;
+ body.innerHTML = '';
+ body.style.display = 'none';
  const cerWidgetEmpty = document.getElementById('briefingCerWidget');
  if (cerWidgetEmpty) cerWidgetEmpty.style.display = 'none';
  return;
  }
+ body.style.display = '';
 
  const sections = [];
  let cerSectionHtml = '';
