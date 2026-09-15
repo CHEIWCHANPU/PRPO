@@ -9359,10 +9359,10 @@ async function testLineAlert(el) {
  valueEl.innerHTML = '<div class="spinner" style="margin:2px auto"></div>';
  metaEl.textContent = 'กำลังส่ง...';
  try {
- const [weeklyRes, dailyRes] = await Promise.all([
- fetch(WEB_APP_URL + '?action=lineWeeklyTest').then(r => r.json()),
- fetch(WEB_APP_URL + '?action=lineDailyTest').then(r => r.json()),
- ]);
+ // เรียกตามลำดับ (ไม่ใช่พร้อมกัน) เพื่อให้การ์ดสรุปรายสัปดาห์เข้ากลุ่มก่อนการ์ดรายละเอียดเสมอ
+ // — ห้ามเปลี่ยนกลับเป็น Promise.all เพราะจะทำให้ลำดับที่การ์ดมาถึงไม่แน่นอน
+ const weeklyRes = await fetch(WEB_APP_URL + '?action=lineWeeklyTest').then(r => r.json());
+ const dailyRes = await fetch(WEB_APP_URL + '?action=lineDailyTest').then(r => r.json());
  const allOk = weeklyRes && weeklyRes.success && dailyRes && dailyRes.success;
  if (allOk) {
  showResultModal('ส่งแจ้งเตือน LINE สำเร็จ', 'success', 'ส่งทั้งการ์ดสรุปรายสัปดาห์และการ์ดแจ้งเตือนแล้ว ตรวจสอบในไลน์กลุ่มได้เลย');
