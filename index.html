@@ -218,7 +218,7 @@
  transition: width 0.28s cubic-bezier(0.4,0,0.2,1); overflow: hidden;
  box-shadow: 2px 0 16px rgba(0,0,0,0.15);
  }
- .sidebar.collapsed { width: var(--swc); }
+ .sidebar.collapsed { width: 0; border-right-color: transparent; box-shadow: none; }
  .sidebar-logo {
  padding: 1rem 0.85rem; display: flex; align-items: center; gap: 0.75rem;
  border-bottom: 1px solid var(--border); min-height: 64px; white-space: nowrap;
@@ -376,7 +376,9 @@
  .nav-section { scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
 
  .main-wrap { margin-left: var(--sw); flex: 1; min-height: 100vh; display: flex; flex-direction: column; transition: margin-left 0.28s cubic-bezier(0.4,0,0.2,1); overflow: auto; }
- .main-wrap.collapsed { margin-left: var(--swc); }
+ .main-wrap.collapsed { margin-left: 0; }
+ .sidebar-open-btn { display: none; }
+ .sidebar-open-btn.show { display: flex; }
 
  .topbar {
  height: 62px; background: var(--surface); border-bottom: 1px solid var(--border);
@@ -532,7 +534,9 @@
  .briefing-panel {
  background: var(--surface); border: 1px solid var(--border); border-radius: 4px; margin-bottom: 1.3rem;
  overflow: hidden; display: flex; flex-direction: column; min-height: calc(100vh - 150px);
+ transition: min-height 0.25s ease;
  }
+ .briefing-panel.briefing-panel-compact { min-height: 0; }
  .briefing-head {
  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.8rem;
  padding: 1rem 1.2rem; border-bottom: 1px solid var(--border); background: var(--glow-warn); flex-shrink: 0;
@@ -3555,28 +3559,61 @@
  ════════════════════════════════════ */
  .orgchart-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 1.5rem 2rem; }
  .orgchart-tree { display: flex; flex-direction: column; align-items: center; padding: 1rem 0; }
+ .orgchart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem; }
+ .orgchart-title { font-size: 1.05rem; font-weight: 700; color: var(--text); }
+ .orgchart-sub { font-size: 0.77rem; color: var(--muted); font-family: var(--mono); margin-top: 2px; }
+ .org-connector-v { width: 2px; height: 32px; background: var(--border2); }
+ .org-connector-h { position: relative; width: min(760px, 92%); height: 2px; background: var(--border2); margin-bottom: 0; }
+ .org-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.6rem; margin-top: 1.8rem; width: 100%; }
  .org-node {
- background: var(--surface2); border: 1.5px solid var(--border);
- border-radius: 4px; padding: 1rem 1.4rem; text-align: center;
- min-width: 160px; transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+ display: flex; flex-direction: column; align-items: center; gap: 0.7rem;
+ background: var(--surface2); border: 1.5px solid var(--border); border-radius: 8px;
+ padding: 1.5rem 1.7rem 1.3rem; min-width: 236px; text-align: center; position: relative;
+ transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
  box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 6px 16px -8px rgba(0,0,0,0.3);
  }
  .org-node:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 10px 24px -8px rgba(62,90,130,0.25); }
- .org-root { border-color: var(--accent); background: linear-gradient(135deg, var(--surface2), rgba(62,90,130,0.05)); box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 8px 20px -8px rgba(62,90,130,0.3); }
- .org-avatar { font-size: 1.89rem; margin-bottom: 0.3rem; }
- .org-name { font-size: 0.84rem; font-weight: 700; color: var(--text); }
- .org-role { font-size: 0.683rem; color: var(--muted); margin-top: 0.2rem; }
- .org-connector { width: 2px; height: 28px; background: var(--border); margin: 0 auto; }
- .org-row { display: flex; gap: 1.2rem; align-items: flex-start; position: relative; padding-top: 28px; }
- .org-row::before {
- content: ''; position: absolute; top: 0; left: calc(50% - 1px); width: 2px; height: 28px;
- background: var(--border);
+ .org-node::before {
+ content: ''; position: absolute; top: -1.8rem; left: 50%; width: 2px; height: 1.8rem;
+ background: var(--border2); transform: translateX(-50%);
  }
- .org-row::after {
- content: ''; position: absolute; top: 0;
- left: calc(16.67% + 80px); right: calc(16.67% + 80px);
- height: 2px; background: var(--border);
+ .org-node-leader { border-color: var(--accent); min-width: 260px; box-shadow: 0 1px 8px rgba(62,90,130,0.15); }
+ .org-photo {
+ width: 144px; height: 144px; border-radius: 12px; position: relative; overflow: hidden; cursor: pointer;
+ display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+ background: linear-gradient(135deg, var(--accent), var(--accent2));
+ border: 1.5px dashed transparent;
  }
+ .org-node-leader .org-photo { width: 168px; height: 168px; box-shadow: 0 0 0 4px var(--glow-accent); }
+ .org-photo.org-photo-empty { background: var(--surface3, var(--surface)); border-color: var(--border2); }
+ .org-photo-icon { font-size: 2.6rem; font-weight: 700; color: #fff; }
+ .org-photo.org-photo-empty .org-photo-icon { color: var(--muted); font-size: 1.05rem; font-weight: 600; padding: 0 0.5rem; line-height: 1.4; }
+ .org-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+ .org-photo-edit {
+ position: absolute; left: 0; right: 0; bottom: 0; padding: 0.4rem 0.3rem;
+ background: rgba(0,0,0,0.55); color: #fff; font-size: 0.7rem; font-weight: 700;
+ display: flex; align-items: center; justify-content: center; gap: 0.3rem;
+ opacity: 0; transition: opacity 0.15s; backdrop-filter: blur(2px);
+ }
+ .org-photo:hover .org-photo-edit { opacity: 1; }
+ .org-name-input {
+ width: 100%; text-align: center; border: none; background: transparent; color: var(--text);
+ font-size: 1.05rem; font-weight: 700; font-family: var(--font); padding: 0.2rem 0.3rem; border-radius: 4px;
+ }
+ .org-name-input:hover, .org-name-input:focus { background: var(--glow-accent); outline: none; }
+ .org-name-input::placeholder { color: var(--muted); font-weight: 500; }
+ .org-role {
+ font-size: 0.756rem; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase;
+ padding: 0.22rem 0.7rem; border-radius: 4px; color: var(--accent); background: var(--glow-accent);
+ border: 1px solid var(--border);
+ }
+ .org-role-leader { color: var(--danger); background: rgba(239,68,68,0.1); }
+ .org-role-engineer { color: var(--warn); background: rgba(245,158,11,0.12); }
+ .team-photo-modal { max-width: min(90vw, 640px); text-align: center; }
+ .team-photo-modal-img-wrap { width: 100%; border-radius: 8px; overflow: hidden; background: var(--surface2); margin-bottom: 1rem; }
+ .team-photo-modal-img-wrap img { width: 100%; max-height: 68vh; object-fit: contain; display: block; }
+ .team-photo-modal-name { font-size: 1.2rem; font-weight: 700; color: var(--text); }
+ .team-photo-modal-role { margin-top: 0.4rem; display: inline-block; }
  .raci-table-wrap { overflow-x: auto; }
  .raci-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
  .raci-table th {
@@ -4947,6 +4984,17 @@ body::after {
  </div>
  </div>
 
+ <div class="nav-group" id="navGroup-team">
+ <div class="nav-label" onclick="toggleNavGroup('team')">
+ <span class="nav-label-text"><span class="nav-label-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span data-i18n="group_team">จัดทีมงาน</span></span><span class="nav-label-chevron">▾</span>
+ </div>
+ <div class="nav-group-items">
+ <button class="nav-item" id="nav-team" onclick="showPage('team',this)">
+ <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="nav-text" data-i18n="nav_team">ทีมงาน Purchase Component</span>
+ </button>
+ </div>
+ </div>
+
  <div class="nav-group" id="navGroup-costcalc">
  <div class="nav-label" onclick="toggleNavGroup('costcalc')">
  <span class="nav-label-text"><span class="nav-label-icon"><svg viewBox="0 0 24 24"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>เครื่องมือคำนวณ</span><span class="nav-label-chevron">▾</span>
@@ -4998,6 +5046,9 @@ body::after {
 <div class="main-wrap" id="mainWrap">
  <div class="topbar">
  <div class="topbar-left">
+ <div class="icon-action sidebar-open-btn" id="sidebarOpenBtn" onclick="toggleSidebar()" title="เปิดเมนู">
+ <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+ </div>
  <div style="display:flex; align-items:center; gap:0.4rem;">
  <div class="topbar-title" id="topbarTitle">หน้าหลัก</div>
  </div>
@@ -5761,6 +5812,44 @@ body::after {
  <button class="btn btn-primary" onclick="openSupplierModal()" style="margin-left:auto">+ เพิ่ม Supplier</button>
  </div>
  <div id="supplierGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem"></div>
+ </div>
+
+ <!-- ORGANIZE TEAM: Team Purchase Component -->
+ <div class="page" id="page-team">
+ <div class="orgchart-panel">
+ <div class="orgchart-header">
+ <div>
+ <div class="orgchart-title">Team Purchase Component</div>
+ <div class="orgchart-sub">ทีมงานจัดซื้อ Component · ทั้งหมด 5 คน</div>
+ </div>
+ </div>
+ <div class="orgchart-tree">
+ <div id="orgChartLeader"></div>
+ <div class="org-connector-v"></div>
+ <div class="org-connector-h"></div>
+ <div class="org-row" id="orgChartMembers"></div>
+ </div>
+ </div>
+ </div>
+ <input type="file" accept="image/*" id="orgPhotoFileInput" style="display:none" onchange="onOrgPhotoFileChange(this)">
+
+ <!-- TEAM PHOTO ENLARGE MODAL -->
+ <div class="modal-overlay" id="teamPhotoModalOverlay" onclick="if(event.target===this)closeTeamPhotoModal()">
+ <div class="modal team-photo-modal">
+ <div class="modal-header">
+ <div class="modal-title">รูปสมาชิกทีม</div>
+ <button class="modal-close" onclick="closeTeamPhotoModal()">✕</button>
+ </div>
+ <div class="modal-body">
+ <div class="team-photo-modal-img-wrap"><img id="teamPhotoModalImg" src="" alt=""></div>
+ <div class="team-photo-modal-name" id="teamPhotoModalName">—</div>
+ <div class="org-role team-photo-modal-role" id="teamPhotoModalRole">—</div>
+ </div>
+ <div class="modal-footer">
+ <button class="btn btn-secondary" id="teamPhotoChangeBtn">🖼️ เปลี่ยนรูป</button>
+ <button class="btn btn-primary" onclick="closeTeamPhotoModal()">ปิด</button>
+ </div>
+ </div>
  </div>
 
  <!-- FILE LIBRARY: Excel / PowerPoint links -->
@@ -7484,7 +7573,7 @@ window.addEventListener('DOMContentLoaded', () => {
 /* ── NAV GROUPS (collapsible) ── */
 // ทุกครั้งที่ล็อกอินใหม่ หมวดหมู่ในเมนูด้านซ้ายจะถูกรีเซ็ตกลับไปที่ค่าเริ่มต้นนี้เสมอ
 // (เมนูหลักเปิดอยู่ ส่วนหมวดอื่นๆ พับเก็บไว้ทั้งหมด) ไม่ใช้ค่าที่จำไว้จากครั้งก่อน
-const DEFAULT_COLLAPSED_NAV_GROUPS = ['track', 'cer', 'modeltracker', 'workplan', 'manual', 'costcalc', 'costsaving', 'other', 'manage'];
+const DEFAULT_COLLAPSED_NAV_GROUPS = ['track', 'cer', 'modeltracker', 'workplan', 'manual', 'costcalc', 'costsaving', 'other', 'team', 'manage'];
 function resetNavGroupsToDefault() {
  localStorage.setItem('prpo_nav_collapsed', JSON.stringify(DEFAULT_COLLAPSED_NAV_GROUPS));
  document.querySelectorAll('.nav-group[id^="navGroup-"]').forEach(el => {
@@ -7545,23 +7634,23 @@ const I18N = {
  th: {
  nav_home: 'หน้าหลัก', nav_exec: 'ภาพรวม KPI', nav_payroll: 'ลงเวลาทำงาน', nav_todo: 'To-Do งานประจำวัน',
  nav_list: 'รายการทั้งหมด', nav_summary: 'สรุปภาพรวม', nav_cer: 'ติดตามใบ CER',
- nav_workplan: 'แผนงานข้างนอก', nav_manual: 'คู่มือการทำงาน', nav_setup: 'ตั้งค่า', nav_collapse: 'ย่อเมนู',
+ nav_workplan: 'แผนงานข้างนอก', nav_manual: 'คู่มือการทำงาน', nav_setup: 'ตั้งค่า', nav_collapse: 'ย่อเมนู', nav_team: 'ทีมงาน Purchase Component',
  group_main: 'เมนูหลัก', group_track: 'ติดตาม PART PR', group_cer: 'ติดตามใบ CER',
  group_modeltracker: 'แผนการผลิต MODEL', group_workplan: 'ตารางแผนงานข้างนอก',
- group_manual: 'คู่มือการทำงาน &amp; พื้นฐานการทำงาน', group_maker: 'ข้อมูล MAKER', group_settings: 'จัดการ',
+ group_manual: 'คู่มือการทำงาน &amp; พื้นฐานการทำงาน', group_maker: 'ข้อมูล MAKER', group_settings: 'จัดการ', group_team: 'จัดทีมงาน',
  },
  en: {
  nav_home: 'Home', nav_exec: 'KPI Overview', nav_payroll: 'Time Attendance', nav_todo: 'To-Do List',
  nav_list: 'All Items', nav_summary: 'Summary', nav_cer: 'CER Tracking',
- nav_workplan: 'Field Workplan', nav_manual: 'Work Manual', nav_setup: 'Settings', nav_collapse: 'Collapse',
+ nav_workplan: 'Field Workplan', nav_manual: 'Work Manual', nav_setup: 'Settings', nav_collapse: 'Collapse', nav_team: 'Purchase Component Team',
  group_main: 'Main Menu', group_track: 'Track Part PR', group_cer: 'CER Tracking',
  group_modeltracker: 'Model Production Plan', group_workplan: 'Field Workplan Schedule',
- group_manual: 'Work Manual &amp; Basics', group_maker: 'Maker Data', group_settings: 'Management',
+ group_manual: 'Work Manual &amp; Basics', group_maker: 'Maker Data', group_settings: 'Management', group_team: 'Organize Team',
  }
 };
 const PAGE_TITLES = {
- th: { home:'หน้าหลัก', exec:'ภาพรวม KPI', dashboard:'Dashboard', list:'รายการทั้งหมด', partmodel:'PART MODEL', summary:'สรุปภาพรวม', gantt:'Timeline / Gantt', setup:'ตั้งค่าระบบ', supplier:'Supplier Database', history:'History Log', leadtime:'Lead Time Analysis', leaderboard:'Maker Leaderboard', cer:'ติดตามใบ CER', modeltracker:'Model Tracker', workplan:'ตารางแผนงานข้างนอก', payroll:'ลงเวลา & ค่าแรง', manual:'คู่มือการทำงาน', todo:'To-Do List', costcalc:'Cost Up/Down', costsaving:'Cost Saving Report' },
- en: { home:'Home', exec:'KPI Overview', dashboard:'Dashboard', list:'All Items', partmodel:'PART MODEL', summary:'Summary', gantt:'Timeline / Gantt', setup:'System Settings', supplier:'Supplier Database', history:'History Log', leadtime:'Lead Time Analysis', leaderboard:'Maker Leaderboard', cer:'CER Tracking', modeltracker:'Model Tracker', workplan:'Field Workplan Schedule', payroll:'Time & Wages', manual:'Work Manual', todo:'To-Do List', costcalc:'Cost Up/Down', costsaving:'Cost Saving Report' }
+ th: { home:'หน้าหลัก', exec:'ภาพรวม KPI', dashboard:'Dashboard', list:'รายการทั้งหมด', partmodel:'PART MODEL', summary:'สรุปภาพรวม', gantt:'Timeline / Gantt', setup:'ตั้งค่าระบบ', supplier:'Supplier Database', history:'History Log', leadtime:'Lead Time Analysis', leaderboard:'Maker Leaderboard', cer:'ติดตามใบ CER', modeltracker:'Model Tracker', workplan:'ตารางแผนงานข้างนอก', payroll:'ลงเวลา & ค่าแรง', manual:'คู่มือการทำงาน', todo:'To-Do List', costcalc:'Cost Up/Down', costsaving:'Cost Saving Report', team:'ทีมงาน Purchase Component' },
+ en: { home:'Home', exec:'KPI Overview', dashboard:'Dashboard', list:'All Items', partmodel:'PART MODEL', summary:'Summary', gantt:'Timeline / Gantt', setup:'System Settings', supplier:'Supplier Database', history:'History Log', leadtime:'Lead Time Analysis', leaderboard:'Maker Leaderboard', cer:'CER Tracking', modeltracker:'Model Tracker', workplan:'Field Workplan Schedule', payroll:'Time & Wages', manual:'Work Manual', todo:'To-Do List', costcalc:'Cost Up/Down', costsaving:'Cost Saving Report', team:'Purchase Component Team' }
 };
 function getCurrentLang() { return localStorage.getItem('prpo_lang') || 'th'; }
 function applyLanguage(lang) {
@@ -7743,6 +7832,8 @@ function toggleSidebar() {
  document.getElementById('sidebar').classList.toggle('collapsed', sidebarCollapsed);
  document.getElementById('mainWrap').classList.toggle('collapsed', sidebarCollapsed);
  document.getElementById('collapseIcon').textContent = sidebarCollapsed ? '▶' : '◀';
+ const openBtn = document.getElementById('sidebarOpenBtn');
+ if (openBtn) openBtn.classList.toggle('show', sidebarCollapsed);
 }
 
 /* ══════════════════════════════════════════════════════
@@ -7819,6 +7910,7 @@ const CMDK_ITEMS = [
  { key: 'modeltracker', label: 'Model Tracker', group: 'แผนการผลิต MODEL', icon: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>' },
  { key: 'workplan', label: 'ตารางแผนงานข้างนอก', group: 'ตารางแผนงานข้างนอก', icon: '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' },
  { key: 'supplier', label: 'Supplier Database', group: 'ข้อมูล MAKER', icon: '<svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V9l5-4 5 4v12"/><path d="M15 21V13l4-2v10"/></svg>' },
+ { key: 'team', label: 'ทีมงาน Purchase Component', group: 'จัดทีมงาน', icon: '<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>' },
  { key: 'history', label: 'History Log', group: 'จัดการ', icon: '<svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>' },
  { key: 'setup', label: 'ตั้งค่าระบบ', group: 'จัดการ', icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>' },
 ];
@@ -7924,6 +8016,184 @@ document.addEventListener('keydown', (e) => {
  }
 }, true); // capture phase — ดักจับก่อน handler อื่นๆ และก่อนโฟกัสจะไปเปลี่ยน e.key
 
+/* ── ORGANIZE TEAM: Team Purchase Component ── */
+const DEFAULT_TEAM_MEMBERS = [
+ { id: 'leader1', role: 'Leader', name: '', photo: '' },
+ { id: 'member1', role: 'Member', name: '', photo: '' },
+ { id: 'member2', role: 'Member', name: '', photo: '' },
+ { id: 'engineer1', role: 'Engineer', name: '', photo: '' },
+ { id: 'engineer2', role: 'Engineer', name: '', photo: '' },
+];
+function loadTeamMembers() {
+ try {
+ const saved = JSON.parse(localStorage.getItem('prpo_team_members') || 'null');
+ if (Array.isArray(saved) && saved.length === DEFAULT_TEAM_MEMBERS.length) return saved;
+ } catch (e) {}
+ return DEFAULT_TEAM_MEMBERS.map(m => ({ ...m }));
+}
+let teamMembers = loadTeamMembers();
+function saveTeamMember(id, field, value) {
+ const m = teamMembers.find(x => x.id === id);
+ if (m) m[field] = value;
+ localStorage.setItem('prpo_team_members', JSON.stringify(teamMembers));
+}
+function teamInitials(name) {
+ return (name || '').trim().split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?';
+}
+function teamPhotoInnerHtml(m) {
+ return m.photo
+ ? `<img src="${m.photo}" alt="${teamInitials(m.name)}">`
+ : `<div class="org-photo-icon">${teamInitials(m.name)}</div>`;
+}
+function teamRoleLabel(role) {
+ const labels = { Leader: 'Leader Purchase', Member: 'Purchase Office', Engineer: 'Purchasing Engineer' };
+ return labels[role] || role;
+}
+function teamNodeHtml(m) {
+ const safeName = (m.name || '').replace(/"/g, '&quot;');
+ return `<div class="org-node${m.role === 'Leader' ? ' org-node-leader' : ''}">
+ <div class="org-photo${m.photo ? '' : ' org-photo-empty'}" id="orgPhoto-${m.id}" onclick="onOrgPhotoAreaClick('${m.id}')">
+ ${teamPhotoInnerHtml(m)}
+ <div class="org-photo-edit" onclick="event.stopPropagation(); triggerTeamPhotoUpload('${m.id}')">🖼️ ${m.photo ? 'เปลี่ยนรูป' : 'เพิ่มรูป'}</div>
+ </div>
+ <input class="org-name-input" value="${safeName}" placeholder="ระบุชื่อ-นามสกุล" oninput="saveTeamMember('${m.id}','name',this.value); teamRefreshEmptyIcon('${m.id}');" onblur="pushTeamToSheet();">
+ <div class="org-role org-role-${m.role.toLowerCase()}">${teamRoleLabel(m.role)}</div>
+ </div>`;
+}
+function teamRefreshEmptyIcon(id) {
+ const m = teamMembers.find(x => x.id === id);
+ if (!m || m.photo) return;
+ const iconEl = document.querySelector(`#orgPhoto-${id} .org-photo-icon`);
+ if (iconEl) iconEl.textContent = teamInitials(m.name);
+}
+function renderTeamOrgChart() {
+ teamMembers = loadTeamMembers();
+ teamRenderNow();
+ syncTeamFromSheet();
+}
+function teamRenderNow() {
+ const leader = teamMembers.find(m => m.role === 'Leader');
+ const others = teamMembers.filter(m => m.role !== 'Leader');
+ const leaderEl = document.getElementById('orgChartLeader');
+ const membersEl = document.getElementById('orgChartMembers');
+ if (leaderEl && leader) leaderEl.innerHTML = teamNodeHtml(leader);
+ if (membersEl) membersEl.innerHTML = others.map(teamNodeHtml).join('');
+}
+let teamPhotoUploadTargetId = null;
+function triggerTeamPhotoUpload(id) {
+ teamPhotoUploadTargetId = id;
+ document.getElementById('orgPhotoFileInput').click();
+}
+function onOrgPhotoAreaClick(id) {
+ const m = teamMembers.find(x => x.id === id);
+ if (m && m.photo) openTeamPhotoModal(id);
+ else triggerTeamPhotoUpload(id);
+}
+async function onOrgPhotoFileChange(input) {
+ const file = input.files && input.files[0];
+ input.value = '';
+ if (!file || !teamPhotoUploadTargetId) return;
+ if (!file.type.startsWith('image/')) { showToast('กรุณาเลือกไฟล์รูปภาพ', 'error'); return; }
+ if (file.size > 3 * 1024 * 1024) { showToast('ไฟล์รูปใหญ่เกินไป (จำกัด 3MB)', 'error'); return; }
+ const id = teamPhotoUploadTargetId;
+ const m = teamMembers.find(x => x.id === id);
+ const oldPhoto = m ? m.photo : '';
+
+ // แสดงตัวอย่างรูปทันทีจาก local ก่อน (เร็ว ไม่ต้องรอเน็ต)
+ const localPreview = await fileToDataUrl_(file);
+ teamApplyPhoto_(id, localPreview);
+
+ if (!WEB_APP_URL) {
+ showToast('บันทึกรูปในเครื่องนี้แล้ว (ยังไม่ได้ตั้งค่า Web App URL จึงไม่ได้อัปขึ้น Sheet/Drive)', 'info');
+ return;
+ }
+ try {
+ showToast('กำลังอัปโหลดรูปขึ้น Google Drive...', 'info');
+ const base64 = await fileToBase64(file);
+ const res = await fetch(WEB_APP_URL, {
+ method: 'POST',
+ headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+ body: JSON.stringify({ action: 'uploadFile', fileName: `team-${id}-${file.name}`, mimeType: file.type || 'image/jpeg', base64, oldFileUrl: (oldPhoto && oldPhoto.startsWith('http')) ? oldPhoto : '' })
+ });
+ const json = await res.json();
+ if (!json.success) throw new Error(json.error || 'อัปโหลดไม่สำเร็จ');
+ teamApplyPhoto_(id, json.url);
+ await pushTeamToSheet();
+ showToast('อัปโหลดรูปและบันทึกลง Sheet สำเร็จ', 'success');
+ } catch (err) {
+ showToast('อัปโหลดขึ้น Drive ไม่สำเร็จ (เก็บรูปไว้ในเครื่องนี้ก่อน): ' + err.message, 'error');
+ }
+}
+function fileToDataUrl_(file) {
+ return new Promise((resolve, reject) => {
+ const reader = new FileReader();
+ reader.onload = () => resolve(reader.result);
+ reader.onerror = reject;
+ reader.readAsDataURL(file);
+ });
+}
+function teamApplyPhoto_(id, url) {
+ saveTeamMember(id, 'photo', url);
+ const photoEl = document.getElementById('orgPhoto-' + id);
+ if (photoEl) {
+ photoEl.classList.remove('org-photo-empty');
+ const m = teamMembers.find(x => x.id === id);
+ photoEl.innerHTML = teamPhotoInnerHtml(m) + `<div class="org-photo-edit" onclick="event.stopPropagation(); triggerTeamPhotoUpload('${id}')">🖼️ เปลี่ยนรูป</div>`;
+ }
+}
+function openTeamPhotoModal(id) {
+ const m = teamMembers.find(x => x.id === id);
+ if (!m || !m.photo) return;
+ document.getElementById('teamPhotoModalImg').src = m.photo;
+ document.getElementById('teamPhotoModalName').textContent = m.name || 'ยังไม่ระบุชื่อ-นามสกุล';
+ const roleEl = document.getElementById('teamPhotoModalRole');
+ roleEl.textContent = teamRoleLabel(m.role);
+ roleEl.className = 'org-role org-role-' + m.role.toLowerCase() + ' team-photo-modal-role';
+ document.getElementById('teamPhotoChangeBtn').onclick = () => { closeTeamPhotoModal(); triggerTeamPhotoUpload(id); };
+ document.getElementById('teamPhotoModalOverlay').classList.add('open');
+}
+function closeTeamPhotoModal() {
+ document.getElementById('teamPhotoModalOverlay').classList.remove('open');
+}
+
+/* ── Team ↔ Google Sheet sync (ใช้ WEB_APP_URL ตัวเดียวกับข้อมูลอื่นในระบบ) ── */
+async function syncTeamFromSheet() {
+ if (!WEB_APP_URL) return;
+ try {
+ const res = await fetch(WEB_APP_URL + '?action=getTeam');
+ const json = await res.json();
+ if (!json.success) return; // เงียบไว้ — ยังไม่ได้ติดตั้ง action ฝั่ง Sheet ก็ใช้ข้อมูลในเครื่องต่อไปได้ปกติ
+ const fromSheet = Array.isArray(json.data) ? json.data : [];
+ if (!fromSheet.length) return; // ยังไม่เคยบันทึกลง Sheet เลย — คงข้อมูลในเครื่องไว้ก่อน
+ teamMembers = DEFAULT_TEAM_MEMBERS.map(def => {
+ const found = fromSheet.find(x => x.id === def.id);
+ return found ? { id: def.id, role: def.role, name: found.name || '', photo: found.photo || '' } : { ...def };
+ });
+ localStorage.setItem('prpo_team_members', JSON.stringify(teamMembers));
+ if (document.getElementById('page-team')?.classList.contains('active')) teamRenderNow();
+ } catch (e) {
+ // เชื่อมต่อไม่ได้ — ใช้ข้อมูลแคชในเครื่องต่อไปเงียบๆ ไม่ต้องรบกวนผู้ใช้
+ }
+}
+let teamSavePending = false;
+async function pushTeamToSheet() {
+ if (!WEB_APP_URL || teamSavePending) return;
+ teamSavePending = true;
+ try {
+ const res = await fetch(WEB_APP_URL, {
+ method: 'POST',
+ headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+ body: JSON.stringify({ action: 'saveTeam', members: teamMembers })
+ });
+ const json = await res.json();
+ if (!json.success) throw new Error(json.error || 'บันทึกไม่สำเร็จ');
+ } catch (e) {
+ showToast('บันทึกลง Sheet ไม่สำเร็จ (ข้อมูลยังอยู่ในเครื่องนี้): ' + e.message, 'error');
+ } finally {
+ teamSavePending = false;
+ }
+}
+
 /* ── PAGE NAV ── */
 function showPage(name, btn) {
  if (ADMIN_LOCKED_PAGES.includes(name) && !isAdminUnlocked()) {
@@ -7953,6 +8223,7 @@ function showPage(name, btn) {
  if (name === 'todo') loadTodoTasks().then(renderTodoList);
  if (name === 'costcalc') renderCostUpDownPage();
  if (name === 'costsaving') loadCostSavingData();
+ if (name === 'team') renderTeamOrgChart();
 }
 
 /* ── NOTIFICATIONS ── */
@@ -8380,6 +8651,7 @@ function renderDailyBriefing() {
  /* — ส่วนที่ 3: (ย้ายขึ้นไปเป็นส่วนแรกด้านบนแล้ว) — */
 
  body.innerHTML = sections.length ? sections.join('') : `<div class="briefing-empty">ไม่มีชิ้นงาน/นัดหมายที่เลยกำหนดหรือใกล้ครบกำหนด — ติดตามตามปกติได้เลย</div>`;
+ if (panelEl) panelEl.classList.toggle('briefing-panel-compact', sections.length === 0);
  // CER แยกไว้เป็นการ์ดของตัวเอง วางไว้ใต้ "งานที่ค้าง/ต้องติดตาม" — ไม่ปนกับ workplan/delivery ด้านบน
  const cerWidget = document.getElementById('briefingCerWidget');
  const cerBody = document.getElementById('briefingBodyCer');
