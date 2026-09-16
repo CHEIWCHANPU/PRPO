@@ -3557,58 +3557,97 @@
  /* ════════════════════════════════════
  ORG CHART STYLES
  ════════════════════════════════════ */
- .orgchart-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 1.5rem 2rem; }
- .orgchart-tree { display: flex; flex-direction: column; align-items: center; padding: 1rem 0; }
+ .orgchart-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 1.5rem 2rem; overflow-x: auto; }
+ .orgchart-tree { display: flex; flex-direction: column; align-items: center; padding: 1rem 0; min-width: max-content; margin: 0 auto; }
  .orgchart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem; }
  .orgchart-title { font-size: 1.05rem; font-weight: 700; color: var(--text); }
  .orgchart-sub { font-size: 0.77rem; color: var(--muted); font-family: var(--mono); margin-top: 2px; }
- .org-connector-v { width: 2px; height: 32px; background: var(--border2); }
- .org-connector-h { position: relative; width: min(760px, 92%); height: 2px; background: var(--border2); margin-bottom: 0; }
- .org-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.6rem; margin-top: 1.8rem; width: 100%; }
+ .org-title-box {
+ font-size: 0.86rem; font-weight: 700; color: var(--accent2); background: var(--surface2);
+ border: 1.5px solid var(--border2); border-radius: 3px; padding: 0.3rem 1rem; white-space: nowrap;
+ }
+ .org-leader-stem { width: 2px; height: 14px; background: var(--mt-connector-color); }
+ /* ── Pure-CSS org tree: nested ul/li so connector lines land exactly on each box ── */
+ .org-tree { display: flex; justify-content: center; width: 100%; }
+ .org-tree ul {
+ display: flex; justify-content: center; list-style: none; margin: 0; padding: 0;
+ position: relative; padding-top: 28px;
+ }
+ .org-tree > ul { padding-top: 0; }
+ .org-tree li {
+ display: flex; flex-direction: column; align-items: center;
+ position: relative; padding: 28px 16px 0 16px;
+ }
+ .org-tree li::before, .org-tree li::after {
+ content: ''; position: absolute; top: 0; right: 50%;
+ border-top: 2px solid var(--mt-connector-color);
+ width: 50%; height: 28px;
+ }
+ .org-tree li::after { right: auto; left: 50%; border-left: 2px solid var(--mt-connector-color); }
+ .org-tree li:first-child::before, .org-tree li:last-child::after { border: 0 none; }
+ .org-tree li:last-child::before { border-right: 2px solid var(--mt-connector-color); border-radius: 0 3px 0 0; }
+ .org-tree li:first-child::after { border-radius: 3px 0 0 0; }
+ /* a lone child still drops the same distance as its siblings elsewhere would — just a straight line, no fork
+ (placed after the first/last-child rules above so it wins the tie and restores the vertical line) */
+ .org-tree li:only-child::after { display: none; }
+ .org-tree li:only-child::before {
+ right: auto; left: 50%; width: 0;
+ border-top: none; border-left: 2px solid var(--mt-connector-color);
+ border-right: none; border-radius: 0;
+ }
+ /* ...except the root leader, whose own top connector is drawn separately (org-leader-stem) */
+ .org-tree > ul > li:only-child { padding-top: 0; }
+ .org-tree > ul > li:only-child::before { display: none; }
+ /* vertical stem from a node down into its own children's ul */
+ .org-tree ul ul::before {
+ content: ''; position: absolute; top: 0; left: 50%;
+ border-left: 2px solid var(--mt-connector-color); width: 0; height: 28px;
+ }
  .org-node {
- display: flex; flex-direction: column; align-items: center; gap: 0.7rem;
- background: var(--surface2); border: 1.5px solid var(--border); border-radius: 8px;
- padding: 1.5rem 1.7rem 1.3rem; min-width: 236px; text-align: center; position: relative;
+ display: flex; flex-direction: column; align-items: center; gap: 0.55rem;
+ background: var(--surface2); border: 1.5px solid var(--border); border-radius: 5px;
+ padding: 1rem 1.1rem 0.9rem; min-width: 182px; text-align: center; position: relative;
  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
  box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 6px 16px -8px rgba(0,0,0,0.3);
  }
  .org-node:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 10px 24px -8px rgba(62,90,130,0.25); }
- .org-node::before {
- content: ''; position: absolute; top: -1.8rem; left: 50%; width: 2px; height: 1.8rem;
- background: var(--border2); transform: translateX(-50%);
- }
- .org-node-leader { border-color: var(--accent); min-width: 260px; box-shadow: 0 1px 8px rgba(62,90,130,0.15); }
+ .org-node-leader { border-color: var(--accent); min-width: 190px; box-shadow: 0 1px 8px rgba(62,90,130,0.15); }
  .org-photo {
- width: 144px; height: 144px; border-radius: 12px; position: relative; overflow: hidden; cursor: pointer;
+ width: 130px; height: 130px; border-radius: 7px; position: relative; overflow: hidden; cursor: pointer;
  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
  background: linear-gradient(135deg, var(--accent), var(--accent2));
  border: 1.5px dashed transparent;
  }
- .org-node-leader .org-photo { width: 168px; height: 168px; box-shadow: 0 0 0 4px var(--glow-accent); }
+ .org-node-leader .org-photo { width: 145px; height: 145px; box-shadow: 0 0 0 3px var(--glow-accent); }
  .org-photo.org-photo-empty { background: var(--surface3, var(--surface)); border-color: var(--border2); }
- .org-photo-icon { font-size: 2.6rem; font-weight: 700; color: #fff; }
- .org-photo.org-photo-empty .org-photo-icon { color: var(--muted); font-size: 1.05rem; font-weight: 600; padding: 0 0.5rem; line-height: 1.4; }
+ .org-photo-icon { font-size: 2.3rem; font-weight: 700; color: #fff; }
+ .org-photo.org-photo-empty .org-photo-icon { color: var(--muted); font-size: 0.85rem; font-weight: 600; padding: 0 0.4rem; line-height: 1.3; }
  .org-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
  .org-photo-edit {
- position: absolute; left: 0; right: 0; bottom: 0; padding: 0.4rem 0.3rem;
- background: rgba(0,0,0,0.55); color: #fff; font-size: 0.7rem; font-weight: 700;
- display: flex; align-items: center; justify-content: center; gap: 0.3rem;
+ position: absolute; left: 0; right: 0; bottom: 0; padding: 0.3rem 0.2rem;
+ background: rgba(0,0,0,0.55); color: #fff; font-size: 0.64rem; font-weight: 700;
+ display: flex; align-items: center; justify-content: center; gap: 0.25rem;
  opacity: 0; transition: opacity 0.15s; backdrop-filter: blur(2px);
  }
  .org-photo:hover .org-photo-edit { opacity: 1; }
  .org-name-input {
  width: 100%; text-align: center; border: none; background: transparent; color: var(--text);
- font-size: 1.05rem; font-weight: 700; font-family: var(--font); padding: 0.2rem 0.3rem; border-radius: 4px;
+ font-size: 0.92rem; font-weight: 700; font-family: var(--font); padding: 0.1rem 0.2rem; border-radius: 4px;
  }
  .org-name-input:hover, .org-name-input:focus { background: var(--glow-accent); outline: none; }
- .org-name-input::placeholder { color: var(--muted); font-weight: 500; }
+ .org-name-input::placeholder { color: var(--muted); font-weight: 500; font-size: 0.8rem; }
  .org-role {
- font-size: 0.756rem; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase;
- padding: 0.22rem 0.7rem; border-radius: 4px; color: var(--accent); background: var(--glow-accent);
- border: 1px solid var(--border);
+ font-size: 0.76rem; font-weight: 700; letter-spacing: 0.01em;
+ color: var(--accent);
  }
- .org-role-leader { color: var(--danger); background: rgba(239,68,68,0.1); }
- .org-role-engineer { color: var(--warn); background: rgba(245,158,11,0.12); }
+ .org-role-leader { color: var(--danger); }
+ .org-role-engineer { color: var(--warn); }
+ .org-role-member { color: var(--accent2); }
+ .org-group-title {
+ font-size: 0.78rem; font-weight: 700; letter-spacing: 0.01em; text-align: center;
+ color: var(--accent2); background: var(--surface2); border: 1.5px solid var(--border2);
+ border-radius: 3px; padding: 0.32rem 0.8rem; white-space: nowrap;
+ }
  .team-photo-modal { max-width: min(90vw, 640px); text-align: center; }
  .team-photo-modal-img-wrap { width: 100%; border-radius: 8px; overflow: hidden; background: var(--surface2); margin-bottom: 1rem; }
  .team-photo-modal-img-wrap img { width: 100%; max-height: 68vh; object-fit: contain; display: block; }
@@ -3705,8 +3744,6 @@
  .exec-kpi-grid { grid-template-columns: repeat(2, 1fr); }
  .exec-grid-2 { grid-template-columns: 1fr; }
  .exec-hero { flex-direction: column; text-align: center; }
- .org-row { flex-direction: column; align-items: center; }
- .org-row::before, .org-row::after { display: none; }
  }
  @media (max-width: 480px) { .exec-kpi-grid { grid-template-columns: 1fr 1fr; } }
 
@@ -5824,10 +5861,9 @@ body::after {
  </div>
  </div>
  <div class="orgchart-tree">
- <div id="orgChartLeader"></div>
- <div class="org-connector-v"></div>
- <div class="org-connector-h"></div>
- <div class="org-row" id="orgChartMembers"></div>
+ <div class="org-title-box">Purchase Component Leader</div>
+ <div class="org-leader-stem"></div>
+ <div class="org-tree"><ul id="orgTreeRoot"></ul></div>
  </div>
  </div>
  </div>
@@ -7597,8 +7633,14 @@ function toggleNavGroup(key) {
  }
  localStorage.setItem('prpo_nav_collapsed', JSON.stringify(collapsed));
 }
+// กลุ่มเมนูที่ต้องพับเก็บไว้ก่อนเสมอทุกครั้งที่เข้าเว็บ (ไม่จำสถานะเปิด/ปิดที่กดไว้ครั้งก่อน)
+const ALWAYS_COLLAPSE_ON_LOAD = ['team', 'costcalc'];
 function initNavGroups() {
  getCollapsedNavGroups().forEach(key => {
+ const el = document.getElementById('navGroup-' + key);
+ if (el) el.classList.add('collapsed');
+ });
+ ALWAYS_COLLAPSE_ON_LOAD.forEach(key => {
  const el = document.getElementById('navGroup-' + key);
  if (el) el.classList.add('collapsed');
  });
@@ -8017,17 +8059,24 @@ document.addEventListener('keydown', (e) => {
 }, true); // capture phase — ดักจับก่อน handler อื่นๆ และก่อนโฟกัสจะไปเปลี่ยน e.key
 
 /* ── ORGANIZE TEAM: Team Purchase Component ── */
+// โครงสร้างทีม: Leader 1 คน, ทีม Purchase Component (New Model) = EN 2 คน + OF 1 คน, ทีม Purchase Component (Mass Pro) = OF 1 คน
 const DEFAULT_TEAM_MEMBERS = [
- { id: 'leader1', role: 'Leader', name: '', photo: '' },
- { id: 'member1', role: 'Member', name: '', photo: '' },
- { id: 'member2', role: 'Member', name: '', photo: '' },
- { id: 'engineer1', role: 'Engineer', name: '', photo: '' },
- { id: 'engineer2', role: 'Engineer', name: '', photo: '' },
+ { id: 'leader1', role: 'Leader', team: '', name: '', photo: '' },
+ { id: 'engineer1', role: 'Engineer', team: 'newmodel', name: '', photo: '' },
+ { id: 'engineer2', role: 'Engineer', team: 'newmodel', name: '', photo: '' },
+ { id: 'member1', role: 'Member', team: 'newmodel', name: '', photo: '' },
+ { id: 'member2', role: 'Member', team: 'masspro', name: '', photo: '' },
 ];
 function loadTeamMembers() {
  try {
  const saved = JSON.parse(localStorage.getItem('prpo_team_members') || 'null');
- if (Array.isArray(saved) && saved.length === DEFAULT_TEAM_MEMBERS.length) return saved;
+ if (Array.isArray(saved) && saved.length) {
+ // รวมข้อมูลเดิม (ชื่อ/รูป) เข้ากับโครงสร้างทีมล่าสุด โดยอ้างอิงจาก id เดิม
+ return DEFAULT_TEAM_MEMBERS.map(def => {
+ const found = saved.find(x => x.id === def.id);
+ return found ? { id: def.id, role: def.role, team: def.team, name: found.name || '', photo: found.photo || '' } : { ...def };
+ });
+ }
  } catch (e) {}
  return DEFAULT_TEAM_MEMBERS.map(m => ({ ...m }));
 }
@@ -8048,6 +8097,10 @@ function teamPhotoInnerHtml(m) {
 function teamRoleLabel(role) {
  const labels = { Leader: 'Leader Purchase', Member: 'Purchase Office', Engineer: 'Purchasing Engineer' };
  return labels[role] || role;
+}
+function teamGroupLabel(team) {
+ const labels = { newmodel: 'Purchase Component (New Model)', masspro: 'Purchase Component (Mass Pro)' };
+ return labels[team] || '';
 }
 function teamNodeHtml(m) {
  const safeName = (m.name || '').replace(/"/g, '&quot;');
@@ -8071,13 +8124,23 @@ function renderTeamOrgChart() {
  teamRenderNow();
  syncTeamFromSheet();
 }
+const TEAM_GROUP_ORDER = ['newmodel', 'masspro'];
 function teamRenderNow() {
  const leader = teamMembers.find(m => m.role === 'Leader');
- const others = teamMembers.filter(m => m.role !== 'Leader');
- const leaderEl = document.getElementById('orgChartLeader');
- const membersEl = document.getElementById('orgChartMembers');
- if (leaderEl && leader) leaderEl.innerHTML = teamNodeHtml(leader);
- if (membersEl) membersEl.innerHTML = others.map(teamNodeHtml).join('');
+ const rootEl = document.getElementById('orgTreeRoot');
+ if (!rootEl) return;
+ const groupsHtml = TEAM_GROUP_ORDER.map(teamKey => {
+ const members = teamMembers.filter(m => m.team === teamKey);
+ if (!members.length) return '';
+ return `<li>
+ <div class="org-group-title">${teamGroupLabel(teamKey)}</div>
+ <ul>${members.map(m => `<li>${teamNodeHtml(m)}</li>`).join('')}</ul>
+ </li>`;
+ }).join('');
+ rootEl.innerHTML = `<li>
+ ${leader ? teamNodeHtml(leader) : ''}
+ <ul>${groupsHtml}</ul>
+ </li>`;
 }
 let teamPhotoUploadTargetId = null;
 function triggerTeamPhotoUpload(id) {
@@ -8175,7 +8238,7 @@ async function syncTeamFromSheet() {
  if (!fromSheet.length) return; // ยังไม่เคยบันทึกลง Sheet เลย — คงข้อมูลในเครื่องไว้ก่อน
  teamMembers = DEFAULT_TEAM_MEMBERS.map(def => {
  const found = fromSheet.find(x => x.id === def.id);
- return found ? { id: def.id, role: def.role, name: found.name || '', photo: found.photo || '' } : { ...def };
+ return found ? { id: def.id, role: def.role, team: def.team, name: found.name || '', photo: found.photo || '' } : { ...def };
  });
  localStorage.setItem('prpo_team_members', JSON.stringify(teamMembers));
  if (document.getElementById('page-team')?.classList.contains('active')) teamRenderNow();
