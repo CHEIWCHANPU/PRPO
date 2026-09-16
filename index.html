@@ -8094,43 +8094,51 @@ async function onOrgPhotoFileChange(input) {
  input.value = '';
  if (!file || !teamPhotoUploadTargetId) return;
  if (!file.type.startsWith('image/')) { showToast('กรุณาเลือกไฟล์รูปภาพ', 'error'); return; }
- if (file.size > 3 * 1024 * 1024) { showToast('ไฟล์รูปใหญ่เกินไป (จำกัด 3MB)', 'error'); return; }
+ if (file.size > 8 * 1024 * 1024) { showToast('ไฟล์รูปใหญ่เกินไป (จำกัด 8MB)', 'error'); return; }
  const id = teamPhotoUploadTargetId;
- const m = teamMembers.find(x => x.id === id);
- const oldPhoto = m ? m.photo : '';
-
- // แสดงตัวอย่างรูปทันทีจาก local ก่อน (เร็ว ไม่ต้องรอเน็ต)
- const localPreview = await fileToDataUrl_(file);
- teamApplyPhoto_(id, localPreview);
-
- if (!WEB_APP_URL) {
- showToast('บันทึกรูปในเครื่องนี้แล้ว (ยังไม่ได้ตั้งค่า Web App URL จึงไม่ได้อัปขึ้น Sheet/Drive)', 'info');
- return;
- }
  try {
- showToast('กำลังอัปโหลดรูปขึ้น Google Drive...', 'info');
- const base64 = await fileToBase64(file);
- const res = await fetch(WEB_APP_URL, {
- method: 'POST',
- headers: { 'Content-Type': 'text/plain;charset=utf-8' },
- body: JSON.stringify({ action: 'uploadFile', fileName: `team-${id}-${file.name}`, mimeType: file.type || 'image/jpeg', base64, oldFileUrl: (oldPhoto && oldPhoto.startsWith('http')) ? oldPhoto : '' })
- });
- const json = await res.json();
- if (!json.success) throw new Error(json.error || 'อัปโหลดไม่สำเร็จ');
- teamApplyPhoto_(id, json.url);
+ // ย่อ/บีบอัดรูปฝั่งเบราว์เซอร์ก่อนเก็บ เพื่อให้แสดงผลได้ชัวร์ 100% ทุกที่
+ // (ไม่พึ่งลิงก์ Google Drive ที่บางไฟล์ยังไม่ได้แชร์แบบสาธารณะ ทำให้รูปตายแบบในรูปที่แจ้งมา)
+ // และยังพอดีกับขีดจำกัดขนาดข้อมูลต่อ 1 ช่องของ Google Sheet ด้วย
+ const dataUrl = await resizeImageToDataUrl_(file, 320, 0.82);
+ const safeDataUrl = await shrinkUntilFits_(file, dataUrl);
+ teamApplyPhoto_(id, safeDataUrl);
  await pushTeamToSheet(true);
- showToast('อัปโหลดรูปและบันทึกลง Sheet สำเร็จ', 'success');
+ showToast('บันทึกรูปแล้ว' + (WEB_APP_URL ? ' · ซิงค์ขึ้น Sheet สำเร็จ' : ' (ยังไม่ได้ตั้งค่า Web App URL — บันทึกในเครื่องนี้ก่อน)'), 'success');
  } catch (err) {
- showToast('อัปโหลดขึ้น Drive ไม่สำเร็จ (เก็บรูปไว้ในเครื่องนี้ก่อน): ' + err.message, 'error');
+ showToast('บันทึกรูปไม่สำเร็จ: ' + err.message, 'error');
  }
 }
-function fileToDataUrl_(file) {
+function resizeImageToDataUrl_(file, maxDim, quality) {
  return new Promise((resolve, reject) => {
  const reader = new FileReader();
- reader.onload = () => resolve(reader.result);
- reader.onerror = reject;
+ reader.onerror = () => reject(new Error('อ่านไฟล์ไม่สำเร็จ'));
+ reader.onload = () => {
+ const img = new Image();
+ img.onerror = () => reject(new Error('ไฟล์รูปเสียหรือเปิดไม่ได้'));
+ img.onload = () => {
+ let w = img.naturalWidth, h = img.naturalHeight;
+ if (w > h) { if (w > maxDim) { h = Math.round(h * maxDim / w); w = maxDim; } }
+ else { if (h > maxDim) { w = Math.round(w * maxDim / h); h = maxDim; } }
+ const canvas = document.createElement('canvas');
+ canvas.width = w; canvas.height = h;
+ canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+ resolve(canvas.toDataURL('image/jpeg', quality));
+ };
+ img.src = reader.result;
+ };
  reader.readAsDataURL(file);
  });
+}
+// Google Sheet จำกัดข้อมูลต่อ 1 ช่องไว้ราว 50,000 ตัวอักษร — ลองย่อ/ลดคุณภาพซ้ำจนกว่าจะพอดี
+async function shrinkUntilFits_(file, firstAttempt) {
+ const LIMIT = 45000;
+ let dataUrl = firstAttempt;
+ const steps = [[280, 0.7], [220, 0.6], [160, 0.5]];
+ for (let i = 0; dataUrl.length > LIMIT && i < steps.length; i++) {
+ dataUrl = await resizeImageToDataUrl_(file, steps[i][0], steps[i][1]);
+ }
+ return dataUrl;
 }
 function teamApplyPhoto_(id, url) {
  saveTeamMember(id, 'photo', url);
