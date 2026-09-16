@@ -10242,7 +10242,7 @@ function statusBadge(status) {
 }
 function daysTag(days, status) {
  const normStatus = normalizeStatus(status);
- if (normStatus.includes('เสร็จแล้ว') || String(days) === 'Done' || String(days).includes('')) {
+ if (normStatus.includes('เสร็จแล้ว') || String(days) === 'Done') {
  return `<span class="days-left days-done">Done</span>`;
  }
  const daysStr = String(days).trim().toUpperCase();
