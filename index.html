@@ -8056,7 +8056,7 @@ function teamNodeHtml(m) {
  ${teamPhotoInnerHtml(m)}
  <div class="org-photo-edit" onclick="event.stopPropagation(); triggerTeamPhotoUpload('${m.id}')">🖼️ ${m.photo ? 'เปลี่ยนรูป' : 'เพิ่มรูป'}</div>
  </div>
- <input class="org-name-input" value="${safeName}" placeholder="ระบุชื่อ-นามสกุล" oninput="saveTeamMember('${m.id}','name',this.value); teamRefreshEmptyIcon('${m.id}');" onblur="pushTeamToSheet();">
+ <input class="org-name-input" value="${safeName}" placeholder="ระบุชื่อ-นามสกุล" oninput="saveTeamMember('${m.id}','name',this.value); teamRefreshEmptyIcon('${m.id}');" onblur="pushTeamToSheet();" onkeydown="if(event.key==='Enter'){this.blur();}">
  <div class="org-role org-role-${m.role.toLowerCase()}">${teamRoleLabel(m.role)}</div>
  </div>`;
 }
@@ -8118,7 +8118,7 @@ async function onOrgPhotoFileChange(input) {
  const json = await res.json();
  if (!json.success) throw new Error(json.error || 'อัปโหลดไม่สำเร็จ');
  teamApplyPhoto_(id, json.url);
- await pushTeamToSheet();
+ await pushTeamToSheet(true);
  showToast('อัปโหลดรูปและบันทึกลง Sheet สำเร็จ', 'success');
  } catch (err) {
  showToast('อัปโหลดขึ้น Drive ไม่สำเร็จ (เก็บรูปไว้ในเครื่องนี้ก่อน): ' + err.message, 'error');
@@ -8176,8 +8176,12 @@ async function syncTeamFromSheet() {
  }
 }
 let teamSavePending = false;
-async function pushTeamToSheet() {
- if (!WEB_APP_URL || teamSavePending) return;
+async function pushTeamToSheet(silent) {
+ if (teamSavePending) return;
+ if (!WEB_APP_URL) {
+ if (!silent) showToast('บันทึกชื่อในเครื่องนี้แล้ว (ยังไม่ได้ตั้งค่า Web App URL จึงไม่ได้ขึ้น Sheet)', 'info');
+ return;
+ }
  teamSavePending = true;
  try {
  const res = await fetch(WEB_APP_URL, {
@@ -8187,6 +8191,7 @@ async function pushTeamToSheet() {
  });
  const json = await res.json();
  if (!json.success) throw new Error(json.error || 'บันทึกไม่สำเร็จ');
+ if (!silent) showToast('บันทึกชื่อทีมงานลง Sheet แล้ว', 'success');
  } catch (e) {
  showToast('บันทึกลง Sheet ไม่สำเร็จ (ข้อมูลยังอยู่ในเครื่องนี้): ' + e.message, 'error');
  } finally {
