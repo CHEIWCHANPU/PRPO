@@ -5198,7 +5198,7 @@ body::after {
  <div>
  <div class="briefing-title">งานที่ต้องติดตามวันนี้</div>
  <div class="briefing-date" id="briefingDate">—</div>
- <div class="briefing-date" style="margin-top:1px">รวมทุกหมวดหมู่ · แจ้งเตือนล่วงหน้า 3 วันก่อนครบกำหนด</div>
+ <div class="briefing-date" style="margin-top:1px">รวมทุกหมวดหมู่ · MAKER ล่วงหน้า 7 วัน · แผนงานข้างนอกล่วงหน้า 15 วัน</div>
  </div>
  <div class="briefing-stats">
  <div class="briefing-stat" style="--stat-color:var(--danger);--stat-bg:rgba(239,68,68,0.14)">
@@ -8486,8 +8486,9 @@ function buildNotifications() {
 
 /* ── DAILY BRIEFING (งานที่ต้องติดตามวันนี้) ── */
 /* รวมข้อมูลจากทุกหมวดหมู่ที่มีวันครบกำหนด: ชิ้นงาน/PO (allData), ใบรับรอง CER (cerData), ตารางแผนงาน (wpData)
- แจ้งเตือนล่วงหน้า 3 วันก่อนครบกำหนด (รวมรายการที่เลยกำหนดแล้ว และครบกำหนดวันนี้ด้วย) */
-const BRIEFING_LEAD_DAYS = 3;
+ แจ้งเตือนล่วงหน้าแยกตามหมวดหมู่ (รวมรายการที่เลยกำหนดแล้ว และครบกำหนดวันนี้ด้วย) */
+const BRIEFING_LEAD_DAYS = 7; // วันนัดส่ง MAKER (ชิ้นงาน/PO)
+const WORKPLAN_BRIEFING_LEAD_DAYS = 15; // แผนงานข้างนอก / นัดหมาย
 // ใบ CER ใช้ระยะแจ้งเตือนที่กว้างกว่า (30 วัน) ให้ตรงกับนิยาม "ใกล้หมดอายุ" ของหน้า CER เอง
 const CER_BRIEFING_LEAD_DAYS = 30;
 
@@ -8541,7 +8542,7 @@ function renderDailyBriefing() {
  if (!d) return;
  d.setHours(0,0,0,0);
  const daysLeft = Math.round((d - today) / 86400000);
- if (daysLeft <= BRIEFING_LEAD_DAYS) wpFollow.push({ item: r, daysLeft });
+ if (daysLeft <= WORKPLAN_BRIEFING_LEAD_DAYS) wpFollow.push({ item: r, daysLeft });
  });
 
  /* ── สรุปสถิติรวมทุกหมวดหมู่ ── */
