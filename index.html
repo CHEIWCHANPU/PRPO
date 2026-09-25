@@ -5462,13 +5462,6 @@ html body .gx-table tbody tr:last-child td { border-bottom: none; }
 .mt-progress > div { height: 6px; border-radius: 99px; background: var(--surface2); overflow: hidden; }
 .mt-progress i { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, var(--accent), var(--live)); transition: width .4s ease !important; }
 .mt-progress span { font-size: .8rem; color: var(--muted); }
-.gx-lightbox { position: fixed; inset: 0; z-index: 6000; display: grid; grid-template-columns: 64px 1fr 64px; align-items: center; background: rgba(4, 9, 18, .92); }
-.gx-lightbox figure { margin: 0; display: grid; justify-items: center; gap: .7rem; }
-.gx-lightbox img { max-width: 100%; max-height: calc(100vh - 110px); border-radius: 8px; }
-.gx-lightbox figcaption { color: #C9D5EA; font-size: .85rem; display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
-.gx-lightbox figcaption a { color: #8FB0FF; }
-.gx-lightbox .lb-close { position: absolute; top: 14px; right: 14px; color: #fff; }
-.lb-nav { justify-self: center; width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .2); background: rgba(255, 255, 255, .06); color: #fff; font-size: 1.6rem; cursor: pointer; }
 
 /* ── Command palette (ของเดิม ปรับหน้าตา) ── */
 html body .cmdk-box { border-radius: 16px !important; border: 1px solid var(--border) !important; box-shadow: 0 40px 90px -30px rgba(6, 12, 24, .7), 0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent) !important; }
@@ -5769,6 +5762,52 @@ html body .gd-table small { color: var(--muted); font-size: .72rem; }
 .gw-confirm b { color: var(--danger); }
 .gw-confirm input { height: 40px; border-radius: 9px; border: 1px solid var(--border); padding: 0 .75rem; font: inherit; font-size: .92rem; background: var(--surface); color: var(--text); }
 .gw-confirm input:focus { outline: none; border-color: var(--danger); box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 16%, transparent) !important; }
+.gx-date { position: relative; display: flex; align-items: stretch; }
+.gx-form .gx-date input[type=text] { padding-right: 2.6rem; font-variant-numeric: tabular-nums; }
+.gx-date-btn { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; display: grid; place-items: center; border: 0; border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer; }
+.gx-date-btn:hover { background: var(--surface2); color: var(--accent); }
+.gx-date-btn svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.gx-date-native { position: absolute; right: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; border: 0; padding: 0; }
+.gx-hint { font-weight: 400; color: var(--muted); font-size: .72rem; margin-left: .3rem; }
+.gx-form label > span .gx-hint { line-height: 1; }
+
+/* ── ดูรูปการประชุม (เต็มจอ) ── */
+.gx-lightbox { position: fixed; inset: 0; z-index: 6000; display: grid; grid-template-rows: auto 1fr auto; background: rgba(4, 9, 18, .94); color: #E3EAF4; }
+.gx-lightbox [hidden] { display: none !important; }
+.lb-top { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .8rem 1.1rem; border-bottom: 1px solid rgba(160,190,255,.12); }
+.lb-title { min-width: 0; display: grid; gap: .1rem; }
+.lb-title b { font-size: .98rem; font-weight: 600; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lb-title span { font-size: .78rem; color: #93A4C2; }
+.lb-tools { display: flex; align-items: center; gap: .5rem; flex-shrink: 0; }
+.lb-open { color: #8FB0FF; font-size: .84rem; text-decoration: none; padding: .45rem .8rem; border: 1px solid rgba(143,176,255,.35); border-radius: 8px; }
+.lb-open:hover { background: rgba(143,176,255,.12); }
+.lb-close { width: 38px; height: 38px; display: grid; place-items: center; border: 0; border-radius: 9px; background: rgba(255,255,255,.08); color: #fff; cursor: pointer; }
+.lb-close svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
+.lb-stage { display: grid; grid-template-columns: 72px minmax(0, 1fr) 72px; align-items: center; min-height: 0; padding: 1rem 0; }
+.lb-img { grid-column: 2; display: grid; place-items: center; min-height: 0; height: 100%; position: relative; }
+.lb-img img { max-width: 100%; max-height: calc(100vh - 210px); object-fit: contain; border-radius: 8px; box-shadow: 0 20px 60px rgba(0,0,0,.5) !important; }
+.lb-spin { width: 34px; height: 34px; border-radius: 50%; border: 3px solid rgba(255,255,255,.18); border-top-color: #8FB0FF; animation: gxSpin .8s linear infinite !important; animation-duration: .8s !important; animation-iteration-count: infinite !important; }
+.lb-fail { display: grid; justify-items: center; gap: .5rem; text-align: center; max-width: 380px; padding: 1.4rem; border-radius: 12px; background: rgba(255,255,255,.05); border: 1px solid rgba(160,190,255,.15); }
+.lb-fail span { font-size: .84rem; color: #93A4C2; }
+.lb-nav { width: 48px; height: 48px; justify-self: center; border-radius: 50%; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.06); color: #fff; font-size: 1.7rem; line-height: 1; cursor: pointer; }
+.lb-nav.prev { grid-column: 1; } .lb-nav.next { grid-column: 3; }
+.lb-nav:hover { background: rgba(255,255,255,.14); }
+.lb-strip { display: flex; gap: .45rem; justify-content: center; overflow-x: auto; padding: .6rem 1rem .9rem; }
+.lb-strip:empty { display: none; }
+.lb-strip button { flex: 0 0 auto; width: 72px; height: 52px; padding: 0; border-radius: 7px; overflow: hidden; border: 2px solid transparent; background: rgba(255,255,255,.06); cursor: pointer; opacity: .6; }
+.lb-strip button.on { border-color: #8FB0FF; opacity: 1; }
+.lb-strip img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.mt-open { all: unset; cursor: pointer; }
+.mt-open:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+.mt-open:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.mt-more-btn { border: 0; background: none; padding: 0; margin: -.35rem 0 .55rem; color: var(--accent); font: inherit; font-size: .8rem; font-weight: 600; cursor: pointer; }
+.mt-view h5 { margin: 0 0 .45rem; font-size: .8rem; font-weight: 700; color: var(--muted); }
+.mt-view-detail { margin: 0 0 1.1rem; white-space: pre-line; line-height: 1.75; font-size: .92rem; color: var(--text); padding: .8rem .95rem; border-radius: 10px; background: var(--surface2); border: 1px solid var(--border); }
+.mt-view-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: .55rem; }
+.mt-view-grid button { padding: 0; aspect-ratio: 4 / 3; border-radius: 9px; overflow: hidden; border: 1px solid var(--border); background: var(--surface2); cursor: zoom-in; }
+.mt-view-grid img { width: 100%; height: 100%; object-fit: cover; display: block; }
+@media (max-width: 760px) { .lb-stage { grid-template-columns: 44px minmax(0,1fr) 44px; } .lb-nav { width: 38px; height: 38px; } .lb-open { display: none; } }
+a.gx-btn { text-decoration: none !important; }
 </style>
 </head>
 <body class="light-theme">
@@ -18800,6 +18839,33 @@ function endTour() {
   };
   const isoToDMY = iso => { if (!iso) return ''; const [y, m, d] = iso.split('-').map(Number); return `${d}/${m}/${y}`; };
   const dmyToISO = dmy => { const d = parseDMY(dmy); return d ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` : ''; };
+  /* ── ช่องวันที่แบบ d/m/yyyy (พิมพ์เองได้ หรือกดไอคอนเลือกจากปฏิทิน) ── */
+  const normDMY = s => {
+    const m = String(s || '').trim().match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
+    if (!m) return '';
+    let d = +m[1], mo = +m[2], y = +m[3];
+    if (y < 100) y += 2000;
+    if (y > 2400) y -= 543;                       // รองรับปี พ.ศ.
+    const dt = new Date(y, mo - 1, d);
+    return dt.getFullYear() === y && dt.getMonth() === mo - 1 && dt.getDate() === d ? `${d}/${mo}/${y}` : '';
+  };
+  const todayDMY = () => { const d = new Date(); return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`; };
+  const dateField = (name, value) => `<div class="gx-date">
+      <input name="${name}" type="text" inputmode="numeric" autocomplete="off" placeholder="d/m/yyyy" value="${esc(value || '')}" aria-describedby="${name}Hint">
+      <button type="button" class="gx-date-btn" title="เลือกจากปฏิทิน" aria-label="เลือกวันที่จากปฏิทิน"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></button>
+      <input type="date" class="gx-date-native" tabindex="-1" aria-hidden="true">
+    </div>`;
+  function wireDateFields(root) {
+    root.querySelectorAll('.gx-date').forEach(box => {
+      const txt = box.querySelector('input[type=text]'), nat = box.querySelector('.gx-date-native');
+      box.querySelector('.gx-date-btn').onclick = () => {
+        nat.value = dmyToISO(normDMY(txt.value)) || '';
+        try { nat.showPicker(); } catch (e) { nat.focus(); nat.click(); }
+      };
+      nat.onchange = () => { if (nat.value) { txt.value = isoToDMY(nat.value); txt.classList.remove('bad'); txt.dispatchEvent(new Event('input', { bubbles: true })); } };
+      txt.addEventListener('blur', () => { const n = normDMY(txt.value); if (n) txt.value = n; txt.classList.toggle('bad', !!txt.value.trim() && !n); });
+    });
+  }
   const thDate = dmy => { const d = parseDMY(dmy); return d ? `${d.getDate()} ${MON_S[d.getMonth()]} ${d.getFullYear() + 543}` : (dmy || '—'); };
   const monthKey = dmy => { const d = parseDMY(dmy); return d ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` : ''; };
   const monthLabel = key => { const [y, m] = key.split('-').map(Number); return `${MONTHS[m - 1]} ${y + 543}`; };
@@ -18890,6 +18956,7 @@ function endTour() {
       if ($('#gxLightbox')) Lightbox.close(); else closeModal();
       return;
     }
+    if ($('#gxLightbox') && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { e.preventDefault(); e.stopImmediatePropagation(); Lightbox.go(e.key === 'ArrowLeft' ? -1 : 1); return; }
     const tag = (document.activeElement && document.activeElement.tagName || '').toLowerCase();
     if (!['input', 'textarea', 'select'].includes(tag)) e.stopImmediatePropagation(); // กันคีย์ลัด N / S ของหน้าหลักทำงานซ้อน
   }, true);
@@ -19285,7 +19352,19 @@ function endTour() {
         }
         const adds = mode === 'merge' ? parsed.plan.fresh : parsed.rows;
         const updates = upd ? parsed.plan.changed : [];
-        const total = adds.length + updates.length, CH = 1000;
+        const total = adds.length + updates.length, CH = 400;
+        const runId = 'IMP' + Date.now().toString(36);
+        // ส่งชุดละ 400 แถว ถ้าเครือข่ายสะดุดจะลองใหม่เอง 3 ครั้ง — เซิร์ฟเวอร์จำรหัสชุดไว้ ส่งซ้ำก็ไม่เพิ่มแถวซ้ำ
+        const send = async (body, label) => {
+          const waits = [0, 2500, 6000, 12000];
+          let last;
+          for (let t = 0; t < waits.length; t++) {
+            if (waits[t]) { $('#gwProgText').textContent = `${label} — เชื่อมต่อสะดุด กำลังลองใหม่ (${t}/${waits.length - 1})`; await new Promise(r => setTimeout(r, waits[t])); }
+            try { return await api.post(body); }
+            catch (e) { last = e; if (/unknown/i.test(e.message)) throw e; }
+          }
+          throw last;
+        };
         setBusy(btn, true, 'กำลังนำเข้า'); el._busy = true; err.textContent = '';
         $('#gwProg').hidden = false;
         let sent = 0;
@@ -19294,13 +19373,13 @@ function endTour() {
           for (let i = 0; i < adds.length; i += CH) {
             const chunk = adds.slice(i, i + CH);
             step(`กำลังเพิ่มรายการ ${Math.min(adds.length, i + CH).toLocaleString('th-TH')}/${adds.length.toLocaleString('th-TH')}`);
-            await api.post({ action: 'importGoWork', mode: i === 0 && mode === 'replace' ? 'replace' : 'append', rows: chunk });
+            await send({ action: 'importGoWork', mode: i === 0 && mode === 'replace' ? 'replace' : 'append', rows: chunk, batch: `${runId}-a${i}` }, `กำลังเพิ่มรายการ ${Math.min(adds.length, i + CH).toLocaleString('th-TH')}/${adds.length.toLocaleString('th-TH')}`);
             sent += chunk.length; step('');
           }
           for (let i = 0; i < updates.length; i += CH) {
             const chunk = updates.slice(i, i + CH);
             step(`กำลังอัปเดตรายการเดิม ${Math.min(updates.length, i + CH).toLocaleString('th-TH')}/${updates.length.toLocaleString('th-TH')}`);
-            await api.post({ action: 'updateGoWorkBatch', items: chunk });
+            await send({ action: 'updateGoWorkBatch', items: chunk, batch: `${runId}-u${i}` }, `กำลังอัปเดตรายการเดิม ${Math.min(updates.length, i + CH).toLocaleString('th-TH')}/${updates.length.toLocaleString('th-TH')}`);
             sent += chunk.length; step('');
           }
           el._busy = false; closeModal();
@@ -19311,8 +19390,12 @@ function endTour() {
           this._raw = ''; this.page = 1; await this.refresh(); this.render();
         } catch (e) {
           el._busy = false; setBusy(btn, false);
-          err.textContent = (/unknown/i.test(e.message) ? 'Apps Script ยังไม่รองรับ — อัปเดต CCIP_Extension.gs แล้ว Deploy เวอร์ชันใหม่' : 'นำเข้าไม่สำเร็จ: ' + e.message)
-            + (sent ? ` (ทำไปแล้ว ${sent} รายการ — เปิดไฟล์เดิมแล้วเลือก "อัปเดตจาก Excel" ซ้ำได้ ระบบจะไม่เพิ่มซ้ำ)` : '');
+          const netFail = /failed to fetch|networkerror|load failed|abort/i.test(e.message);
+          err.innerHTML = esc(/unknown/i.test(e.message) ? 'Apps Script ยังไม่รองรับ — อัปเดต CCIP_Extension.gs แล้ว Deploy เวอร์ชันใหม่'
+            : netFail ? 'ติดต่อ Apps Script ไม่ได้ระหว่างส่งข้อมูล (ลองใหม่ 3 ครั้งแล้ว) — สคริปต์อาจทำงานผิดพลาด/เกินเวลา หรือเครือข่ายหลุด ดูสาเหตุได้ที่ Apps Script → การดำเนินการ (Executions)'
+            : 'นำเข้าไม่สำเร็จ: ' + e.message)
+            + esc(sent ? ` (ทำไปแล้ว ${sent} รายการ — เปิดไฟล์เดิมแล้วเลือก "อัปเดตจาก Excel" ซ้ำได้ ระบบจะไม่เพิ่มซ้ำ)` : '');
+          if (sent) { this._raw = ''; this.refresh(); }
         }
       };
       setTimeout(() => drop.focus(), 80);
@@ -19676,8 +19759,8 @@ function endTour() {
       return `<article class="mt-card" id="mt-${esc(m.id)}">
         <div class="mt-date"><b>${d ? d.getDate() : '—'}</b><span>${d ? MON_S[d.getMonth()] : ''}</span><small>${d ? d.getFullYear() + 543 : ''}</small></div>
         <div class="mt-main">
-          <div class="mt-top"><h4>${esc(m.topic)}</h4><span class="gx-tag maker">${esc(m.maker) || 'ไม่ระบุ Maker'}</span></div>
-          ${m.detail ? `<p class="mt-detail">${esc(m.detail)}</p>` : ''}
+          <div class="mt-top"><h4><button class="mt-open" onclick="Meeting.show('${esc(m.id)}')" title="ดูรายละเอียดทั้งหมด">${esc(m.topic)}</button></h4><span class="gx-tag maker">${esc(m.maker) || 'ไม่ระบุ Maker'}</span></div>
+          ${m.detail ? `<p class="mt-detail">${esc(m.detail)}</p>${m.detail.split('\n').length > 3 || m.detail.length > 240 ? `<button class="mt-more-btn" onclick="Meeting.show('${esc(m.id)}')">อ่านทั้งหมด</button>` : ''}` : ''}
           ${imgs.length ? `<div class="mt-thumbs">${shown.map((im, i) => `
             <button class="mt-thumb" onclick="Meeting.view('${esc(m.id)}',${i})" aria-label="ดูรูป ${esc(im.name)}">
               <img loading="lazy" src="${thumb(im.id, 360)}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'mt-thumb-fallback',textContent:'เปิดใน Drive'}))">
@@ -19701,7 +19784,7 @@ function endTour() {
         sub: m ? `${m.topic} · ${thDate(m.date)}` : 'รูปจะถูกย่อขนาดในเครื่อง แล้วส่งเข้าโฟลเดอร์ Google Drive ของการประชุมนี้',
         body: `<form class="gx-form" id="mtForm" novalidate>
           <label class="span2"><span>หัวข้อ Meeting <em>*</em></span><input name="topic" required value="${esc(m && m.topic)}" placeholder="เช่น ทบทวนคุณภาพ Lot มิ.ย. / เจรจาราคา"></label>
-          <label><span>วันที่ <em>*</em></span><input name="date" type="date" required value="${m ? dmyToISO(m.date) : todayISO()}"></label>
+          <label><span>วันที่ <em>*</em> <small class="gx-hint">วัน/เดือน/ปี ค.ศ.</small></span>${dateField('date', m ? (normDMY(m.date) || m.date) : todayDMY())}</label>
           <label><span>Maker <em>*</em></span><input name="maker" list="mtMakerList" required value="${esc(m && m.maker)}"></label>
           <label class="span2"><span>สรุป / รายละเอียด</span><textarea name="detail" rows="4" placeholder="ประเด็นที่คุย ข้อตกลง และสิ่งที่ต้องติดตาม">${esc(m && m.detail)}</textarea></label>
           <div class="span2">
@@ -19721,6 +19804,7 @@ function endTour() {
         onClose: () => files.forEach(f => URL.revokeObjectURL(f.url))
       });
       el.querySelector('[data-close2]').onclick = closeModal;
+      wireDateFields(el);
       const drop = $('#mtDrop'), input = $('#mtFile'), queue = $('#mtQueue');
       const drawQueue = () => {
         queue.innerHTML = files.map((f, i) => `<figure class="${f.status}">
@@ -19760,8 +19844,11 @@ function endTour() {
         f.querySelectorAll('input').forEach(i => i.classList.toggle('bad', miss.some(([n]) => n === i.name)));
         if (miss.length) { $('#mtErr').textContent = 'กรอกให้ครบ: ' + miss.map(x => x[1]).join(', '); return; }
         $('#mtErr').textContent = '';
+        const dmy = normDMY(v('date'));
+        if (!dmy) { f.date.classList.add('bad'); $('#mtErr').textContent = 'วันที่ไม่ถูกต้อง — ใช้รูปแบบ วัน/เดือน/ปี เช่น 24/9/2026'; f.date.focus(); return; }
+        f.date.value = dmy;
         const btn = $('#mtSave'); setBusy(btn, true, 'กำลังบันทึก'); el._busy = true;
-        const rec = { topic: v('topic'), date: isoToDMY(v('date')), maker: v('maker'), detail: v('detail') };
+        const rec = { topic: v('topic'), date: dmy, maker: v('maker'), detail: v('detail') };
         const by = localStorage.getItem('prpo_username') || '';
         let target;
         try {
@@ -19819,7 +19906,25 @@ function endTour() {
       try { await api.post({ action: 'deleteMeeting', id }); this.save(); toast('ลบบันทึกการประชุมแล้ว', 'success'); }
       catch (e) { this.list = before; this.render(); toast('ลบไม่สำเร็จ: ' + e.message, 'error'); }
     },
-    view(id, i) { const m = this.list.find(x => x.id === id); if (m) Lightbox.open(m, i); }
+    view(id, i) { const m = this.list.find(x => x.id === id); if (m && (m.images || []).length) Lightbox.open(m, i); },
+    show(id) {
+      const m = this.list.find(x => x.id === id); if (!m) return;
+      const imgs = m.images || [];
+      const el = openModal({
+        wide: true, title: m.topic, sub: `${m.maker || 'ไม่ระบุ Maker'} · ${thDate(m.date)}${m.by ? ' · บันทึกโดย ' + m.by : ''}`,
+        body: `<div class="mt-view">
+            <h5>สรุป / รายละเอียด</h5>
+            <p class="mt-view-detail">${m.detail ? esc(m.detail) : '<span class="gx-dim">ไม่มีรายละเอียด</span>'}</p>
+            <h5>รูปภาพ (${imgs.length})</h5>
+            ${imgs.length ? `<div class="mt-view-grid">${imgs.map((im, i) => `<button type="button" data-i="${i}" aria-label="ดูรูปที่ ${i + 1}"><img loading="lazy" src="${thumb(im.id, 400)}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'mt-thumb-fallback',textContent:'เปิดใน Drive'}))"></button>`).join('')}</div>` : '<p class="gx-dim">ยังไม่มีรูป</p>'}
+          </div>`,
+        foot: `${m.folderUrl ? `<a class="gx-btn ghost" href="${esc(m.folderUrl)}" target="_blank" rel="noopener" style="margin-right:auto">เปิดโฟลเดอร์ Google Drive</a>` : ''}<button class="gx-btn ghost" data-edit>แก้ไข</button><button class="gx-btn primary" data-close2>ปิด</button>`
+      });
+      el.querySelector('[data-close2]').onclick = closeModal;
+      el.querySelector('[data-edit]').onclick = () => { closeModal(); this.openForm(m.id); };
+      const grid = el.querySelector('.mt-view-grid');
+      if (grid) grid.onclick = e => { const t = e.target.closest('[data-i]'); if (t) Lightbox.open(m, +t.dataset.i); };
+    }
   };
   function confirmBoxInline(btn) {
     if (btn.dataset.armed) return Promise.resolve(true);
@@ -19830,27 +19935,45 @@ function endTour() {
 
   const Lightbox = {
     open(m, i) {
-      this.m = m; this.i = i;
+      this.close();
+      this.m = m; this.i = i || 0;
       const el = document.createElement('div');
       el.id = 'gxLightbox'; el.className = 'gx-lightbox';
-      el.innerHTML = `<button class="lb-close gx-icon-btn" aria-label="ปิด">${ICON.close}</button>
-        <button class="lb-nav prev" aria-label="รูปก่อนหน้า">‹</button><figure><img alt=""><figcaption></figcaption></figure><button class="lb-nav next" aria-label="รูปถัดไป">›</button>`;
-      el.onclick = e => { if (e.target === el || e.target.closest('.lb-close')) this.close(); };
-      el.querySelector('.prev').onclick = () => this.go(-1);
-      el.querySelector('.next').onclick = () => this.go(1);
-      this.keys = e => { if (e.key === 'ArrowLeft') this.go(-1); if (e.key === 'ArrowRight') this.go(1); };
-      document.addEventListener('keydown', this.keys);
-      document.body.appendChild(el); this.draw();
+      el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'ดูรูปการประชุม');
+      el.innerHTML = `<header class="lb-top"><div class="lb-title"></div><div class="lb-tools">
+          <a class="lb-open" target="_blank" rel="noopener">เปิดใน Google Drive</a>
+          <button class="lb-close" aria-label="ปิด">${ICON.close}</button></div></header>
+        <div class="lb-stage">
+          <button class="lb-nav prev" aria-label="รูปก่อนหน้า">‹</button>
+          <div class="lb-img"><div class="lb-spin"></div><img alt=""><div class="lb-fail" hidden><b>แสดงรูปในหน้านี้ไม่ได้</b><span>อาจยังไม่ได้เข้าสู่ระบบ Google ในเบราว์เซอร์นี้ หรือไม่มีสิทธิ์ดูไฟล์</span><a class="gx-btn primary" target="_blank" rel="noopener">เปิดรูปใน Google Drive</a></div></div>
+          <button class="lb-nav next" aria-label="รูปถัดไป">›</button>
+        </div>
+        <div class="lb-strip"></div>`;
+      el.addEventListener('click', e => { if (e.target === el || e.target.classList.contains('lb-stage') || e.target.closest('.lb-close')) this.close(); });
+      el.querySelector('.prev').onclick = e => { e.stopPropagation(); this.go(-1); };
+      el.querySelector('.next').onclick = e => { e.stopPropagation(); this.go(1); };
+      el.querySelector('.lb-strip').onclick = e => { const t = e.target.closest('[data-i]'); if (t) { this.i = +t.dataset.i; this.draw(); } };
+      const img = el.querySelector('.lb-img img');
+      img.onload = () => { el.querySelector('.lb-spin').hidden = true; img.hidden = false; };
+      img.onerror = () => { el.querySelector('.lb-spin').hidden = true; img.hidden = true; el.querySelector('.lb-fail').hidden = false; };
+      document.body.appendChild(el);
+      el.querySelector('.lb-strip').innerHTML = m.images.length > 1 ? m.images.map((im, k) => `<button data-i="${k}" aria-label="รูปที่ ${k + 1}"><img loading="lazy" src="${thumb(im.id, 160)}" alt=""></button>`).join('') : '';
+      this.draw();
     },
-    go(d) { const n = this.m.images.length; this.i = (this.i + d + n) % n; this.draw(); },
+    go(d) { const n = this.m.images.length; if (n < 2) return; this.i = (this.i + d + n) % n; this.draw(); },
     draw() {
-      const el = $('#gxLightbox'), im = this.m.images[this.i];
-      el.querySelector('img').src = thumb(im.id, 2000);
-      el.querySelector('figcaption').innerHTML = `${esc(this.m.topic)} · ${this.i + 1}/${this.m.images.length}
-        <a href="https://drive.google.com/file/d/${encodeURIComponent(im.id)}/view" target="_blank" rel="noopener">เปิดใน Google Drive</a>`;
-      el.querySelectorAll('.lb-nav').forEach(b => b.hidden = this.m.images.length < 2);
+      const el = $('#gxLightbox'); if (!el) return;
+      const im = this.m.images[this.i], n = this.m.images.length;
+      const drive = `https://drive.google.com/file/d/${encodeURIComponent(im.id)}/view`;
+      const img = el.querySelector('.lb-img img');
+      el.querySelector('.lb-spin').hidden = false; el.querySelector('.lb-fail').hidden = true; img.hidden = true;
+      img.src = thumb(im.id, 1600);
+      el.querySelector('.lb-title').innerHTML = `<b>${esc(this.m.topic)}</b><span>${esc(this.m.maker)} · ${thDate(this.m.date)} · รูป ${this.i + 1}/${n}</span>`;
+      el.querySelectorAll('.lb-open, .lb-fail a').forEach(a => a.href = drive);
+      el.querySelectorAll('.lb-nav').forEach(b => b.style.visibility = n < 2 ? 'hidden' : 'visible');
+      el.querySelectorAll('.lb-strip [data-i]').forEach(b => b.classList.toggle('on', +b.dataset.i === this.i));
     },
-    close() { const el = $('#gxLightbox'); if (el) el.remove(); document.removeEventListener('keydown', this.keys); }
+    close() { const el = $('#gxLightbox'); if (el) el.remove(); }
   };
 
   /* ══════════════════════ RFQ ขอใบเสนอราคา (E-Form เดิมฝังในกรอบแยก) ══════════════════════ */
