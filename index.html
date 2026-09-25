@@ -5808,6 +5808,140 @@ html body .gd-table small { color: var(--muted); font-size: .72rem; }
 .mt-view-grid img { width: 100%; height: 100%; object-fit: cover; display: block; }
 @media (max-width: 760px) { .lb-stage { grid-template-columns: 44px minmax(0,1fr) 44px; } .lb-nav { width: 38px; height: 38px; } .lb-open { display: none; } }
 a.gx-btn { text-decoration: none !important; }
+
+/* ── แถบตัวเลขบนหัว Dashboard ── */
+html body .dash-hero-stats { display: grid !important; grid-template-columns: repeat(3, minmax(150px, 1fr)); gap: .6rem !important; align-items: stretch !important; }
+html body .dash-hero-stat {
+  text-align: left !important; padding: .8rem 1rem .85rem !important; border-radius: 12px !important;
+  border: 1px solid rgba(160,190,255,.16) !important; background: rgba(255,255,255,.05) !important;
+  display: flex; flex-direction: column; gap: .15rem; min-width: 0;
+}
+html body .dash-hero-stat-val { order: 2; font-size: 1.9rem !important; font-weight: 600 !important; line-height: 1.1 !important; color: #FFFFFF !important; letter-spacing: -.01em; }
+html body .dash-hero-stat-lbl { order: 1; font-size: .78rem !important; font-weight: 600; text-transform: none !important; letter-spacing: 0 !important; color: #A9B8D2 !important; margin: 0 !important; display: flex; align-items: center; gap: .4rem; }
+html body .dash-hero-stat .dh-sub { order: 3; font-size: .72rem; color: #7E90AE; }
+html body .dash-hero-stat .dh-bar { order: 3; display: block; height: 6px; margin-top: .45rem; border-radius: 99px; background: rgba(255,255,255,.1); overflow: hidden; }
+html body .dash-hero-stat .dh-bar b { display: block; height: 100%; width: calc(var(--p, 0) * 1%); border-radius: 99px; background: var(--dh-c, #3AD4EC); transition: width .8s cubic-bezier(.2,.7,.2,1) !important; }
+html body .dash-hero-stat.pos { --dh-c: #3AD4EC; }
+html body .dash-hero-stat.pos .dash-hero-stat-val { color: #7FE6F5 !important; }
+html body .dash-hero-stat.acc { --dh-c: #4FD6A0; }
+html body .dash-hero-stat.acc[data-level="good"] .dash-hero-stat-val { color: #4FD6A0 !important; }
+html body .dash-hero-stat.acc[data-level="mid"] { --dh-c: #F2B452; }
+html body .dash-hero-stat.acc[data-level="mid"] .dash-hero-stat-val { color: #F2B452 !important; }
+html body .dash-hero-stat.acc[data-level="low"] { --dh-c: #FF7A72; }
+html body .dash-hero-stat.acc[data-level="low"] .dash-hero-stat-val { color: #FF7A72 !important; }
+.dh-tag { font-size: .66rem; font-weight: 700; padding: .05rem .4rem; border-radius: 5px; background: color-mix(in srgb, var(--dh-c) 18%, transparent); color: var(--dh-c); }
+.dh-tag:empty { display: none; }
+@media (max-width: 900px) { html body .dash-hero-stats { grid-template-columns: 1fr 1fr 1fr; width: 100%; } html body .dash-hero-stat-val { font-size: 1.5rem !important; } }
+
+/* ════════ โปรไฟล์ผู้ใช้ที่มุมขวาบน ════════ */
+html body .topbar .account-pill { height: 42px !important; padding: 0 .55rem 0 .3rem !important; gap: .55rem !important; border: 1px solid var(--border) !important; background: var(--surface) !important; border-radius: 999px !important; }
+html body .topbar .account-pill:hover { border-color: var(--accent) !important; }
+html body .account-pill .account-pill-avatar { width: 34px !important; height: 34px !important; border-radius: 50% !important; overflow: hidden; display: grid !important; place-items: center; background: var(--surface2) !important; }
+.pf-av-img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: grid; place-items: center; }
+.pf-initials { color: #fff; font-weight: 700; font-size: .8rem; letter-spacing: .02em; font-family: var(--font-display); }
+html body .account-pill .account-pill-label { display: grid !important; line-height: 1.15; max-width: 170px; text-align: left; }
+.pf-name { font-size: .84rem; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pf-pos { font-size: .7rem; font-weight: 500; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+html body .account-pill:not(.pf-set) .account-pill-label { color: var(--accent) !important; font-size: .82rem; font-weight: 600; }
+html body .account-popover .pf-pop-av { width: 56px !important; height: 56px !important; border-radius: 50% !important; overflow: hidden; display: grid; place-items: center; }
+html body .account-popover .pf-pop-av .pf-initials { font-size: 1.15rem; }
+.pf-dept { display: block; font-size: .72rem; color: var(--muted); margin-top: .1rem; }
+.pf-edit { display: flex; align-items: center; gap: .5rem; width: 100%; height: 38px; padding: 0 .8rem; margin-bottom: .4rem; border-radius: 9px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; font-size: .84rem; font-weight: 600; cursor: pointer; }
+.pf-edit:hover { border-color: var(--accent); color: var(--accent); }
+.pf-edit svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
+.pf-edit-grid { display: grid; grid-template-columns: 150px 1fr; gap: 1.2rem; align-items: start; }
+.pf-photo { display: grid; justify-items: center; gap: .55rem; }
+.pf-photo-box { width: 120px; height: 120px; border-radius: 50%; overflow: hidden; border: 3px solid var(--surface); box-shadow: 0 0 0 1px var(--border), 0 10px 24px -12px rgba(13,26,44,.35) !important; }
+.pf-big { width: 100%; height: 100%; object-fit: cover; display: grid; place-items: center; }
+.pf-big.pf-initials { font-size: 2.3rem; }
+.pf-upload { cursor: pointer; height: 34px; font-size: .8rem; }
+.pf-remove { border: 0; background: none; color: var(--muted); font: inherit; font-size: .76rem; cursor: pointer; text-decoration: underline; }
+.pf-remove[hidden] { display: none; }
+.pf-form { grid-template-columns: 1fr; }
+.pf-team { margin-bottom: 1rem; }
+.pf-team > span { display: block; font-size: .78rem; font-weight: 600; color: var(--muted); margin-bottom: .45rem; }
+.pf-team > div { display: flex; flex-wrap: wrap; gap: .45rem; }
+.pf-team-btn { display: grid; grid-template-columns: 30px auto; grid-template-rows: auto auto; column-gap: .5rem; align-items: center; text-align: left; padding: .35rem .7rem .35rem .35rem; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; cursor: pointer; }
+.pf-team-btn:hover, .pf-team-btn.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+.pf-team-av { grid-row: span 2; width: 30px; height: 30px; border-radius: 50%; object-fit: cover; display: grid; place-items: center; font-size: .7rem; }
+.pf-team-btn b { font-size: .8rem; line-height: 1.2; }
+.pf-team-btn small { font-size: .68rem; color: var(--muted); line-height: 1.2; }
+@media (max-width: 900px) { html body .account-pill .account-pill-label { display: none !important; } }
+@media (max-width: 560px) { .pf-edit-grid { grid-template-columns: 1fr; } }
+
+/* ════════ แถบตัวเลขบนหัว Dashboard ════════ */
+html body .dash-hero-stats { display: grid !important; grid-template-columns: repeat(3, minmax(130px, 1fr)); gap: .6rem !important; }
+html body .dash-hero-stat {
+  display: flex !important; flex-direction: column; gap: .25rem; text-align: left !important; min-width: 130px;
+  padding: .75rem 1rem .8rem !important; border-radius: 12px !important;
+  border: 1px solid rgba(160,190,255,.16) !important; background: rgba(255,255,255,.05) !important;
+}
+html body .dash-hero-stat-lbl { order: 0; display: flex; align-items: center; gap: .35rem; font-size: .76rem !important; font-weight: 500 !important; letter-spacing: .01em !important; text-transform: none !important; color: #A9B8D2 !important; margin: 0 !important; }
+html body .dash-hero-stat-val { order: 1; font-size: 1.85rem !important; font-weight: 600 !important; line-height: 1.05 !important; color: #FFFFFF !important; letter-spacing: -.01em; }
+html body .dash-hero-stat .dh-sub { order: 2; font-size: .72rem; color: #7F90AE; margin: 0 !important; }
+html body .dash-hero-stat .dh-bar { order: 3; display: block !important; position: static !important; height: 5px !important; margin-top: .35rem; border-radius: 99px; background: rgba(255,255,255,.1) !important; overflow: hidden; }
+html body .dash-hero-stat .dh-bar b { display: block !important; position: static !important; height: 100% !important; transform: none !important; width: calc(var(--p, 0) * 1%) !important; border-radius: 99px; background: var(--bar, #8FB0FF) !important; transition: width .6s ease !important; }
+html body .dash-hero-stat::before, html body .dash-hero-stat::after { display: none !important; }
+html body .dash-hero-stat.pos { --bar: #5EE0A8; }
+html body .dash-hero-stat.acc { --bar: #F5BE5C; }
+html body .dash-hero-stat.pos .dash-hero-stat-val { color: #5EE0A8 !important; }
+html body .dash-hero-stat.acc .dash-hero-stat-val { color: #F5BE5C !important; }
+html body .dash-hero-stat .dh-tag { font-size: .66rem !important; font-weight: 700; padding: .05rem .4rem; border-radius: 5px; }
+@media (max-width: 760px) { html body .dash-hero-stats { grid-template-columns: repeat(3, 1fr); width: 100%; } html body .dash-hero-stat-val { font-size: 1.4rem !important; } }
+
+/* ── แถบบนแน่นเกิน: ย่อส่วนที่ซ้ำกับปุ่ม Sync ── */
+html body .account-pill .account-pill-label { max-width: 130px; }
+@media (max-width: 1600px) { html body .topbar .topbar-sub { display: none !important; } }
+html body .account-popover { background: var(--surface) !important; }
+html body .account-popover .account-popover-user { position: relative; z-index: 1; }
+
+/* ════════ บัญชีผู้ใช้ ════════ */
+.pf-id { font-weight: 600; color: var(--text); }
+.us-role { display: inline-block; font-size: .68rem; font-weight: 700; padding: .08rem .45rem; border-radius: 5px; background: var(--surface2); color: var(--muted); }
+.us-role.admin { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
+.pf-pw { border: 1px solid var(--border); border-radius: 10px; padding: .55rem .8rem; }
+.pf-pw summary { cursor: pointer; font-size: .84rem; font-weight: 600; color: var(--accent); }
+.pf-pw[open] { display: grid; gap: .6rem; }
+.pf-pw[open] summary { margin-bottom: .2rem; }
+.us-setup { display: grid; gap: .2rem; padding: .8rem 1rem; margin-bottom: .9rem; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--warn) 45%, var(--border)); background: color-mix(in srgb, var(--warn) 8%, var(--surface)); font-size: .85rem; }
+.us-setup span { color: var(--muted); font-size: .8rem; }
+.us-form { padding: .9rem 1rem; border: 1px solid var(--border); border-radius: 12px; background: var(--surface2); }
+.us-form h4 { margin: 0 0 .7rem; font-size: .9rem; }
+.us-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .65rem .8rem; }
+.us-grid label { display: grid; gap: .3rem; font-size: .78rem; font-weight: 600; color: var(--muted); }
+.us-grid em { color: var(--danger); font-style: normal; }
+.us-grid input, .us-grid select { height: 38px; border-radius: 9px; border: 1px solid var(--border); padding: 0 .7rem; font: inherit; font-size: .88rem; font-weight: 400; background: var(--surface); color: var(--text); width: 100%; box-sizing: border-box; }
+.us-grid input:disabled { opacity: .6; }
+.us-pw > div { display: flex; gap: .4rem; }
+.us-pw .gx-btn { height: 38px; flex-shrink: 0; }
+.us-active { display: flex !important; align-items: center; gap: .45rem; align-self: end; height: 38px; font-weight: 500 !important; color: var(--text) !important; }
+.us-active input { width: 16px !important; height: 16px !important; accent-color: var(--accent); }
+.us-actions { display: flex; justify-content: flex-end; gap: .5rem; margin-top: .75rem; }
+.us-actions [hidden] { display: none; }
+.us-pwbox { margin-top: .7rem; padding: .75rem .9rem; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--success) 45%, var(--border)); background: color-mix(in srgb, var(--success) 8%, var(--surface)); display: grid; gap: .35rem; font-size: .84rem; }
+.us-pwbox div { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.us-pwbox code { font-family: var(--mono); font-size: .92rem; font-weight: 700; padding: .15rem .45rem; border-radius: 6px; background: var(--surface); border: 1px solid var(--border); }
+.us-pwbox small { color: var(--muted); }
+.us-list { margin-top: .9rem; border: 1px solid var(--border); border-radius: 12px; overflow: auto; max-height: 42vh; }
+html body .us-table { font-size: .83rem; }
+html body .us-table th, html body .us-table td { padding: .55rem .75rem; white-space: nowrap; vertical-align: middle; }
+.us-table tr.off td { opacity: .55; }
+.us-user { display: flex; align-items: center; gap: .55rem; }
+.us-av { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; display: grid; place-items: center; font-size: .7rem; flex-shrink: 0; }
+.us-me { font-size: .68rem; font-weight: 700; color: var(--accent); }
+.us-on { color: var(--success); font-weight: 600; }
+.us-off { color: var(--danger); font-weight: 600; }
+.us-last { color: var(--muted); font-size: .76rem; }
+.us-act { text-align: right; }
+.us-mini { height: 30px !important; padding: 0 .6rem !important; font-size: .74rem !important; }
+.us-mini.warn { color: var(--warn) !important; border-color: var(--warn) !important; }
+.gx-icon-btn.armed { background: var(--danger) !important; color: #fff !important; }
+.us-count { margin-right: auto; align-self: center; font-size: .8rem; color: var(--muted); }
+@media (max-width: 640px) { .us-grid { grid-template-columns: 1fr; } }
+html body .us-table thead th, html body .gd-table thead th { padding: .55rem .75rem !important; }
+.pf-av-img, .pf-big, .us-av, .pf-team-av { box-sizing: border-box; flex-shrink: 0; }
+html body .account-pill .account-pill-avatar > .pf-av-img, html body .account-popover .pf-pop-av > .pf-av-img { width: 100% !important; height: 100% !important; aspect-ratio: 1 / 1; border-radius: 50% !important; }
+.pf-initials { display: grid !important; place-items: center; line-height: 1; }
 </style>
 </head>
 <body class="light-theme">
@@ -6418,15 +6552,15 @@ a.gx-btn { text-decoration: none !important; }
  <div class="dash-hero-stats">
  <div class="dash-hero-stat">
  <div class="dash-hero-stat-val" id="hero-total">—</div>
- <div class="dash-hero-stat-lbl">Total Records</div>
+ <div class="dash-hero-stat-lbl">รายการทั้งหมด</div><div class="dh-sub" id="dhTotalSub">PR / PO ในระบบ</div>
  </div>
  <div class="dash-hero-stat pos">
  <div class="dash-hero-stat-val" id="hero-donepct">—</div>
- <div class="dash-hero-stat-lbl">% เสร็จสมบูรณ์</div>
+ <div class="dash-hero-stat-lbl">เสร็จสมบูรณ์</div><i class="dh-bar" aria-hidden="true"><b></b></i>
  </div>
  <div class="dash-hero-stat acc">
  <div class="dash-hero-stat-val" id="hero-ontime">—</div>
- <div class="dash-hero-stat-lbl">On-Time Rate</div>
+ <div class="dash-hero-stat-lbl">ส่งตรงเวลา <span class="dh-tag" id="dhOnTag"></span></div><i class="dh-bar" aria-hidden="true"><b></b></i>
  </div>
  </div>
  </div>
@@ -20155,6 +20289,399 @@ function endTour() {
   };
   window.addEventListener('message', e => { if (e.data && e.data.rfq === 'changed' && RFQ.frame && e.source === RFQ.frame.contentWindow) { clearTimeout(RFQ._t); RFQ._t = setTimeout(() => { RFQ.status(); RFQ.fit(); }, 250); } });
 
+  /* ══════════════════════ โปรไฟล์ผู้ใช้ (ชื่อ · รูป · ตำแหน่ง) ══════════════════════
+     ระบบใช้รหัสเข้าระบบร่วมกันทั้งแผนก จึงเก็บโปรไฟล์แยกตามเครื่อง/เบราว์เซอร์ (localStorage)
+     ชื่อที่ตั้งจะใช้เป็น "ผู้บันทึก" ในคอมเมนต์และ Summary Meeting อัตโนมัติ */
+  const PF_KEY = 'ccip_profile';
+  const Profile = {
+    POSITIONS: ['Purchasing Manager', 'Purchasing Leader', 'Purchasing Engineer', 'Buyer', 'Purchasing Staff', 'Engineer', 'Member'],
+    get() { try { return JSON.parse(localStorage.getItem(PF_KEY) || 'null'); } catch (e) { return null; } },
+    fromAccount(u) {
+      if (!u) return;
+      this.set({ id: u.id, role: u.role, name: u.name || (u.legacy ? '' : u.id), position: u.position || '', dept: u.dept || 'ทีมจัดซื้อ · Purchase', photo: u.photo || '', legacy: !!u.legacy });
+    },
+    set(p) {
+      localStorage.setItem(PF_KEY, JSON.stringify(p));
+      if (p && p.name) localStorage.setItem('prpo_username', p.name);
+      this.apply();
+    },
+    initials(name) {
+      // ตัวแรกของชื่อและนามสกุล (ข้ามสระนำหน้าภาษาไทย เช่น ใ เ แ โ ไ)
+      const first = w => (w.match(/[A-Za-z0-9ก-ฮ]/) || [w[0]])[0];
+      const w = String(name || '').trim().split(/\s+/).filter(Boolean);
+      if (!w.length) return '?';
+      return (w.length > 1 ? first(w[0]) + first(w[1]) : (w[0].match(/[A-Za-z0-9ก-ฮ]/g) || ['?']).slice(0, 2).join('')).toUpperCase();
+    },
+    avatar(p, cls) {
+      const bg = ['#1E56F0', '#0A9FB8', '#12A071', '#E0900F', '#6B5BD6', '#E8692A'][[...String(p && p.name || '')].reduce((s, c) => s + c.charCodeAt(0), 0) % 6];
+      return p && p.photo ? `<img class="${cls}" src="${esc(p.photo)}" alt="">`
+        : `<span class="${cls} pf-initials" style="background:${bg}">${esc(this.initials(p && p.name))}</span>`;
+    },
+    apply() {
+      const p = this.get();
+      const pill = document.getElementById('accountBtn');
+      if (!pill) return;
+      pill.classList.toggle('pf-set', !!(p && p.name));
+      const av = pill.querySelector('.account-pill-avatar');
+      const label = pill.querySelector('.account-pill-label');
+      if (p && p.name) {
+        av.innerHTML = this.avatar(p, 'pf-av-img');
+        label.innerHTML = `<span class="pf-name">${esc(p.name)}</span><span class="pf-pos">${esc(p.position || 'ทีมจัดซื้อ')}</span>`;
+        pill.title = `${p.name} · ${p.position || ''}`;
+      } else {
+        av.innerHTML = `<img id="accountAvatarMini" alt="โลโก้บริษัท" src="${esc(typeof COMPANY_LOGO_SRC !== 'undefined' ? COMPANY_LOGO_SRC : '')}">`;
+        label.textContent = 'ตั้งโปรไฟล์';
+        pill.title = 'ตั้งชื่อ รูป และตำแหน่งของคุณ';
+      }
+      const box = document.querySelector('#accountPopover .account-popover-user');
+      if (box) {
+        box.innerHTML = `<div class="account-popover-avatar pf-pop-av">${p && p.name ? this.avatar(p, 'pf-av-img') : `<img alt="" src="${esc(typeof COMPANY_LOGO_SRC !== 'undefined' ? COMPANY_LOGO_SRC : '')}">`}</div>
+          <div class="account-popover-idwrap">
+            <div class="account-popover-id">${esc(p && p.name || 'ยังไม่ได้ตั้งโปรไฟล์')}</div>
+            <span class="account-popover-role">${esc(p && p.position || 'Purchasing Engineer')}</span>
+            <span class="pf-dept">${esc(p && p.dept || 'ทีมจัดซื้อ · Purchase')}${p && p.id && !p.legacy ? ` · <b class="pf-id">${esc(p.id)}</b>` : ''}${p && p.role === 'admin' ? ' <span class="us-role admin">admin</span>' : ''}</span>
+          </div>`;
+      }
+      const act = document.querySelector('#accountPopover .account-popover-actions');
+      if (act) {
+        act.querySelectorAll('.pf-edit').forEach(b => b.remove());
+        const admin = window.CCIPAuth && CCIPAuth.isAdmin();
+        act.insertAdjacentHTML('afterbegin', `<button class="pf-edit" onclick="closeAccountPopover();CCIPProfile.edit()">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>${p && p.id && !p.legacy ? 'โปรไฟล์และรหัสผ่าน' : 'แก้ไขโปรไฟล์'}</button>${admin ? `
+          <button class="pf-edit" onclick="closeAccountPopover();CCIPUsers.open()"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.5 3-5.5 6.5-5.5s6.5 2 6.5 5.5"/><path d="M17 11h5M19.5 8.5v5"/></svg>จัดการผู้ใช้และรหัสผ่าน</button>` : ''}`);
+      }
+    },
+    async cropPhoto(file) {
+      const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('อ่านรูปไม่ได้')); i.src = URL.createObjectURL(file); });
+      const S = 200, side = Math.min(img.naturalWidth, img.naturalHeight);
+      const c = document.createElement('canvas'); c.width = c.height = S;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, S, S);
+      ctx.drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, S, S);
+      URL.revokeObjectURL(img.src);
+      return c.toDataURL('image/jpeg', 0.8);
+    },
+    edit(first) {
+      const acct = window.CCIPAuth && CCIPAuth.token() && CCIPAuth.user() && !CCIPAuth.user().legacy ? CCIPAuth.user() : null;
+      const cur = this.get() || { name: localStorage.getItem('prpo_username') || '', position: '', dept: 'ทีมจัดซื้อ · Purchase', photo: '' };
+      const draft = Object.assign({}, cur);
+      let team = [];
+      try { team = (teamMembers || []).filter(m => m.name); } catch (e) {}
+      const el = openModal({
+        title: first ? 'ยินดีต้อนรับ — ตั้งโปรไฟล์ของคุณ' : 'แก้ไขโปรไฟล์',
+        sub: acct ? `บัญชี ${acct.id} — ข้อมูลบันทึกในระบบ ใช้ได้ทุกเครื่องที่เข้าสู่ระบบด้วยบัญชีนี้` : 'ชื่อ รูป และตำแหน่งจะแสดงที่มุมขวาบน และใช้เป็นชื่อผู้บันทึกในคอมเมนต์ / Summary Meeting (บันทึกเฉพาะเครื่องนี้)',
+        body: `${team.length ? `<div class="pf-team"><span>เลือกจากทีม</span><div>${team.map((m, i) => `<button type="button" data-t="${i}" class="pf-team-btn">${this.avatar(m, 'pf-team-av')}<b>${esc(m.name)}</b><small>${esc(m.role)}</small></button>`).join('')}</div></div>` : ''}
+          <div class="pf-edit-grid">
+            <div class="pf-photo">
+              <div class="pf-photo-box" id="pfPhoto"></div>
+              <label class="gx-btn ghost pf-upload">เลือกรูป<input type="file" accept="image/*" id="pfFile" hidden></label>
+              <button type="button" class="pf-remove" id="pfRemove">ลบรูป</button>
+            </div>
+            <form class="gx-form pf-form" id="pfForm" novalidate>
+              <label class="span2"><span>ชื่อ – นามสกุล <em>*</em></span><input name="name" value="${esc(draft.name)}" placeholder="เช่น วราเทพ ใจดี" autocomplete="name"></label>
+              <label class="span2"><span>ตำแหน่งงาน</span><input name="position" list="pfPosList" value="${esc(draft.position)}" placeholder="เช่น Purchasing Engineer"></label>
+              <label class="span2"><span>ฝ่าย / ทีม</span><input name="dept" value="${esc(draft.dept || 'ทีมจัดซื้อ · Purchase')}"></label>
+              <datalist id="pfPosList">${this.POSITIONS.map(p => `<option value="${esc(p)}">`).join('')}</datalist>
+              ${acct ? `<details class="pf-pw span2"><summary>เปลี่ยนรหัสผ่าน</summary>
+                <label><span>รหัสผ่านเดิม</span><input name="oldPw" type="password" autocomplete="current-password"></label>
+                <label><span>รหัสผ่านใหม่ (อย่างน้อย 6 ตัว)</span><input name="newPw" type="password" autocomplete="new-password"></label>
+                <label><span>ยืนยันรหัสผ่านใหม่</span><input name="newPw2" type="password" autocomplete="new-password"></label></details>` : ''}
+              <p class="gx-form-err span2" id="pfErr" role="alert"></p>
+            </form>
+          </div>`,
+        foot: `${first ? '<button class="gx-btn ghost" data-close2>ข้ามไปก่อน</button>' : '<button class="gx-btn ghost" data-close2>ยกเลิก</button>'}<button class="gx-btn primary" id="pfSave">บันทึกโปรไฟล์</button>`
+      });
+      el.querySelector('[data-close2]').onclick = () => { if (first) sessionStorage.setItem('ccip_profile_skip', '1'); closeModal(); };
+      const f = $('#pfForm');
+      const drawPhoto = () => {
+        const p = { name: f.name.value || draft.name, photo: draft.photo };
+        $('#pfPhoto').innerHTML = this.avatar(p, 'pf-big');
+        $('#pfRemove').hidden = !draft.photo;
+      };
+      f.name.addEventListener('input', drawPhoto);
+      $('#pfFile').onchange = async e => {
+        const file = e.target.files[0]; if (!file) return;
+        try { draft.photo = await this.cropPhoto(file); drawPhoto(); } catch (err) { $('#pfErr').textContent = err.message; }
+        e.target.value = '';
+      };
+      $('#pfRemove').onclick = () => { draft.photo = ''; drawPhoto(); };
+      el.querySelectorAll('[data-t]').forEach(b => b.onclick = () => {
+        const m = team[+b.dataset.t];
+        f.name.value = m.name; f.position.value = m.role || ''; if (m.photo) draft.photo = m.photo;
+        el.querySelectorAll('.pf-team-btn').forEach(x => x.classList.toggle('on', x === b)); drawPhoto();
+      });
+      const save = async () => {
+        const name = f.name.value.trim();
+        if (!name) { f.name.classList.add('bad'); $('#pfErr').textContent = 'กรอกชื่อก่อน'; f.name.focus(); return; }
+        const prof = { name, position: f.position.value.trim(), dept: f.dept.value.trim(), photo: draft.photo || '' };
+        if (acct) {
+          const oldPw = f.oldPw.value, newPw = f.newPw.value, newPw2 = f.newPw2.value;
+          if (newPw || oldPw) {
+            if (!oldPw) { $('#pfErr').textContent = 'กรอกรหัสผ่านเดิม'; return; }
+            if (newPw.length < 6) { $('#pfErr').textContent = 'รหัสผ่านใหม่ต้องยาวอย่างน้อย 6 ตัว'; return; }
+            if (newPw !== newPw2) { $('#pfErr').textContent = 'ยืนยันรหัสผ่านใหม่ไม่ตรงกัน'; return; }
+          }
+          const btn = $('#pfSave'); setBusy(btn, true); el._busy = true;
+          try {
+            const j = await CCIPAuth.api('authUpdateProfile', prof);
+            if (newPw) await CCIPAuth.api('authChangePassword', { oldPassword: oldPw, newPassword: newPw });
+            CCIPAuth.update(j.user); this.fromAccount(j.user);
+            el._busy = false; closeModal();
+            toast(newPw ? 'บันทึกโปรไฟล์และเปลี่ยนรหัสผ่านแล้ว' : 'บันทึกโปรไฟล์แล้ว', 'success');
+          } catch (err) { el._busy = false; setBusy(btn, false); $('#pfErr').textContent = err.message; }
+          return;
+        }
+        this.set(Object.assign({}, this.get() || {}, prof));
+        closeModal();
+        toast(`สวัสดีครับ คุณ${name.split(/\s+/)[0]}`, 'success');
+      };
+      $('#pfSave').onclick = save;
+      f.addEventListener('submit', e => { e.preventDefault(); save(); });
+      drawPhoto();
+    }
+  };
+  window.CCIPProfile = Profile;
+  // หลังเข้าสู่ระบบ ถ้ายังไม่มีโปรไฟล์ → ชวนตั้งครั้งเดียวต่อการเปิดใช้งาน
+  const askProfile = () => {
+    const ws = document.getElementById('welcomeScreen');
+    const loggedIn = ws && getComputedStyle(ws).display === 'none';
+    if (loggedIn && !Profile.get() && !(window.CCIPAuth && CCIPAuth.user()) && !sessionStorage.getItem('ccip_profile_skip') && !$('#gxOverlay')) Profile.edit(true);
+  };
+  const pfBoot = () => { Profile.apply(); setTimeout(askProfile, 2500); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pfBoot); else pfBoot();
+
+  /* ══════════════════════ บัญชีผู้ใช้ + รหัสผ่าน (ฐานข้อมูลในชีต USERS) ══════════════════════
+     - เข้าสู่ระบบด้วยรหัสของแต่ละคน ตรวจสอบที่ Apps Script (รหัสผ่านเก็บเป็น hash ไม่เก็บตัวจริง)
+     - ถ้า Apps Script ยังไม่อัปเดต → ใช้รหัสกลางเดิมได้เหมือนเดิม ระบบไม่พัง
+     - ผู้ดูแลระบบ (admin) เพิ่ม/แก้ไข/ปิด/ลบผู้ใช้ และรีเซ็ตรหัสผ่านได้ */
+  const Auth = {
+    KEY: 'ccip_auth',
+    get() { try { return JSON.parse(localStorage.getItem(this.KEY) || sessionStorage.getItem(this.KEY) || 'null'); } catch (e) { return null; } },
+    save(a, remember) {
+      const s = JSON.stringify(a);
+      (remember ? localStorage : sessionStorage).setItem(this.KEY, s);
+      (remember ? sessionStorage : localStorage).removeItem(this.KEY);
+    },
+    update(user) { const a = this.get(); if (!a) return; a.user = user; this.save(a, !!localStorage.getItem(this.KEY)); },
+    clear() { localStorage.removeItem(this.KEY); sessionStorage.removeItem(this.KEY); },
+    token() { const a = this.get(); return a && a.token; },
+    user() { const a = this.get(); return a && a.user; },
+    isAdmin() { const u = this.user(); return !!(u && u.role === 'admin'); },
+    async call(body) {
+      const r = await fetch(url(), { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) });
+      return r.json();
+    },
+    async api(action, extra) {
+      const j = await this.call(Object.assign({ action, token: this.token() }, extra || {}));
+      if (!j.success) throw new Error(j.error || 'ทำรายการไม่สำเร็จ');
+      return j;
+    }
+  };
+  window.CCIPAuth = Auth;
+  const genPassword = () => { const a = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789'; let s = ''; const r = crypto.getRandomValues(new Uint32Array(10)); r.forEach(n => s += a[n % a.length]); return s; };
+
+  function wlBusy(on, text) {
+    const btn = $('#wlLoginBtn'), t = $('#wlLoginBtnText'), ic = $('#wlLoginBtnIcon'), sp = $('#wlLoginBtnSpinner');
+    if (on) { if (btn) { btn.disabled = true; btn.style.opacity = '.7'; } if (t) t.textContent = text || 'กำลังตรวจสอบข้อมูล...'; if (ic) ic.style.display = 'none'; if (sp) sp.style.display = ''; }
+    else if (typeof wlResetLoginBtn === 'function') wlResetLoginBtn();
+  }
+  function wlError(msg) {
+    const box = $('#wlErrorMsg'); if (box) { const sp = box.querySelector('span'); if (sp) sp.textContent = msg; }
+    if (typeof wlShowError === 'function') wlShowError();
+  }
+  function enterApp() {
+    localStorage.setItem(LOGIN_KEY, 'true');
+    sessionStorage.setItem('prpo_session_active', 'true');
+    try { resetNavGroupsToDefault(); } catch (e) {}
+    const ws = $('#welcomeScreen');
+    ws.classList.add('hide');
+    setTimeout(() => {
+      ws.style.display = 'none';
+      try { if (!dueAlertsShown) { dueAlertsShown = true; setTimeout(showDueAlerts, 800); } } catch (e) {}
+    }, 520);
+  }
+  window.wlLogin = async function () {
+    const id = ($('#wlUserId').value || '').trim(), pw = $('#wlPassword').value || '';
+    const remember = !!($('#wlRemember') && $('#wlRemember').checked);
+    if (!id || !pw) { wlError('กรอกรหัสผู้ใช้และรหัสผ่าน'); return; }
+    if (typeof wlClearError === 'function') wlClearError();
+    wlBusy(true);
+    let res;
+    if (url()) {
+      try { res = await Auth.call({ action: 'authLogin', id, password: pw, remember }); }
+      catch (e) { res = { success: false, net: true }; }
+    }
+    // Apps Script ยังไม่รองรับบัญชีผู้ใช้ → ใช้รหัสกลางเดิม
+    if (!url() || (res && !res.success && /unknown action/i.test(res.error || ''))) {
+      res = (id === WL_CREDENTIALS.id && pw === WL_CREDENTIALS.password) ? { success: true } : { success: false, error: 'รหัสผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' };
+    }
+    if (!res.success) {
+      wlBusy(false);
+      wlError(res.net ? 'ติดต่อเซิร์ฟเวอร์ไม่ได้ ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่' : (res.error || 'เข้าสู่ระบบไม่สำเร็จ'));
+      if (!res.locked) { $('#wlPassword').value = ''; $('#wlPassword').focus(); }
+      return;
+    }
+    if (remember) localStorage.setItem(REMEMBER_KEY, JSON.stringify({ id, password: '' })); else localStorage.removeItem(REMEMBER_KEY);
+    $('#wlPassword').value = '';
+    if (res.token) { Auth.save({ token: res.token, user: res.user }, remember); Profile.fromAccount(res.user); }
+    else { Auth.clear(); setTimeout(askProfile, 2600); }
+    wlBusy(true, 'เข้าสู่ระบบสำเร็จ');
+    setTimeout(() => {
+      enterApp();
+      if (res.setup) setTimeout(() => Users.open(true), 900);
+      else if (res.user && res.user.name) setTimeout(() => toast(`ยินดีต้อนรับ คุณ${res.user.name.split(/\s+/)[0]}`, 'success'), 700);
+      else if (res.user) setTimeout(() => Profile.edit(true), 900);
+    }, 250);
+  };
+  const origLogout = window.doLogout;
+  window.doLogout = function () {
+    const hadAccount = !!Auth.user();
+    Auth.clear();
+    if (hadAccount) localStorage.removeItem(PF_KEY);
+    Profile.apply();
+    return origLogout.apply(this, arguments);
+  };
+  // เปิดหน้าเว็บอีกครั้ง: ตรวจว่าเซสชันยังใช้ได้ และบัญชียังไม่ถูกปิด
+  async function verifySession() {
+    if (!url() || localStorage.getItem(LOGIN_KEY) !== 'true') return;
+    try {
+      const j = await Auth.call({ action: 'authCheck', token: Auth.token() || '' });
+      if (!j.success && /unknown action/i.test(j.error || '')) return;           // Apps Script เวอร์ชันเก่า
+      if (j.success) { Auth.update(j.user); Profile.fromAccount(j.user); return; }
+      if (Auth.token() || j.accounts) {                                          // หมดอายุ / ถูกปิด / ต้องใช้บัญชีส่วนตัวแล้ว
+        doLogout();
+        setTimeout(() => wlError(Auth.token() ? 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่' : 'ระบบเปลี่ยนเป็นบัญชีรายบุคคลแล้ว — เข้าสู่ระบบด้วยรหัสของคุณ'), 300);
+      }
+    } catch (e) { /* ออฟไลน์ → ใช้ต่อได้ */ }
+  }
+  const authBoot = () => {
+    const lbl = document.querySelector('label[for="wlRemember"]') || ($('#wlRemember') && $('#wlRemember').parentElement.querySelector('label, span'));
+    if (lbl) lbl.textContent = 'จดจำการเข้าสู่ระบบ (30 วัน)';
+    try { const r = JSON.parse(localStorage.getItem(REMEMBER_KEY) || 'null'); if (r && r.password) localStorage.setItem(REMEMBER_KEY, JSON.stringify({ id: r.id, password: '' })); } catch (e) {}
+    const pwEl = $('#wlPassword'); if (pwEl && /^\d+$/.test(pwEl.value) && pwEl.value === WL_CREDENTIALS.password) pwEl.value = '';
+    setTimeout(verifySession, 1500);
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', authBoot); else authBoot();
+
+  /* ── จัดการผู้ใช้ (admin) ── */
+  const Users = {
+    list: [],
+    async open(setup) {
+      const me = Auth.user();
+      if (!me || me.role !== 'admin') { toast('เฉพาะผู้ดูแลระบบเท่านั้น', 'error'); return; }
+      const el = openModal({
+        wide: true, title: 'จัดการผู้ใช้และรหัสผ่าน',
+        sub: 'บัญชีเก็บในชีต USERS — รหัสผ่านถูกเข้ารหัสแบบทางเดียว (hash) ผู้ดูแลระบบก็อ่านรหัสจริงไม่ได้ ทำได้เฉพาะตั้งรหัสใหม่',
+        body: `${me.legacy || setup ? `<div class="us-setup"><b>ยังไม่มีบัญชีผู้ใช้ในระบบ</b><span>สร้างบัญชีของคุณก่อน — บัญชีแรกจะเป็นผู้ดูแลระบบ (admin) และหลังสร้างแล้ว รหัสกลางเดิมจะใช้ไม่ได้อีก</span></div>` : ''}
+          <form class="us-form" id="usForm" novalidate>
+            <h4 id="usFormTitle">เพิ่มผู้ใช้ใหม่</h4>
+            <div class="us-grid">
+              <label><span>รหัสผู้ใช้ (ID) <em>*</em></span><input name="id" autocomplete="off" placeholder="เช่น varathep.j"></label>
+              <label><span>ชื่อ – นามสกุล</span><input name="name" autocomplete="off"></label>
+              <label><span>ตำแหน่ง</span><input name="position" list="pfPosList2" autocomplete="off"></label>
+              <label><span>สิทธิ์</span><select name="role"><option value="user">ผู้ใช้ทั่วไป</option><option value="admin">ผู้ดูแลระบบ (admin)</option></select></label>
+              <label class="us-pw"><span id="usPwLbl">รหัสผ่านเริ่มต้น <em>*</em></span><div><input name="password" type="text" autocomplete="new-password" placeholder="อย่างน้อย 6 ตัว"><button type="button" class="gx-btn ghost" id="usGen">สุ่มรหัส</button></div></label>
+              <label class="us-active"><input type="checkbox" name="active" checked> เปิดใช้งาน</label>
+            </div>
+            <datalist id="pfPosList2">${Profile.POSITIONS.map(p => `<option value="${esc(p)}">`).join('')}</datalist>
+            <div class="us-actions"><button type="button" class="gx-btn ghost" id="usCancel" hidden>ยกเลิกการแก้ไข</button><button type="submit" class="gx-btn primary" id="usSave">เพิ่มผู้ใช้</button></div>
+            <p class="gx-form-err" id="usErr" role="alert"></p>
+          </form>
+          <div class="us-list" id="usList"><div class="gx-skel"></div></div>`,
+        foot: `<span class="us-count" id="usCount"></span><button class="gx-btn primary" data-close2>เสร็จสิ้น</button>`
+      });
+      el.querySelector('[data-close2]').onclick = closeModal;
+      const f = $('#usForm');
+      let editing = null;
+      const resetForm = () => {
+        editing = null; f.reset(); f.id.disabled = false;
+        $('#usFormTitle').textContent = 'เพิ่มผู้ใช้ใหม่'; $('#usSave').textContent = 'เพิ่มผู้ใช้';
+        $('#usPwLbl').innerHTML = 'รหัสผ่านเริ่มต้น <em>*</em>'; $('#usCancel').hidden = true; $('#usErr').textContent = '';
+        if (me.legacy) f.role.value = 'admin';
+      };
+      $('#usGen').onclick = () => { f.password.value = genPassword(); };
+      $('#usCancel').onclick = resetForm;
+      f.onsubmit = async e => {
+        e.preventDefault();
+        const u = { id: f.id.value.trim(), name: f.name.value.trim(), position: f.position.value.trim(), role: f.role.value, active: f.active.checked };
+        const pw = f.password.value;
+        if (!u.id) { $('#usErr').textContent = 'กรอกรหัสผู้ใช้'; return; }
+        if (!editing && pw.length < 6) { $('#usErr').textContent = 'รหัสผ่านต้องยาวอย่างน้อย 6 ตัว'; return; }
+        if (editing && pw && pw.length < 6) { $('#usErr').textContent = 'รหัสผ่านใหม่ต้องยาวอย่างน้อย 6 ตัว'; return; }
+        const btn = $('#usSave'); setBusy(btn, true); el._busy = true;
+        try {
+          const j = await Auth.api('adminSaveUser', { user: u, password: pw || '', isNew: !editing });
+          el._busy = false; setBusy(btn, false);
+          this.list = j.users; this.draw();
+          if (pw) this.showPw(u.id, pw, editing ? 'ตั้งรหัสผ่านใหม่แล้ว' : 'สร้างบัญชีแล้ว');
+          if (j.firstAccount) {
+            closeModal();
+            confirmBox('สร้างบัญชีผู้ดูแลระบบแล้ว', `ต่อจากนี้ต้องเข้าสู่ระบบด้วยรหัส "${u.id}" — รหัสกลางเดิมใช้ไม่ได้แล้ว`, 'เข้าสู่ระบบด้วยบัญชีใหม่')
+              .then(() => { doLogout(); setTimeout(() => { $('#wlUserId').value = u.id; $('#wlPassword').focus(); }, 400); });
+            return;
+          }
+          toast(editing ? `บันทึกผู้ใช้ ${u.id} แล้ว` : `เพิ่มผู้ใช้ ${u.id} แล้ว`, 'success');
+          resetForm();
+        } catch (err) { el._busy = false; setBusy(btn, false); $('#usErr').textContent = err.message; }
+      };
+      this.startEdit = u => {
+        editing = u; f.id.value = u.id; f.id.disabled = true; f.name.value = u.name; f.position.value = u.position;
+        f.role.value = u.role; f.active.checked = u.active; f.password.value = '';
+        $('#usFormTitle').textContent = `แก้ไขผู้ใช้ ${u.id}`; $('#usSave').textContent = 'บันทึกการแก้ไข';
+        $('#usPwLbl').textContent = 'รหัสผ่านใหม่ (เว้นว่าง = ไม่เปลี่ยน)'; $('#usCancel').hidden = false;
+        f.scrollIntoView({ block: 'nearest' }); f.name.focus();
+      };
+      resetForm();
+      try { const j = await Auth.api('adminListUsers'); this.list = j.users; this.draw(); }
+      catch (err) { $('#usList').innerHTML = `<div class="gx-empty warn"><strong>โหลดรายชื่อผู้ใช้ไม่ได้</strong><span>${esc(err.message)}</span></div>`; }
+    },
+    showPw(id, pw, title) {
+      const box = document.createElement('div');
+      box.className = 'us-pwbox';
+      box.innerHTML = `<b>${esc(title)} — แจ้งรหัสนี้ให้เจ้าของบัญชี</b><div><code>${esc(id)}</code> / <code>${esc(pw)}</code><button type="button" class="gx-btn ghost">คัดลอก</button></div><small>รหัสผ่านจะแสดงครั้งนี้ครั้งเดียว ระบบเก็บเฉพาะค่าเข้ารหัส</small>`;
+      box.querySelector('button').onclick = () => { navigator.clipboard && navigator.clipboard.writeText(`รหัสผู้ใช้: ${id}\nรหัสผ่าน: ${pw}`); toast('คัดลอกแล้ว', 'success'); };
+      const old = $('.us-pwbox'); if (old) old.remove();
+      $('#usForm').after(box);
+    },
+    draw() {
+      const me = Auth.user() || {};
+      const cnt = $('#usCount'); if (cnt) cnt.textContent = `ผู้ใช้ทั้งหมด ${this.list.length} คน · admin ${this.list.filter(u => u.role === 'admin').length}`;
+      const host = $('#usList'); if (!host) return;
+      if (!this.list.length) { host.innerHTML = '<div class="gx-empty"><strong>ยังไม่มีผู้ใช้</strong><span>เพิ่มผู้ใช้คนแรกด้านบน</span></div>'; return; }
+      const fmt = s => { const d = s ? new Date(s) : null; return d && !isNaN(d) ? d.toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) : '—'; };
+      host.innerHTML = `<table class="gx-table us-table"><thead><tr><th>ผู้ใช้</th><th>รหัสผู้ใช้</th><th>ตำแหน่ง</th><th>สิทธิ์</th><th>สถานะ</th><th>เข้าใช้ล่าสุด</th><th></th></tr></thead><tbody>
+        ${this.list.map((u, i) => `<tr class="${u.active ? '' : 'off'}">
+          <td><div class="us-user">${Profile.avatar(u, 'us-av')}<b>${esc(u.name || '—')}</b></div></td>
+          <td><span class="gx-code">${esc(u.id)}</span>${u.id === me.id ? ' <small class="us-me">คุณ</small>' : ''}</td>
+          <td>${esc(u.position || '—')}</td>
+          <td><span class="us-role ${u.role}">${u.role === 'admin' ? 'admin' : 'ผู้ใช้'}</span></td>
+          <td>${u.active ? '<span class="us-on">ใช้งาน</span>' : '<span class="us-off">ปิดใช้งาน</span>'}</td>
+          <td class="us-last">${fmt(u.lastLogin)}</td>
+          <td class="us-act">
+            <button class="gx-icon-btn" title="แก้ไข" data-edit="${i}">${ICON.edit}</button>
+            <button class="gx-btn ghost us-mini" data-reset="${i}">ตั้งรหัสใหม่</button>
+            ${u.id === me.id ? '' : `<button class="gx-icon-btn danger" title="ลบผู้ใช้" data-del="${i}">${ICON.trash}</button>`}
+          </td></tr>`).join('')}</tbody></table>`;
+      host.onclick = async e => {
+        const b = e.target.closest('button'); if (!b) return;
+        const u = this.list[+(b.dataset.edit || b.dataset.reset || b.dataset.del)];
+        if (b.dataset.edit != null) this.startEdit(u);
+        if (b.dataset.reset != null) {
+          const pw = genPassword();
+          if (!b.dataset.sure) { b.dataset.sure = '1'; b.textContent = 'ยืนยันตั้งรหัสใหม่?'; b.classList.add('warn'); setTimeout(() => { delete b.dataset.sure; b.textContent = 'ตั้งรหัสใหม่'; b.classList.remove('warn'); }, 3500); return; }
+          try { setBusy(b, true, ''); await Auth.api('adminResetPassword', { id: u.id, password: pw }); setBusy(b, false); this.showPw(u.id, pw, `ตั้งรหัสผ่านใหม่ให้ ${u.id} แล้ว`); }
+          catch (err) { setBusy(b, false); $('#usErr').textContent = err.message; }
+        }
+        if (b.dataset.del != null) {
+          if (!b.dataset.sure) { b.dataset.sure = '1'; b.classList.add('armed'); b.title = 'กดอีกครั้งเพื่อยืนยันการลบ'; setTimeout(() => { delete b.dataset.sure; b.classList.remove('armed'); }, 3500); return; }
+          try { const j = await Auth.api('adminDeleteUser', { id: u.id }); this.list = j.users; this.draw(); toast(`ลบผู้ใช้ ${u.id} แล้ว`, 'success'); }
+          catch (err) { $('#usErr').textContent = err.message; }
+        }
+      };
+    }
+  };
+  window.CCIPUsers = Users;
+
   /* ══════════════════════ COMMAND PALETTE เดิม (Ctrl/⌘ + K) — เพิ่มหน้าใหม่และค้นข้อมูล GO WORK / Meeting ══════════════════════ */
   try {
     const svg = d => `<svg viewBox="0 0 24 24">${d}</svg>`;
@@ -20227,6 +20754,29 @@ function endTour() {
   if (typeof origTick === 'function') {
     window.autoSyncTick = function () { const p = origTick.apply(this, arguments); if (!document.hidden && url()) { GoWork.refresh(); Meeting.refresh(); } return p; };
   }
+  // แถบตัวเลขบน Dashboard: ความยาวแถบตาม % และสีสถานะของ On-Time
+  (function heroStats() {
+    const sync = () => {
+      [['hero-donepct', false], ['hero-ontime', true]].forEach(([id, rate]) => {
+        const v = document.getElementById(id); if (!v) return;
+        const n = parseFloat(String(v.textContent).replace(/[^\d.]/g, ''));
+        const box = v.closest('.dash-hero-stat'); if (!box) return;
+        box.style.setProperty('--p', isNaN(n) ? 0 : Math.max(0, Math.min(100, n)));
+        if (rate) {
+          const lv = isNaN(n) ? '' : n >= 90 ? 'good' : n >= 75 ? 'mid' : 'low';
+          box.dataset.level = lv;
+          const tag = document.getElementById('dhOnTag');
+          if (tag) tag.textContent = lv === 'good' ? 'ดี' : lv === 'mid' ? 'ควรติดตาม' : lv === 'low' ? 'ต่ำ' : '';
+        }
+      });
+    };
+    const start = () => {
+      ['hero-donepct', 'hero-ontime'].forEach(id => { const el = document.getElementById(id); if (el) new MutationObserver(sync).observe(el, { childList: true, characterData: true, subtree: true }); });
+      sync();
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+  })();
+
   const boot = () => { if (url()) { GoWork.load(); Meeting.load(); } };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();
