@@ -5682,6 +5682,83 @@ html body .gw-sample .gx-table th, html body .gw-sample .gx-table td { padding: 
 .gw-mode label.gw-sub small { display: inline; }
 .gw-mode label.gw-sub.off { opacity: .45; pointer-events: none; }
 @media (max-width: 760px) { .gw-diff { grid-template-columns: 1fr; } }
+
+/* ════════ GO WORK: ตารางแนวคอลัมน์ตรงกัน ════════ */
+html body .gw-table { table-layout: fixed; min-width: 0; border-collapse: separate; border-spacing: 0; }
+html body .gw-table th, html body .gw-table td {
+  padding: 0 .75rem !important; height: 44px; max-width: none !important; min-width: 0 !important;
+  white-space: nowrap !important; overflow: hidden; text-overflow: ellipsis; vertical-align: middle;
+  border-right: 1px solid var(--border2); box-sizing: border-box;
+}
+html body .gw-table thead .gw-group-row th { height: 30px; padding: 0 .75rem !important; border-right: 1px solid var(--border); }
+html body .gw-table thead tr + tr th { height: 40px; }
+html body .gw-table thead th .gx-th { padding: 0 !important; height: 100%; gap: .3rem; width: 100%; }
+html body .gw-table .gx-th span { overflow: hidden; text-overflow: ellipsis; }
+html body .gw-table .gx-th i { width: auto; flex-shrink: 0; }
+html body .gw-table .gx-th i:empty { display: none; }
+html body .gw-table .gw-al-l { text-align: left; }
+html body .gw-table .gw-al-r { text-align: right; }
+html body .gw-table .gw-al-c { text-align: center; }
+html body .gw-table th.gw-al-r .gx-th { flex-direction: row-reverse; justify-content: flex-start; }
+html body .gw-table th.gw-al-c .gx-th { justify-content: center; }
+html body .gw-table th.gw-al-l .gx-th { justify-content: flex-start; }
+html body .gw-table td.gw-al-r { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: .8rem; }
+html body .gw-table td.sticky-no { color: var(--muted); }
+html body .gw-table tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--surface2) 55%, var(--surface)); }
+html body .gw-table tbody tr:nth-child(even) td.sticky-no { background: color-mix(in srgb, var(--surface2) 55%, var(--surface)); }
+html body .gw-table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 7%, var(--surface)) !important; }
+html body .gw-table td .gx-code, html body .gw-table td .gx-tag, html body .gw-table td .gw-cpc { max-width: 100%; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
+html body .gw-table td .gx-tag { display: inline-block; }
+html body .gw-table .gw-rev { font-weight: 600; font-family: var(--mono); font-size: .78rem; }
+html body .gw-table td.act, html body .gw-table th.act { border-right: none; text-align: center; padding: 0 .3rem !important; }
+
+/* ════════ DASHBOARD GO WORK ════════ */
+.gd-controls { display: flex; align-items: flex-end; gap: .6rem; flex-wrap: wrap; }
+.gd-controls label { display: grid; gap: .3rem; font-size: .72rem; color: #93A4C2; }
+.gd-controls select { height: 38px; min-width: 150px; border-radius: 9px; padding: 0 .7rem; font: inherit; font-size: .9rem; font-weight: 600;
+  background: rgba(255,255,255,.07); color: #fff; border: 1px solid rgba(160,190,255,.25); }
+.gd-controls select option { color: #0D1A2C; }
+.gd-vs { align-self: flex-end; padding-bottom: .55rem; font-size: .8rem; color: #93A4C2; }
+.gd-bar { display: flex; flex-wrap: wrap; gap: .6rem 1.2rem; align-items: center; justify-content: space-between; margin-bottom: .9rem; }
+.gd-seg { display: inline-flex; align-items: center; gap: .25rem; padding: .25rem; border-radius: 11px; background: var(--surface); border: 1px solid var(--border); }
+.gd-seg span { font-size: .74rem; font-weight: 600; color: var(--muted); padding: 0 .5rem 0 .4rem; }
+.gd-seg button { height: 32px; padding: 0 .85rem; border-radius: 8px; border: 0; background: transparent; color: var(--text); font: inherit; font-size: .8rem; font-weight: 500; cursor: pointer; transition: background-color .15s ease, color .15s ease !important; }
+.gd-seg button:hover { background: var(--surface2); }
+.gd-seg button.on { background: var(--accent); color: #fff; font-weight: 600; }
+.gd-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .7rem; margin-bottom: .9rem; }
+.gd-kpi { padding: .9rem 1rem; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow-card) !important; display: grid; gap: .15rem; }
+.gd-kpi-l { font-size: .76rem; color: var(--muted); font-weight: 600; }
+.gd-kpi b { font-family: var(--font-display); font-weight: 600; font-size: 1.55rem; color: var(--text); font-variant-numeric: tabular-nums; line-height: 1.2; }
+.gd-kpi small { font-size: .72rem; color: var(--muted); }
+.gd-delta { font-size: .78rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.gd-delta.up { color: var(--success); }
+.gd-delta.down { color: var(--danger); }
+.gd-delta.flat { color: var(--muted); font-weight: 500; }
+.gd-delta.neutral { color: var(--warn); }
+.gd-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow-card) !important; padding: 1rem 1.15rem; margin-bottom: .9rem; min-width: 0; }
+.gd-card header { display: flex; justify-content: space-between; align-items: baseline; gap: .8rem; padding-bottom: .6rem; margin-bottom: .75rem; border-bottom: 1px solid var(--border2); }
+.gd-card h3 { margin: 0; font-size: .95rem; font-weight: 600; color: var(--text); }
+.gd-card header span { font-size: .74rem; color: var(--muted); white-space: nowrap; }
+.gd-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 .9rem; }
+.gd-grid .span2 { grid-column: 1 / -1; }
+.gd-chart { position: relative; height: 260px; }
+.gd-chart.tall { height: 320px; }
+.gd-insights ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem .9rem; }
+.gd-insights li { display: flex; gap: .6rem; align-items: flex-start; font-size: .86rem; line-height: 1.55; color: var(--text); padding: .55rem .7rem; border-radius: 10px; background: var(--surface2); }
+.gd-insights li i { flex-shrink: 0; width: 8px; height: 8px; margin-top: .45rem; border-radius: 50%; background: var(--accent); }
+.gd-insights li.up i { background: var(--success); }
+.gd-insights li.down i { background: var(--danger); }
+.gd-insights li.warn i { background: var(--warn); }
+.gd-insights li.warn { background: color-mix(in srgb, var(--warn) 8%, var(--surface)); }
+.gd-insights b { font-weight: 700; }
+html body .gd-table th, html body .gd-table td { padding: .6rem .8rem; white-space: nowrap; }
+html body .gd-table td.gw-al-r { font-family: var(--mono); font-size: .82rem; font-variant-numeric: tabular-nums; }
+html body .gd-table .gw-al-r { text-align: right; }
+html body .gd-table .gw-al-c { text-align: center; }
+html body .gd-table tr.on td { background: color-mix(in srgb, var(--accent) 8%, var(--surface)) !important; }
+html body .gd-table small { color: var(--muted); font-size: .72rem; }
+@media (max-width: 1100px) { .gd-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .gd-grid, .gd-insights ul { grid-template-columns: 1fr; } }
+.gd-seg[hidden] { display: none !important; }
 </style>
 </head>
 <body class="light-theme">
@@ -5877,6 +5954,9 @@ html body .gw-sample .gx-table th, html body .gw-sample .gx-table td { padding: 
  <div class="nav-group-items">
  <button class="nav-item" id="nav-gowork" onclick="showPage('gowork',this)">
  <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></span><span class="nav-text" data-i18n="nav_gowork">รายการ GO WORK</span>
+ </button>
+ <button class="nav-item" id="nav-gwdash" onclick="showPage('gwdash',this)">
+ <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></span><span class="nav-text" data-i18n="nav_gwdash">Dashboard GO WORK</span>
  </button>
  </div>
  </div>
@@ -8085,6 +8165,41 @@ html body .gw-sample .gx-table th, html body .gw-sample .gx-table td { padding: 
       <div class="gx-table-scroll gw-scroll"><table class="gx-table gw-table"><thead id="gwHead"></thead><tbody id="gwBody"></tbody></table></div>
       <div class="gx-table-foot" id="gwFoot"></div>
     </div>
+  </div>
+
+  <!-- ═══════════ DASHBOARD GO WORK ═══════════ -->
+  <div class="page" id="page-gwdash">
+    <section class="gx-hero gd-hero">
+      <div class="gx-hero-text">
+        <h1>Dashboard GO WORK</h1>
+        <p>เปรียบเทียบผลงานรายปี — จำนวนงาน GO, VOLUME, มูลค่า, กำไร และ Margin แยกตาม Maker ประเภทงาน และเดือน พร้อมสรุปวิเคราะห์อัตโนมัติ</p>
+      </div>
+      <div class="gd-controls">
+        <label>ปีที่ดู<select id="gdYear" onchange="GWDash.year=+this.value;GWDash.base=null;GWDash.render()"></select></label>
+        <span class="gd-vs">เทียบ</span>
+        <label>ปีเปรียบเทียบ<select id="gdBase" onchange="GWDash.base=+this.value||null;GWDash.render()"></select></label>
+      </div>
+    </section>
+    <div class="gd-bar">
+      <div class="gd-seg" id="gdMetric" role="group" aria-label="วัดด้วย">
+        <span>วัดด้วย</span>
+        <button data-m="count" onclick="GWDash.setMetric('count')">จำนวนรายการ</button>
+        <button data-m="volume" onclick="GWDash.setMetric('volume')">VOLUME</button>
+        <button data-m="sales" onclick="GWDash.setMetric('sales')">มูลค่าขาย</button>
+        <button data-m="profit" onclick="GWDash.setMetric('profit')">กำไรขั้นต้น</button>
+      </div>
+      <div class="gd-seg" id="gdYtd" role="group" aria-label="ช่วงเวลาที่เทียบ" hidden>
+        <span>ปีปัจจุบันเทียบกับ</span>
+        <button data-y="1" onclick="GWDash.ytd=true;GWDash.render()">ช่วงเดือนเดียวกัน</button>
+        <button data-y="0" onclick="GWDash.ytd=false;GWDash.render()">ทั้งปีของปีก่อน</button>
+      </div>
+      <div class="gd-seg" id="gdBasis" role="group" aria-label="นับปีจาก">
+        <span>นับปีจาก</span>
+        <button data-b="go" onclick="GWDash.basis='go';GWDash.year=null;GWDash.base=null;GWDash.render()">วันที่ GO</button>
+        <button data-b="year" onclick="GWDash.basis='year';GWDash.year=null;GWDash.base=null;GWDash.render()">คอลัมน์ YEAR</button>
+      </div>
+    </div>
+    <div id="gdBody"><div class="gx-skel tall"></div></div>
   </div>
 
   <!-- ═══════════ SUMMARY MEETING ═══════════ -->
@@ -18786,6 +18901,13 @@ function endTour() {
     ['maker', 'MAKER', 'prod'], ['goDate', 'GO', 'prod'], ['volume', 'VOLUME', 'prod'], ['year', 'YEAR', 'prod'],
     ['place', 'PLACE', 'prod'], ['work', 'WORK', 'prod'], ['specPlating', 'SPEC ชุบ', 'prod'], ['specMat', "SPEC MAT'L", 'prod']
   ];
+  // ความกว้าง (px) และการจัดแนวของแต่ละคอลัมน์: l = ชิดซ้าย (ข้อความ), r = ชิดขวา (ตัวเลข), c = กึ่งกลาง (รหัสสั้น)
+  const GW_COL = {
+    no: [68, 'r'], model: [150, 'l'], cpc: [128, 'c'], customer: [100, 'r'], custMaker: [96, 'r'], cusCode: [130, 'l'],
+    partName: [230, 'l'], partNo: [190, 'l'], rev: [120, 'c'], maker: [140, 'l'], goDate: [104, 'c'], volume: [104, 'r'],
+    year: [72, 'c'], place: [96, 'c'], work: [150, 'l'], specPlating: [240, 'l'], specMat: [200, 'l']
+  };
+  const fmtPrice = v => { const n = numOf(v); return n == null || !/^[\d,.\s]+$/.test(String(v).trim()) ? esc(v) : n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 }); };
   const GW_GROUPS = { cust: 'Model / ราคา', part: 'ชิ้นงาน', prod: 'การผลิต / Process' };
   const GW_FORM_LABEL = { customer: 'CUSTOMER (ราคาลูกค้า)', custMaker: 'MAKER (ราคา Maker)', maker: 'MAKER (ผู้ผลิต)' };
   // คีย์ระบุ "รายการเดียวกัน" สำหรับอัปเดตจาก Excel — ไม่รวมค่าที่เปลี่ยนได้ (ราคา, VOLUME, GO, YEAR)
@@ -18876,6 +18998,7 @@ function endTour() {
         this._raw = raw; this.rows = data; this.loaded = true;
         localStorage.setItem(GW_KEY, raw);
         if (changed && this.active()) this.render();
+        if (changed && GWDash.active()) GWDash.render();
       } catch (e) {
         if (e.unsupported || /unknown/i.test(e.message)) { this.supported = false; if (this.active()) this.render(); }
         else if (this.active() && !this.loaded) this.render(e.message);
@@ -18928,9 +19051,13 @@ function endTour() {
       GW_FIELDS.forEach(([, , g]) => { const last = groups[groups.length - 1]; if (last && last.g === g) last.n++; else groups.push({ g, n: 1 }); });
       $('#gwHead').innerHTML =
         `<tr class="gw-group-row">${groups.map(x => `<th colspan="${x.n}" class="gw-g-${x.g}">${GW_GROUPS[x.g]}</th>`).join('')}<th class="act"></th></tr>` +
-        '<tr>' + GW_FIELDS.map(([k, l, g]) => `<th class="gw-h-${g}${['volume', 'year', 'no', 'customer', 'custMaker'].includes(k) ? ' num' : ''}${k === 'no' ? ' sticky-no' : ''}" aria-sort="${this.sort.col === k ? (this.sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}">
-          <button class="gx-th" onclick="GoWork.setSort('${k}')">${esc(l)}<i>${this.sort.col === k ? (this.sort.dir === 'asc' ? '↑' : '↓') : ''}</i></button></th>`).join('') + '<th class="act"></th></tr>';
-
+        '<tr>' + GW_FIELDS.map(([k, l, g]) => `<th class="gw-h-${g} gw-al-${GW_COL[k][1]}${k === 'no' ? ' sticky-no' : ''}" aria-sort="${this.sort.col === k ? (this.sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}">
+          <button class="gx-th" onclick="GoWork.setSort('${k}')" title="เรียงตาม ${esc(l)}"><span>${esc(l)}</span><i>${this.sort.col === k ? (this.sort.dir === 'asc' ? '↑' : '↓') : ''}</i></button></th>`).join('') + '<th class="act"></th></tr>';
+      const tbl = $('#gwHead').parentElement;
+      if (!tbl.querySelector('colgroup')) {
+        tbl.insertAdjacentHTML('afterbegin', '<colgroup>' + GW_FIELDS.map(([k]) => `<col style="width:${GW_COL[k][0]}px">`).join('') + '<col style="width:88px"></colgroup>');
+        tbl.style.width = (GW_FIELDS.reduce((s2, [k]) => s2 + GW_COL[k][0], 0) + 88) + 'px';
+      }
       const span = GW_FIELDS.length + 1;
       if (!this.supported) {
         body.innerHTML = `<tr><td colspan="${span}"><div class="gx-empty warn"><strong>ยังเชื่อม GO WORK กับ Google Sheet ไม่ได้</strong>
@@ -18951,16 +19078,18 @@ function endTour() {
           ${this.rows.length ? '' : '<div class="gw-empty-actions"><button class="gx-btn primary" onclick="GoWork.openImport()">นำเข้า Excel</button><button class="gx-btn ghost" onclick="GoWork.openForm()">เพิ่มทีละรายการ</button></div>'}</div></td></tr>`;
       } else {
         body.innerHTML = slice.map(r => `<tr>${GW_FIELDS.map(([k]) => {
-          const v = r[k];
-          if (k === 'no') return `<td class="num sticky-no">${esc(v)}</td>`;
-          if (k === 'partNo') return `<td><span class="gx-code">${esc(v) || '—'}</span></td>`;
-          if (k === 'partName') return `<td><span class="gx-strong">${esc(v)}</span></td>`;
-          if (k === 'rev') return `<td class="gw-rev">${esc(v)}</td>`;
-          if (k === 'volume' || k === 'year') return `<td class="num">${v === '' || v == null ? '' : (k === 'volume' ? fmtNum(v) : esc(v))}</td>`;
-          if (k === 'customer' || k === 'custMaker') return `<td class="num">${esc(v)}</td>`;
-          if (k === 'work') return `<td>${v ? `<span class="gx-tag">${esc(v)}</span>` : ''}</td>`;
-          if (k === 'cpc') return `<td>${v ? `<span class="gw-cpc ${/NON/i.test(v) ? 'non' : ''}">${esc(v)}</span>` : ''}</td>`;
-          return `<td>${esc(v)}</td>`;
+          const v = r[k] == null ? '' : String(r[k]);
+          const cls = `gw-al-${GW_COL[k][1]}${k === 'no' ? ' sticky-no' : ''}`;
+          const tip = v.length > 14 ? ` title="${esc(v)}"` : '';
+          let html;
+          if (k === 'partNo') html = v ? `<span class="gx-code">${esc(v)}</span>` : '';
+          else if (k === 'partName') html = `<span class="gx-strong">${esc(v)}</span>`;
+          else if (k === 'volume') html = fmtNum(v);
+          else if (k === 'customer' || k === 'custMaker') html = fmtPrice(v);
+          else if (k === 'work') html = v ? `<span class="gx-tag">${esc(v)}</span>` : '';
+          else if (k === 'cpc') html = v ? `<span class="gw-cpc ${/NON/i.test(v) ? 'non' : ''}">${esc(v)}</span>` : '';
+          else html = esc(v);
+          return `<td class="${cls}${k === 'rev' ? ' gw-rev' : ''}"${tip}>${html}</td>`;
         }).join('')}
           <td class="act"><button class="gx-icon-btn" title="แก้ไข" aria-label="แก้ไข ${esc(r.partNo)}" onclick="GoWork.openForm('${esc(r.id)}')">${ICON.edit}</button>
             <button class="gx-icon-btn danger" title="ลบ" aria-label="ลบ ${esc(r.partNo)}" onclick="GoWork.remove('${esc(r.id)}')">${ICON.trash}</button></td></tr>`).join('');
@@ -19186,6 +19315,230 @@ function endTour() {
       ws['!cols'] = GW_FIELDS.map(([k]) => ({ wch: ['partName', 'specPlating', 'specMat'].includes(k) ? 26 : ['partNo', 'customer', 'maker', 'work'].includes(k) ? 18 : 10 }));
       XLSX.utils.book_append_sheet(wb, ws, 'GO WORK');
       XLSX.writeFile(wb, `GO_WORK_${todayISO()}.xlsx`);
+    }
+  };
+
+  /* ══════════════════════ DASHBOARD GO WORK (เปรียบเทียบรายปี + วิเคราะห์) ══════════════════════ */
+  const GWDash = {
+    charts: {}, year: null, base: null, basis: 'go', metric: 'count', ytd: true,
+    METRICS: { count: 'จำนวนรายการ', volume: 'VOLUME', sales: 'มูลค่าขาย', profit: 'กำไรขั้นต้น' },
+    COLORS: ['#2E5395', '#2F8F6E', '#C9A227', '#B0673A', '#1E3A8A', '#3F7D53', '#A6443C', '#8A94A6'],
+    active() { return $('#page-gwdash') && $('#page-gwdash').classList.contains('active'); },
+    open() { this.render(); GoWork.load(); },
+    yearOf(r) {
+      const fix = y => (y > 2400 ? y - 543 : y);
+      const fromGo = () => { const d = parseDMY(r.goDate); return d ? fix(d.getFullYear()) : null; };
+      const fromCol = () => { const n = numOf(r.year); return n && n > 1990 ? fix(Math.round(n)) : null; };
+      return this.basis === 'go' ? (fromGo() || fromCol()) : (fromCol() || fromGo());
+    },
+    prep() {
+      return GoWork.rows.map(r => {
+        const d = parseDMY(r.goDate);
+        const vol = numOf(r.volume) || 0, cp = numOf(r.customer), mp = numOf(r.custMaker);
+        const priced = cp != null && mp != null;
+        return {
+          y: this.yearOf(r), m: d ? d.getMonth() : null, volume: vol, priced,
+          sales: cp != null ? cp * vol : 0, cost: mp != null ? mp * vol : 0,
+          profit: priced ? (cp - mp) * vol : 0, salesP: priced ? cp * vol : 0,
+          maker: String(r.maker || '').trim() || '(ไม่ระบุ)', work: String(r.work || '').trim() || '(ไม่ระบุ)',
+          model: String(r.model || '').trim(), cpc: /NON/i.test(r.cpc || '') ? 'NON CPS' : (String(r.cpc || '').trim() ? 'CPC / CPS' : '(ไม่ระบุ)')
+        };
+      }).filter(x => x.y);
+    },
+    val(list, metric) {
+      metric = metric || this.metric;
+      if (metric === 'count') return list.length;
+      return list.reduce((s, x) => s + (x[metric] || 0), 0);
+    },
+    sum(list) {
+      const salesP = list.reduce((s, x) => s + x.salesP, 0), profit = list.reduce((s, x) => s + x.profit, 0);
+      return {
+        count: list.length, volume: this.val(list, 'volume'), sales: this.val(list, 'sales'), cost: this.val(list, 'cost'),
+        profit, margin: salesP ? profit / salesP * 100 : null,
+        makers: new Set(list.map(x => x.maker)).size, models: new Set(list.map(x => x.model).filter(Boolean)).size,
+        priced: list.filter(x => x.priced).length
+      };
+    },
+    fmt(v, metric) {
+      if (v == null || isNaN(v)) return '—';
+      if (metric === 'sales' || metric === 'profit' || metric === 'cost') {
+        const a = Math.abs(v);
+        return (v < 0 ? '-' : '') + '฿' + (a >= 1e6 ? (a / 1e6).toFixed(a >= 1e8 ? 0 : 2) + 'M' : a >= 1e4 ? (a / 1e3).toFixed(1) + 'K' : a.toLocaleString('th-TH', { maximumFractionDigits: 0 }));
+      }
+      return Math.round(v).toLocaleString('th-TH');
+    },
+    delta(cur, prev, pp) {
+      if (cur == null || prev == null) return { txt: 'ไม่มีข้อมูลปีเทียบ', cls: 'flat' };
+      if (pp) { const d = cur - prev; return { txt: `${d >= 0 ? '▲' : '▼'} ${Math.abs(d).toFixed(1)} จุด`, cls: Math.abs(d) < 0.05 ? 'flat' : d > 0 ? 'up' : 'down' }; }
+      if (!prev) return { txt: cur ? 'ใหม่ (ปีเทียบ = 0)' : '—', cls: cur ? 'up' : 'flat' };
+      const p = (cur - prev) / Math.abs(prev) * 100;
+      return { txt: `${p >= 0 ? '▲' : '▼'} ${Math.abs(p).toFixed(1)}%`, cls: Math.abs(p) < 0.05 ? 'flat' : p > 0 ? 'up' : 'down' };
+    },
+    kill(id) { if (this.charts[id]) { this.charts[id].destroy(); delete this.charts[id]; } },
+    chart(id, cfg) {
+      this.kill(id);
+      const c = document.getElementById(id); if (!c || typeof Chart === 'undefined') return;
+      cfg.options = Object.assign({ responsive: true, maintainAspectRatio: false }, cfg.options);
+      this.charts[id] = new Chart(c, cfg);
+    },
+    setMetric(m) { this.metric = m; this.render(); },
+    render() {
+      const host = $('#gdBody'); if (!host) return;
+      const all = this.prep();
+      const years = [...new Set(all.map(x => x.y))].sort((a, b) => a - b);
+      const yearSel = $('#gdYear'), baseSel = $('#gdBase');
+      if (!years.length) {
+        Object.keys(this.charts).forEach(k => this.kill(k));
+        yearSel.innerHTML = ''; baseSel.innerHTML = '';
+        host.innerHTML = `<div class="gx-empty"><strong>${GoWork.rows.length ? 'ยังหาปีของรายการไม่ได้' : (GoWork.loaded ? 'ยังไม่มีข้อมูล GO WORK' : 'กำลังโหลดข้อมูล…')}</strong>
+          <span>${GoWork.rows.length ? 'ต้องมีวันที่ในคอลัมน์ GO หรือปีในคอลัมน์ YEAR' : 'นำเข้าไฟล์ Excel หลักในหน้า รายการ GO WORK ก่อน แล้ว Dashboard จะคำนวณให้อัตโนมัติ'}</span>
+          ${GoWork.loaded && !GoWork.rows.length ? `<button class="gx-btn primary" onclick="showPage('gowork', document.getElementById('nav-gowork'));setTimeout(()=>GoWork.openImport(),100)">นำเข้า Excel</button>` : ''}</div>`;
+        return;
+      }
+      if (!this.year || !years.includes(this.year)) { const now = new Date().getFullYear(); this.year = years.includes(now) ? now : years[years.length - 1]; }
+      if (this.base == null || this.base >= this.year || !years.includes(this.base)) this.base = years.filter(y => y < this.year).pop() || null;
+      yearSel.innerHTML = years.slice().reverse().map(y => `<option value="${y}"${y === this.year ? ' selected' : ''}>${y + 543} (${y})</option>`).join('');
+      baseSel.innerHTML = years.filter(y => y < this.year).reverse().map(y => `<option value="${y}"${y === this.base ? ' selected' : ''}>${y + 543}</option>`).join('') || '<option value="">— ไม่มีปีก่อนหน้า —</option>';
+      document.querySelectorAll('#gdMetric button').forEach(b => b.classList.toggle('on', b.dataset.m === this.metric));
+      document.querySelectorAll('#gdBasis button').forEach(b => b.classList.toggle('on', b.dataset.b === this.basis));
+
+      const Y = this.year, B = this.base, M = this.metric, ML = this.METRICS[M];
+      // ปีปัจจุบันยังไม่จบ → เทียบกับช่วงเดือนเดียวกันของปีก่อน (ม.ค. ถึงเดือนล่าสุด) เพื่อความยุติธรรม
+      const isCurYear = Y === new Date().getFullYear(), lastM = new Date().getMonth();
+      const ytdOn = this.ytd && isCurYear && B;
+      const cur = all.filter(x => x.y === Y);
+      const prevFull = B ? all.filter(x => x.y === B) : [];
+      const prev = ytdOn ? prevFull.filter(x => x.m == null || x.m <= lastM) : prevFull;
+      const MS_ = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+      const period = ytdOn ? ` (ม.ค.–${MS_[lastM]})` : '';
+      const ytdBox = $('#gdYtd');
+      if (ytdBox) { ytdBox.hidden = !(isCurYear && B); ytdBox.querySelectorAll('button').forEach(b => b.classList.toggle('on', (b.dataset.y === '1') === !!this.ytd)); }
+      const sc = this.sum(cur), sp = B ? this.sum(prev) : null;
+      const yTH = y => y + 543;
+
+      /* ── KPI ── */
+      const kpis = [
+        ['จำนวนรายการ GO', sc.count, sp && sp.count, 'count'],
+        ['VOLUME รวม', sc.volume, sp && sp.volume, 'volume'],
+        ['มูลค่าขาย', sc.sales, sp && sp.sales, 'sales'],
+        ['ต้นทุน Maker', sc.cost, sp && sp.cost, 'cost'],
+        ['กำไรขั้นต้น', sc.profit, sp && sp.profit, 'profit'],
+        ['Margin', sc.margin, sp && sp.margin, 'margin'],
+        ['Maker ที่ใช้', sc.makers, sp && sp.makers, 'count'],
+        ['Model', sc.models, sp && sp.models, 'count']
+      ];
+      const kpiHtml = kpis.map(([l, v, p, t]) => {
+        const d = this.delta(v, B ? p : null, t === 'margin');
+        const shown = t === 'margin' ? (v == null ? '—' : v.toFixed(1) + '%') : this.fmt(v, t);
+        const was = !B ? '' : t === 'margin' ? (p == null ? '—' : p.toFixed(1) + '%') : this.fmt(p, t);
+        const cls = t === 'cost' && d.cls !== 'flat' ? 'neutral' : d.cls;
+        return `<div class="gd-kpi"><span class="gd-kpi-l">${l}</span><b>${shown}</b>
+          <span class="gd-delta ${cls}">${B ? d.txt : '—'}</span>${B ? `<small>ปี ${yTH(B)}${period}: ${was}</small>` : ''}</div>`;
+      }).join('');
+
+      /* ── วิเคราะห์อัตโนมัติ ── */
+      const ins = [];
+      if (B) {
+        const d = sc.count - sp.count, p = sp.count ? d / sp.count * 100 : null;
+        ins.push([d >= 0 ? 'up' : 'down', `ปี ${yTH(Y)}${period} มีงาน GO <b>${sc.count.toLocaleString('th-TH')}</b> รายการ ${d >= 0 ? 'เพิ่มขึ้น' : 'ลดลง'} <b>${Math.abs(d).toLocaleString('th-TH')}</b> รายการ${p != null ? ` (${Math.abs(p).toFixed(1)}%)` : ''} จากช่วงเดียวกันของปี ${yTH(B)}`.replace('จากช่วงเดียวกันของปี', period ? 'จากช่วงเดียวกันของปี' : 'จากปี')]);
+        if (sc.margin != null && sp.margin != null) {
+          const dm = sc.margin - sp.margin;
+          ins.push([dm >= 0 ? 'up' : 'down', `Margin เฉลี่ย <b>${sc.margin.toFixed(1)}%</b> ${Math.abs(dm) < 0.05 ? 'เท่ากับปีก่อน' : `${dm > 0 ? 'ดีขึ้น' : 'ลดลง'} ${Math.abs(dm).toFixed(1)} จุด`} (ปีก่อน ${sp.margin.toFixed(1)}%)`]);
+        }
+        const byMaker = (list) => { const m = new Map(); list.forEach(x => m.set(x.maker, (m.get(x.maker) || 0) + this.val([x]))); return m; };
+        const mc = byMaker(cur), mp = byMaker(prev);
+        const diffs = [...new Set([...mc.keys(), ...mp.keys()])].map(k => [k, (mc.get(k) || 0) - (mp.get(k) || 0)]).sort((a, b) => b[1] - a[1]);
+        if (diffs.length && diffs[0][1] > 0) ins.push(['up', `Maker ที่${ML}เพิ่มขึ้นมากที่สุด: <b>${esc(diffs[0][0])}</b> (+${this.fmt(diffs[0][1], M)})`]);
+        const last = diffs[diffs.length - 1];
+        if (last && last[1] < 0) ins.push(['down', `Maker ที่${ML}ลดลงมากที่สุด: <b>${esc(last[0])}</b> (${this.fmt(last[1], M)})`]);
+        const oldModels = new Set(all.filter(x => x.y < Y).map(x => x.model));
+        const newModels = [...new Set(cur.map(x => x.model).filter(m => m && !oldModels.has(m)))];
+        if (newModels.length) ins.push(['info', `Model ใหม่ในปี ${yTH(Y)}: <b>${newModels.length}</b> รุ่น — ${newModels.slice(0, 5).map(esc).join(', ')}${newModels.length > 5 ? ' …' : ''}`]);
+      }
+      const works = new Map(); cur.forEach(x => works.set(x.work, (works.get(x.work) || 0) + this.val([x])));
+      const topWork = [...works].sort((a, b) => b[1] - a[1])[0];
+      const totalM = this.val(cur);
+      if (topWork && totalM) ins.push(['info', `งานที่มีสัดส่วนมากที่สุด (${ML}): <b>${esc(topWork[0])}</b> ${(topWork[1] / totalM * 100).toFixed(1)}%`]);
+      const months = Array.from({ length: 12 }, (_, i) => this.val(cur.filter(x => x.m === i)));
+      const peak = months.indexOf(Math.max(...months));
+      if (months[peak] > 0) ins.push(['info', `เดือนที่${ML}สูงสุด: <b>${MONTHS[peak]}</b> (${this.fmt(months[peak], M)})`]);
+      if (cur.length && sc.priced < cur.length) ins.push(['warn', `มีราคาครบทั้งราคาลูกค้าและราคา Maker ${sc.priced.toLocaleString('th-TH')} จาก ${cur.length.toLocaleString('th-TH')} รายการ (${(sc.priced / cur.length * 100).toFixed(0)}%) — มูลค่า/กำไรคำนวณจากรายการที่มีราคา`]);
+
+      /* ── ตารางสรุปรายปี ── */
+      const yearRows = years.slice().reverse().map((y, i, arr) => {
+        const s = this.sum(all.filter(x => x.y === y)), py = arr[i + 1], ps = py ? this.sum(all.filter(x => x.y === py)) : null;
+        const d = ps ? this.delta(s.count, ps.count) : null;
+        return `<tr class="${y === Y ? 'on' : ''}"><td class="gw-al-c"><b>${yTH(y)}</b> <small>${y}</small></td>
+          <td class="gw-al-r">${s.count.toLocaleString('th-TH')}</td><td class="gw-al-r">${d ? `<span class="gd-delta ${d.cls}">${d.txt}</span>` : '—'}</td>
+          <td class="gw-al-r">${this.fmt(s.volume, 'volume')}</td><td class="gw-al-r">${this.fmt(s.sales, 'sales')}</td><td class="gw-al-r">${this.fmt(s.cost, 'cost')}</td>
+          <td class="gw-al-r">${this.fmt(s.profit, 'profit')}</td><td class="gw-al-r">${s.margin == null ? '—' : s.margin.toFixed(1) + '%'}</td>
+          <td class="gw-al-r">${s.makers}</td><td class="gw-al-r">${s.models}</td></tr>`;
+      }).join('');
+
+      host.innerHTML = `
+        <div class="gd-kpis">${kpiHtml}</div>
+        <section class="gd-card gd-insights"><header><h3>สรุปวิเคราะห์ ปี ${yTH(Y)}${B ? ` เทียบ ${yTH(B)}` : ''}${period}</h3><span>วัดด้วย: ${ML}</span></header>
+          <ul>${ins.map(([t, h]) => `<li class="${t}"><i></i><span>${h}</span></li>`).join('') || '<li class="info"><i></i><span>ยังมีข้อมูลไม่พอสำหรับการวิเคราะห์</span></li>'}</ul></section>
+        <div class="gd-grid">
+          <section class="gd-card span2"><header><h3>${ML}รายเดือน: ${yTH(Y)} เทียบ ${B ? yTH(B) : '—'}</h3><span>ใช้เดือนจากวันที่ GO</span></header><div class="gd-chart tall"><canvas id="gdMonthly"></canvas></div></section>
+          <section class="gd-card span2"><header><h3>สรุปรายปี: ${ML} และ Margin %</h3><span>ทุกปีที่มีข้อมูล</span></header><div class="gd-chart"><canvas id="gdYearly"></canvas></div></section>
+          <section class="gd-card"><header><h3>Top 10 Maker ตาม${ML}</h3><span>${yTH(Y)}${B ? ` เทียบ ${yTH(B)}` : ''}${period}</span></header><div class="gd-chart tall"><canvas id="gdMaker"></canvas></div></section>
+          <section class="gd-card"><header><h3>ประเภทงาน (WORK) ตาม${ML}</h3><span>${yTH(Y)}${B ? ` เทียบ ${yTH(B)}` : ''}${period}</span></header><div class="gd-chart tall"><canvas id="gdWork"></canvas></div></section>
+          <section class="gd-card"><header><h3>สัดส่วน CPC / NON CPS</h3><span>ปี ${yTH(Y)} · ${ML}</span></header><div class="gd-chart"><canvas id="gdCpc"></canvas></div></section>
+          <section class="gd-card"><header><h3>${ML}สะสมทั้งปี</h3><span>เดือนต่อเดือน</span></header><div class="gd-chart"><canvas id="gdCum"></canvas></div></section>
+        </div>
+        <section class="gd-card"><header><h3>ตารางสรุปแต่ละปี</h3><span>มูลค่า = ราคา × VOLUME</span></header>
+          <div class="gx-table-scroll"><table class="gx-table gd-table"><thead><tr><th class="gw-al-c">ปี</th><th class="gw-al-r">รายการ</th><th class="gw-al-r">เทียบปีก่อน</th><th class="gw-al-r">VOLUME</th>
+          <th class="gw-al-r">มูลค่าขาย</th><th class="gw-al-r">ต้นทุน Maker</th><th class="gw-al-r">กำไรขั้นต้น</th><th class="gw-al-r">Margin</th><th class="gw-al-r">Maker</th><th class="gw-al-r">Model</th></tr></thead>
+          <tbody>${yearRows}</tbody></table></div></section>`;
+
+      /* ── กราฟ ── */
+      const money = ['sales', 'profit'].includes(M);
+      const tick = v => this.fmt(v, M);
+      const tipLabel = ctx => `${ctx.dataset.label}: ${money ? '฿' + Number(ctx.raw).toLocaleString('th-TH', { maximumFractionDigits: 0 }) : Number(ctx.raw).toLocaleString('th-TH')}`;
+      const monthOf = list => Array.from({ length: 12 }, (_, i) => this.val(list.filter(x => x.m === i)));
+      const mC = monthOf(cur), mP = B ? monthOf(prevFull) : null;
+      const MS = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+      const legend = { display: true, position: 'top', align: 'end' };
+      this.chart('gdMonthly', { type: 'bar', data: { labels: MS, datasets: [
+          ...(B ? [{ label: `ปี ${yTH(B)}`, data: mP, backgroundColor: '#8A94A6', maxBarThickness: 22 }] : []),
+          { label: `ปี ${yTH(Y)}`, data: mC, backgroundColor: '#2E5395', maxBarThickness: 22 }] },
+        options: { plugins: { legend, tooltip: { callbacks: { label: tipLabel } } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { callback: tick } } } } });
+
+      const ys = years.map(y => all.filter(x => x.y === y));
+      this.chart('gdYearly', { type: 'bar', data: { labels: years.map(y => yTH(y)), datasets: [
+          { type: 'bar', label: ML, data: ys.map(l => this.val(l)), backgroundColor: years.map(y => y === Y ? '#2E5395' : '#8A94A6'), yAxisID: 'y', maxBarThickness: 48, order: 2 },
+          { type: 'line', label: 'Margin %', data: ys.map(l => { const s = this.sum(l); return s.margin == null ? null : +s.margin.toFixed(2); }), borderColor: '#C9A227', yAxisID: 'y1', order: 1, spanGaps: true }] },
+        options: { plugins: { legend, tooltip: { callbacks: { label: ctx => ctx.dataset.yAxisID === 'y1' ? `Margin: ${ctx.raw}%` : tipLabel(ctx) } } },
+          scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { callback: tick } }, y1: { position: 'right', grid: { display: false }, ticks: { callback: v => v + '%' } } } } });
+
+      const group = (list, key) => { const m = new Map(); list.forEach(x => m.set(x[key], (m.get(x[key]) || 0) + this.val([x]))); return m; };
+      const gC = group(cur, 'maker'), gP = group(prev, 'maker');
+      const topMakers = [...gC].sort((a, b) => b[1] - a[1]).slice(0, 10).map(x => x[0]);
+      this.chart('gdMaker', { type: 'bar', data: { labels: topMakers, datasets: [
+          { label: `ปี ${yTH(Y)}`, data: topMakers.map(k => gC.get(k) || 0), backgroundColor: '#2E5395', maxBarThickness: 14 },
+          ...(B ? [{ label: `ปี ${yTH(B)}`, data: topMakers.map(k => gP.get(k) || 0), backgroundColor: '#8A94A6', maxBarThickness: 14 }] : [])] },
+        options: { indexAxis: 'y', plugins: { legend, tooltip: { callbacks: { label: tipLabel } } }, scales: { x: { beginAtZero: true, ticks: { callback: tick } }, y: { grid: { display: false } } } } });
+
+      const wC = group(cur, 'work'), wP = group(prev, 'work');
+      const topWorks = [...wC].sort((a, b) => b[1] - a[1]).slice(0, 8).map(x => x[0]);
+      this.chart('gdWork', { type: 'bar', data: { labels: topWorks, datasets: [
+          { label: `ปี ${yTH(Y)}`, data: topWorks.map(k => wC.get(k) || 0), backgroundColor: '#2F8F6E', maxBarThickness: 14 },
+          ...(B ? [{ label: `ปี ${yTH(B)}`, data: topWorks.map(k => wP.get(k) || 0), backgroundColor: '#8A94A6', maxBarThickness: 14 }] : [])] },
+        options: { indexAxis: 'y', plugins: { legend, tooltip: { callbacks: { label: tipLabel } } }, scales: { x: { beginAtZero: true, ticks: { callback: tick } }, y: { grid: { display: false } } } } });
+
+      const cC = group(cur, 'cpc'), cLabels = [...cC.keys()];
+      const cTotal = [...cC.values()].reduce((a, b) => a + b, 0);
+      this.chart('gdCpc', { type: 'doughnut', data: { labels: cLabels, datasets: [{ data: cLabels.map(k => cC.get(k)), backgroundColor: cLabels.map(k => k === 'CPC / CPS' ? '#2E5395' : k === 'NON CPS' ? '#2F8F6E' : '#8A94A6') }] },
+        options: { plugins: { legend: { display: true, position: 'right' }, centerText: { text: this.fmt(cTotal, M), label: ML },
+          tooltip: { callbacks: { label: ctx => `${ctx.label}: ${tick(ctx.raw)} (${cTotal ? (ctx.raw / cTotal * 100).toFixed(1) : 0}%)` } } } } });
+
+      const cum = arr => { let s = 0; return arr.map(v => (s += v)); };
+      const nowM = new Date().getFullYear() === Y ? new Date().getMonth() : 11;
+      this.chart('gdCum', { type: 'line', data: { labels: MS, datasets: [
+          { label: `ปี ${yTH(Y)}`, data: cum(mC).map((v, i) => i <= nowM ? v : null), borderColor: '#2E5395', fill: true, backgroundColor: 'rgba(46,83,149,0.08)' },
+          ...(B ? [{ label: `ปี ${yTH(B)}`, data: cum(mP), borderColor: '#8A94A6', borderDash: [5, 4] }] : [])] },
+        options: { plugins: { legend, tooltip: { callbacks: { label: tipLabel } } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { callback: tick } } } } });
     }
   };
 
@@ -19639,6 +19992,7 @@ function endTour() {
     const at = CMDK_ITEMS.findIndex(i => i.key === 'cer');
     CMDK_ITEMS.splice(at < 0 ? CMDK_ITEMS.length : at, 0,
       { key: 'gowork', label: 'รายการ GO WORK', group: 'งาน GO WORK', icon: TRUCK },
+      { key: 'gwdash', label: 'Dashboard GO WORK (เทียบรายปี)', group: 'งาน GO WORK', icon: svg('<path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/>') },
       { key: 'meeting', label: 'บันทึกการประชุม', group: 'Summary Meeting', icon: CHAT },
       { key: 'rfq', label: 'RFQ ขอใบเสนอราคา (E-Form)', group: 'RFQ', icon: svg('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/>') },
       { key: 'costsaving', label: 'Cost Saving Report', group: 'COST SAVING', icon: COIN },
@@ -19668,14 +20022,14 @@ function endTour() {
   } catch (e) { console.warn('[ccip] command palette extension:', e); }
 
   /* ══════════════════════ เชื่อมกับระบบเดิม ══════════════════════ */
-  window.GoWork = GoWork; window.Meeting = Meeting; window.RFQ = RFQ;
+  window.GoWork = GoWork; window.GWDash = GWDash; window.Meeting = Meeting; window.RFQ = RFQ;
 
   // หน้าใหม่ + ชื่อหัวข้อ + เมนู 2 ภาษา
   try {
-    Object.assign(PAGE_TITLES.th, { gowork: 'GO WORK', meeting: 'Summary Meeting', rfq: 'RFQ ขอใบเสนอราคา' });
-    Object.assign(PAGE_TITLES.en, { gowork: 'GO WORK', meeting: 'Summary Meeting', rfq: 'RFQ Request for Quotation' });
-    Object.assign(I18N.th, { group_gowork: 'งาน GO WORK', nav_gowork: 'รายการ GO WORK', group_meeting: 'Summary Meeting', nav_meeting: 'บันทึกการประชุม', group_rfq: 'RFQ ขอใบเสนอราคา', nav_rfq: 'สร้างใบขอราคา (E-Form)' });
-    Object.assign(I18N.en, { group_gowork: 'GO WORK', nav_gowork: 'GO WORK List', group_meeting: 'Summary Meeting', nav_meeting: 'Meeting Notes', group_rfq: 'RFQ', nav_rfq: 'Create RFQ (E-Form)' });
+    Object.assign(PAGE_TITLES.th, { gwdash: 'Dashboard GO WORK', gowork: 'GO WORK', meeting: 'Summary Meeting', rfq: 'RFQ ขอใบเสนอราคา' });
+    Object.assign(PAGE_TITLES.en, { gwdash: 'GO WORK Dashboard', gowork: 'GO WORK', meeting: 'Summary Meeting', rfq: 'RFQ Request for Quotation' });
+    Object.assign(I18N.th, { group_gowork: 'งาน GO WORK', nav_gowork: 'รายการ GO WORK', nav_gwdash: 'Dashboard GO WORK', group_meeting: 'Summary Meeting', nav_meeting: 'บันทึกการประชุม', group_rfq: 'RFQ ขอใบเสนอราคา', nav_rfq: 'สร้างใบขอราคา (E-Form)' });
+    Object.assign(I18N.en, { group_gowork: 'GO WORK', nav_gowork: 'GO WORK List', nav_gwdash: 'GO WORK Dashboard', group_meeting: 'Summary Meeting', nav_meeting: 'Meeting Notes', group_rfq: 'RFQ', nav_rfq: 'Create RFQ (E-Form)' });
     DEFAULT_COLLAPSED_NAV_GROUPS.push('gowork', 'meeting', 'rfq');
   } catch (e) {}
 
@@ -19688,6 +20042,7 @@ function endTour() {
     if (!document.getElementById('page-' + name)) name = 'home', btn = document.getElementById('nav-home');
     origShowPage(name, btn);
     if (name === 'gowork') GoWork.open();
+    if (name === 'gwdash') GWDash.open();
     if (name === 'meeting') Meeting.open();
     if (name === 'rfq') RFQ.open();
     document.querySelector('main') && document.querySelector('main').scrollTo && document.querySelector('main').scrollTo(0, 0);
