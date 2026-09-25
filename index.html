@@ -5669,6 +5669,19 @@ html body .gw-sample .gx-table th, html body .gw-sample .gx-table td { padding: 
 #page-gowork .gx-search { flex: 1 1 220px; max-width: 320px; }
 #page-gowork .gx-select { min-width: 0; width: 132px; flex: 0 1 132px; }
 #page-gowork .gx-toolbar .gx-btn { padding: 0 .8rem; }
+.gw-diff { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; margin: .2rem 0 .3rem; }
+.gw-diff div { padding: .65rem .85rem; border-radius: 10px; border: 1px solid var(--border); background: var(--surface2); }
+.gw-diff b { display: block; font-family: var(--font-display); font-size: 1.35rem; font-weight: 600; }
+.gw-diff span { font-size: .76rem; color: var(--muted); }
+.gw-diff .new { border-color: color-mix(in srgb, var(--success) 45%, var(--border)); background: color-mix(in srgb, var(--success) 8%, var(--surface)); }
+.gw-diff .new b { color: var(--success); }
+.gw-diff .chg { border-color: color-mix(in srgb, var(--warn) 45%, var(--border)); background: color-mix(in srgb, var(--warn) 8%, var(--surface)); }
+.gw-diff .chg b { color: var(--warn); }
+.gw-diff .same b { color: var(--muted); }
+.gw-mode label.gw-sub { margin: -.2rem 0 0 2.2rem; padding: .55rem .8rem; font-size: .84rem; border-style: dashed; }
+.gw-mode label.gw-sub small { display: inline; }
+.gw-mode label.gw-sub.off { opacity: .45; pointer-events: none; }
+@media (max-width: 760px) { .gw-diff { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body class="light-theme">
@@ -8059,9 +8072,8 @@ html body .gw-sample .gx-table th, html body .gw-sample .gx-table td { padding: 
     </section>
     <div class="gx-toolbar">
       <label class="gx-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input id="gwSearch" type="search" placeholder="ค้นหาทุกคอลัมน์: Part No, Part Name, Customer, Spec…" oninput="GoWork.page=1;GoWork.render()" aria-label="ค้นหางาน GO WORK"></label>
+        <input id="gwSearch" type="search" placeholder="ค้นหาทุกคอลัมน์: Part No, Part Name, Spec…" oninput="GoWork.page=1;GoWork.render()" aria-label="ค้นหางาน GO WORK"></label>
       <select id="gwModel" class="gx-select" onchange="GoWork.page=1;GoWork.render()" aria-label="กรอง Model"></select>
-      <select id="gwCustomer" class="gx-select" onchange="GoWork.page=1;GoWork.render()" aria-label="กรอง Customer"></select>
       <select id="gwMaker" class="gx-select" onchange="GoWork.page=1;GoWork.render()" aria-label="กรอง Maker"></select>
       <select id="gwWork" class="gx-select" onchange="GoWork.page=1;GoWork.render()" aria-label="กรอง Work"></select>
       <span class="gx-spacer"></span>
@@ -18774,8 +18786,13 @@ function endTour() {
     ['maker', 'MAKER', 'prod'], ['goDate', 'GO', 'prod'], ['volume', 'VOLUME', 'prod'], ['year', 'YEAR', 'prod'],
     ['place', 'PLACE', 'prod'], ['work', 'WORK', 'prod'], ['specPlating', 'SPEC ชุบ', 'prod'], ['specMat', "SPEC MAT'L", 'prod']
   ];
-  const GW_GROUPS = { cust: 'ข้อมูลลูกค้า', part: 'ชิ้นงาน', prod: 'การผลิต / Process' };
-  const GW_FORM_LABEL = { custMaker: 'MAKER (ฝั่งลูกค้า)', maker: 'MAKER (ผู้ผลิต)' };
+  const GW_GROUPS = { cust: 'Model / ราคา', part: 'ชิ้นงาน', prod: 'การผลิต / Process' };
+  const GW_FORM_LABEL = { customer: 'CUSTOMER (ราคาลูกค้า)', custMaker: 'MAKER (ราคา Maker)', maker: 'MAKER (ผู้ผลิต)' };
+  // คีย์ระบุ "รายการเดียวกัน" สำหรับอัปเดตจาก Excel — ไม่รวมค่าที่เปลี่ยนได้ (ราคา, VOLUME, GO, YEAR)
+  const GW_KEY_FIELDS = ['partNo', 'rev', 'model', 'maker', 'work'];
+  const normK = v => String(v == null ? '' : v).toUpperCase().replace(/\s+/g, ' ').trim().replace(/^-$/, '');
+  const gwKey = r => GW_KEY_FIELDS.map(k => normK(r[k])).join('|');
+  const gwSame = (a, b) => GW_FIELDS.every(([k]) => normK(a[k]) === normK(b[k]));
   const numOf = v => { const n = parseFloat(String(v == null ? '' : v).replace(/,/g, '')); return isNaN(n) ? null : n; };
   const fmtNum = v => { const n = numOf(v); return n == null ? esc(v) : n.toLocaleString('th-TH'); };
 
@@ -18876,7 +18893,7 @@ function endTour() {
     },
     filtered() {
       const q = ($('#gwSearch') && $('#gwSearch').value || '').trim().toLowerCase();
-      const f = { model: $('#gwModel'), customer: $('#gwCustomer'), maker: $('#gwMaker'), work: $('#gwWork') };
+      const f = { model: $('#gwModel'), maker: $('#gwMaker'), work: $('#gwWork') };
       let list = this.rows.filter(r =>
         Object.entries(f).every(([k, el]) => !el || !el.value || String(r[k] || '').trim() === el.value) &&
         (!q || GW_FIELDS.some(([k]) => String(r[k] || '').toLowerCase().includes(q))));
@@ -18898,7 +18915,7 @@ function endTour() {
     render(errMsg) {
       const body = $('#gwBody'); if (!body) return;
       this.fillSelect('#gwModel', 'model', 'ทุก Model');
-      this.fillSelect('#gwCustomer', 'customer', 'ทุก Customer');
+      
       this.fillSelect('#gwMaker', 'maker', 'ทุก Maker');
       this.fillSelect('#gwWork', 'work', 'ทุก Work');
       const uniq = k => new Set(this.rows.map(r => String(r[k] || '').trim()).filter(Boolean)).size;
@@ -18911,7 +18928,7 @@ function endTour() {
       GW_FIELDS.forEach(([, , g]) => { const last = groups[groups.length - 1]; if (last && last.g === g) last.n++; else groups.push({ g, n: 1 }); });
       $('#gwHead').innerHTML =
         `<tr class="gw-group-row">${groups.map(x => `<th colspan="${x.n}" class="gw-g-${x.g}">${GW_GROUPS[x.g]}</th>`).join('')}<th class="act"></th></tr>` +
-        '<tr>' + GW_FIELDS.map(([k, l, g]) => `<th class="gw-h-${g}${['volume', 'year', 'no'].includes(k) ? ' num' : ''}${k === 'no' ? ' sticky-no' : ''}" aria-sort="${this.sort.col === k ? (this.sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}">
+        '<tr>' + GW_FIELDS.map(([k, l, g]) => `<th class="gw-h-${g}${['volume', 'year', 'no', 'customer', 'custMaker'].includes(k) ? ' num' : ''}${k === 'no' ? ' sticky-no' : ''}" aria-sort="${this.sort.col === k ? (this.sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}">
           <button class="gx-th" onclick="GoWork.setSort('${k}')">${esc(l)}<i>${this.sort.col === k ? (this.sort.dir === 'asc' ? '↑' : '↓') : ''}</i></button></th>`).join('') + '<th class="act"></th></tr>';
 
       const span = GW_FIELDS.length + 1;
@@ -18940,6 +18957,7 @@ function endTour() {
           if (k === 'partName') return `<td><span class="gx-strong">${esc(v)}</span></td>`;
           if (k === 'rev') return `<td class="gw-rev">${esc(v)}</td>`;
           if (k === 'volume' || k === 'year') return `<td class="num">${v === '' || v == null ? '' : (k === 'volume' ? fmtNum(v) : esc(v))}</td>`;
+          if (k === 'customer' || k === 'custMaker') return `<td class="num">${esc(v)}</td>`;
           if (k === 'work') return `<td>${v ? `<span class="gx-tag">${esc(v)}</span>` : ''}</td>`;
           if (k === 'cpc') return `<td>${v ? `<span class="gw-cpc ${/NON/i.test(v) ? 'non' : ''}">${esc(v)}</span>` : ''}</td>`;
           return `<td>${esc(v)}</td>`;
@@ -19046,7 +19064,19 @@ function endTour() {
           btn.disabled = true;
         } else {
           const found = GW_FIELDS.filter(([k]) => parsed.map[k] != null), missing = GW_FIELDS.filter(([k]) => parsed.map[k] == null);
-          const dup = parsed.rows.length - new Set(parsed.rows.map(r => r.partNo + '|' + r.rev + '|' + r.maker)).size;
+          // เทียบกับข้อมูลเดิมแบบนับจำนวน (รายการที่ซ้ำกันจริงในไฟล์ยังเก็บครบ)
+          const pool = new Map();
+          this.rows.forEach(r => { const k = gwKey(r); if (!pool.has(k)) pool.set(k, []); pool.get(k).push(r); });
+          const plan = { fresh: [], same: 0, changed: [] };
+          parsed.rows.forEach(r => {
+            const list = pool.get(gwKey(r));
+            if (list && list.length) {
+              const old = list.shift();
+              if (gwSame(old, r)) plan.same++; else plan.changed.push(Object.assign({}, r, { id: old.id }));
+            } else plan.fresh.push(r);
+          });
+          parsed.plan = plan;
+          const hasOld = this.rows.length > 0;
           prev.innerHTML = `<div class="gw-imp-head"><span class="gw-file">${esc(input._name || '')}</span>${sheetSel}</div>
             <div class="gw-imp-stats">
               <div><b>${parsed.rows.length.toLocaleString('th-TH')}</b><span>รายการที่จะนำเข้า</span></div>
@@ -19056,15 +19086,33 @@ function endTour() {
             </div>
             <div class="gw-map">${GW_FIELDS.map(([k, l]) => `<span class="${parsed.map[k] != null ? 'ok' : 'miss'}">${esc(GW_FORM_LABEL[k] || l)}</span>`).join('')}</div>
             ${missing.length ? `<p class="gw-note warn">ไม่พบคอลัมน์: ${missing.map(m => esc(GW_FORM_LABEL[m[0]] || m[1])).join(', ')} — ช่องเหล่านี้จะว่าง</p>` : ''}
-            ${dup > 0 ? `<p class="gw-note">มี Part No ซ้ำกัน ${dup} แถว (นำเข้าตามไฟล์ทุกแถว)</p>` : ''}
             <div class="gw-sample"><table class="gx-table"><thead><tr>${GW_FIELDS.map(([k, l]) => `<th>${esc(l)}</th>`).join('')}</tr></thead>
               <tbody>${parsed.rows.slice(0, 6).map(r => `<tr>${GW_FIELDS.map(([k]) => `<td>${esc(r[k])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+            ${hasOld ? `<div class="gw-diff">
+              <div class="new"><b>${plan.fresh.length.toLocaleString('th-TH')}</b><span>รายการใหม่ (ยังไม่มีในระบบ)</span></div>
+              <div class="chg"><b>${plan.changed.length.toLocaleString('th-TH')}</b><span>มีอยู่แล้ว แต่ค่าใน Excel เปลี่ยน</span></div>
+              <div class="same"><b>${plan.same.toLocaleString('th-TH')}</b><span>มีอยู่แล้ว ข้อมูลตรงกัน</span></div>
+            </div>
+            <p class="gw-note">เทียบรายการด้วย PART NO. + REV. + MODEL + MAKER + WORK</p>` : ''}
             <div class="gw-mode" role="radiogroup" aria-label="วิธีนำเข้า">
-              <label><input type="radio" name="gwMode" value="replace" checked><span><b>แทนที่ข้อมูลทั้งหมดด้วยไฟล์นี้</b><small>แนะนำ — Excel เป็นข้อมูลหลัก ข้อมูลเดิม ${this.rows.length.toLocaleString('th-TH')} รายการจะถูกแทนที่</small></span></label>
-              <label><input type="radio" name="gwMode" value="append"><span><b>เพิ่มต่อท้ายข้อมูลเดิม</b><small>เก็บรายการเดิมไว้ แล้วเพิ่มแถวจากไฟล์นี้</small></span></label>
+              ${hasOld ? `<label><input type="radio" name="gwMode" value="merge" checked><span><b>อัปเดตจาก Excel — เพิ่มเฉพาะรายการใหม่ต่อท้าย</b><small>รายการที่มีอยู่แล้วจะไม่ถูกเพิ่มซ้ำ ข้อมูลเดิมยังอยู่ครบ</small></span></label>
+              <label class="gw-sub"><input type="checkbox" id="gwUpd"${plan.changed.length ? '' : ' disabled'}><span>อัปเดตค่าของ ${plan.changed.length.toLocaleString('th-TH')} รายการที่เปลี่ยน ให้ตรงกับ Excel ด้วย <small>(ราคา, VOLUME, GO ฯลฯ — ไม่สร้างแถวซ้ำ)</small></span></label>` : ''}
+              <label><input type="radio" name="gwMode" value="replace"${hasOld ? '' : ' checked'}><span><b>แทนที่ข้อมูลทั้งหมดด้วยไฟล์นี้</b><small>${hasOld ? `ลบข้อมูลเดิม ${this.rows.length.toLocaleString('th-TH')} รายการ แล้วใช้ไฟล์นี้แทน` : 'นำเข้าครั้งแรก — ใช้ไฟล์นี้เป็นข้อมูลหลัก'}</small></span></label>
+              <label><input type="radio" name="gwMode" value="append"><span><b>เพิ่มทุกแถวต่อท้าย</b><small>ไม่ตรวจรายการซ้ำ</small></span></label>
             </div>`;
-          btn.disabled = !parsed.rows.length;
-          btn.textContent = `นำเข้า ${parsed.rows.length.toLocaleString('th-TH')} รายการ`;
+          const label = () => {
+            const mode = (el.querySelector('input[name=gwMode]:checked') || {}).value;
+            if ($('#gwUpd')) { $('#gwUpd').closest('.gw-sub').classList.toggle('off', mode !== 'merge'); if (mode !== 'merge') $('#gwUpd').checked = false; }
+            const upd = $('#gwUpd') && $('#gwUpd').checked;
+            delete btn.dataset.sure; btn.classList.remove('danger');
+            if (mode === 'merge') {
+              const n = plan.fresh.length + (upd ? plan.changed.length : 0);
+              btn.disabled = !n;
+              btn.textContent = !n ? 'ข้อมูลเป็นปัจจุบันแล้ว' : `เพิ่ม ${plan.fresh.length.toLocaleString('th-TH')} รายการใหม่${upd && plan.changed.length ? ` · อัปเดต ${plan.changed.length.toLocaleString('th-TH')}` : ''}`;
+            } else { btn.disabled = !parsed.rows.length; btn.textContent = `นำเข้า ${parsed.rows.length.toLocaleString('th-TH')} รายการ`; }
+          };
+          el.querySelectorAll('input[name=gwMode], #gwUpd').forEach(i => i.addEventListener('change', label));
+          label();
         }
         const ss = $('#gwSheet'); if (ss) ss.onchange = () => { sheetName = ss.value; show(); };
       };
@@ -19072,6 +19120,8 @@ function endTour() {
         err.textContent = '';
         try {
           const buf = await file.arrayBuffer();
+          prev.innerHTML = '<div class="gx-skel"></div>';
+          try { this._raw = ''; await this.refresh(); } catch (e) {}   // เทียบกับข้อมูลล่าสุดใน Sheet
           wb = XLSX.read(buf, { type: 'array', cellNF: true, cellDates: false });
           input._name = file.name;
           sheetName = wb.SheetNames.find(n => parseSheet(wb.Sheets[n])) || wb.SheetNames[0];
@@ -19089,29 +19139,40 @@ function endTour() {
       btn.onclick = async () => {
         if (!parsed || !parsed.rows.length) return;
         const mode = (el.querySelector('input[name=gwMode]:checked') || {}).value || 'replace';
+        const upd = mode === 'merge' && $('#gwUpd') && $('#gwUpd').checked;
         if (mode === 'replace' && this.rows.length && !btn.dataset.sure) {
           btn.dataset.sure = '1'; btn.textContent = `ยืนยันแทนที่ ${this.rows.length.toLocaleString('th-TH')} รายการเดิม`; btn.classList.add('danger'); return;
         }
+        const adds = mode === 'merge' ? parsed.plan.fresh : parsed.rows;
+        const updates = upd ? parsed.plan.changed : [];
+        const total = adds.length + updates.length, CH = 1000;
         setBusy(btn, true, 'กำลังนำเข้า'); el._busy = true; err.textContent = '';
         $('#gwProg').hidden = false;
-        const rows = parsed.rows, CH = 1000, total = rows.length;
         let sent = 0;
+        const step = (txt) => { $('#gwProgText').textContent = txt; $('#gwBar').style.width = Math.round(sent / Math.max(1, total) * 100) + '%'; };
         try {
-          for (let i = 0; i < total; i += CH) {
-            const chunk = rows.slice(i, i + CH);
-            $('#gwProgText').textContent = `กำลังส่งเข้า Google Sheet ${Math.min(total, i + CH).toLocaleString('th-TH')}/${total.toLocaleString('th-TH')}`;
-            await api.post({ action: 'importGoWork', mode: i === 0 ? mode : 'append', rows: chunk });
-            sent += chunk.length;
-            $('#gwBar').style.width = Math.round(sent / total * 100) + '%';
+          for (let i = 0; i < adds.length; i += CH) {
+            const chunk = adds.slice(i, i + CH);
+            step(`กำลังเพิ่มรายการ ${Math.min(adds.length, i + CH).toLocaleString('th-TH')}/${adds.length.toLocaleString('th-TH')}`);
+            await api.post({ action: 'importGoWork', mode: i === 0 && mode === 'replace' ? 'replace' : 'append', rows: chunk });
+            sent += chunk.length; step('');
+          }
+          for (let i = 0; i < updates.length; i += CH) {
+            const chunk = updates.slice(i, i + CH);
+            step(`กำลังอัปเดตรายการเดิม ${Math.min(updates.length, i + CH).toLocaleString('th-TH')}/${updates.length.toLocaleString('th-TH')}`);
+            await api.post({ action: 'updateGoWorkBatch', items: chunk });
+            sent += chunk.length; step('');
           }
           el._busy = false; closeModal();
-          if (typeof addHistoryLog === 'function') addHistoryLog('add', 'GO WORK', input._name || 'Excel', `นำเข้า ${total} รายการ (${mode === 'replace' ? 'แทนที่ทั้งหมด' : 'เพิ่มต่อท้าย'})`);
-          toast(`นำเข้า GO WORK ${total.toLocaleString('th-TH')} รายการแล้ว`, 'success');
+          const what = mode === 'merge' ? `เพิ่มใหม่ ${adds.length}${updates.length ? ` · อัปเดต ${updates.length}` : ''} · ข้ามซ้ำ ${parsed.plan.same + (upd ? 0 : parsed.plan.changed.length)}`
+            : `${adds.length} รายการ (${mode === 'replace' ? 'แทนที่ทั้งหมด' : 'เพิ่มต่อท้าย'})`;
+          if (typeof addHistoryLog === 'function') addHistoryLog('add', 'GO WORK', input._name || 'Excel', 'นำเข้า Excel: ' + what);
+          toast(`นำเข้า GO WORK แล้ว — ${what}`, 'success');
           this._raw = ''; this.page = 1; await this.refresh(); this.render();
         } catch (e) {
           el._busy = false; setBusy(btn, false);
-          err.textContent = (/unknown/i.test(e.message) ? 'Apps Script ยังไม่รองรับการนำเข้า — อัปเดต CCIP_Extension.gs แล้ว Deploy เวอร์ชันใหม่' : 'นำเข้าไม่สำเร็จ: ' + e.message)
-            + (sent ? ` (ส่งไปแล้ว ${sent} รายการ)` : '');
+          err.textContent = (/unknown/i.test(e.message) ? 'Apps Script ยังไม่รองรับ — อัปเดต CCIP_Extension.gs แล้ว Deploy เวอร์ชันใหม่' : 'นำเข้าไม่สำเร็จ: ' + e.message)
+            + (sent ? ` (ทำไปแล้ว ${sent} รายการ — เปิดไฟล์เดิมแล้วเลือก "อัปเดตจาก Excel" ซ้ำได้ ระบบจะไม่เพิ่มซ้ำ)` : '');
         }
       };
       setTimeout(() => drop.focus(), 80);
