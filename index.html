@@ -5759,6 +5759,16 @@ html body .gd-table tr.on td { background: color-mix(in srgb, var(--accent) 8%, 
 html body .gd-table small { color: var(--muted); font-size: .72rem; }
 @media (max-width: 1100px) { .gd-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .gd-grid, .gd-insights ul { grid-template-columns: 1fr; } }
 .gd-seg[hidden] { display: none !important; }
+.gw-clear-btn { color: var(--danger) !important; }
+.gw-clear-btn:hover { border-color: var(--danger) !important; background: color-mix(in srgb, var(--danger) 8%, var(--surface)) !important; color: var(--danger) !important; }
+.gw-clear-btn svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.gw-danger { display: grid; gap: .8rem; padding: .9rem 1rem; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--danger) 35%, var(--border)); background: color-mix(in srgb, var(--danger) 5%, var(--surface)); }
+.gw-danger p { margin: 0; font-size: .86rem; line-height: 1.6; color: var(--text); }
+.gw-danger .gx-btn { justify-self: start; }
+.gw-confirm { display: grid; gap: .35rem; font-size: .82rem; color: var(--muted); }
+.gw-confirm b { color: var(--danger); }
+.gw-confirm input { height: 40px; border-radius: 9px; border: 1px solid var(--border); padding: 0 .75rem; font: inherit; font-size: .92rem; background: var(--surface); color: var(--text); }
+.gw-confirm input:focus { outline: none; border-color: var(--danger); box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 16%, transparent) !important; }
 </style>
 </head>
 <body class="light-theme">
@@ -8157,6 +8167,7 @@ html body .gd-table small { color: var(--muted); font-size: .72rem; }
       <select id="gwMaker" class="gx-select" onchange="GoWork.page=1;GoWork.render()" aria-label="กรอง Maker"></select>
       <select id="gwWork" class="gx-select" onchange="GoWork.page=1;GoWork.render()" aria-label="กรอง Work"></select>
       <span class="gx-spacer"></span>
+      <button class="gx-btn ghost gw-clear-btn" onclick="GoWork.clearAll()" title="ลบรายการ GO WORK ทั้งหมด"><svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>ลบทั้งหมด</button>
       <button class="gx-btn ghost" onclick="GoWork.exportXlsx()">Export Excel</button>
       <button class="gx-btn ghost gw-import-btn" onclick="GoWork.openImport()"><svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>นำเข้า Excel</button>
       <button class="gx-btn primary" onclick="GoWork.openForm()">เพิ่มรายการ</button>
@@ -19305,6 +19316,45 @@ function endTour() {
         }
       };
       setTimeout(() => drop.focus(), 80);
+    },
+    /* ── ลบรายการทั้งหมด (ต้องพิมพ์ยืนยัน) ── */
+    clearAll() {
+      const n = this.rows.length;
+      if (!n) { toast('ไม่มีรายการ GO WORK ให้ลบ', 'info'); return; }
+      const WORD = 'ลบทั้งหมด';
+      const el = openModal({
+        title: 'ลบรายการ GO WORK ทั้งหมด?',
+        sub: `รายการทั้งหมด ${n.toLocaleString('th-TH')} รายการจะถูกลบออกจาก Google Sheet (ชีต GO WORK) สำหรับทุกคนในแผนก`,
+        body: `<div class="gw-danger">
+            <p><b>แนะนำ:</b> สำรองข้อมูลเป็นไฟล์ Excel ก่อนลบ จะนำกลับเข้ามาได้ด้วยปุ่ม "นำเข้า Excel"</p>
+            <button type="button" class="gx-btn ghost" id="gwClrBackup">ดาวน์โหลดสำรอง (Excel ${n.toLocaleString('th-TH')} รายการ)</button>
+            <label class="gw-confirm"><span>พิมพ์ <b>${WORD}</b> เพื่อยืนยัน</span><input id="gwClrWord" autocomplete="off" placeholder="${WORD}"></label>
+          </div>
+          <p class="gx-form-err" id="gwClrErr" role="alert"></p>`,
+        foot: `<button class="gx-btn ghost" data-close2>ยกเลิก</button><button class="gx-btn danger" id="gwClrGo" disabled>ลบทั้งหมด ${n.toLocaleString('th-TH')} รายการ</button>`
+      });
+      el.querySelector('[data-close2]').onclick = closeModal;
+      $('#gwClrBackup').onclick = () => { const q = $('#gwSearch'); const keep = q ? q.value : ''; if (q) q.value = '';
+        ['#gwModel', '#gwMaker', '#gwWork'].forEach(id => { const x = $(id); if (x) x.value = ''; });
+        this.exportXlsx(); if (q) q.value = keep; };
+      const word = $('#gwClrWord'), go = $('#gwClrGo');
+      word.oninput = () => { go.disabled = word.value.trim() !== WORD; };
+      word.onkeydown = e => { if (e.key === 'Enter' && !go.disabled) go.click(); };
+      go.onclick = async () => {
+        setBusy(go, true, 'กำลังลบ'); el._busy = true;
+        try {
+          await api.post({ action: 'importGoWork', mode: 'replace', rows: [] });   // replace ด้วยชุดว่าง = ล้างข้อมูลทั้งหมด
+          this.rows = []; this.save(); this.page = 1;
+          el._busy = false; closeModal(); this.render();
+          if (GWDash.active()) GWDash.render();
+          if (typeof addHistoryLog === 'function') addHistoryLog('delete', 'GO WORK', 'ทั้งหมด', `ลบรายการ GO WORK ทั้งหมด ${n} รายการ`);
+          toast(`ลบรายการ GO WORK ทั้งหมด ${n.toLocaleString('th-TH')} รายการแล้ว`, 'success');
+        } catch (e) {
+          el._busy = false; setBusy(go, false);
+          $('#gwClrErr').textContent = (/unknown/i.test(e.message) ? 'Apps Script ยังไม่รองรับ — อัปเดต CCIP_Extension.gs แล้ว Deploy เวอร์ชันใหม่' : 'ลบไม่สำเร็จ: ' + e.message);
+        }
+      };
+      setTimeout(() => word.focus(), 80);
     },
     exportXlsx() {
       if (typeof XLSX === 'undefined') { toast('ยังโหลดตัวสร้างไฟล์ Excel ไม่เสร็จ ลองใหม่อีกครั้ง', 'error'); return; }
