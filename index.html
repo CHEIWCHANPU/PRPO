@@ -8,34 +8,37 @@
 <meta name="application-name" content="PU/EN CCIP">
 <script id="net-layer">
 /* ══════════════════════════════════════════════════════════════
-   NET LAYER v2 — แก้ปัญหา "Sync ช้า / ค้างแคช"
-   1) ทุกคำขอไป Google Apps Script จะไม่ใช้ HTTP cache ของเบราว์เซอร์ (no-store + ตัวเลขกันแคช)
-   2) คำขอ "อ่าน" ที่ซ้ำกันขณะยังโหลดอยู่ จะรวมเป็นคำขอเดียว (เดิมยิง getData ซ้ำ 2–3 รอบพร้อมกัน)
-   3) มี timeout 25 วินาที และลองใหม่อัตโนมัติ 1 ครั้งเมื่อเน็ตสะดุด/เซิร์ฟเวอร์ตอบ 5xx/429
-   4) localStorage เต็ม → ล้างข้อมูลชั่วคราวที่ดึงใหม่ได้ แล้วบันทึกซ้ำ (เดิม error นี้ถูกนับว่า "Sync ล้มเหลว")
-   5) ไม่เขียน localStorage ซ้ำถ้าข้อมูลเหมือนเดิม (ลดอาการกระตุกตอน auto-sync)
+   NET LAYER v3 — โหลดข้อมูล Google Sheet ให้เร็วที่สุด
+   1) เริ่มดึงข้อมูลทันทีตั้งแต่ <head> (ไม่ต้องรอไฟล์ 1.7 MB โหลดจบ) แล้วส่งต่อให้แต่ละหน้าใช้
+   2) รวมคำขออ่านที่เกิดพร้อมกันเป็นคำขอเดียว (action=getAll) — จาก 5–7 รอบ เหลือ 1 รอบ
+      ถ้า Apps Script ยังไม่ได้อัปเดตให้รองรับ getAll จะถอยกลับไปยิงทีละตัวให้อัตโนมัติ
+   3) คำขอซ้ำขณะยังโหลดอยู่ → ใช้ผลเดียวกัน, ไม่ใช้ HTTP cache ของเบราว์เซอร์ (no-store)
+   4) timeout: อ่าน 25 วิ / เขียน 90 วิ (อัปโหลดรูป), อ่านล้มเหลว → ลองใหม่ 1 ครั้ง
+   5) localStorage เต็ม → ล้างข้อมูลชั่วคราวแล้วบันทึกซ้ำ, ไม่เขียนซ้ำถ้าข้อมูลเหมือนเดิม
    ══════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
+  var DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbxGqLFU6cltVxCZbBi-ryj2MuJTsarqDq2dkLL6ysm3e3YjhMxKvu9jn4fXSimM8cehjw/exec';
   var nativeFetch = window.fetch.bind(window);
   var inflight = new Map();
-  var TIMEOUT_MS = 25000;
-  var net = window.__net = { pending: 0, lastOk: 0, lastFail: 0, lastError: '' };
+  var READ_TIMEOUT = 25000, WRITE_TIMEOUT = 90000;
+  var BATCHABLE = ['getData', 'getCer', 'getSuppliers', 'getWorkplan', 'getTodos', 'getGoWork', 'getMeetings'];
+  var BATCH_FLAG = 'ccip_batch_unsupported_until';
+  var net = window.__net = { pending: 0, lastOk: 0, lastFail: 0, lastError: '', batched: 0 };
 
-  function emit() {
-    try { document.dispatchEvent(new CustomEvent('net:state', { detail: net })); } catch (e) {}
-  }
+  function emit() { try { document.dispatchEvent(new CustomEvent('net:state', { detail: net })); } catch (e) {} }
   function isGAS(url) { return /script\.google(usercontent)?\.com/.test(url); }
-  function actionOf(url) {
-    var m = /[?&]action=([^&#]+)/.exec(url);
-    return m ? decodeURIComponent(m[1]) : '';
-  }
+  function actionOf(url) { var m = /[?&]action=([^&#]+)/.exec(url); return m ? decodeURIComponent(m[1]) : ''; }
   function bust(url) { return url + (url.indexOf('?') >= 0 ? '&' : '?') + '_ts=' + Date.now(); }
   function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  function jsonResponse(obj) { return new Response(JSON.stringify(obj), { status: 200, headers: { 'Content-Type': 'application/json' } }); }
+  function batchAllowed() {
+    try { return Date.now() > parseInt(localStorage.getItem(BATCH_FLAG) || '0', 10); } catch (e) { return true; }
+  }
 
-  function once(url, init) {
+  function once(url, init, isRead) {
     var ctrl = new AbortController();
-    var timer = setTimeout(function () { ctrl.abort(); }, TIMEOUT_MS);
+    var timer = setTimeout(function () { ctrl.abort(); }, isRead ? READ_TIMEOUT : WRITE_TIMEOUT);
     var opts = Object.assign({}, init || {}, { cache: 'no-store', redirect: 'follow' });
     if (!opts.signal) opts.signal = ctrl.signal;
     return nativeFetch(url, opts).finally(function () { clearTimeout(timer); });
@@ -46,49 +49,114 @@
     try {
       var res;
       try {
-        res = await once(isRead ? bust(url) : url, init);
+        res = await once(isRead ? bust(url) : url, init, isRead);
         if (isRead && (res.status >= 500 || res.status === 429)) throw new Error('HTTP ' + res.status);
       } catch (err) {
-        if (!isRead) throw err;           // คำขอเขียนข้อมูล: ห้ามส่งซ้ำ กันข้อมูลเบิ้ล
+        if (!isRead) throw err; // คำขอเขียน: ห้ามส่งซ้ำ กันข้อมูลเบิ้ล
         await wait(1200);
-        res = await once(bust(url), init);
+        res = await once(bust(url), init, isRead);
       }
       net.lastOk = Date.now(); net.lastError = '';
       return res;
     } catch (err) {
       net.lastFail = Date.now();
-      net.lastError = err && err.name === 'AbortError' ? 'หมดเวลารอเซิร์ฟเวอร์ (25 วินาที)' : String(err && err.message || err);
+      net.lastError = err && err.name === 'AbortError' ? 'หมดเวลารอเซิร์ฟเวอร์' : String(err && err.message || err);
       throw err;
     } finally {
       net.pending = Math.max(0, net.pending - 1); emit();
     }
   }
 
+  /* ── รวมคำขออ่านหลายชุดเป็น getAll ครั้งเดียว ── */
+  var queue = null;
+  function queueRead(base, action) {
+    return new Promise(function (resolve, reject) {
+      if (!queue || queue.base !== base) {
+        if (queue) flush();
+        queue = { base: base, waiters: new Map() };
+        setTimeout(flush, 30);
+      }
+      var list = queue.waiters.get(action) || [];
+      list.push({ resolve: resolve, reject: reject });
+      queue.waiters.set(action, list);
+    });
+  }
+  function settleSingly(base, waiters) {
+    waiters.forEach(function (list, action) {
+      var p = tracked(base + '?action=' + encodeURIComponent(action), null, true);
+      list.forEach(function (w) { p.then(function (r) { w.resolve(r.clone()); }, w.reject); });
+    });
+  }
+  async function flush() {
+    var q = queue; queue = null;
+    if (!q || !q.waiters.size) return;
+    if (q.waiters.size === 1 || !batchAllowed()) { settleSingly(q.base, q.waiters); return; }
+    var actions = Array.from(q.waiters.keys());
+    try {
+      var res = await tracked(q.base + '?action=getAll&only=' + encodeURIComponent(actions.join(',')), null, true);
+      var json = await res.json();
+      if (!json || !json.success || !json.results) throw new Error('batch-unsupported');
+      net.batched++;
+      q.waiters.forEach(function (list, action) {
+        var part = json.results[action] || { success: false, error: 'ไม่มีข้อมูล ' + action + ' ในผลรวม' };
+        list.forEach(function (w) { w.resolve(jsonResponse(part)); });
+      });
+    } catch (err) {
+      // เซิร์ฟเวอร์เวอร์ชันเก่า (ยังไม่มี getAll) → จำไว้ 6 ชม. แล้วยิงทีละตัวแทน
+      if (String(err && err.message) === 'batch-unsupported' || err instanceof SyntaxError) {
+        try { localStorage.setItem(BATCH_FLAG, String(Date.now() + 6 * 3600 * 1000)); } catch (e) {}
+        settleSingly(q.base, q.waiters);
+      } else {
+        q.waiters.forEach(function (list) { list.forEach(function (w) { w.reject(err); }); });
+      }
+    }
+  }
+
+  /* ── ดึงล่วงหน้าตอนเปิดไฟล์ ── */
+  var boot = new Map();
+  var BOOT_TTL = 30000;
+
   window.fetch = function (input, init) {
     var url = typeof input === 'string' ? input : (input && input.url) || '';
     if (!isGAS(url)) return nativeFetch(input, init);
     var method = String((init && init.method) || 'GET').toUpperCase();
-    var isRead = method === 'GET' && /^get/i.test(actionOf(url));
+    var action = actionOf(url);
+    var isRead = method === 'GET' && /^get/i.test(action);
     if (!isRead) return tracked(url, init, false);
+
+    var b = boot.get(url);
+    if (b && Date.now() - b.t < BOOT_TTL) { boot.delete(url); return b.p.then(function (r) { return r.clone(); }); }
+    boot.delete(url);
+
     if (!inflight.has(url)) {
-      var p = tracked(url, init, true);
+      var base = url.split('?')[0];
+      var simple = url === base + '?action=' + action;
+      var p = simple && BATCHABLE.indexOf(action) >= 0 ? queueRead(base, action) : tracked(url, init, true);
       inflight.set(url, p);
       p.then(function () { inflight.delete(url); }, function () { inflight.delete(url); });
     }
     return inflight.get(url).then(function (r) { return r.clone(); });
   };
 
+  try {
+    var seen = localStorage.getItem('prpo_default_url_seen');
+    var base = (seen === DEFAULT_URL && localStorage.getItem('prpo_url')) || DEFAULT_URL;
+    if (base && isGAS(base)) {
+      BATCHABLE.forEach(function (a) {
+        var u = base + '?action=' + a;
+        var p = window.fetch(u);
+        p.catch(function () {});
+        boot.set(u, { p: p, t: Date.now() });
+      });
+    }
+  } catch (e) {}
+
   /* ── localStorage ที่ไม่ทำให้ Sync พัง ── */
-  var proto = Storage.prototype;
-  var nativeSet = proto.setItem;
-  var nativeGet = proto.getItem;
+  var proto = Storage.prototype, nativeSet = proto.setItem, nativeGet = proto.getItem;
   var PRUNABLE = [/^comments_/, /^kpi_prev_/];
   function prune(store) {
     var drop = [];
-    for (var i = 0; i < store.length; i++) {
-      var k = store.key(i);
-      if (PRUNABLE.some(function (re) { return re.test(k); })) drop.push(k);
-    }
+    for (var i = 0; i < store.length; i++) { var k = store.key(i); if (PRUNABLE.some(function (re) { return re.test(k); })) drop.push(k); }
     drop.forEach(function (k) { store.removeItem(k); });
     try {
       var h = JSON.parse(nativeGet.call(store, 'prpo_history') || '[]');
@@ -98,7 +166,7 @@
   proto.setItem = function (k, v) {
     v = String(v);
     try {
-      if (v.length > 4000 && nativeGet.call(this, k) === v) return; // ข้อมูลเดิม ไม่ต้องเขียนซ้ำ
+      if (v.length > 4000 && nativeGet.call(this, k) === v) return;
       return nativeSet.call(this, k, v);
     } catch (e) {
       try { prune(this); return nativeSet.call(this, k, v); }
@@ -5052,7 +5120,7 @@ html body .topbar .sync-pill::before {
 html body .topbar .sync-pill #syncIcon { display: none; }
 html body .topbar .sync-pill .sync-age {
   color: var(--muted); font-weight: 500; font-variant-numeric: tabular-nums;
-  padding-left: .5rem; border-left: 1px solid var(--border); min-width: 5.2em;
+  padding-left: .5rem; border-left: 1px solid var(--border); min-width: 5.2em; white-space: nowrap;
 }
 body[data-sync="error"] .topbar .sync-pill .sync-age { color: var(--danger); }
 body[data-sync="stale"] .topbar .sync-pill .sync-age { color: var(--warn); }
@@ -5182,6 +5250,302 @@ html body #welcomeScreen .wl-btn:hover { transform: translateY(-1px); }
   html body .topbar .sync-pill .sync-age { display: none; }
   html body .main-wrap { background-size: 24px 24px; }
 }
+
+/* ════════════════════════════════════════════════════════════════
+   v3 — MISSION HEADERS: แผงหัวหน้าสีหมึก + กริดแบบแปลน ใช้ร่วมกันทุกหน้าหลัก
+   ════════════════════════════════════════════════════════════════ */
+html body .briefing-head,
+html body .dash-hero,
+html body .gx-hero {
+  --text: #EAF0FA; --muted: #93A4C2; --accent: #8FB0FF; --accent2: #8FB0FF;
+  --danger: #FF7A72; --warn: #F2B452; --success: #4FD6A0;
+  --surface: rgba(255, 255, 255, 0.045); --surface2: rgba(255, 255, 255, 0.07); --border: rgba(160, 190, 255, 0.16);
+  position: relative; overflow: hidden; isolation: isolate;
+  color: var(--text) !important;
+  background:
+    linear-gradient(rgba(160, 190, 255, .07) 1px, transparent 1px) 0 0 / 28px 28px,
+    linear-gradient(90deg, rgba(160, 190, 255, .07) 1px, transparent 1px) 0 0 / 28px 28px,
+    radial-gradient(70% 120% at 100% 0%, rgba(92, 132, 255, .32), transparent 60%),
+    radial-gradient(50% 90% at 0% 100%, rgba(10, 162, 187, .16), transparent 60%),
+    linear-gradient(135deg, #0E2244 0%, #0A1830 60%, #081326 100%) !important;
+  border: 1px solid rgba(160, 190, 255, .14) !important;
+  box-shadow: 0 24px 48px -28px rgba(8, 19, 38, .75) !important;
+}
+html body .dash-hero, html body .gx-hero { border-radius: 16px !important; }
+html body .briefing-head::after,
+html body .dash-hero::after,
+html body .gx-hero::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; z-index: -1;
+  background: linear-gradient(90deg, transparent, var(--live, #3AD4EC) 30%, #8FB0FF 70%, transparent);
+  opacity: .8;
+}
+html body .briefing-title, html body .dash-hero-title, html body .gx-hero h1 { color: #FFFFFF !important; }
+html body .briefing-date, html body .dash-hero-sub { color: #93A4C2 !important; }
+html body .briefing-stat, html body .dash-hero-stat {
+  background: rgba(255, 255, 255, .05) !important;
+  border-color: rgba(160, 190, 255, .14) !important;
+  backdrop-filter: blur(6px) !important; -webkit-backdrop-filter: blur(6px) !important;
+}
+html body .briefing-stat-label, html body .dash-hero-stat-lbl { color: #93A4C2 !important; }
+html body .briefing-stat-icon { background: rgba(255, 255, 255, .06) !important; color: var(--stat-color) !important; }
+html body .dash-hero-badge {
+  background: rgba(58, 212, 236, .12) !important; color: #7FE6F5 !important;
+  border: 1px solid rgba(58, 212, 236, .3) !important; border-radius: 99px !important;
+  text-transform: none !important; letter-spacing: .02em !important;
+}
+html body .dash-hero-stat-val { font-family: var(--font-display) !important; font-variant-numeric: tabular-nums; }
+
+/* ════════ หน้าใหม่: GO WORK / Summary Meeting ════════ */
+.gx-hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap; padding: 1.6rem 1.75rem 1.5rem; margin-bottom: 1rem; }
+.gx-hero h1 { font-family: var(--font-display); font-weight: 600; font-size: clamp(1.6rem, 2.4vw, 2.1rem); line-height: 1.1; margin: 0 0 .4rem; letter-spacing: 0; }
+.gx-hero p { margin: 0; color: #A9B8D2; max-width: 56ch; font-size: .9rem; line-height: 1.6; }
+.gx-metrics { display: grid; grid-template-columns: repeat(4, minmax(110px, auto)); gap: .6rem; }
+.gx-metric { padding: .7rem .95rem; border-radius: 10px; background: rgba(255, 255, 255, .05); border: 1px solid rgba(160, 190, 255, .14); min-width: 110px; }
+.gx-metric span { display: block; font-size: .72rem; color: #93A4C2; margin-bottom: .2rem; }
+.gx-metric b { font-family: var(--font-display); font-weight: 600; font-size: 1.35rem; color: #fff; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.gx-metric.money b { color: #7FE6F5; }
+
+.gx-toolbar { display: flex; align-items: center; gap: .55rem; flex-wrap: wrap; margin-bottom: .85rem; }
+.gx-spacer { flex: 1; }
+.gx-search { position: relative; flex: 1 1 260px; max-width: 420px; }
+.gx-search svg { position: absolute; left: .75rem; top: 50%; width: 16px; height: 16px; transform: translateY(-50%); fill: none; stroke: var(--muted); stroke-width: 2; pointer-events: none; }
+.gx-search input, .gx-select {
+  width: 100%; height: 38px; border-radius: 9px; border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  font: inherit; font-size: .86rem; padding: 0 .8rem;
+  transition: border-color .15s ease, box-shadow .15s ease !important;
+}
+.gx-search input { padding-left: 2.2rem; }
+.gx-select { width: auto; min-width: 150px; cursor: pointer; }
+.gx-search input:focus, .gx-select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent) !important; }
+
+.gx-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .45rem; height: 38px; padding: 0 1rem;
+  border-radius: 9px; font: inherit; font-size: .86rem; font-weight: 600; cursor: pointer; white-space: nowrap;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease, transform .15s ease !important;
+}
+.gx-btn:hover { border-color: var(--accent); color: var(--accent); }
+.gx-btn.primary { background: var(--accent); border-color: transparent; color: #fff; box-shadow: 0 8px 18px -10px var(--accent) !important; }
+.gx-btn.primary:hover { background: color-mix(in srgb, var(--accent) 85%, #000); color: #fff; }
+.gx-btn.danger { background: var(--danger); border-color: transparent; color: #fff; }
+.gx-btn.danger:hover { background: color-mix(in srgb, var(--danger) 85%, #000); color: #fff; }
+.gx-btn:disabled { opacity: .7; cursor: progress; }
+.gx-icon-btn {
+  display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 8px; cursor: pointer;
+  border: 1px solid transparent; background: transparent; color: var(--muted);
+  transition: background-color .15s ease, color .15s ease !important;
+}
+.gx-icon-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.gx-icon-btn:hover { background: var(--surface2); color: var(--accent); }
+.gx-icon-btn.danger:hover { color: var(--danger); background: color-mix(in srgb, var(--danger) 10%, transparent); }
+.gx-spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .35); border-top-color: #fff; animation: gxSpin .8s linear infinite !important; animation-duration: .8s !important; animation-iteration-count: infinite !important; }
+@keyframes gxSpin { to { transform: rotate(360deg); } }
+
+.gx-table-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow-card) !important; overflow: hidden; }
+.gx-table-scroll { overflow-x: auto; }
+html body .gx-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: .86rem; }
+html body .gx-table thead th { position: sticky; top: 0; z-index: 1; padding: 0; text-align: left; white-space: nowrap; }
+html body .gx-table th.num, html body .gx-table td.num { text-align: right; }
+.gx-th { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: .3rem; width: 100%; padding: .75rem .9rem; cursor: pointer; font-weight: 600; }
+th.num .gx-th { justify-content: flex-end; }
+.gx-th i { font-style: normal; color: var(--accent); width: .8em; }
+.gx-th:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+html body .gx-table td { padding: .72rem .9rem; border-bottom: 1px solid var(--border2); vertical-align: middle; color: var(--text); }
+html body .gx-table tbody tr:last-child td { border-bottom: none; }
+.gx-table td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; font-weight: 500; }
+.gx-table td.act, .gx-table th.act { width: 84px; text-align: right; white-space: nowrap; }
+.gx-table td.nowrap { white-space: nowrap; }
+.gx-strong { font-weight: 600; }
+.gx-code { font-family: var(--mono); font-size: .8rem; padding: .15rem .45rem; border-radius: 5px; background: var(--surface2); border: 1px solid var(--border); }
+.gx-dim { color: var(--muted); }
+.gx-rel { display: block; color: var(--muted); font-size: .72rem; margin-top: .1rem; }
+.gx-rel.today { color: var(--accent); font-weight: 600; }
+.gx-tag { display: inline-block; padding: .18rem .55rem; border-radius: 6px; font-size: .78rem; font-weight: 600; background: color-mix(in srgb, var(--accent) 10%, transparent); color: var(--accent); }
+.gx-tag.maker { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+.gx-table-foot { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding: .75rem .95rem; border-top: 1px solid var(--border); background: var(--surface2); font-size: .8rem; color: var(--muted); }
+.gx-table-foot b { color: var(--text); font-variant-numeric: tabular-nums; }
+.gx-pager { display: flex; gap: .3rem; flex-wrap: wrap; }
+.gx-pager button { min-width: 30px; height: 30px; border-radius: 7px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; font: inherit; font-size: .8rem; }
+.gx-pager button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.gx-empty { display: grid; justify-items: center; gap: .45rem; text-align: center; padding: 2.6rem 1rem; color: var(--muted); }
+.gx-empty strong { color: var(--text); font-size: 1rem; }
+.gx-empty span { max-width: 52ch; line-height: 1.6; font-size: .86rem; }
+.gx-empty .gx-btn { margin-top: .5rem; }
+.gx-empty.warn { border: 1px dashed color-mix(in srgb, var(--warn) 55%, transparent); border-radius: 12px; background: color-mix(in srgb, var(--warn) 6%, transparent); }
+.gx-skel { height: 44px; margin: .6rem .2rem; border-radius: 8px; background: linear-gradient(90deg, var(--surface2), color-mix(in srgb, var(--surface2) 40%, var(--surface)), var(--surface2)); background-size: 200% 100%; animation: gxShimmer 1.3s ease-in-out infinite !important; animation-duration: 1.3s !important; animation-iteration-count: infinite !important; }
+.gx-skel.tall { height: 150px; border-radius: 14px; margin: 0 0 .8rem; }
+@keyframes gxShimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+
+/* ── Modal ── */
+.gx-overlay { position: fixed; inset: 0; z-index: 5000; display: grid; place-items: center; padding: 1rem; background: rgba(6, 12, 24, .55); opacity: 0; transition: opacity .18s ease !important; backdrop-filter: blur(4px) !important; -webkit-backdrop-filter: blur(4px) !important; }
+.gx-overlay.open { opacity: 1; }
+.gx-modal { width: min(620px, 100%); max-height: calc(100vh - 2rem); display: flex; flex-direction: column; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 40px 80px -30px rgba(6, 12, 24, .6) !important; transform: translateY(8px); transition: transform .22s cubic-bezier(.2, .8, .2, 1) !important; overflow: hidden; }
+.gx-overlay.open .gx-modal { transform: none; }
+.gx-modal.wide { width: min(780px, 100%); }
+.gx-modal.compact { width: min(440px, 100%); }
+.gx-modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: 1.15rem 1.3rem .9rem; border-bottom: 1px solid var(--border); }
+.gx-modal-head h2 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 1.15rem; }
+.gx-modal-head p { margin: .25rem 0 0; color: var(--muted); font-size: .82rem; line-height: 1.5; }
+.gx-modal-body { padding: 1.1rem 1.3rem; overflow-y: auto; }
+.gx-modal.compact .gx-modal-body { display: none; }
+.gx-modal-foot { display: flex; justify-content: flex-end; gap: .5rem; padding: .85rem 1.3rem; border-top: 1px solid var(--border); background: var(--surface2); }
+.gx-form { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem 1rem; }
+.gx-form .span2 { grid-column: 1 / -1; }
+.gx-form label { display: grid; gap: .35rem; align-content: start; font-size: .8rem; font-weight: 600; color: var(--muted); }
+.gx-form label em { color: var(--danger); font-style: normal; }
+.gx-form input, .gx-form textarea {
+  width: 100%; box-sizing: border-box; font: inherit; font-size: .9rem; font-weight: 400; color: var(--text);
+  background: var(--surface); border: 1px solid var(--border); border-radius: 9px; padding: .6rem .75rem;
+  transition: border-color .15s ease, box-shadow .15s ease !important;
+}
+.gx-form textarea { resize: vertical; min-height: 96px; line-height: 1.6; }
+.gx-form input:focus, .gx-form textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent) !important; }
+.gx-form input.bad { border-color: var(--danger); }
+.gx-form-err { margin: 0; min-height: 1em; color: var(--danger); font-size: .82rem; }
+.gx-form-err:empty { display: none; }
+
+/* ── Meeting ── */
+.mt-list { display: grid; gap: 1.4rem; }
+.mt-month h3 { display: flex; align-items: baseline; gap: .6rem; margin: 0 0 .65rem; font-family: var(--font-display); font-weight: 600; font-size: 1rem; color: var(--text); }
+.mt-month h3 span { font-family: var(--font); font-weight: 500; font-size: .78rem; color: var(--muted); }
+.mt-card {
+  display: grid; grid-template-columns: 76px 1fr auto; gap: 1.1rem; align-items: start;
+  padding: 1.05rem 1.1rem; margin-bottom: .65rem; border-radius: 14px;
+  background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow-card) !important;
+  transition: border-color .2s ease, box-shadow .2s ease !important;
+}
+.mt-card:hover { border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); }
+.mt-card.flash { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent), var(--shadow-card) !important; }
+.mt-date { display: grid; justify-items: center; align-content: center; gap: .05rem; padding: .65rem .3rem; border-radius: 12px; color: #fff; background: linear-gradient(160deg, #13305E, #0A1830); border: 1px solid rgba(160, 190, 255, .18); }
+.mt-date b { font-family: var(--font-display); font-weight: 600; font-size: 1.7rem; line-height: 1; }
+.mt-date span { font-size: .8rem; color: #A9C1FF; font-weight: 600; }
+.mt-date small { font-size: .68rem; color: #93A4C2; }
+.mt-main { min-width: 0; }
+.mt-top { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; margin-bottom: .35rem; }
+.mt-top h4 { margin: 0; font-size: 1rem; font-weight: 700; color: var(--text); }
+.mt-detail { margin: 0 0 .6rem; color: var(--text); opacity: .85; font-size: .88rem; line-height: 1.65; white-space: pre-line; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; max-width: 80ch; }
+.mt-thumbs { display: flex; gap: .45rem; flex-wrap: wrap; margin-bottom: .45rem; }
+.mt-thumb { position: relative; width: 92px; height: 68px; padding: 0; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; cursor: zoom-in; background: var(--surface2); }
+.mt-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .25s ease !important; }
+.mt-thumb:hover img { transform: scale(1.06); }
+.mt-thumb-fallback { display: grid; place-items: center; height: 100%; font-size: .7rem; color: var(--muted); }
+.mt-more { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(8, 19, 38, .62); color: #fff; font-weight: 700; font-size: .95rem; }
+.mt-meta { font-size: .76rem; color: var(--muted); }
+.mt-actions { display: flex; gap: .15rem; }
+.mt-drop {
+  display: grid; justify-items: center; gap: .3rem; padding: 1.3rem 1rem; text-align: center; cursor: pointer;
+  border: 1.5px dashed color-mix(in srgb, var(--accent) 45%, var(--border)); border-radius: 12px;
+  background: color-mix(in srgb, var(--accent) 4%, var(--surface)); color: var(--muted);
+  transition: background-color .15s ease, border-color .15s ease !important;
+}
+.mt-drop svg { width: 26px; height: 26px; fill: none; stroke: var(--accent); stroke-width: 1.8; }
+.mt-drop b { color: var(--text); font-size: .88rem; }
+.mt-drop span { font-size: .75rem; }
+.mt-drop.over, .mt-drop:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 9%, var(--surface)); }
+.mt-queue, .mt-existing > div { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .6rem; }
+.mt-existing > span { display: block; margin-top: .9rem; font-size: .78rem; font-weight: 600; color: var(--muted); }
+.mt-queue figure, .mt-existing figure { position: relative; margin: 0; width: 96px; border-radius: 9px; overflow: hidden; border: 1px solid var(--border); background: var(--surface2); }
+.mt-queue img, .mt-existing img { display: block; width: 100%; height: 70px; object-fit: cover; }
+.mt-queue figcaption { font-size: .66rem; padding: .2rem .35rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mt-queue figure.up { border-color: var(--accent); }
+.mt-queue figure.up figcaption { color: var(--accent); }
+.mt-queue figure.done { border-color: var(--success); }
+.mt-queue figure.done figcaption { color: var(--success); }
+.mt-queue figure.err { border-color: var(--danger); }
+.mt-queue figure.err figcaption { color: var(--danger); }
+.mt-existing figure.removing { opacity: .4; }
+.mt-x { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; display: grid; place-items: center; border: none; border-radius: 6px; background: rgba(8, 19, 38, .72); color: #fff; cursor: pointer; }
+.mt-x svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2.5; }
+.mt-x.armed { background: var(--danger); }
+.mt-progress { display: grid; gap: .35rem; }
+.mt-progress[hidden] { display: none; }
+.mt-progress > div { height: 6px; border-radius: 99px; background: var(--surface2); overflow: hidden; }
+.mt-progress i { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, var(--accent), var(--live)); transition: width .4s ease !important; }
+.mt-progress span { font-size: .8rem; color: var(--muted); }
+.gx-lightbox { position: fixed; inset: 0; z-index: 6000; display: grid; grid-template-columns: 64px 1fr 64px; align-items: center; background: rgba(4, 9, 18, .92); }
+.gx-lightbox figure { margin: 0; display: grid; justify-items: center; gap: .7rem; }
+.gx-lightbox img { max-width: 100%; max-height: calc(100vh - 110px); border-radius: 8px; }
+.gx-lightbox figcaption { color: #C9D5EA; font-size: .85rem; display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+.gx-lightbox figcaption a { color: #8FB0FF; }
+.gx-lightbox .lb-close { position: absolute; top: 14px; right: 14px; color: #fff; }
+.lb-nav { justify-self: center; width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .2); background: rgba(255, 255, 255, .06); color: #fff; font-size: 1.6rem; cursor: pointer; }
+
+/* ── Command palette (ของเดิม ปรับหน้าตา) ── */
+html body .cmdk-box { border-radius: 16px !important; border: 1px solid var(--border) !important; box-shadow: 0 40px 90px -30px rgba(6, 12, 24, .7), 0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent) !important; }
+html body .cmdk-overlay { background: rgba(6, 12, 24, .45) !important; backdrop-filter: blur(3px) !important; -webkit-backdrop-filter: blur(3px) !important; }
+html body .cmdk-item { border-radius: 9px !important; }
+html body .cmdk-item.active { background: color-mix(in srgb, var(--accent) 12%, transparent) !important; box-shadow: inset 2px 0 0 var(--accent) !important; }
+html body .cmdk-group-label { text-transform: none !important; letter-spacing: .01em !important; }
+.gx-palette-in { display: flex; align-items: center; gap: .7rem; padding: .9rem 1.1rem; border-bottom: 1px solid var(--border); }
+.gx-kbd { white-space: nowrap; font-family: var(--mono); font-size: .7rem; padding: .15rem .4rem; border-radius: 5px; border: 1px solid var(--border); color: var(--muted); background: var(--surface2); }
+.gx-palette-hint { display: inline-flex; align-items: center; gap: .4rem; height: 34px; padding: 0 .7rem; border-radius: 9px; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); font: inherit; font-size: .78rem; cursor: pointer; }
+.gx-palette-hint:hover { border-color: var(--accent); color: var(--text); }
+.gx-palette-hint svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+@media (max-width: 1680px) { .gx-palette-hint > span { display: none; } }
+@media (max-width: 760px) {
+  .gx-hero { padding: 1.2rem; }
+  .gx-metrics { grid-template-columns: repeat(2, 1fr); width: 100%; }
+  .gx-form { grid-template-columns: 1fr; }
+  .mt-card { grid-template-columns: 60px 1fr; }
+  .mt-actions { grid-column: 1 / -1; justify-content: flex-end; }
+  .gx-select { flex: 1 1 140px; }
+  .gx-palette-hint span { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gx-skel, .gx-spin { animation: none !important; }
+  .gx-modal, .gx-overlay, .mt-thumb img { transition: none !important; }
+}
+.gx-form input { height: 40px; }
+.gx-table-foot:empty { display: none; }
+
+/* ════════ v4 — ANALYTICS: การ์ดกราฟ / KPI แบบรายงานมืออาชีพ ════════ */
+html body .chart-card::before { display: none !important; }
+html body .chart-card { padding: 1.15rem 1.25rem 1.1rem !important; }
+html body .chart-card:hover { transform: none !important; border-color: color-mix(in srgb, var(--accent) 28%, var(--border)) !important; }
+html body .chart-header { padding-bottom: .7rem !important; margin-bottom: .85rem !important; border-bottom: 1px solid var(--border2) !important; }
+html body .chart-title {
+  font-family: var(--font) !important; font-size: .95rem !important; font-weight: 600 !important;
+  letter-spacing: 0 !important; text-transform: none !important; color: var(--text) !important;
+  background: none !important; -webkit-text-fill-color: currentColor !important;
+}
+html body .chart-card select, html body .chart-header select {
+  height: 30px !important; border-radius: 8px !important; border: 1px solid var(--border) !important;
+  background: var(--surface) !important; color: var(--text) !important; font: inherit !important; font-size: .78rem !important; padding: 0 .5rem !important;
+}
+html body .chart-card canvas { max-width: 100%; }
+
+/* exec hero → แผงหมึกเดียวกับหน้าอื่น */
+html body .exec-hero {
+  --text: #EAF0FA; --muted: #93A4C2; --accent: #8FB0FF; --accent2: #8FB0FF;
+  background:
+    linear-gradient(rgba(160,190,255,.07) 1px, transparent 1px) 0 0 / 28px 28px,
+    linear-gradient(90deg, rgba(160,190,255,.07) 1px, transparent 1px) 0 0 / 28px 28px,
+    radial-gradient(70% 120% at 100% 0%, rgba(92,132,255,.32), transparent 60%),
+    linear-gradient(135deg, #0E2244 0%, #0A1830 60%, #081326 100%) !important;
+  border: 1px solid rgba(160,190,255,.14) !important; border-radius: 16px !important;
+  box-shadow: 0 24px 48px -28px rgba(8,19,38,.75) !important; color: #EAF0FA !important;
+}
+html body .exec-hero::before { display: none !important; }
+html body .exec-hero-label { color: #7FE6F5 !important; letter-spacing: .02em !important; text-transform: none !important; background: none !important; -webkit-text-fill-color: currentColor !important; }
+html body .exec-hero-title { color: #FFFFFF !important; font-family: var(--font-display) !important; font-weight: 600 !important; background: none !important; -webkit-text-fill-color: #FFFFFF !important; }
+html body .exec-hero-sub, html body .exec-health-label { color: #93A4C2 !important; }
+html body .exec-health-value { color: #FFFFFF !important; font-family: var(--font-display) !important; font-weight: 600 !important; background: none !important; -webkit-text-fill-color: #FFFFFF !important; }
+html body .exec-ring-bg { stroke: rgba(255,255,255,.1) !important; }
+html body .exec-ring-fg { stroke: #3AD4EC !important; }
+
+/* การ์ด KPI: ไอคอนโทนเดียว ตัวเลขใหญ่อ่านง่าย */
+html body .exec-kpi-card, html body .kpi-card {
+  background: var(--surface) !important; border: 1px solid var(--border) !important; border-radius: 12px !important;
+  box-shadow: var(--shadow-card) !important;
+}
+html body .exec-kpi-card:hover, html body .kpi-card:hover { transform: none !important; border-color: color-mix(in srgb, var(--accent) 30%, var(--border)) !important; }
+html body .exec-kpi-icon {
+  width: 34px !important; height: 34px !important; border-radius: 9px !important; font-size: .8rem !important; font-weight: 700 !important;
+  background: color-mix(in srgb, var(--accent) 10%, transparent) !important; color: var(--accent) !important;
+}
+html body .exec-kpi-icon svg { width: 18px !important; height: 18px !important; }
+html body .exec-kpi-value, html body .kpi-value { color: var(--text) !important; font-family: var(--font-display) !important; font-weight: 600 !important; font-variant-numeric: tabular-nums; letter-spacing: -.01em !important; background: none !important; -webkit-text-fill-color: currentColor !important; }
 </style>
 </head>
 <body class="light-theme">
@@ -5362,19 +5726,35 @@ html body #welcomeScreen .wl-btn:hover { transform: translateY(-1px); }
  <button class="nav-item" id="nav-summary" onclick="showPage('summary',this)">
  <span class="nav-icon"><svg viewBox="0 0 24 24"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg></span><span class="nav-text" data-i18n="nav_summary">สรุปภาพรวม</span>
  </button>
- <button class="nav-item" id="nav-gantt" onclick="showPage('gantt',this)">
- <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span><span class="nav-text">Timeline / Gantt</span>
- </button>
- <button class="nav-item" id="nav-leadtime" onclick="showPage('leadtime',this)">
- <span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><polyline points="12 9 12 13 15 15"/><line x1="9" y1="2" x2="15" y2="2"/></svg></span><span class="nav-text">Lead Time</span>
- </button>
- <button class="nav-item" id="nav-leaderboard" onclick="showPage('leaderboard',this)">
- <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v6a5 5 0 0 1-10 0z"/><path d="M17 5h3a2 2 0 0 1-2 4"/><path d="M7 5H4a2 2 0 0 0 2 4"/></svg></span><span class="nav-text">Leaderboard</span>
- </button>
+ 
+ 
+ 
  </div>
  </div>
 
  
+
+<div class="nav-group" id="navGroup-gowork">
+ <div class="nav-label" onclick="toggleNavGroup('gowork')">
+ <span class="nav-label-text"><span class="nav-label-icon"><svg viewBox="0 0 24 24"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></span><span data-i18n="group_gowork">งาน GO WORK</span><span class="nav-label-badge" id="navGroupBadge-gowork" style="display:none">0</span></span><span class="nav-label-chevron">▾</span>
+ </div>
+ <div class="nav-group-items">
+ <button class="nav-item" id="nav-gowork" onclick="showPage('gowork',this)">
+ <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></span><span class="nav-text" data-i18n="nav_gowork">รายการ GO WORK</span>
+ </button>
+ </div>
+ </div>
+
+<div class="nav-group" id="navGroup-meeting">
+ <div class="nav-label" onclick="toggleNavGroup('meeting')">
+ <span class="nav-label-text"><span class="nav-label-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><span data-i18n="group_meeting">Summary Meeting</span></span><span class="nav-label-chevron">▾</span>
+ </div>
+ <div class="nav-group-items">
+ <button class="nav-item" id="nav-meeting" onclick="showPage('meeting',this)">
+ <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="13" y2="13"/></svg></span><span class="nav-text" data-i18n="nav_meeting">บันทึกการประชุม</span>
+ </button>
+ </div>
+ </div>
 
 <div class="nav-group" id="navGroup-team">
  <div class="nav-label" onclick="toggleNavGroup('team')">
@@ -5396,6 +5776,9 @@ html body #welcomeScreen .wl-btn:hover { transform: translateY(-1px); }
  <div class="nav-group-items">
  <button class="nav-item" id="nav-costsaving" onclick="showPage('costsaving',this)">
  <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span><span class="nav-text">Cost Saving Report</span>
+ </button>
+ <button class="nav-item" id="nav-costcalc" onclick="showPage('costcalc',this)">
+ <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></span><span class="nav-text">เครื่องมือคำนวณ COST UP / DOWN</span>
  </button>
  </div>
  </div>
@@ -5467,16 +5850,7 @@ html body #welcomeScreen .wl-btn:hover { transform: translateY(-1px); }
 
  
 
-<div class="nav-group" id="navGroup-costcalc">
- <div class="nav-label" onclick="toggleNavGroup('costcalc')">
- <span class="nav-label-text"><span class="nav-label-icon"><svg viewBox="0 0 24 24"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>เครื่องมือคำนวณ</span><span class="nav-label-chevron">▾</span>
- </div>
- <div class="nav-group-items">
- <button class="nav-item" id="nav-costcalc" onclick="showPage('costcalc',this)">
- <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></span><span class="nav-text">COST UP / DOWN</span>
- </button>
- </div>
- </div>
+
 
  
 
@@ -5523,6 +5897,7 @@ html body #welcomeScreen .wl-btn:hover { transform: translateY(-1px); }
  </div>
  <div class="topbar-right">
  <div class="topbar-chip" id="currentDateChip"></div>
+ <button class="gx-palette-hint" onclick="openCommandPalette()" title="ค้นหาและไปที่หน้า (Ctrl+K)"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>ค้นหา</span><kbd class="gx-kbd">Ctrl K</kbd></button>
  <button class="sync-pill" onclick="syncData()" data-tour="sync-btn"><span id="syncIcon">⟳</span><span class="sync-label">Sync</span><span class="sync-age" id="syncAge" aria-live="polite">กำลังโหลด</span></button>
  <div style="width:1px;height:20px;background:var(--border);flex-shrink:0"></div>
  <div class="notif-wrap">
@@ -6178,46 +6553,7 @@ html body #welcomeScreen .wl-btn:hover { transform: translateY(-1px); }
  </div>
 
  <!-- GANTT -->
- <div class="page" id="page-gantt">
- <div class="gantt-kpi-row" id="ganttKpiRow">
- <div class="gantt-kpi"><div class="gantt-kpi-label">รายการในเดือนนี้</div><div class="gantt-kpi-val" id="gkpi-total" style="color:var(--accent2)">—</div></div>
- <div class="gantt-kpi"><div class="gantt-kpi-label">เสร็จแล้ว</div><div class="gantt-kpi-val" id="gkpi-done" style="color:var(--success)">—</div></div>
- <div class="gantt-kpi"><div class="gantt-kpi-label">กำลังดำเนินการ</div><div class="gantt-kpi-val" id="gkpi-prog" style="color:var(--accent2)">—</div></div>
- <div class="gantt-kpi"><div class="gantt-kpi-label">เลยกำหนด / วันนี้</div><div class="gantt-kpi-val" id="gkpi-late" style="color:var(--danger)">—</div></div>
- </div>
- <div class="gantt-controls">
- <button class="gantt-nav-btn" onclick="ganttPrevMonth()">◀</button>
- <div class="gantt-month-label" id="ganttMonthLabel">—</div>
- <button class="gantt-nav-btn" onclick="ganttNextMonth()">▶</button>
- <button class="gantt-nav-btn" onclick="ganttGoToday()" style="font-size: 0.756rem;color:var(--accent);border-color:var(--accent)">วันนี้</button>
- <div style="flex:1"></div>
- <select id="ganttFilterStatus" onchange="renderGantt()">
- <option value="">สถานะทั้งหมด</option>
- <option value="เสร็จแล้ว">เสร็จแล้ว</option>
- <option value="กำลังดำเนินการ">กำลังดำเนินการ</option>
- <option value="ยังไม่ครบ">ยังไม่ครบ</option>
- </select>
- <select id="ganttFilterMaker" onchange="renderGantt()"><option value="">Maker ทั้งหมด</option></select>
- <select id="ganttGroupBy" onchange="renderGantt()">
- <option value="item">แยกตามรายการ</option>
- <option value="maker">แยกตาม Maker</option>
- </select>
- </div>
- <div class="gantt-legend">
- <div class="gantt-legend-item"><div class="gantt-legend-dot" style="background:#3F7D53"></div>เสร็จแล้ว</div>
- <div class="gantt-legend-item"><div class="gantt-legend-dot" style="background:#2E5395"></div>กำลังดำเนินการ</div>
- <div class="gantt-legend-item"><div class="gantt-legend-dot" style="background:#C9A227"></div>เหลือ ≤ 7 วัน</div>
- <div class="gantt-legend-item"><div class="gantt-legend-dot" style="background:#A6443C"></div>เลยกำหนด / วันนี้</div>
- <div class="gantt-legend-item"><div class="gantt-legend-dot" style="background:var(--accent);opacity:0.7"></div>วันนี้</div>
- </div>
- <div id="ganttDensityWrap" style="margin-bottom:0.5rem"></div>
- <div class="gantt-wrap">
- <table class="gantt-table" id="ganttTable">
- <thead id="ganttHead"></thead>
- <tbody id="ganttBody"></tbody>
- </table>
- </div>
- </div>
+ 
 
  <!-- SETUP -->
  <div class="page" id="page-setup">
@@ -6344,111 +6680,10 @@ html body #welcomeScreen .wl-btn:hover { transform: translateY(-1px); }
  </div>
 
  <!-- LEAD TIME ANALYSIS -->
- <div class="page" id="page-leadtime">
- <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:1.3rem">
- <div class="stat-card total" style="cursor:default">
- <div class="stat-top"><div class="stat-icon-wrap"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div></div>
- <div class="stat-label">Maker ทั้งหมด</div>
- <div class="stat-value" id="lt-maker-count" style="color:var(--accent2)">—</div>
- <div class="stat-meta">ที่มีรายการส่งแล้ว</div>
- </div>
- <div class="stat-card done" style="cursor:default">
- <div class="stat-top"><div class="stat-icon-wrap"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div></div>
- <div class="stat-label">On-Time Rate</div>
- <div class="stat-value" id="lt-ontime-rate" style="color:var(--success)">—</div>
- <div class="stat-meta">ส่งตรงเวลา</div>
- </div>
- <div class="stat-card incomplete" style="cursor:default">
- <div class="stat-top"><div class="stat-icon-wrap"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div></div>
- <div class="stat-label">ส่งช้าที่สุด</div>
- <div class="stat-value" id="lt-worst-maker" style="color:var(--danger);font-size: 1.155rem">—</div>
- <div class="stat-meta" id="lt-worst-days">Lead time เกินกำหนด</div>
- </div>
- </div>
- <div class="chart-row" style="grid-template-columns:1fr 1fr;margin-bottom:1.3rem">
- <div class="chart-card" style="grid-column:1/-1">
- <div class="chart-header" style="display:flex;align-items:center;justify-content:space-between">
- <div class="chart-title">Lead Time เฉลี่ยต่อ Maker (วัน)</div>
- <select id="leadtimeTopN" onchange="renderLeadTime()" style="
- background:var(--surface2);border:1px solid var(--border);border-radius:4px;
- color:var(--text);font-size: 0.714rem;padding:0.2rem 0.45rem;
- font-family:var(--mono);cursor:pointer;outline:none;">
- <option value="5">Top 5</option>
- <option value="10" selected>Top 10</option>
- <option value="15">Top 15</option>
- <option value="999">ทั้งหมด</option>
- </select>
- </div>
- <div class="chart-wrap" style="height:220px;overflow-y:auto"><canvas id="chartLeadTime"></canvas></div>
- </div>
- </div>
- <div class="table-wrap">
- <div class="table-title-bar">
- <span class="table-title-label">รายงาน Lead Time แต่ละ Maker</span>
- <select id="leadtimeTableTopN" onchange="leadTimePage=1;renderLeadTime()" style="
- background:var(--surface2);border:1px solid var(--border);border-radius:4px;
- color:var(--text);font-size: 0.714rem;padding:0.2rem 0.45rem;
- font-family:var(--mono);cursor:pointer;outline:none;">
- <option value="5">Top 5</option>
- <option value="10">Top 10</option>
- <option value="15">Top 15</option>
- <option value="999" selected>ทั้งหมด</option>
- </select>
- </div>
- <table>
- <thead><tr>
- <th onclick="sortLT('maker')">MAKER</th>
- <th onclick="sortLT('total')">รายการทั้งหมด</th>
- <th onclick="sortLT('done')">ส่งแล้ว</th>
- <th onclick="sortLT('avgLead')">Lead Time เฉลี่ย (วัน)</th>
- <th onclick="sortLT('ontime')">On-Time</th>
- <th onclick="sortLT('late')">ส่งช้า</th>
- <th onclick="sortLT('ontimeRate')">% ตรงเวลา</th>
- </tr></thead>
- <tbody id="leadTimeBody"></tbody>
- </table>
- <div class="table-footer" style="display:flex;align-items:center;justify-content:flex-end;padding:0.6rem 0.2rem 0">
- <div class="pagination" id="leadTimePagination"></div>
- </div>
- </div>
- </div>
+ 
 
  <!-- LEADERBOARD / STREAK / BADGES PAGE -->
- <div class="page" id="page-leaderboard">
- <div class="chart-card" style="margin-bottom:1rem">
- <div class="chart-header">
- <div class="chart-title">Streak — ปิดงานตรงเวลาต่อเนื่อง</div>
- </div>
- <div id="teamStreakWrap" style="display:flex;flex-wrap:wrap;gap:1rem;align-items:center;padding:0.3rem 0 1.1rem"></div>
- <div id="badgeGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:0.7rem"></div>
- </div>
-
- <div class="chart-card" style="margin-bottom:1rem">
- <div class="chart-header" style="flex-wrap:wrap;gap:0.4rem">
- <div class="chart-title">Maker Leaderboard — On-Time Ranking</div>
- <div style="font-size: 0.7rem;color:var(--muted)">จัดอันดับจาก % ตรงเวลา (ต้องมีงานปิดแล้วอย่างน้อย 2 รายการ)</div>
- </div>
- <div id="leaderboardPodium" style="display:flex;justify-content:center;align-items:flex-end;gap:1.4rem;padding:1.2rem 0 0.4rem;flex-wrap:wrap;min-height:170px"></div>
- </div>
-
- <div class="table-wrap">
- <table>
- <thead><tr>
- <th style="width:50px">อันดับ</th>
- <th>MAKER</th>
- <th style="text-align:center">งานที่ปิดแล้ว</th>
- <th style="text-align:center">ตรงเวลา</th>
- <th style="text-align:center">% ตรงเวลา</th>
- <th style="text-align:center">Streak ปัจจุบัน</th>
- <th style="text-align:center">Best Streak</th>
- </tr></thead>
- <tbody id="leaderboardTableBody"><tr><td colspan="7" class="empty"><div class="spinner"></div></td></tr></tbody>
- </table>
- <div class="table-footer" style="display:flex;align-items:center;justify-content:flex-end;padding:0.6rem 0.2rem 0">
- <div class="pagination" id="leaderboardPagination"></div>
- </div>
- </div>
- </div>
+ 
 
  <!-- CER PAGE -->
  <div class="page" id="page-cer">
@@ -7678,6 +7913,49 @@ html body #welcomeScreen .wl-btn:hover { transform: translateY(-1px); }
  </div>
  <!-- /PAYROLL PAGE -->
 
+ 
+  <!-- ═══════════ GO WORK ═══════════ -->
+  <div class="page" id="page-gowork">
+    <section class="gx-hero">
+      <div class="gx-hero-text">
+        <h1>GO WORK</h1>
+        <p>งานที่ส่งออกไป Process ที่ Maker ภายนอก — ติดตามวันส่ง ขั้นตอนงาน และราคาในที่เดียว</p>
+      </div>
+      <div class="gx-metrics" id="gwMetrics"></div>
+    </section>
+    <div class="gx-toolbar">
+      <label class="gx-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="gwSearch" type="search" placeholder="ค้นหา Part Name, Part No, Model, Process" oninput="GoWork.page=1;GoWork.render()" aria-label="ค้นหางาน GO WORK"></label>
+      <select id="gwMaker" class="gx-select" onchange="GoWork.page=1;GoWork.render()" aria-label="กรอง Maker"></select>
+      <select id="gwMonth" class="gx-select" onchange="GoWork.page=1;GoWork.render()" aria-label="กรองเดือน"></select>
+      <span class="gx-spacer"></span>
+      <button class="gx-btn ghost" onclick="GoWork.exportXlsx()">Export Excel</button>
+      <button class="gx-btn primary" onclick="GoWork.openForm()">เพิ่มงาน GO WORK</button>
+    </div>
+    <div class="gx-table-card">
+      <div class="gx-table-scroll"><table class="gx-table"><thead id="gwHead"></thead><tbody id="gwBody"></tbody></table></div>
+      <div class="gx-table-foot" id="gwFoot"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SUMMARY MEETING ═══════════ -->
+  <div class="page" id="page-meeting">
+    <section class="gx-hero">
+      <div class="gx-hero-text">
+        <h1>Summary Meeting</h1>
+        <p>บันทึกสรุปการประชุมกับ Maker พร้อมรูปประกอบ — รูปถูกเก็บเข้า Google Drive แยกโฟลเดอร์ตามการประชุม</p>
+      </div>
+      <div class="gx-metrics" id="mtMetrics"></div>
+    </section>
+    <div class="gx-toolbar">
+      <label class="gx-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="mtSearch" type="search" placeholder="ค้นหาหัวข้อ, Maker, รายละเอียด" oninput="Meeting.render()" aria-label="ค้นหาการประชุม"></label>
+      <select id="mtMaker" class="gx-select" onchange="Meeting.render()" aria-label="กรอง Maker"></select>
+      <span class="gx-spacer"></span>
+      <button class="gx-btn primary" onclick="Meeting.openForm()">บันทึกการประชุม</button>
+    </div>
+    <div class="mt-list" id="mtList"></div>
+  </div>
  </main>
 </div>
 
@@ -18193,6 +18471,854 @@ function endTour() {
   document.addEventListener('net:state', tick);
   setInterval(tick, 1000);
   if (document.readyState !== 'loading') tick(); else document.addEventListener('DOMContentLoaded', tick);
+})();
+</script>
+<script id="ccip-modules">
+/* ══════════════════════════════════════════════════════════════
+   CCIP MODULES — GO WORK · SUMMARY MEETING · COMMAND PALETTE (Ctrl/⌘ + K)
+   ข้อมูลเก็บใน Google Sheet (ชีต "GO WORK" และ "SUMMARY MEETING") ผ่าน Apps Script
+   รูปภาพ Meeting ถูกย่อขนาดในเครื่องก่อน แล้วส่งเข้า Google Drive ทีละรูปพร้อมแถบความคืบหน้า
+   ══════════════════════════════════════════════════════════════ */
+(function () {
+  'use strict';
+  const $ = (s, r = document) => r.querySelector(s);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const MONTHS = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+  const MON_S = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+  const parseDMY = s => {
+    const p = String(s || '').split('/').map(Number);
+    if (p.length !== 3 || p.some(isNaN)) return null;
+    const d = new Date(p[2], p[1] - 1, p[0]); d.setHours(0, 0, 0, 0); return d;
+  };
+  const isoToDMY = iso => { if (!iso) return ''; const [y, m, d] = iso.split('-').map(Number); return `${d}/${m}/${y}`; };
+  const dmyToISO = dmy => { const d = parseDMY(dmy); return d ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` : ''; };
+  const thDate = dmy => { const d = parseDMY(dmy); return d ? `${d.getDate()} ${MON_S[d.getMonth()]} ${d.getFullYear() + 543}` : (dmy || '—'); };
+  const monthKey = dmy => { const d = parseDMY(dmy); return d ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` : ''; };
+  const monthLabel = key => { const [y, m] = key.split('-').map(Number); return `${MONTHS[m - 1]} ${y + 543}`; };
+  const baht = n => (n == null || n === '' || isNaN(n)) ? '—' : Number(n).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const todayISO = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+  const relDays = dmy => {
+    const d = parseDMY(dmy); if (!d) return '';
+    const t = new Date(); t.setHours(0, 0, 0, 0);
+    const n = Math.round((d - t) / 86400000);
+    return n === 0 ? 'วันนี้' : n > 0 ? `อีก ${n} วัน` : `${-n} วันก่อน`;
+  };
+  const toast = (m, t) => { if (typeof showToast === 'function') showToast(m, t || 'info'); };
+  const url = () => (typeof WEB_APP_URL !== 'undefined' ? WEB_APP_URL : '');
+  const makerOptions = () => {
+    const s = new Set();
+    try { (allData || []).forEach(r => r.maker && s.add(String(r.maker).trim())); } catch (e) {}
+    try { (suppliers || []).forEach(r => { const n = r.name || r.company || r['ชื่อบริษัท']; if (n) s.add(String(n).trim()); }); } catch (e) {}
+    return [...s].filter(Boolean).sort((a, b) => a.localeCompare(b, 'th'));
+  };
+  const api = {
+    async get(action) {
+      if (!url()) throw new Error('ยังไม่ได้ตั้งค่า Web App URL (หน้า ตั้งค่า)');
+      const r = await fetch(url() + '?action=' + action);
+      const j = await r.json();
+      if (!j.success) throw new Error(j.error || 'โหลดข้อมูลไม่สำเร็จ');
+      return j;
+    },
+    async post(body) {
+      if (!url()) throw new Error('ยังไม่ได้ตั้งค่า Web App URL (หน้า ตั้งค่า)');
+      const r = await fetch(url(), { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) });
+      const j = await r.json();
+      if (!j.success) throw new Error(j.error || 'บันทึกไม่สำเร็จ');
+      return j;
+    }
+  };
+  const ICON = {
+    edit: '<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+    trash: '<svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>',
+    folder: '<svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>',
+    image: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>',
+    search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+    close: '<svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>'
+  };
+
+  /* ── Modal กลางที่ใช้ร่วมกัน ── */
+  function openModal({ title, sub, body, foot, wide, onClose }) {
+    closeModal();
+    const el = document.createElement('div');
+    el.className = 'gx-overlay'; el.id = 'gxOverlay';
+    el.innerHTML = `<div class="gx-modal${wide ? ' wide' : ''}" role="dialog" aria-modal="true" aria-labelledby="gxModalTitle">
+      <header class="gx-modal-head"><div><h2 id="gxModalTitle">${esc(title)}</h2>${sub ? `<p>${esc(sub)}</p>` : ''}</div>
+      <button class="gx-icon-btn" data-close aria-label="ปิด">${ICON.close}</button></header>
+      <div class="gx-modal-body">${body}</div>
+      ${foot ? `<footer class="gx-modal-foot">${foot}</footer>` : ''}</div>`;
+    el.addEventListener('mousedown', e => { if (e.target === el) closeModal(); });
+    el.querySelector('[data-close]').onclick = closeModal;
+    el._onClose = onClose;
+    document.body.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('open'));
+    setTimeout(() => { const f = el.querySelector('input:not([type=hidden]),textarea,select'); if (f) f.focus(); }, 60);
+    return el;
+  }
+  function closeModal() {
+    const el = $('#gxOverlay');
+    if (!el) return;
+    if (el._busy) { toast('กำลังส่งข้อมูล รอสักครู่', 'info'); return; }
+    if (typeof el._onClose === 'function') el._onClose();
+    el.remove();
+  }
+  function confirmBox(title, sub, okLabel) {
+    return new Promise(resolve => {
+      const el = openModal({
+        title, sub,
+        body: '',
+        foot: `<button class="gx-btn ghost" data-no>ยกเลิก</button><button class="gx-btn danger" data-yes>${esc(okLabel)}</button>`,
+        onClose: () => resolve(false)
+      });
+      el.querySelector('.gx-modal').classList.add('compact');
+      el.querySelector('[data-no]').onclick = () => { el._onClose = null; el.remove(); resolve(false); };
+      el.querySelector('[data-yes]').onclick = () => { el._onClose = null; el.remove(); resolve(true); };
+      setTimeout(() => el.querySelector('[data-yes]').focus(), 60);
+    });
+  }
+  document.addEventListener('keydown', e => {
+    if (!$('#gxOverlay') && !$('#gxLightbox')) return;
+    if (e.key === 'Escape') {
+      e.stopImmediatePropagation();
+      if ($('#gxLightbox')) Lightbox.close(); else closeModal();
+      return;
+    }
+    const tag = (document.activeElement && document.activeElement.tagName || '').toLowerCase();
+    if (!['input', 'textarea', 'select'].includes(tag)) e.stopImmediatePropagation(); // กันคีย์ลัด N / S ของหน้าหลักทำงานซ้อน
+  }, true);
+
+  function setBusy(btn, busy, label) {
+    if (!btn) return;
+    if (busy) { btn.dataset.label = btn.innerHTML; btn.disabled = true; btn.innerHTML = `<span class="gx-spin"></span>${esc(label || 'กำลังบันทึก')}`; }
+    else { btn.disabled = false; if (btn.dataset.label) btn.innerHTML = btn.dataset.label; }
+  }
+  const setupBanner = feature => `<div class="gx-empty warn"><strong>ยังเชื่อม ${feature} กับ Google Sheet ไม่ได้</strong>
+      <span>ต้องติดตั้งไฟล์ CCIP_Extension.gs ใน Apps Script และ Deploy เวอร์ชันใหม่ก่อน (ขั้นตอนอยู่ด้านบนของไฟล์)</span></div>`;
+
+  /* ══════════════════════ GO WORK ══════════════════════ */
+  const GW_KEY = 'ccip_gowork_cache';
+  const GoWork = {
+    rows: [], loaded: false, supported: true, sort: { col: 'goDate', dir: 'desc' }, page: 1, per: 25,
+    load(force) {
+      if (!this.loaded) {
+        try { const c = JSON.parse(localStorage.getItem(GW_KEY) || 'null'); if (Array.isArray(c)) { this.rows = c; this.loaded = true; } } catch (e) {}
+      }
+      return this.refresh(force);
+    },
+    async refresh() {
+      try {
+        const j = await api.get('getGoWork');
+        const data = Array.isArray(j.data) ? j.data : [];
+        if (data.length && !('goDate' in data[0])) throw Object.assign(new Error('unsupported'), { unsupported: true });
+        this.supported = true;
+        const raw = JSON.stringify(data);
+        const changed = raw !== this._raw;
+        this._raw = raw; this.rows = data; this.loaded = true;
+        localStorage.setItem(GW_KEY, raw);
+        if (changed && this.active()) this.render();
+      } catch (e) {
+        if (e.unsupported || /unknown|ไม่รู้จัก|invalid action/i.test(e.message)) { this.supported = false; if (this.active()) this.render(); }
+        else if (this.active() && !this.loaded) this.render(e.message);
+      }
+    },
+    active() { return $('#page-gowork') && $('#page-gowork').classList.contains('active'); },
+    open() { this.fillFilters(); this.render(); this.load(); },
+    fillFilters() {
+      const mk = $('#gwMaker'), mo = $('#gwMonth');
+      if (!mk || !mo) return;
+      const cm = mk.value, cmo = mo.value;
+      const makers = [...new Set(this.rows.map(r => r.maker).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'th'));
+      mk.innerHTML = '<option value="">Maker ทั้งหมด</option>' + makers.map(m => `<option>${esc(m)}</option>`).join('');
+      const months = [...new Set(this.rows.map(r => monthKey(r.goDate)).filter(Boolean))].sort().reverse();
+      mo.innerHTML = '<option value="">ทุกเดือน</option>' + months.map(k => `<option value="${k}">${monthLabel(k)}</option>`).join('');
+      mk.value = makers.includes(cm) ? cm : ''; mo.value = months.includes(cmo) ? cmo : '';
+    },
+    filtered() {
+      const q = ($('#gwSearch') && $('#gwSearch').value || '').trim().toLowerCase();
+      const mk = $('#gwMaker') ? $('#gwMaker').value : '';
+      const mo = $('#gwMonth') ? $('#gwMonth').value : '';
+      let list = this.rows.filter(r =>
+        (!mk || r.maker === mk) && (!mo || monthKey(r.goDate) === mo) &&
+        (!q || [r.partName, r.partNo, r.model, r.process, r.maker].some(v => String(v || '').toLowerCase().includes(q))));
+      const { col, dir } = this.sort, k = dir === 'asc' ? 1 : -1;
+      list.sort((a, b) => {
+        let x = a[col], y = b[col];
+        if (col === 'goDate') { x = parseDMY(x) || 0; y = parseDMY(y) || 0; }
+        else if (col === 'price') { x = Number(x) || 0; y = Number(y) || 0; }
+        else { x = String(x || '').toLowerCase(); y = String(y || '').toLowerCase(); }
+        return x > y ? k : x < y ? -k : 0;
+      });
+      return list;
+    },
+    setSort(col) {
+      this.sort = this.sort.col === col ? { col, dir: this.sort.dir === 'asc' ? 'desc' : 'asc' } : { col, dir: col === 'goDate' || col === 'price' ? 'desc' : 'asc' };
+      this.render();
+    },
+    render(errMsg) {
+      const body = $('#gwBody'); if (!body) return;
+      this.fillFilters();
+      const now = monthKey(isoToDMY(todayISO()));
+      const total = this.rows.reduce((s, r) => s + (Number(r.price) || 0), 0);
+      const thisMonth = this.rows.filter(r => monthKey(r.goDate) === now);
+      $('#gwMetrics').innerHTML = [
+        ['รายการทั้งหมด', this.rows.length.toLocaleString('th-TH'), ''],
+        ['มูลค่ารวม', '฿' + baht(total), 'money'],
+        ['ส่งงานเดือนนี้', thisMonth.length.toLocaleString('th-TH'), ''],
+        ['Maker', new Set(this.rows.map(r => r.maker).filter(Boolean)).size, '']
+      ].map(([l, v, c]) => `<div class="gx-metric ${c}"><span>${l}</span><b>${v}</b></div>`).join('');
+
+      const cols = [['partName', 'Part Name'], ['partNo', 'Part No'], ['model', 'Model'], ['goDate', 'Go Date'], ['process', 'Process Work'], ['maker', 'Maker'], ['price', 'Price Maker (฿)']];
+      $('#gwHead').innerHTML = '<tr>' + cols.map(([k, l]) =>
+        `<th class="${k === 'price' ? 'num' : ''}" aria-sort="${this.sort.col === k ? (this.sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}">
+          <button class="gx-th" onclick="GoWork.setSort('${k}')">${l}<i>${this.sort.col === k ? (this.sort.dir === 'asc' ? '↑' : '↓') : ''}</i></button></th>`).join('') + '<th class="act"></th></tr>';
+
+      if (!this.supported) { body.innerHTML = `<tr><td colspan="8">${setupBanner('GO WORK')}</td></tr>`; $('#gwFoot').innerHTML = ''; return; }
+      const list = this.filtered();
+      const pages = Math.max(1, Math.ceil(list.length / this.per));
+      this.page = Math.min(this.page, pages);
+      const slice = list.slice((this.page - 1) * this.per, this.page * this.per);
+      if (!this.loaded && !errMsg) {
+        body.innerHTML = `<tr><td colspan="8"><div class="gx-skel"></div><div class="gx-skel"></div><div class="gx-skel"></div></td></tr>`;
+      } else if (errMsg && !this.rows.length) {
+        body.innerHTML = `<tr><td colspan="8"><div class="gx-empty warn"><strong>โหลดข้อมูล GO WORK ไม่สำเร็จ</strong><span>${esc(errMsg)} — กด Sync เพื่อลองใหม่</span></div></td></tr>`;
+      } else if (!list.length) {
+        body.innerHTML = `<tr><td colspan="8"><div class="gx-empty"><strong>${this.rows.length ? 'ไม่พบรายการที่ตรงกับตัวกรอง' : 'ยังไม่มีงาน GO WORK'}</strong>
+          <span>${this.rows.length ? 'ลองล้างคำค้นหรือเลือก Maker / เดือนอื่น' : 'เพิ่มงานแรกเพื่อเริ่มติดตามงานที่ส่งออกไป Process ข้างนอก'}</span>
+          ${this.rows.length ? '' : '<button class="gx-btn primary" onclick="GoWork.openForm()">เพิ่มงาน GO WORK</button>'}</div></td></tr>`;
+      } else {
+        body.innerHTML = slice.map(r => {
+          const rel = relDays(r.goDate);
+          return `<tr>
+          <td><span class="gx-strong">${esc(r.partName)}</span></td>
+          <td><span class="gx-code">${esc(r.partNo)}</span></td>
+          <td>${esc(r.model) || '<span class="gx-dim">—</span>'}</td>
+          <td class="nowrap">${thDate(r.goDate)}${rel ? `<small class="gx-rel${rel === 'วันนี้' ? ' today' : ''}">${rel}</small>` : ''}</td>
+          <td><span class="gx-tag">${esc(r.process) || '—'}</span></td>
+          <td>${esc(r.maker)}</td>
+          <td class="num">${baht(r.price)}</td>
+          <td class="act"><button class="gx-icon-btn" title="แก้ไข" aria-label="แก้ไข ${esc(r.partName)}" onclick="GoWork.openForm('${esc(r.id)}')">${ICON.edit}</button>
+            <button class="gx-icon-btn danger" title="ลบ" aria-label="ลบ ${esc(r.partName)}" onclick="GoWork.remove('${esc(r.id)}')">${ICON.trash}</button></td></tr>`;
+        }).join('');
+      }
+      const sum = list.reduce((s, r) => s + (Number(r.price) || 0), 0);
+      $('#gwFoot').innerHTML = `<span>แสดง ${list.length ? ((this.page - 1) * this.per + 1) : 0}–${Math.min(this.page * this.per, list.length)} จาก ${list.length} รายการ · มูลค่าตามตัวกรอง <b>฿${baht(sum)}</b></span>
+        <div class="gx-pager">${pages > 1 ? Array.from({ length: pages }, (_, i) => `<button class="${i + 1 === this.page ? 'on' : ''}" onclick="GoWork.page=${i + 1};GoWork.render()">${i + 1}</button>`).join('') : ''}</div>`;
+      const badge = $('#navGroupBadge-gowork');
+      if (badge) { const n = thisMonth.length; badge.textContent = n; badge.style.display = n ? '' : 'none'; }
+    },
+    openForm(id) {
+      const r = id ? this.rows.find(x => x.id === id) : null;
+      const parts = (() => { try { return [...new Map((allData || []).filter(x => x.partNo).map(x => [String(x.partNo), x])).values()]; } catch (e) { return []; } })();
+      const procs = [...new Set(this.rows.map(x => x.process).filter(Boolean))];
+      const el = openModal({
+        title: r ? 'แก้ไขงาน GO WORK' : 'เพิ่มงาน GO WORK',
+        sub: r ? `${r.partNo} · ${r.partName}` : 'พิมพ์ Part No ที่มีในระบบ แล้วระบบจะเติม Part Name / Model / Maker ให้',
+        body: `<form class="gx-form" id="gwForm" novalidate>
+          <label class="span2"><span>Part No <em>*</em></span><input name="partNo" list="gwPartList" required autocomplete="off" value="${esc(r && r.partNo)}"></label>
+          <label class="span2"><span>Part Name <em>*</em></span><input name="partName" required value="${esc(r && r.partName)}"></label>
+          <label><span>Model</span><input name="model" value="${esc(r && r.model)}"></label>
+          <label><span>Go Date <em>*</em></span><input name="goDate" type="date" required value="${r ? dmyToISO(r.goDate) : todayISO()}"></label>
+          <label class="span2"><span>Process Work <em>*</em></span><input name="process" list="gwProcList" required placeholder="เช่น ชุบ, พ่นสี, Heat Treatment" value="${esc(r && r.process)}"></label>
+          <label><span>Maker <em>*</em></span><input name="maker" list="gwMakerList" required value="${esc(r && r.maker)}"></label>
+          <label><span>Price Maker (฿)</span><input name="price" type="number" inputmode="decimal" min="0" step="0.01" value="${r && r.price != null ? r.price : ''}"></label>
+          <datalist id="gwPartList">${parts.slice(0, 800).map(p => `<option value="${esc(p.partNo)}">${esc(p.partName)} · ${esc(p.model)}</option>`).join('')}</datalist>
+          <datalist id="gwProcList">${procs.map(p => `<option value="${esc(p)}">`).join('')}</datalist>
+          <datalist id="gwMakerList">${makerOptions().map(m => `<option value="${esc(m)}">`).join('')}</datalist>
+          <p class="gx-form-err span2" id="gwErr" role="alert"></p>
+        </form>`,
+        foot: `<button class="gx-btn ghost" data-close2>ยกเลิก</button><button class="gx-btn primary" id="gwSave">${r ? 'บันทึกการแก้ไข' : 'เพิ่มงาน'}</button>`
+      });
+      const f = $('#gwForm');
+      el.querySelector('[data-close2]').onclick = closeModal;
+      f.partNo.addEventListener('change', () => {
+        const hit = parts.find(p => String(p.partNo) === f.partNo.value.trim());
+        if (!hit) return;
+        if (!f.partName.value) f.partName.value = hit.partName || '';
+        if (!f.model.value) f.model.value = hit.model || '';
+        if (!f.maker.value) f.maker.value = hit.maker || '';
+      });
+      const save = () => this.save(r, f, el);
+      $('#gwSave').onclick = save;
+      f.addEventListener('submit', e => { e.preventDefault(); save(); });
+    },
+    async save(r, f, el) {
+      const v = n => f[n].value.trim();
+      const miss = [['partNo', 'Part No'], ['partName', 'Part Name'], ['goDate', 'Go Date'], ['process', 'Process Work'], ['maker', 'Maker']].filter(([n]) => !v(n));
+      f.querySelectorAll('input').forEach(i => i.classList.toggle('bad', miss.some(([n]) => n === i.name)));
+      if (miss.length) { $('#gwErr').textContent = 'กรอกให้ครบ: ' + miss.map(m => m[1]).join(', '); return; }
+      const rec = { partNo: v('partNo'), partName: v('partName'), model: v('model'), goDate: isoToDMY(v('goDate')), process: v('process'), maker: v('maker'), price: v('price') === '' ? null : Number(v('price')) };
+      const btn = $('#gwSave'); setBusy(btn, true); el._busy = true;
+      try {
+        const j = await api.post(Object.assign({ action: r ? 'updateGoWork' : 'addGoWork', id: r && r.id }, rec));
+        const saved = Object.assign({}, rec, { id: (j.data && j.data.id) || (r && r.id) });
+        if (r) this.rows = this.rows.map(x => x.id === r.id ? saved : x); else this.rows.unshift(saved);
+        this._raw = JSON.stringify(this.rows); localStorage.setItem(GW_KEY, this._raw);
+        el._busy = false; closeModal(); this.render();
+        if (typeof addHistoryLog === 'function') addHistoryLog(r ? 'edit' : 'add', rec.partNo, rec.partName, 'GO WORK: ' + rec.process + ' · ' + rec.maker);
+        toast(r ? 'บันทึกการแก้ไข GO WORK แล้ว' : 'เพิ่มงาน GO WORK แล้ว', 'success');
+      } catch (e) {
+        el._busy = false; setBusy(btn, false);
+        $('#gwErr').textContent = 'บันทึกไม่สำเร็จ: ' + e.message;
+      }
+    },
+    async remove(id) {
+      const r = this.rows.find(x => x.id === id); if (!r) return;
+      if (!await confirmBox('ลบงาน GO WORK นี้?', `${r.partNo} · ${r.partName} (${r.maker}) จะถูกลบออกจาก Google Sheet`, 'ลบงาน')) return;
+      const before = this.rows;
+      this.rows = this.rows.filter(x => x.id !== id); this.render();
+      try {
+        await api.post({ action: 'deleteGoWork', id });
+        this._raw = JSON.stringify(this.rows); localStorage.setItem(GW_KEY, this._raw);
+        if (typeof addHistoryLog === 'function') addHistoryLog('delete', r.partNo, r.partName, 'GO WORK: ลบรายการ');
+        toast('ลบงาน GO WORK แล้ว', 'success');
+      } catch (e) { this.rows = before; this.render(); toast('ลบไม่สำเร็จ: ' + e.message, 'error'); }
+    },
+    exportXlsx() {
+      if (typeof XLSX === 'undefined') { toast('ยังโหลดตัวสร้างไฟล์ Excel ไม่เสร็จ ลองใหม่อีกครั้ง', 'error'); return; }
+      const rows = this.filtered().map(r => ({ 'Part Name': r.partName, 'Part No': r.partNo, 'Model': r.model, 'Go Date': r.goDate, 'Process Work': r.process, 'Maker': r.maker, 'Price Maker': r.price }));
+      const ws = XLSX.utils.json_to_sheet(rows), wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'GO WORK');
+      XLSX.writeFile(wb, `GO_WORK_${todayISO()}.xlsx`);
+    }
+  };
+
+  /* ══════════════════════ SUMMARY MEETING ══════════════════════ */
+  const MT_KEY = 'ccip_meeting_cache';
+  const thumb = (id, w) => `https://drive.google.com/thumbnail?id=${encodeURIComponent(id)}&sz=w${w || 480}`;
+  async function compressImage(file) {
+    const MAX = 1800;
+    const readB64 = blob => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(blob); });
+    if (file.type === 'image/gif' || /hei[cf]/i.test(file.type + file.name) || (file.size < 400 * 1024 && /jpe?g|png|webp/.test(file.type))) {
+      return { name: file.name, mime: file.type, base64: await readB64(file), size: file.size };
+    }
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('อ่านไฟล์รูปไม่ได้: ' + file.name)); i.src = URL.createObjectURL(file); });
+    const scale = Math.min(1, MAX / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement('canvas');
+    c.width = Math.round(img.naturalWidth * scale); c.height = Math.round(img.naturalHeight * scale);
+    const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height); ctx.drawImage(img, 0, 0, c.width, c.height);
+    URL.revokeObjectURL(img.src);
+    const blob = await new Promise(res => c.toBlob(res, 'image/jpeg', 0.86));
+    return { name: file.name.replace(/\.[^.]+$/, '') + '.jpg', mime: 'image/jpeg', base64: await readB64(blob), size: blob.size };
+  }
+  const kb = n => n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
+
+  const Meeting = {
+    list: [], loaded: false, supported: true,
+    load() {
+      if (!this.loaded) { try { const c = JSON.parse(localStorage.getItem(MT_KEY) || 'null'); if (Array.isArray(c)) { this.list = c; this.loaded = true; } } catch (e) {} }
+      return this.refresh();
+    },
+    async refresh() {
+      try {
+        const j = await api.get('getMeetings');
+        const data = Array.isArray(j.data) ? j.data : [];
+        if (data.length && !('topic' in data[0])) throw Object.assign(new Error('unsupported'), { unsupported: true });
+        this.supported = true;
+        const raw = JSON.stringify(data);
+        const changed = raw !== this._raw;
+        this._raw = raw; this.list = data; this.loaded = true;
+        localStorage.setItem(MT_KEY, raw);
+        if (changed && this.active()) this.render();
+      } catch (e) {
+        if (e.unsupported || /unknown|ไม่รู้จัก|invalid action/i.test(e.message)) { this.supported = false; if (this.active()) this.render(); }
+        else if (this.active() && !this.loaded) this.render(e.message);
+      }
+    },
+    active() { return $('#page-meeting') && $('#page-meeting').classList.contains('active'); },
+    open() { this.render(); this.load(); },
+    save() { this._raw = JSON.stringify(this.list); localStorage.setItem(MT_KEY, this._raw); },
+    render(errMsg) {
+      const wrap = $('#mtList'); if (!wrap) return;
+      const mk = $('#mtMaker'), cur = mk.value;
+      const makers = [...new Set(this.list.map(m => m.maker).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'th'));
+      mk.innerHTML = '<option value="">Maker ทั้งหมด</option>' + makers.map(m => `<option>${esc(m)}</option>`).join('');
+      mk.value = makers.includes(cur) ? cur : '';
+      const nowKey = monthKey(isoToDMY(todayISO()));
+      const imgCount = this.list.reduce((s, m) => s + (m.images || []).length, 0);
+      $('#mtMetrics').innerHTML = [
+        ['การประชุมทั้งหมด', this.list.length], ['เดือนนี้', this.list.filter(m => monthKey(m.date) === nowKey).length],
+        ['Maker', makers.length], ['รูปใน Drive', imgCount]
+      ].map(([l, v]) => `<div class="gx-metric"><span>${l}</span><b>${Number(v).toLocaleString('th-TH')}</b></div>`).join('');
+
+      if (!this.supported) { wrap.innerHTML = setupBanner('Summary Meeting'); return; }
+      if (!this.loaded && !errMsg) { wrap.innerHTML = '<div class="gx-skel tall"></div><div class="gx-skel tall"></div>'; return; }
+      if (errMsg && !this.list.length) { wrap.innerHTML = `<div class="gx-empty warn"><strong>โหลด Summary Meeting ไม่สำเร็จ</strong><span>${esc(errMsg)} — กด Sync เพื่อลองใหม่</span></div>`; return; }
+      const q = ($('#mtSearch').value || '').trim().toLowerCase();
+      const items = this.list.filter(m => (!mk.value || m.maker === mk.value) &&
+        (!q || [m.topic, m.maker, m.detail, m.by].some(v => String(v || '').toLowerCase().includes(q))))
+        .sort((a, b) => (parseDMY(b.date) || 0) - (parseDMY(a.date) || 0));
+      if (!items.length) {
+        wrap.innerHTML = `<div class="gx-empty"><strong>${this.list.length ? 'ไม่พบการประชุมที่ตรงกับตัวกรอง' : 'ยังไม่มีบันทึกการประชุม'}</strong>
+          <span>${this.list.length ? 'ลองล้างคำค้นหรือเลือก Maker อื่น' : 'บันทึกหัวข้อ วันที่ Maker และแนบรูปจากการประชุม รูปจะถูกเก็บเข้า Google Drive ให้เอง'}</span>
+          ${this.list.length ? '' : '<button class="gx-btn primary" onclick="Meeting.openForm()">บันทึกการประชุม</button>'}</div>`;
+        return;
+      }
+      const groups = new Map();
+      items.forEach(m => { const k = monthKey(m.date) || 'ไม่ระบุวันที่'; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(m); });
+      wrap.innerHTML = [...groups].map(([k, arr]) => `
+        <section class="mt-month"><h3>${k.includes('-') ? monthLabel(k) : k}<span>${arr.length} การประชุม</span></h3>
+        ${arr.map(m => this.card(m)).join('')}</section>`).join('');
+    },
+    card(m) {
+      const d = parseDMY(m.date);
+      const imgs = m.images || [];
+      const shown = imgs.slice(0, 5);
+      return `<article class="mt-card" id="mt-${esc(m.id)}">
+        <div class="mt-date"><b>${d ? d.getDate() : '—'}</b><span>${d ? MON_S[d.getMonth()] : ''}</span><small>${d ? d.getFullYear() + 543 : ''}</small></div>
+        <div class="mt-main">
+          <div class="mt-top"><h4>${esc(m.topic)}</h4><span class="gx-tag maker">${esc(m.maker) || 'ไม่ระบุ Maker'}</span></div>
+          ${m.detail ? `<p class="mt-detail">${esc(m.detail)}</p>` : ''}
+          ${imgs.length ? `<div class="mt-thumbs">${shown.map((im, i) => `
+            <button class="mt-thumb" onclick="Meeting.view('${esc(m.id)}',${i})" aria-label="ดูรูป ${esc(im.name)}">
+              <img loading="lazy" src="${thumb(im.id, 360)}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'mt-thumb-fallback',textContent:'เปิดใน Drive'}))">
+              ${i === shown.length - 1 && imgs.length > shown.length ? `<span class="mt-more">+${imgs.length - shown.length}</span>` : ''}</button>`).join('')}</div>` : ''}
+          <div class="mt-meta">${m.by ? `บันทึกโดย ${esc(m.by)} · ` : ''}${imgs.length} รูป</div>
+        </div>
+        <div class="mt-actions">
+          ${m.folderUrl ? `<a class="gx-icon-btn" href="${esc(m.folderUrl)}" target="_blank" rel="noopener" title="เปิดโฟลเดอร์ใน Google Drive" aria-label="เปิดโฟลเดอร์ Drive">${ICON.folder}</a>` : ''}
+          <button class="gx-icon-btn" title="เพิ่มรูป" aria-label="เพิ่มรูป" onclick="Meeting.openForm('${esc(m.id)}', true)">${ICON.image}</button>
+          <button class="gx-icon-btn" title="แก้ไข" aria-label="แก้ไข" onclick="Meeting.openForm('${esc(m.id)}')">${ICON.edit}</button>
+          <button class="gx-icon-btn danger" title="ลบ" aria-label="ลบ" onclick="Meeting.remove('${esc(m.id)}')">${ICON.trash}</button>
+        </div></article>`;
+    },
+    openForm(id, focusImages) {
+      const m = id ? this.list.find(x => x.id === id) : null;
+      const files = []; // { file, url, status: wait|up|done|err, err }
+      let createdId = m ? m.id : null;
+      const el = openModal({
+        wide: true,
+        title: m ? (focusImages ? 'เพิ่มรูปให้การประชุม' : 'แก้ไขบันทึกการประชุม') : 'บันทึกการประชุม',
+        sub: m ? `${m.topic} · ${thDate(m.date)}` : 'รูปจะถูกย่อขนาดในเครื่อง แล้วส่งเข้าโฟลเดอร์ Google Drive ของการประชุมนี้',
+        body: `<form class="gx-form" id="mtForm" novalidate>
+          <label class="span2"><span>หัวข้อ Meeting <em>*</em></span><input name="topic" required value="${esc(m && m.topic)}" placeholder="เช่น ทบทวนคุณภาพ Lot มิ.ย. / เจรจาราคา"></label>
+          <label><span>วันที่ <em>*</em></span><input name="date" type="date" required value="${m ? dmyToISO(m.date) : todayISO()}"></label>
+          <label><span>Maker <em>*</em></span><input name="maker" list="mtMakerList" required value="${esc(m && m.maker)}"></label>
+          <label class="span2"><span>สรุป / รายละเอียด</span><textarea name="detail" rows="4" placeholder="ประเด็นที่คุย ข้อตกลง และสิ่งที่ต้องติดตาม">${esc(m && m.detail)}</textarea></label>
+          <div class="span2">
+            <div class="mt-drop" id="mtDrop" tabindex="0" role="button" aria-label="เลือกรูปภาพ">
+              ${ICON.image}<b>ลากรูปมาวาง คลิกเพื่อเลือก หรือกด Ctrl+V วางรูป</b><span>JPG · PNG · WEBP · HEIC ไม่จำกัดจำนวน — ระบบย่อให้ไม่เกิน 1800px</span>
+              <input type="file" id="mtFile" accept="image/*" multiple hidden>
+            </div>
+            <div class="mt-queue" id="mtQueue"></div>
+            ${m && (m.images || []).length ? `<div class="mt-existing"><span>รูปที่อยู่ใน Drive แล้ว (${m.images.length})</span><div>${m.images.map(im =>
+              `<figure><img loading="lazy" src="${thumb(im.id, 200)}" alt=""><button type="button" class="mt-x" title="ลบรูปนี้ออกจาก Drive" data-rm="${esc(im.id)}">${ICON.close}</button></figure>`).join('')}</div></div>` : ''}
+          </div>
+          <datalist id="mtMakerList">${makerOptions().map(x => `<option value="${esc(x)}">`).join('')}</datalist>
+          <div class="mt-progress span2" id="mtProg" hidden><div><i id="mtBar"></i></div><span id="mtProgText"></span></div>
+          <p class="gx-form-err span2" id="mtErr" role="alert"></p>
+        </form>`,
+        foot: `<button class="gx-btn ghost" data-close2>ยกเลิก</button><button class="gx-btn primary" id="mtSave">${m ? 'บันทึก' : 'บันทึกและอัปโหลด'}</button>`,
+        onClose: () => files.forEach(f => URL.revokeObjectURL(f.url))
+      });
+      el.querySelector('[data-close2]').onclick = closeModal;
+      const drop = $('#mtDrop'), input = $('#mtFile'), queue = $('#mtQueue');
+      const drawQueue = () => {
+        queue.innerHTML = files.map((f, i) => `<figure class="${f.status}">
+          <img src="${f.url}" alt=""><figcaption>${f.status === 'done' ? 'อัปโหลดแล้ว' : f.status === 'up' ? 'กำลังส่ง…' : f.status === 'err' ? 'ส่งไม่สำเร็จ' : kb(f.file.size)}</figcaption>
+          ${f.status === 'wait' || f.status === 'err' ? `<button type="button" class="mt-x" data-i="${i}" aria-label="เอาออก">${ICON.close}</button>` : ''}</figure>`).join('');
+        const n = files.filter(f => f.status !== 'done').length;
+        $('#mtSave').textContent = n ? `บันทึกและอัปโหลด ${n} รูป` : (m ? 'บันทึก' : 'บันทึกการประชุม');
+      };
+      const add = list => {
+        [...list].filter(f => /^image\//.test(f.type) || /\.(heic|heif)$/i.test(f.name)).forEach(file => files.push({ file, url: URL.createObjectURL(file), status: 'wait' }));
+        drawQueue();
+      };
+      drop.onclick = () => input.click();
+      drop.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); } };
+      input.onchange = () => { add(input.files); input.value = ''; };
+      ['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add('over'); }));
+      ['dragleave', 'drop'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove('over'); }));
+      drop.addEventListener('drop', e => add(e.dataTransfer.files));
+      el.addEventListener('paste', e => { const fl = [...(e.clipboardData && e.clipboardData.files || [])]; if (fl.length) { e.preventDefault(); add(fl); } });
+      queue.onclick = e => { const b = e.target.closest('[data-i]'); if (!b) return; const f = files.splice(+b.dataset.i, 1)[0]; URL.revokeObjectURL(f.url); drawQueue(); };
+      el.querySelectorAll('[data-rm]').forEach(b => b.onclick = async () => {
+        if (!await confirmBoxInline(b)) return;
+        try {
+          b.closest('figure').classList.add('removing');
+          await api.post({ action: 'removeMeetingImage', id: m.id, fileId: b.dataset.rm });
+          m.images = m.images.filter(i => i.id !== b.dataset.rm); this.save(); this.render();
+          b.closest('figure').remove();
+        } catch (err) { b.closest('figure').classList.remove('removing'); $('#mtErr').textContent = 'ลบรูปไม่สำเร็จ: ' + err.message; }
+      });
+      drawQueue();
+      if (focusImages) setTimeout(() => drop.focus(), 80);
+
+      const f = $('#mtForm');
+      $('#mtSave').onclick = async () => {
+        const v = n => f[n].value.trim();
+        const miss = [['topic', 'หัวข้อ Meeting'], ['date', 'วันที่'], ['maker', 'Maker']].filter(([n]) => !v(n));
+        f.querySelectorAll('input').forEach(i => i.classList.toggle('bad', miss.some(([n]) => n === i.name)));
+        if (miss.length) { $('#mtErr').textContent = 'กรอกให้ครบ: ' + miss.map(x => x[1]).join(', '); return; }
+        $('#mtErr').textContent = '';
+        const btn = $('#mtSave'); setBusy(btn, true, 'กำลังบันทึก'); el._busy = true;
+        const rec = { topic: v('topic'), date: isoToDMY(v('date')), maker: v('maker'), detail: v('detail') };
+        const by = localStorage.getItem('prpo_username') || '';
+        let target;
+        try {
+          if (!createdId) {
+            const j = await api.post(Object.assign({ action: 'addMeeting', by }, rec));
+            target = Object.assign({ images: [] }, j.data); createdId = target.id;
+            this.list.unshift(target);
+          } else {
+            target = this.list.find(x => x.id === createdId);
+            const changed = !m || ['topic', 'date', 'maker', 'detail'].some(k => String(m[k] || '') !== rec[k]);
+            if (changed) { await api.post(Object.assign({ action: 'updateMeeting', id: createdId }, rec)); Object.assign(target, rec); }
+          }
+          this.save(); this.render();
+          const todo = files.filter(x => x.status !== 'done');
+          if (todo.length) {
+            $('#mtProg').hidden = false;
+            let done = 0;
+            for (const item of todo) {
+              item.status = 'up'; drawQueue();
+              $('#mtProgText').textContent = `กำลังส่งรูปเข้า Google Drive ${done + 1}/${todo.length}`;
+              try {
+                const img = await compressImage(item.file);
+                const j = await api.post({ action: 'uploadMeetingImage', id: createdId, name: img.name, mime: img.mime, base64: img.base64 });
+                target.images = (target.images || []).concat([j.data]);
+                item.status = 'done'; done++;
+                this.save(); this.render();
+              } catch (err) { item.status = 'err'; item.err = err.message; }
+              $('#mtBar').style.width = Math.round((todo.indexOf(item) + 1) / todo.length * 100) + '%';
+              drawQueue();
+            }
+            const failed = files.filter(x => x.status === 'err');
+            if (failed.length) {
+              el._busy = false; setBusy(btn, false); drawQueue();
+              $('#mtProgText').textContent = `ส่งสำเร็จ ${done} รูป · ไม่สำเร็จ ${failed.length} รูป`;
+              $('#mtErr').textContent = `บันทึกการประชุมแล้ว แต่ส่งรูปไม่สำเร็จ ${failed.length} รูป (${failed[0].err}) — กดปุ่มอีกครั้งเพื่อส่งเฉพาะรูปที่ค้าง`;
+              return;
+            }
+          }
+          el._busy = false; closeModal();
+          if (typeof addHistoryLog === 'function') addHistoryLog(m ? 'edit' : 'add', rec.maker, rec.topic, 'Summary Meeting' + (files.length ? ` · อัปโหลด ${files.length} รูปเข้า Drive` : ''));
+          toast(files.length ? `บันทึกการประชุมและส่ง ${files.length} รูปเข้า Google Drive แล้ว` : 'บันทึกการประชุมแล้ว', 'success');
+          const card = document.getElementById('mt-' + createdId);
+          if (card) { card.classList.add('flash'); card.scrollIntoView({ block: 'nearest' }); }
+        } catch (err) {
+          el._busy = false; setBusy(btn, false);
+          $('#mtErr').textContent = 'บันทึกไม่สำเร็จ: ' + err.message;
+        }
+      };
+    },
+    async remove(id) {
+      const m = this.list.find(x => x.id === id); if (!m) return;
+      if (!await confirmBox('ลบบันทึกการประชุมนี้?', `"${m.topic}" และรูป ${(m.images || []).length} รูปในโฟลเดอร์ Drive จะถูกย้ายไปถังขยะ (กู้คืนได้ภายใน 30 วัน)`, 'ลบการประชุม')) return;
+      const before = this.list;
+      this.list = this.list.filter(x => x.id !== id); this.render();
+      try { await api.post({ action: 'deleteMeeting', id }); this.save(); toast('ลบบันทึกการประชุมแล้ว', 'success'); }
+      catch (e) { this.list = before; this.render(); toast('ลบไม่สำเร็จ: ' + e.message, 'error'); }
+    },
+    view(id, i) { const m = this.list.find(x => x.id === id); if (m) Lightbox.open(m, i); }
+  };
+  function confirmBoxInline(btn) {
+    if (btn.dataset.armed) return Promise.resolve(true);
+    btn.dataset.armed = '1'; btn.classList.add('armed'); btn.title = 'กดอีกครั้งเพื่อยืนยันการลบ';
+    setTimeout(() => { delete btn.dataset.armed; btn.classList.remove('armed'); }, 3000);
+    return Promise.resolve(false);
+  }
+
+  const Lightbox = {
+    open(m, i) {
+      this.m = m; this.i = i;
+      const el = document.createElement('div');
+      el.id = 'gxLightbox'; el.className = 'gx-lightbox';
+      el.innerHTML = `<button class="lb-close gx-icon-btn" aria-label="ปิด">${ICON.close}</button>
+        <button class="lb-nav prev" aria-label="รูปก่อนหน้า">‹</button><figure><img alt=""><figcaption></figcaption></figure><button class="lb-nav next" aria-label="รูปถัดไป">›</button>`;
+      el.onclick = e => { if (e.target === el || e.target.closest('.lb-close')) this.close(); };
+      el.querySelector('.prev').onclick = () => this.go(-1);
+      el.querySelector('.next').onclick = () => this.go(1);
+      this.keys = e => { if (e.key === 'ArrowLeft') this.go(-1); if (e.key === 'ArrowRight') this.go(1); };
+      document.addEventListener('keydown', this.keys);
+      document.body.appendChild(el); this.draw();
+    },
+    go(d) { const n = this.m.images.length; this.i = (this.i + d + n) % n; this.draw(); },
+    draw() {
+      const el = $('#gxLightbox'), im = this.m.images[this.i];
+      el.querySelector('img').src = thumb(im.id, 2000);
+      el.querySelector('figcaption').innerHTML = `${esc(this.m.topic)} · ${this.i + 1}/${this.m.images.length}
+        <a href="https://drive.google.com/file/d/${encodeURIComponent(im.id)}/view" target="_blank" rel="noopener">เปิดใน Google Drive</a>`;
+      el.querySelectorAll('.lb-nav').forEach(b => b.hidden = this.m.images.length < 2);
+    },
+    close() { const el = $('#gxLightbox'); if (el) el.remove(); document.removeEventListener('keydown', this.keys); }
+  };
+
+  /* ══════════════════════ COMMAND PALETTE เดิม (Ctrl/⌘ + K) — เพิ่มหน้าใหม่และค้นข้อมูล GO WORK / Meeting ══════════════════════ */
+  try {
+    const svg = d => `<svg viewBox="0 0 24 24">${d}</svg>`;
+    for (let i = CMDK_ITEMS.length - 1; i >= 0; i--) if (['gantt', 'leadtime', 'leaderboard', 'costcalc'].includes(CMDK_ITEMS[i].key)) CMDK_ITEMS.splice(i, 1);
+    const TRUCK = svg('<path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>');
+    const CHAT = svg('<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>');
+    const COIN = svg('<path d="M12 2v20"/><path d="M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>');
+    const at = CMDK_ITEMS.findIndex(i => i.key === 'cer');
+    CMDK_ITEMS.splice(at < 0 ? CMDK_ITEMS.length : at, 0,
+      { key: 'gowork', label: 'รายการ GO WORK', group: 'งาน GO WORK', icon: TRUCK },
+      { key: 'meeting', label: 'บันทึกการประชุม', group: 'Summary Meeting', icon: CHAT },
+      { key: 'costsaving', label: 'Cost Saving Report', group: 'COST SAVING', icon: COIN },
+      { key: 'costcalc', label: 'เครื่องมือคำนวณ COST UP / DOWN', group: 'COST SAVING', icon: COIN });
+    const origSearch = window.cmdkSearchData;
+    window.cmdkSearchData = function (q) {
+      const base = (origSearch && origSearch.apply(this, arguments)) || [];
+      q = String(q || '').trim().toLowerCase();
+      if (q.length < 2) return base;
+      const has = (o, keys) => keys.some(k => String(o[k] || '').toLowerCase().includes(q));
+      const gw = GoWork.rows.filter(r => has(r, ['partNo', 'partName', 'maker', 'process', 'model'])).slice(0, 5).map(r => ({
+        type: 'ext', group: 'GO WORK', icon: TRUCK, label: `${esc(r.partNo)} — ${esc(r.partName)} · ${esc(r.process)} · ${esc(r.maker)}`,
+        run: () => { showPage('gowork', $('#nav-gowork')); setTimeout(() => GoWork.openForm(r.id), 60); }
+      }));
+      const mt = Meeting.list.filter(m => has(m, ['topic', 'maker', 'detail'])).slice(0, 5).map(m => ({
+        type: 'ext', group: 'Summary Meeting', icon: CHAT, label: `${esc(m.topic)} · ${esc(m.maker)} · ${thDate(m.date)}`,
+        run: () => { showPage('meeting', $('#nav-meeting')); setTimeout(() => { const c = document.getElementById('mt-' + m.id); if (c) { c.scrollIntoView({ block: 'center' }); c.classList.add('flash'); } }, 120); }
+      }));
+      return base.concat(gw, mt);
+    };
+    const origSelect = window.cmdkSelect;
+    window.cmdkSelect = function (i) {
+      const it = cmdkFiltered[i];
+      if (it && typeof it.run === 'function') { closeCommandPalette(); it.run(); return; }
+      return origSelect.apply(this, arguments);
+    };
+  } catch (e) { console.warn('[ccip] command palette extension:', e); }
+
+  /* ══════════════════════ เชื่อมกับระบบเดิม ══════════════════════ */
+  window.GoWork = GoWork; window.Meeting = Meeting;
+
+  // หน้าใหม่ + ชื่อหัวข้อ + เมนู 2 ภาษา
+  try {
+    Object.assign(PAGE_TITLES.th, { gowork: 'GO WORK', meeting: 'Summary Meeting' });
+    Object.assign(PAGE_TITLES.en, { gowork: 'GO WORK', meeting: 'Summary Meeting' });
+    Object.assign(I18N.th, { group_gowork: 'งาน GO WORK', nav_gowork: 'รายการ GO WORK', group_meeting: 'Summary Meeting', nav_meeting: 'บันทึกการประชุม' });
+    Object.assign(I18N.en, { group_gowork: 'GO WORK', nav_gowork: 'GO WORK List', group_meeting: 'Summary Meeting', nav_meeting: 'Meeting Notes' });
+    DEFAULT_COLLAPSED_NAV_GROUPS.push('gowork', 'meeting');
+  } catch (e) {}
+
+  // ฟังก์ชันที่ถูกนำออก (Timeline / Gantt, Lead Time, Leaderboard) — ปิดไว้เพื่อไม่ให้โค้ดเดิมเรียกแล้ว error
+  ['renderGantt', 'populateGanttFilters', 'renderLeadTime', 'renderLeaderboard', 'ganttPrevMonth', 'ganttNextMonth', 'ganttGoToday', 'sortLT']
+    .forEach(n => { window[n] = function () {}; });
+
+  const origShowPage = window.showPage;
+  window.showPage = function (name, btn) {
+    if (!document.getElementById('page-' + name)) name = 'home', btn = document.getElementById('nav-home');
+    origShowPage(name, btn);
+    if (name === 'gowork') GoWork.open();
+    if (name === 'meeting') Meeting.open();
+    document.querySelector('main') && document.querySelector('main').scrollTo && document.querySelector('main').scrollTo(0, 0);
+  };
+  // ซิงค์ GO WORK / Meeting ไปพร้อมกับข้อมูลชุดอื่นในคำขอเดียวกัน (ถูกรวมเป็น getAll)
+  const origSync = window.syncData;
+  window.syncData = function () { const p = origSync.apply(this, arguments); GoWork.load(); Meeting.load(); return p; };
+  const origTick = window.autoSyncTick;
+  if (typeof origTick === 'function') {
+    window.autoSyncTick = function () { const p = origTick.apply(this, arguments); if (!document.hidden && url()) { GoWork.refresh(); Meeting.refresh(); } return p; };
+  }
+  const boot = () => { if (url()) { GoWork.load(); Meeting.load(); } };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+})();
+</script>
+<script id="ccip-chart-theme">
+/* ══════════════════════════════════════════════════════════════
+   CCIP CHART THEME — ปรับกราฟทุกตัวในระบบให้เป็นมาตรฐานเดียวกัน
+   - ชุดสีใหม่: น้ำเงินสัญญาณเป็นสีหลัก, สีสถานะชัดเจน (เขียว = เสร็จ/ตรงเวลา, เหลืองอำพัน = กำลังทำ, แดง = ล่าช้า/ไม่ครบ)
+   - แท่งกราฟสีทึบ มุมโค้งเฉพาะปลายแท่ง, กราฟอันดับใช้สีเดียว (ไม่ใช่สีรุ้ง)
+   - เส้นกริดบาง ไม่มีเส้นประ, ตัวอักษรแกน/คำอธิบายเป็นฟอนต์เดียวกับระบบ
+   - Tooltip สีหมึกน้ำเงินเข้ม, เลื่อนเมาส์บนกราฟเส้นแล้วเห็นค่าทุกชุดในเดือนเดียวกัน
+   ทำงานโดยปรับ config ก่อนสร้างกราฟ — ไม่ต้องแก้โค้ดกราฟแต่ละตัว
+   ══════════════════════════════════════════════════════════════ */
+(function () {
+  'use strict';
+  if (!window.Chart) return;
+  const OrigChart = window.Chart;
+  const FONT = "'IBM Plex Sans Thai', 'Sarabun', sans-serif";
+  const DISPLAY = "'Chakra Petch', 'IBM Plex Sans Thai', sans-serif";
+  const isDark = () => document.body.classList.contains('dark-theme');
+  const PAL = {
+    light: { primary: '#1E56F0', navy: '#0B3A8C', cyan: '#0A9FB8', green: '#12A071', amber: '#E0900F', red: '#E5484D',
+             violet: '#6B5BD6', orange: '#E8692A', slate: '#8A99AF', text: '#56677F', strong: '#0D1A2C',
+             grid: 'rgba(13,26,44,0.07)', surface: '#FFFFFF' },
+    dark:  { primary: '#5B8CFF', navy: '#3E6DE0', cyan: '#3AD4EC', green: '#34C08A', amber: '#F2B04A', red: '#F2645D',
+             violet: '#9A8CFF', orange: '#F58A52', slate: '#8FA0BA', text: '#8494AE', strong: '#E3EAF4',
+             grid: 'rgba(255,255,255,0.06)', surface: '#0D1727' }
+  };
+  const P = () => PAL[isDark() ? 'dark' : 'light'];
+  // สีเดิมในโค้ดกราฟ → บทบาทสีใหม่
+  const MAP = {
+    '2E5395': 'primary', '3E5A82': 'primary', '2A3F5C': 'primary', '1E3A8A': 'navy', '5A8FC0': 'cyan', '2F8F6E': 'cyan',
+    'C9A227': 'amber', 'D4A017': 'amber', 'F59E0B': 'amber', 'B0673A': 'orange',
+    '3F7D53': 'green', '16A34A': 'green', '10B981': 'green', '7A9E7E': 'green', '4C8267': 'green',
+    'A6443C': 'red', 'DC2626': 'red', 'EF4444': 'red', 'B3564C': 'red',
+    '8A94A6': 'slate', '7D8AA0': 'slate', '5C6F8A': 'slate', '64748B': 'slate', '94A3B8': 'slate'
+  };
+  const SEMANTIC = new Set(['green', 'amber', 'red', 'slate']);
+  const hexOf = (r, g, b) => [r, g, b].map(v => (+v).toString(16).padStart(2, '0')).join('').toUpperCase();
+  function parse(c) {
+    if (typeof c !== 'string') return null;
+    let m = /^#([0-9a-f]{6})$/i.exec(c.trim());
+    if (m) return { hex: m[1].toUpperCase(), a: 1 };
+    m = /^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+)\s*)?\)$/i.exec(c.trim());
+    if (m) return { hex: hexOf(m[1], m[2], m[3]), a: m[4] == null ? 1 : +m[4] };
+    return null;
+  }
+  const withAlpha = (hex, a) => {
+    if (a >= 1) return hex;
+    const h = hex.replace('#', '');
+    return `rgba(${parseInt(h.substr(0, 2), 16)},${parseInt(h.substr(2, 2), 16)},${parseInt(h.substr(4, 2), 16)},${a})`;
+  };
+  const roleOf = c => { const p = parse(c); return p && MAP[p.hex] ? MAP[p.hex] : null; };
+  function remap(c) {
+    const p = parse(c);
+    if (!p || !MAP[p.hex]) return c;
+    return withAlpha(P()[MAP[p.hex]], p.a);
+  }
+
+  /* ── ตัวช่วยเดิมของระบบ: ให้ใช้สีใหม่ และแท่งกราฟเป็นสีทึบแทนไล่เฉด ── */
+  const origGrad = window.makeGradient;
+  if (typeof origGrad === 'function') {
+    window.makeGradient = function (ctx, area, a, b, vertical) {
+      const pa = parse(a);
+      const isAreaFill = pa && pa.a < 0.12;          // พื้นใต้กราฟเส้น → คงไล่เฉดไว้
+      if (!isAreaFill) return remap(b);               // แท่งกราฟ → สีทึบ
+      return origGrad(ctx, area, remap(a), remap(b), vertical);
+    };
+  }
+  const origHexToRgba = window.hexToRgba;
+  if (typeof origHexToRgba === 'function') {
+    window.hexToRgba = (hex, a) => { const p = parse(hex); return origHexToRgba(p && MAP[p.hex] ? P()[MAP[p.hex]] : hex, a); };
+  }
+  const tooltipStyle = () => ({
+    enabled: true, backgroundColor: isDark() ? '#101E34' : '#0A1830', titleColor: '#FFFFFF', bodyColor: '#C9D5EA', footerColor: '#93A4C2',
+    borderColor: 'rgba(143,176,255,0.22)', borderWidth: 1, cornerRadius: 10, padding: { x: 12, y: 10 },
+    caretSize: 6, caretPadding: 8, boxPadding: 6, boxWidth: 9, boxHeight: 9, usePointStyle: true, displayColors: true,
+    titleFont: { family: DISPLAY, size: 12.5, weight: '600' }, titleMarginBottom: 6,
+    bodyFont: { family: FONT, size: 12, weight: '500' }, bodySpacing: 4,
+    footerFont: { family: FONT, size: 11, weight: '400' }
+  });
+  const legendLabels = () => ({
+    color: P().text, usePointStyle: true, pointStyle: 'rectRounded', boxWidth: 10, boxHeight: 10, padding: 16,
+    font: { family: FONT, size: 11.5, weight: '500' }
+  });
+  window.chartTooltipCfg = () => tooltipStyle();
+  window.chartLegendCfg = () => ({ position: 'bottom', align: 'center', labels: legendLabels() });
+
+  /* ── ปรับ config ของกราฟทุกตัวก่อนสร้าง ── */
+  function restyle(cfg) {
+    if (!cfg || typeof cfg !== 'object') return;
+    const pal = P(), type = cfg.type;
+    const o = cfg.options = cfg.options || {};
+    const datasets = (cfg.data && cfg.data.datasets) || [];
+    let hasLine = false;
+    datasets.forEach(d => {
+      const t = d.type || type;
+      // กราฟอันดับที่ไล่สีตาม PALETTE ทีละแท่ง → สีหลักสีเดียว
+      if (t === 'bar' && typeof d.backgroundColor === 'function' && datasets.length === 1 && /PALETTE/.test(String(d.backgroundColor))) d.backgroundColor = pal.primary;
+      ['backgroundColor', 'borderColor', 'pointBackgroundColor', 'pointBorderColor', 'hoverBackgroundColor', 'hoverBorderColor', 'pointHoverBackgroundColor'].forEach(k => {
+        const v = d[k];
+        if (typeof v === 'string') d[k] = remap(v);
+        else if (Array.isArray(v)) d[k] = v.map(x => typeof x === 'string' ? remap(x) : x);
+        else if (typeof v === 'function') { const f = v; d[k] = c => { const r = f(c); return typeof r === 'string' ? remap(r) : r; }; }
+      });
+      if (t === 'bar') {
+        // กราฟอันดับที่ใช้หลายสีต่อแท่ง (ไม่ใช่สีสถานะ) → ใช้สีหลักสีเดียว
+        const orig = Array.isArray(d.backgroundColor) ? d.backgroundColor : null;
+        if (orig && datasets.length === 1 && orig.length > 1) {
+          const roles = orig.map(x => roleOf(typeof x === 'string' ? x : '') || x);
+          const semantic = roles.every(r => SEMANTIC.has(r));
+          if (!semantic) d.backgroundColor = orig.map(() => pal.primary);
+        }
+        // สีตามลำดับแท่งจาก PALETTE (กราฟอันดับ) → สีหลักสีเดียว
+        // ตั้งสีตามความหมายของชุดข้อมูล
+        if (/on-?time|ตรงเวลา/i.test(String(d.label || ''))) { d.backgroundColor = pal.cyan; d.borderColor = pal.cyan; }
+        if (typeof d.borderRadius !== 'object') d.borderRadius = 5;
+        d.borderSkipped = 'start';
+        d.borderWidth = 0;
+        if (d.barPercentage == null) d.barPercentage = 0.8;
+        if (d.categoryPercentage == null) d.categoryPercentage = datasets.length > 1 ? 0.7 : 0.72;
+        if (d.hoverBackgroundColor == null && typeof d.backgroundColor === 'string') d.hoverBackgroundColor = d.backgroundColor;
+      }
+      if (t === 'line') {
+        hasLine = true;
+        if (/on-?time|ตรงเวลา/i.test(String(d.label || ''))) d.borderColor = pal.cyan;
+        const lc = typeof d.borderColor === 'string' ? d.borderColor : pal.primary;
+        const n = (d.data || []).length;
+        d.borderWidth = 2.25;
+        d.tension = d.tension === 0 ? 0 : 0.32;
+        d.pointRadius = n > 12 ? 0 : 3;
+        d.pointHoverRadius = 5; d.pointHitRadius = 14; d.pointBorderWidth = 2;
+        d.pointBackgroundColor = pal.surface; d.pointBorderColor = lc;
+        d.pointHoverBackgroundColor = lc; d.pointHoverBorderColor = pal.surface;
+      }
+      if (t === 'doughnut' || t === 'pie' || t === 'polarArea') {
+        d.borderWidth = 2; d.borderColor = pal.surface; d.hoverOffset = 5; d.hoverBorderColor = pal.surface;
+        if (t === 'doughnut') d.borderRadius = 3;
+      }
+    });
+    if (type === 'doughnut' && (!o.cutout || parseInt(o.cutout, 10) < 66)) o.cutout = '72%';
+    if (hasLine && !o.interaction) o.interaction = { mode: 'index', intersect: false };
+    o.animation = o.animation === false ? false : { duration: 650, easing: 'easeOutQuart' };
+    o.layout = Object.assign({ padding: { top: 6, right: 6 } }, o.layout);
+
+    if (o.scales) Object.keys(o.scales).forEach(key => {
+      const sc = o.scales[key];
+      if (!sc || sc.display === false) return;
+      const tf = (sc.ticks && sc.ticks.font) || {};
+      sc.ticks = Object.assign({}, sc.ticks, { color: pal.text, padding: 8, font: Object.assign({}, tf, { family: FONT, size: 11, weight: '500' }) });
+      if (!sc.grid || sc.grid.display !== false) sc.grid = Object.assign({}, sc.grid, { color: pal.grid, lineWidth: 1, borderDash: [], drawTicks: false, tickBorderDash: [] });
+      sc.border = Object.assign({}, sc.border, { display: false, dash: [] });
+      if (sc.title && sc.title.display) sc.title = Object.assign({}, sc.title, { color: pal.text, font: { family: FONT, size: 11, weight: '600' } });
+    });
+
+    const pl = o.plugins = o.plugins || {};
+    if (pl.legend && pl.legend.display !== false) {
+      pl.legend.labels = Object.assign({}, pl.legend.labels, legendLabels(), pl.legend.labels && pl.legend.labels.generateLabels ? { generateLabels: pl.legend.labels.generateLabels } : {});
+    }
+    if (pl.tooltip !== false && !(pl.tooltip && pl.tooltip.enabled === false)) {
+      pl.tooltip = Object.assign({}, pl.tooltip || {}, tooltipStyle(), pl.tooltip && pl.tooltip.callbacks ? { callbacks: pl.tooltip.callbacks } : {},
+        pl.tooltip && pl.tooltip.mode ? { mode: pl.tooltip.mode } : {}, pl.tooltip && pl.tooltip.filter ? { filter: pl.tooltip.filter } : {});
+    }
+    if (pl.centerText) {
+      const c = pl.centerText;
+      c.glow = null;
+      c.color = pal.strong;
+      c.labelColor = pal.text;
+    }
+  }
+
+  function CCIPChart(item, cfg) {
+    try { restyle(cfg); } catch (e) { console.warn('[chart-theme]', e); }
+    return new OrigChart(item, cfg);
+  }
+  Object.setPrototypeOf(CCIPChart, OrigChart);
+  CCIPChart.prototype = OrigChart.prototype;
+  window.Chart = CCIPChart;
+
+  OrigChart.defaults.font.family = FONT;
+  OrigChart.defaults.font.size = 11;
+  OrigChart.defaults.color = PAL.light.text;
+
+  /* ── ตัวเลขกลางโดนัท: ฟอนต์ตัวเลขแบบเดียวกับการ์ด KPI ── */
+  try {
+    const old = OrigChart.registry.plugins.get('centerText');
+    if (old) OrigChart.unregister(old);
+  } catch (e) {}
+  OrigChart.register({
+    id: 'centerText',
+    beforeDraw(chart) {
+      const opt = chart.config.options && chart.config.options.plugins && chart.config.options.plugins.centerText;
+      if (!opt || opt.text === undefined || opt.text === null || !chart.chartArea) return;
+      const { ctx, chartArea: a } = chart;
+      const cx = (a.left + a.right) / 2, cy = (a.top + a.bottom) / 2;
+      const size = Math.max(18, Math.min(30, (a.bottom - a.top) * 0.16));
+      ctx.save();
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = `600 ${size}px ${DISPLAY}`;
+      ctx.fillStyle = P().strong;
+      ctx.fillText(String(opt.text), cx, cy - (opt.label ? size * 0.36 : 0));
+      if (opt.label) {
+        ctx.font = `500 ${Math.max(10, size * 0.42)}px ${FONT}`;
+        ctx.fillStyle = P().text;
+        ctx.fillText(String(opt.label), cx, cy + size * 0.52);
+      }
+      ctx.restore();
+    }
+  });
 })();
 </script>
 </body>
