@@ -20479,7 +20479,7 @@ function endTour() {
     const loggedIn = ws && getComputedStyle(ws).display === 'none';
     if (loggedIn && !Profile.get() && !(window.CCIPAuth && CCIPAuth.user()) && !sessionStorage.getItem('ccip_profile_skip') && !$('#gxOverlay')) Profile.edit(true);
   };
-  const pfBoot = () => { Profile.apply(); setTimeout(askProfile, 2500); };
+  const pfBoot = () => { Profile.apply(); };   // ไม่เปิดหน้าตั้งโปรไฟล์อัตโนมัติ — แก้ได้จากเมนูบัญชีมุมขวาบน
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pfBoot); else pfBoot();
 
   /* ══════════════════════ บัญชีผู้ใช้ + รหัสผ่าน (ฐานข้อมูลในชีต USERS) ══════════════════════
@@ -20556,14 +20556,13 @@ function endTour() {
     if (remember) localStorage.setItem(REMEMBER_KEY, JSON.stringify({ id, password: '' })); else localStorage.removeItem(REMEMBER_KEY);
     $('#wlPassword').value = '';
     if (res.token) { Auth.save({ token: res.token, user: Object.assign({}, res.user, { pendingCount: res.pendingCount || 0 }) }, remember); Profile.fromAccount(res.user); }
-    else { Auth.clear(); setTimeout(askProfile, 2600); }
+    else { Auth.clear(); }
     wlBusy(true, 'เข้าสู่ระบบสำเร็จ');
     setTimeout(() => {
       enterApp();
       if (res.setup) setTimeout(() => Users.open(true), 900);
       else if (res.user && res.user.name) setTimeout(() => toast(`ยินดีต้อนรับ คุณ${res.user.name.split(/\s+/)[0]}`, 'success'), 700);
       if (res.pendingCount) setTimeout(() => toast(`มีคำขอสร้างบัญชีรออนุมัติ ${res.pendingCount} รายการ — ดูที่ เมนูบัญชี → จัดการผู้ใช้`, 'info'), 1800);
-      else if (res.user) setTimeout(() => Profile.edit(true), 900);
     }, 250);
   };
   const origLogout = window.doLogout;
