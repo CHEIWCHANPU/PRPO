@@ -5976,6 +5976,17 @@ html body .account-pill .account-pill-avatar > .pf-av-img, html body .account-po
 .us-pend-row small { font-size: .74rem; color: var(--muted); }
 /* Edge ใส่ปุ่มดูรหัสผ่านของตัวเองซ้อนกับปุ่มของระบบ → ซ่อนปุ่มของเบราว์เซอร์ */
 #wlPassword::-ms-reveal, #wlPassword::-ms-clear { display: none !important; width: 0; height: 0; }
+.gw-cust-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.gw-cust-btn.on { border-color: var(--warn) !important; color: var(--warn) !important; background: color-mix(in srgb, var(--warn) 8%, var(--surface)) !important; }
+.gw-cust-btn.on .gw-eye-slash { display: none; }
+.gw-secret { position: relative; }
+.gw-secret input { padding-right: 2.6rem !important; }
+.gw-secret-btn { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; display: grid; place-items: center; border: 0; border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer; }
+.gw-secret-btn:hover { background: var(--surface2); color: var(--accent); }
+.gw-secret-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
+.gw-secret input::-ms-reveal { display: none; }
+#page-gowork .gx-search { flex: 1 1 180px; max-width: 260px; }
+#page-gowork .gx-select { width: 118px; flex: 0 1 118px; }
 </style>
 </head>
 <body class="light-theme">
@@ -8373,6 +8384,7 @@ html body .account-pill .account-pill-avatar > .pf-av-img, html body .account-po
       <select id="gwModel" class="gx-select" onchange="GoWork.page=1;GoWork.render()" aria-label="กรอง Model"></select>
       <select id="gwMaker" class="gx-select" onchange="GoWork.page=1;GoWork.render()" aria-label="กรอง Maker"></select>
       <select id="gwWork" class="gx-select" onchange="GoWork.page=1;GoWork.render()" aria-label="กรอง Work"></select>
+      <button class="gx-btn ghost gw-cust-btn" id="gwCustToggle" onclick="GoWork.toggleCust()" aria-pressed="false" title="ราคาลูกค้า (CUSTOMER) ซ่อนไว้เป็นค่าเริ่มต้น"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><path class="gw-eye-slash" d="M3 3l18 18"/></svg><span>แสดงราคาลูกค้า</span></button>
       <span class="gx-spacer"></span>
       <button class="gx-btn ghost gw-clear-btn" onclick="GoWork.clearAll()" title="ลบรายการ GO WORK ทั้งหมด"><svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>ลบทั้งหมด</button>
       <button class="gx-btn ghost" onclick="GoWork.exportXlsx()">Export Excel</button>
@@ -19075,7 +19087,8 @@ function endTour() {
     folder: '<svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>',
     image: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>',
     search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
-    close: '<svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>'
+    close: '<svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+    eye: '<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>'
   };
 
   /* ── Modal กลางที่ใช้ร่วมกัน ── */
@@ -19227,6 +19240,15 @@ function endTour() {
 
   const GoWork = {
     rows: [], loaded: false, supported: true, sort: { col: 'no', dir: 'asc' }, page: 1, per: 50,
+    // ราคาลูกค้า (CUSTOMER) ซ่อนไว้เป็นค่าเริ่มต้น — กดแสดงได้ชั่วคราว ปิดเบราว์เซอร์แล้วกลับไปซ่อน
+    hideCust: sessionStorage.getItem('gw_show_customer') !== '1',
+    cols() { return this.hideCust ? GW_FIELDS.filter(([k]) => k !== 'customer') : GW_FIELDS; },
+    toggleCust() {
+      this.hideCust = !this.hideCust;
+      sessionStorage.setItem('gw_show_customer', this.hideCust ? '0' : '1');
+      if (this.hideCust && this.sort.col === 'customer') this.sort = { col: 'no', dir: 'asc' };
+      this.render();
+    },
     load() {
       if (!this.loaded) {
         try { const c = JSON.parse(localStorage.getItem(GW_KEY) || 'null'); if (Array.isArray(c)) { this.rows = c; this.loaded = true; } } catch (e) {}
@@ -19265,7 +19287,7 @@ function endTour() {
       const f = { model: $('#gwModel'), maker: $('#gwMaker'), work: $('#gwWork') };
       let list = this.rows.filter(r =>
         Object.entries(f).every(([k, el]) => !el || !el.value || String(r[k] || '').trim() === el.value) &&
-        (!q || GW_FIELDS.some(([k]) => String(r[k] || '').toLowerCase().includes(q))));
+        (!q || this.cols().some(([k]) => String(r[k] || '').toLowerCase().includes(q))));
       const { col, dir } = this.sort, k = dir === 'asc' ? 1 : -1;
       const numeric = ['no', 'volume', 'year'].includes(col);
       list.sort((a, b) => {
@@ -19294,17 +19316,19 @@ function endTour() {
       ].map(([l, v]) => `<div class="gx-metric"><span>${l}</span><b>${v}</b></div>`).join('');
 
       const groups = [];
-      GW_FIELDS.forEach(([, , g]) => { const last = groups[groups.length - 1]; if (last && last.g === g) last.n++; else groups.push({ g, n: 1 }); });
+      const COLS = this.cols();
+      const tg = $('#gwCustToggle');
+      if (tg) { tg.classList.toggle('on', !this.hideCust); tg.querySelector('span').textContent = this.hideCust ? 'แสดงราคาลูกค้า' : 'ซ่อนราคาลูกค้า'; tg.setAttribute('aria-pressed', String(!this.hideCust)); }
+      COLS.forEach(([, , g]) => { const last = groups[groups.length - 1]; if (last && last.g === g) last.n++; else groups.push({ g, n: 1 }); });
       $('#gwHead').innerHTML =
         `<tr class="gw-group-row">${groups.map(x => `<th colspan="${x.n}" class="gw-g-${x.g}">${GW_GROUPS[x.g]}</th>`).join('')}<th class="act"></th></tr>` +
-        '<tr>' + GW_FIELDS.map(([k, l, g]) => `<th class="gw-h-${g} gw-al-${GW_COL[k][1]}${k === 'no' ? ' sticky-no' : ''}" aria-sort="${this.sort.col === k ? (this.sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}">
+        '<tr>' + COLS.map(([k, l, g]) => `<th class="gw-h-${g} gw-al-${GW_COL[k][1]}${k === 'no' ? ' sticky-no' : ''}" aria-sort="${this.sort.col === k ? (this.sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}">
           <button class="gx-th" onclick="GoWork.setSort('${k}')" title="เรียงตาม ${esc(l)}"><span>${esc(l)}</span><i>${this.sort.col === k ? (this.sort.dir === 'asc' ? '↑' : '↓') : ''}</i></button></th>`).join('') + '<th class="act"></th></tr>';
       const tbl = $('#gwHead').parentElement;
-      if (!tbl.querySelector('colgroup')) {
-        tbl.insertAdjacentHTML('afterbegin', '<colgroup>' + GW_FIELDS.map(([k]) => `<col style="width:${GW_COL[k][0]}px">`).join('') + '<col style="width:88px"></colgroup>');
-        tbl.style.width = (GW_FIELDS.reduce((s2, [k]) => s2 + GW_COL[k][0], 0) + 88) + 'px';
-      }
-      const span = GW_FIELDS.length + 1;
+      const cg = tbl.querySelector('colgroup'); if (cg) cg.remove();
+      tbl.insertAdjacentHTML('afterbegin', '<colgroup>' + COLS.map(([k]) => `<col style="width:${GW_COL[k][0]}px">`).join('') + '<col style="width:88px"></colgroup>');
+      tbl.style.width = (COLS.reduce((s2, [k]) => s2 + GW_COL[k][0], 0) + 88) + 'px';
+      const span = COLS.length + 1;
       if (!this.supported) {
         body.innerHTML = `<tr><td colspan="${span}"><div class="gx-empty warn"><strong>ยังเชื่อม GO WORK กับ Google Sheet ไม่ได้</strong>
           <span>ต้องอัปเดตไฟล์ CCIP_Extension.gs เป็นเวอร์ชันล่าสุด แล้ว Deploy เวอร์ชันใหม่ก่อน</span></div></td></tr>`;
@@ -19323,7 +19347,7 @@ function endTour() {
           <span>${this.rows.length ? 'ลองล้างคำค้นหรือเปลี่ยนตัวกรอง' : 'นำเข้าไฟล์ Excel หลักทีเดียวได้ทั้งหมด หรือเพิ่มทีละรายการ'}</span>
           ${this.rows.length ? '' : '<div class="gw-empty-actions"><button class="gx-btn primary" onclick="GoWork.openImport()">นำเข้า Excel</button><button class="gx-btn ghost" onclick="GoWork.openForm()">เพิ่มทีละรายการ</button></div>'}</div></td></tr>`;
       } else {
-        body.innerHTML = slice.map(r => `<tr>${GW_FIELDS.map(([k]) => {
+        body.innerHTML = slice.map(r => `<tr>${COLS.map(([k]) => {
           const v = r[k] == null ? '' : String(r[k]);
           const cls = `gw-al-${GW_COL[k][1]}${k === 'no' ? ' sticky-no' : ''}`;
           const tip = v.length > 14 ? ` title="${esc(v)}"` : '';
@@ -19358,6 +19382,8 @@ function endTour() {
         const req = ['partNo', 'partName'].includes(k);
         const val = r ? r[k] : (k === 'no' ? String((Math.max(0, ...this.rows.map(x => numOf(x.no) || 0))) + 1) : '');
         const list = ['model', 'cpc', 'customer', 'custMaker', 'maker', 'place', 'work', 'partNo'].includes(k) ? ` list="gwl-${k}"` : '';
+        const secret = k === 'customer' && this.hideCust;
+        if (secret) return `<label class="${cls || ''}"><span>${esc(GW_FORM_LABEL[k])} <small class="gx-hint">ซ่อนอยู่</small></span><div class="gw-secret"><input name="${k}" type="password" value="${esc(val)}" autocomplete="off" inputmode="decimal"><button type="button" class="gw-secret-btn" onclick="const i=this.previousElementSibling;i.type=i.type==='password'?'text':'password'" aria-label="แสดง/ซ่อนราคาลูกค้า">${ICON.eye}</button></div></label>`;
         return `<label class="${cls || ''}"><span>${esc(GW_FORM_LABEL[k] || def[1])}${req ? ' <em>*</em>' : ''}</span><input name="${k}"${list} value="${esc(val)}" autocomplete="off"${['volume', 'year', 'no'].includes(k) ? ' inputmode="numeric"' : ''}${k === 'goDate' ? ' placeholder="เช่น 1/10/2026"' : ''}></label>`;
       };
       const el = openModal({
@@ -19447,7 +19473,9 @@ function endTour() {
             const list = pool.get(gwKey(r));
             if (list && list.length) {
               const old = list.shift();
-              if (gwSame(old, r)) plan.same++; else plan.changed.push(Object.assign({}, r, { id: old.id }));
+              // คอลัมน์ที่ไม่มีในไฟล์ (เช่น Export ตอนซ่อนราคาลูกค้า) → คงค่าเดิมไว้ ไม่ล้างทิ้ง
+              const merged = Object.assign({}, r); missing.forEach(([k]) => { merged[k] = old[k]; });
+              if (gwSame(old, merged)) plan.same++; else plan.changed.push(Object.assign(merged, { id: old.id }));
             } else plan.fresh.push(r);
           });
           parsed.plan = plan;
@@ -19461,8 +19489,8 @@ function endTour() {
             </div>
             <div class="gw-map">${GW_FIELDS.map(([k, l]) => `<span class="${parsed.map[k] != null ? 'ok' : 'miss'}">${esc(GW_FORM_LABEL[k] || l)}</span>`).join('')}</div>
             ${missing.length ? `<p class="gw-note warn">ไม่พบคอลัมน์: ${missing.map(m => esc(GW_FORM_LABEL[m[0]] || m[1])).join(', ')} — ช่องเหล่านี้จะว่าง</p>` : ''}
-            <div class="gw-sample"><table class="gx-table"><thead><tr>${GW_FIELDS.map(([k, l]) => `<th>${esc(l)}</th>`).join('')}</tr></thead>
-              <tbody>${parsed.rows.slice(0, 6).map(r => `<tr>${GW_FIELDS.map(([k]) => `<td>${esc(r[k])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+            <div class="gw-sample"><table class="gx-table"><thead><tr>${this.cols().map(([k, l]) => `<th>${esc(l)}</th>`).join('')}</tr></thead>
+              <tbody>${parsed.rows.slice(0, 6).map(r => `<tr>${this.cols().map(([k]) => `<td>${esc(r[k])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
             ${hasOld ? `<div class="gw-diff">
               <div class="new"><b>${plan.fresh.length.toLocaleString('th-TH')}</b><span>รายการใหม่ (ยังไม่มีในระบบ)</span></div>
               <div class="chg"><b>${plan.changed.length.toLocaleString('th-TH')}</b><span>มีอยู่แล้ว แต่ค่าใน Excel เปลี่ยน</span></div>
@@ -19609,11 +19637,13 @@ function endTour() {
     },
     exportXlsx() {
       if (typeof XLSX === 'undefined') { toast('ยังโหลดตัวสร้างไฟล์ Excel ไม่เสร็จ ลองใหม่อีกครั้ง', 'error'); return; }
-      const aoa = [GW_FIELDS.map(f => f[1])].concat(this.filtered().map(r => GW_FIELDS.map(([k]) => {
+      const EX = this.cols();
+      if (this.hideCust) toast('Export โดยไม่รวมคอลัมน์ CUSTOMER (ราคาลูกค้าซ่อนอยู่)', 'info');
+      const aoa = [EX.map(f => f[1])].concat(this.filtered().map(r => EX.map(([k]) => {
         const v = r[k]; return ['volume', 'year', 'no'].includes(k) && numOf(v) != null && /^[\d,.\s]+$/.test(String(v)) ? numOf(v) : (v || '');
       })));
       const ws = XLSX.utils.aoa_to_sheet(aoa), wb = XLSX.utils.book_new();
-      ws['!cols'] = GW_FIELDS.map(([k]) => ({ wch: ['partName', 'specPlating', 'specMat'].includes(k) ? 26 : ['partNo', 'customer', 'maker', 'work'].includes(k) ? 18 : 10 }));
+      ws['!cols'] = EX.map(([k]) => ({ wch: ['partName', 'specPlating', 'specMat'].includes(k) ? 26 : ['partNo', 'customer', 'maker', 'work'].includes(k) ? 18 : 10 }));
       XLSX.utils.book_append_sheet(wb, ws, 'GO WORK');
       XLSX.writeFile(wb, `GO_WORK_${todayISO()}.xlsx`);
     }
