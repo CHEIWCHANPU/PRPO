@@ -22673,6 +22673,9 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
 #pcSheet .c,#pcSheet .c input{text-align:center}
 #pcSheet .u{display:flex;align-items:center;gap:4px}
 #pcSheet .u input{flex:1 1 auto;min-width:0;text-align:center}
+#pcSheet td.pc > .u{position:relative;display:block}
+#pcSheet td.pc > .u input{width:100%;padding:0 24px}
+#pcSheet td.pc > .u span{position:absolute;right:0;top:0;bottom:0;display:flex;align-items:center;pointer-events:none}
 #pcSheet .u span{flex:0 0 auto}
 #pcSheet .pcs-vol{display:flex;align-items:stretch;height:23px}
 #pcSheet .pcs-vol > .u{flex:1;padding:0 6px}
@@ -22724,7 +22727,7 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
 .pcs-img .tools button:hover{border-color:#2563EB;color:#2563EB}
 .pcs-foot{display:grid;grid-template-columns:1fr 420px;gap:10px;margin-top:8px;align-items:end}
 .pcs-rmk{flex:0 0 240px;margin:8px 8px 0 0;display:flex;flex-direction:column;min-width:0}
-.pcs-rmk-b{flex:1;min-height:72px;display:flex;flex-direction:column;justify-content:center;text-align:center;border:1px solid var(--ln);padding:6px 10px;font-size:15px;font-weight:700;line-height:1.5;white-space:pre-wrap;word-break:break-word;outline:0;color:#111827;background:#FFFDF5}
+.pcs-rmk-b{flex:1;min-height:72px;display:flex;flex-direction:column;justify-content:center;text-align:center;border:1px solid var(--ln);padding:6px 10px;font-size:19px;font-weight:700;line-height:1.5;white-space:pre-wrap;word-break:break-word;outline:0;color:#111827;background:#FFFDF5}
 .pcs-rmk-b:empty::before{content:'พิมพ์หมายเหตุ เช่น งาน Prototype / เงื่อนไขพิเศษ ...';color:#B0B6BF;font-size:12px;font-weight:400}
 .pcs-rmk-b:focus,.pcs-rmk-b:focus-visible{box-shadow:none !important;outline:none !important}
 .pcs-add{margin-top:5px;border:1px dashed #9CA3AF;background:#fff;color:#374151;border-radius:6px;font:inherit;font-size:11px;font-weight:600;padding:3px 10px;cursor:pointer}
@@ -22829,18 +22832,18 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
               </table></div>
             <div style="display:flex;gap:24px;justify-content:space-between;margin-top:10px;align-items:stretch">
             <div style="flex:0 0 330px"><table><colgroup><col style="width:118px"><col><col style="width:22px"><col style="width:96px"></colgroup>
-              <tr><td class="lb cu">ราคาที่เสนอลูกค้า</td><td class="cu">${F('custCode','c')}</td><td class="c cu">=</td><td class="r cu"><div class="u">${F('custPrice')}<span>THB</span></div></td></tr>
-              ${d.makers.map((m, i) => `<tr class="pcs-mk" data-mi="${i}"><td class="lb mk">${i ? '' : 'ราคาของ MAKER'}</td><td class="mv" style="position:relative">${F('makers.' + i + '.name', 'c')}${i ? `<button class="pcs-rm" data-rm="${i}" title="ลบแถวนี้">×</button>` : ''}</td><td class="c mv">=</td><td class="r mv"><div class="u">${F('makers.' + i + '.price')}<span>THB</span></div></td></tr>`).join('')}
+              <tr><td class="lb cu">ราคาที่เสนอลูกค้า</td><td class="cu">${F('custCode','c')}</td><td class="c cu">=</td><td class="pc r cu"><div class="u">${F('custPrice')}<span>THB</span></div></td></tr>
+              ${d.makers.map((m, i) => `<tr class="pcs-mk" data-mi="${i}"><td class="lb mk">${i ? '' : 'ราคาของ MAKER'}</td><td class="mv" style="position:relative">${F('makers.' + i + '.name', 'c')}${i ? `<button class="pcs-rm" data-rm="${i}" title="ลบแถวนี้">×</button>` : ''}</td><td class="c mv">=</td><td class="pc r mv"><div class="u">${F('makers.' + i + '.price')}<span>THB</span></div></td></tr>`).join('')}
             </table>${d.makers.length < MROWS ? '<button class="pcs-add" id="pcsAddMk">+ เพิ่ม MAKER</button>' : ''}</div>
             <div class="pcs-rmk"><div class="pcs-cap">REMARK<span>หมายเหตุ</span></div><div class="pcs-rmk-b" id="pcsRemark" contenteditable="true" spellcheck="false">${esc(d.remark).replace(/\n/g, '<br>')}</div></div>
             </div>
             <div class="pcs-note" title="พื้นที่ว่างสำหรับเขียนสรุป / Note หลังพิมพ์"></div>
             <div class="pcs-row"><div class="pcs-bbox"><div>รายละเอียดของ</div><div>ชิ้นงานที่ใกล้เคียง</div><div>(BASE)</div></div>
-              <table style="flex:1"><colgroup><col style="width:112px"><col><col style="width:80px"><col style="width:92px"><col style="width:82px"><col style="width:126px"></colgroup>
+              <table style="flex:1"><colgroup><col style="width:112px"><col><col style="width:64px"><col style="width:96px"><col style="width:96px"><col style="width:112px"></colgroup>
                 <tr><td class="lb bs">PART NAME / NO.</td><td colspan="5">${F('base.partName')}</td></tr>
-                <tr><td class="lb bs">VOLUME</td><td class="r"><div class="u">${F('base.volume')}<span>PCS</span></div></td><td class="r"><div class="u">${F('base.years')}<span>YEAR</span></div></td><th class="bs">MAKER</th><th class="bs">CUSTOMER</th><th class="bs">MASS PROD. PLANT</th></tr>
-                <tr><td class="lb bs">MODEL</td><td colspan="2">${F('base.model')}</td><td>${F('base.maker','c')}</td><td>${F('base.customer','c')}</td><td>${F('base.plant','c','font-weight:700')}</td></tr>
-                <tr><td class="lb bs">PRICE</td><td class="r"><div class="u">${F('base.price')}<span>THB</span></div></td><td style="background:#FAFAFA"></td><td class="r"><div class="u">${F('base.makerPrice')}<span>THB</span></div></td><td class="r"><div class="u">${F('base.custPrice')}<span>THB</span></div></td><td style="background:#FAFAFA"></td></tr>
+                <tr><td class="lb bs">VOLUME</td><td class="r"><div class="u">${F('base.volume')}<span>PCS</span></div></td><td class="r"><div class="u">${F('base.years')}<span>YEAR</span></div></td><th class="bs">MAKER</th><th class="bs">CUSTOMER</th><th class="bs" style="font-size:10.5px">MASS PROD. PLANT</th></tr>
+                <tr><td class="lb bs">MODEL</td><td colspan="2">${F('base.model','c')}</td><td>${F('base.maker','c')}</td><td>${F('base.customer','c')}</td><td>${F('base.plant','c','font-weight:700')}</td></tr>
+                <tr><td class="lb bs">PRICE</td><td class="pc r"><div class="u">${F('base.price')}<span>THB</span></div></td><td style="background:#FAFAFA"></td><td class="pc r"><div class="u">${F('base.makerPrice')}<span>THB</span></div></td><td class="pc r"><div class="u">${F('base.custPrice')}<span>THB</span></div></td><td style="background:#FAFAFA"></td></tr>
               </table></div>
           </div><div class="pcs-imgs">
             <div class="pcs-cap">รูปงานใหม่<span>NEW PART</span></div>${this.imgBox('new', '')}
@@ -23099,6 +23102,12 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install); else install();
 })();
 </script>
+
+
+
+
+
+
 
 
 
