@@ -22726,7 +22726,7 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
 .pcs-img .tools button{border:1px solid #ccc;background:#fff;border-radius:6px;font:inherit;font-size:11px;padding:2px 7px;cursor:pointer;color:#111}
 .pcs-img .tools button:hover{border-color:#2563EB;color:#2563EB}
 .pcs-foot{display:grid;grid-template-columns:1fr 420px;gap:10px;margin-top:8px;align-items:end}
-.pcs-rmk{flex:0 0 240px;margin:8px 8px 0 0;display:flex;flex-direction:column;min-width:0}
+.pcs-rmk{flex:0 0 300px;margin:8px 6px 0 0;display:flex;flex-direction:column;min-width:0}
 .pcs-rmk-b{flex:1;min-height:72px;display:flex;flex-direction:column;justify-content:center;text-align:center;border:1px solid var(--ln);padding:6px 10px;font-size:19px;font-weight:700;line-height:1.5;white-space:pre-wrap;word-break:break-word;outline:0;color:#111827;background:#FFFDF5}
 .pcs-rmk-b:empty::before{content:'พิมพ์หมายเหตุ เช่น งาน Prototype / เงื่อนไขพิเศษ ...';color:#B0B6BF;font-size:12px;font-weight:400}
 .pcs-rmk-b:focus,.pcs-rmk-b:focus-visible{box-shadow:none !important;outline:none !important}
@@ -22850,12 +22850,6 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
             <div class="pcs-cap" style="margin-top:8px">รูปงานใกล้เคียง<span>SIMILAR PART (BASE)</span></div>${this.imgBox('base', 'sm')}
           </div></div>
           <table style="margin-top:8px" class="c" id="pcsCap"></table>
-          <div class="pcs-foot">
-            <div></div>
-            <table class="pcs-sign c"><tr><th class="lb">PREPARED BY</th><th class="lb">CHECKED BY</th><th class="lb">APPROVED BY</th></tr>
-              <tr><td class="sp"></td><td class="sp"></td><td class="sp"></td></tr>
-              <tr><td>${F('signPrep','c')}</td><td>${F('signChk','c')}</td><td>${F('signApp','c')}</td></tr></table>
-          </div>
           <div class="pcs-meta"><span>PURCHASE-EN-CCIP · E-FORM MAKER PRICE SUMMARY (BEFORE GO WORK)</span><span>${esc(d.partNo || '')}</span></div>
         </div></div>`;
       page.querySelectorAll('#pcSheet [data-k]').forEach(inp => inp.addEventListener('input', () => {
@@ -23102,6 +23096,8 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install); else install();
 })();
 </script>
+
+
 
 
 
