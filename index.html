@@ -6064,6 +6064,7 @@ html body .notif-item:hover .notif-icon { color: var(--text) !important; }
 .ccip-ico-empty { display: grid; place-items: center; margin: 0 auto .6rem; color: var(--muted); opacity: .75; }
 #adminPinTitle ~ * .ccip-ico, html body .ccip-ico[width="26"] { color: var(--accent); }
 html body .notif-panel { background: var(--surface) !important; }
+.mnl-folder-btn { display: inline-flex; align-items: center; gap: .4rem; }
 </style>
 </head>
 <body class="light-theme">
@@ -8132,7 +8133,8 @@ html body .notif-panel { background: var(--surface) !important; }
  <button class="btn btn-ghost manual-cat-btn" data-cat="พื้นฐานการทำงาน" onclick="setManualCategoryFilter('พื้นฐานการทำงาน', this)" style="padding:0.4rem 0.9rem;font-size: 0.777rem">พื้นฐานการทำงาน</button>
  <button class="btn btn-ghost manual-cat-btn" data-cat="อื่นๆ" onclick="setManualCategoryFilter('อื่นๆ', this)" style="padding:0.4rem 0.9rem;font-size: 0.777rem">อื่นๆ</button>
  </div>
- <button class="btn btn-primary" onclick="openManualModal()" style="margin-left:auto">+ อัพโหลดคู่มือ (PDF)</button>
+ <button class="btn btn-ghost mnl-folder-btn" onclick="openManualFolder(this)" style="margin-left:auto" title="เปิดโฟลเดอร์เก็บไฟล์ PDF ใน Google Drive (ตามหมวดที่เลือกอยู่)"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg> โฟลเดอร์ Google Drive</button>
+ <button class="btn btn-primary" onclick="openManualModal()">+ อัพโหลดคู่มือ (PDF)</button>
  </div>
  <div id="manualGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:1rem"></div>
  </div>
@@ -20988,6 +20990,23 @@ function endTour() {
     BriefFit.schedule();
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bfBoot); else bfBoot();
+
+  /* ── คู่มือการทำงาน: ปุ่มเปิดโฟลเดอร์ PDF ใน Google Drive ── */
+  window.openManualFolder = async function (btn) {
+    if (!url()) { toast('ยังไม่ได้ตั้งค่าการเชื่อมต่อระบบ', 'error'); return; }
+    const win = window.open('', '_blank');   // เปิดแท็บก่อน กันเบราว์เซอร์บล็อกป๊อปอัป
+    if (win) win.document.write('<p style="font-family:sans-serif;padding:2rem;color:#555">กำลังเปิดโฟลเดอร์ Google Drive…</p>');
+    if (btn) setBusy(btn, true, 'กำลังเปิด');
+    try {
+      const j = await api.get('getManualFolder');
+      const cat = (document.querySelector('.manual-cat-btn.active') || {}).dataset;
+      const target = (cat && cat.cat && j.folders && j.folders[cat.cat]) || j.url;
+      if (win) win.location.href = target; else window.open(target, '_blank');
+    } catch (e) {
+      if (win) win.close();
+      toast(/unknown|ยังไม่ได้อัปเดต/i.test(e.message) ? 'ต้องอัปเดตไฟล์ 14_MANUALS.gs และ CCIP_Extension.gs ใน Apps Script ก่อน' : 'เปิดโฟลเดอร์ไม่สำเร็จ: ' + e.message, 'error');
+    } finally { if (btn) setBusy(btn, false); }
+  };
 
   /* ══════════════════════ COMMAND PALETTE เดิม (Ctrl/⌘ + K) — เพิ่มหน้าใหม่และค้นข้อมูล GO WORK / Meeting ══════════════════════ */
   try {
