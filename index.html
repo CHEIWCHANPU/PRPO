@@ -21811,5 +21811,416 @@ html.ccip-lock,html.ccip-lock body{overflow:hidden !important}
   hookAll();
 })();
 </script>
+<!-- ═══ MODEL TRACKER · Executive UI (mtx) ═══ -->
+<style id="mtx-css">
+#page-modeltracker.mtx{
+  --mtx-fc:#64748B; --mtx-pp1:#2563EB; --mtx-pp2:#4F46E5; --mtx-pp3:#7C3AED; --mtx-or:#D97706; --mtx-mp:#059669;
+  --mtx-today:#DC2626; --mtx-ink:var(--text,#0F172A); --mtx-sub:var(--muted,#64748B);
+  --mtx-card:var(--surface,#fff); --mtx-soft:var(--surface2,#F3F5F9); --mtx-line:var(--border,#E3E7EE);
+  --mtx-cw:60px; --mtx-cm:236px; --mtx-cs:172px;
+  font-variant-numeric:tabular-nums;
+}
+body.dark-theme #page-modeltracker.mtx{ --mtx-fc:#94A3B8; --mtx-pp1:#60A5FA; --mtx-pp2:#818CF8; --mtx-pp3:#A78BFA; --mtx-or:#FBBF24; --mtx-mp:#34D399; --mtx-today:#F87171; }
+#page-modeltracker.mtx > .mt-legend{display:none !important}
+
+/* ── Header ── */
+.mtx-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin:0 0 1rem}
+.mtx-eyebrow{font-size:.68rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--mtx-sub)}
+.mtx-title{font-size:1.45rem;font-weight:700;letter-spacing:-.01em;color:var(--mtx-ink);margin:.2rem 0 .15rem;line-height:1.2}
+.mtx-desc{font-size:.8rem;color:var(--mtx-sub)}
+.mtx-legend{display:flex;gap:.9rem;flex-wrap:wrap;align-items:center;font-size:.72rem;color:var(--mtx-sub)}
+.mtx-legend span{display:inline-flex;align-items:center;gap:.35rem;white-space:nowrap}
+.mtx-legend i{width:9px;height:9px;transform:rotate(45deg);border-radius:1.5px;display:inline-block;background:var(--c)}
+.mtx-legend .t i{width:2px;height:12px;transform:none;background:var(--mtx-today)}
+
+/* ── Stage pipeline ── */
+.mtx-pipe{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));background:var(--mtx-card);border:1px solid var(--mtx-line);border-radius:12px;overflow:hidden;margin-bottom:.9rem}
+.mtx-st{position:relative;padding:.85rem 1rem .8rem;border-right:1px solid var(--mtx-line);cursor:pointer;background:none;border-top:0;border-bottom:0;border-left:0;text-align:left;font:inherit;color:inherit;transition:background .15s}
+.mtx-st:last-child{border-right:0}
+.mtx-st:hover{background:var(--mtx-soft)}
+.mtx-st::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--c);opacity:.9}
+.mtx-st.on{background:color-mix(in srgb,var(--c) 9%,transparent)}
+.mtx-st.on::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 2px var(--c);border-radius:0;pointer-events:none}
+.mtx-st-k{font-size:.66rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--c)}
+.mtx-st-n{font-size:1.6rem;font-weight:700;color:var(--mtx-ink);line-height:1.15;margin-top:.15rem}
+.mtx-st-l{font-size:.72rem;color:var(--mtx-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mtx-st-bar{height:4px;border-radius:4px;background:var(--mtx-soft);margin-top:.55rem;overflow:hidden}
+.mtx-st-bar b{display:block;height:100%;background:var(--c);border-radius:4px}
+
+/* ── KPI cards ── */
+#page-modeltracker.mtx .mt-kpi-bar{display:grid !important;grid-template-columns:repeat(4,minmax(0,1fr));gap:.9rem;margin-bottom:.9rem}
+#page-modeltracker.mtx .mt-kpi-card{background:var(--mtx-card) !important;border:1px solid var(--mtx-line) !important;border-radius:12px !important;padding:1rem 1.1rem !important;box-shadow:none !important;position:relative;overflow:hidden;cursor:pointer;transition:border-color .15s,background .15s}
+#page-modeltracker.mtx .mt-kpi-card:hover{border-color:color-mix(in srgb,var(--k) 45%,var(--mtx-line)) !important}
+#page-modeltracker.mtx .mt-kpi-card.active{border-color:var(--k) !important;background:color-mix(in srgb,var(--k) 6%,var(--mtx-card)) !important}
+#page-modeltracker.mtx .mt-kpi-card::before{display:none !important}
+#page-modeltracker.mtx .kpi-total{--k:#334155} #page-modeltracker.mtx .kpi-prog{--k:var(--mtx-pp1)}
+#page-modeltracker.mtx .kpi-soon{--k:var(--mtx-fc)} #page-modeltracker.mtx .kpi-mass{--k:var(--mtx-or)}
+body.dark-theme #page-modeltracker.mtx .kpi-total{--k:#CBD5E1}
+#page-modeltracker.mtx .mt-kpi-label{font-size:.68rem !important;font-weight:700 !important;letter-spacing:.1em !important;text-transform:uppercase !important;color:var(--mtx-sub) !important;display:flex;align-items:center;gap:.45rem}
+#page-modeltracker.mtx .mt-kpi-label::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--k)}
+#page-modeltracker.mtx .mt-kpi-val{font-size:2rem !important;font-weight:700 !important;color:var(--mtx-ink) !important;line-height:1.1 !important;margin:.35rem 0 .1rem !important;letter-spacing:-.02em}
+#page-modeltracker.mtx .mt-kpi-sub{font-size:.74rem !important;color:var(--mtx-sub) !important}
+
+/* ── Toolbar ── */
+#page-modeltracker.mtx > .toolbar{background:var(--mtx-card);border:1px solid var(--mtx-line);border-radius:12px;padding:.6rem .7rem;gap:.55rem;margin-bottom:.9rem !important}
+#page-modeltracker.mtx > .toolbar .search-box{border-radius:8px}
+#page-modeltracker.mtx > .toolbar .filter-select{border-radius:8px}
+#page-modeltracker.mtx #mt-modelCount{font-weight:600;color:var(--mtx-sub) !important;white-space:nowrap}
+#page-modeltracker.mtx .mt-year-nav{border-radius:8px;overflow:hidden}
+#page-modeltracker.mtx .mt-year-nav-label{font-weight:700;letter-spacing:.02em}
+#page-modeltracker.mtx #mt-btnAddModel{border-radius:8px;font-weight:600}
+
+/* ── Gantt ── */
+#page-modeltracker.mtx .mt-gantt-wrap{border-radius:12px !important;border:1px solid var(--mtx-line) !important;background:var(--mtx-card) !important;height:calc(100vh - 330px);min-height:440px}
+.mtx-g{position:relative;min-width:100%}
+.mtx-r{display:flex;align-items:stretch}
+.mtx-c{flex:0 0 auto}
+.mtx-cm{width:var(--mtx-cm);position:sticky;left:0;z-index:5;background:var(--mtx-card)}
+.mtx-cs{width:var(--mtx-cs);position:sticky;left:var(--mtx-cm);z-index:5;background:var(--mtx-card);box-shadow:1px 0 0 var(--mtx-line),6px 0 10px -8px rgba(15,23,42,.25)}
+.mtx-ct{position:relative;overflow:hidden;z-index:0}
+
+.mtx-head{position:sticky;top:0;z-index:6;background:var(--mtx-card);border-bottom:1px solid var(--mtx-line)}
+.mtx-head .mtx-cm,.mtx-head .mtx-cs{display:flex;align-items:flex-end;padding:0 1rem .55rem;font-size:.66rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mtx-sub);z-index:7}
+.mtx-yrs{display:flex;height:26px;border-bottom:1px solid var(--mtx-line)}
+.mtx-yr{flex:0 0 auto;display:flex;align-items:center;padding-left:0;font-size:.74rem;font-weight:700;color:var(--mtx-ink);border-left:1px solid var(--mtx-line);letter-spacing:.02em}
+.mtx-yr:first-child{border-left:0}
+.mtx-yr span{position:sticky;left:calc(var(--mtx-cm) + var(--mtx-cs) + .6rem)}
+.mtx-yr small{font-weight:500;color:var(--mtx-sub);margin-left:.4rem;font-size:.68rem}
+.mtx-mos{display:flex;height:28px}
+.mtx-mo{flex:0 0 var(--mtx-cw);display:flex;align-items:center;justify-content:center;font-size:.7rem;color:var(--mtx-sub);font-weight:500;border-left:1px solid color-mix(in srgb,var(--mtx-line) 60%,transparent)}
+.mtx-mo.q{border-left-color:var(--mtx-line)}
+.mtx-mo.y{border-left:1px solid color-mix(in srgb,var(--mtx-ink) 25%,transparent)}
+.mtx-mo.now{color:var(--mtx-today);font-weight:700}
+.mtx-tag{position:absolute;top:5px;transform:translateX(-50%);background:var(--mtx-today);color:#fff;font-size:.6rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:1px 6px;border-radius:4px;z-index:2;pointer-events:none}
+
+.mtx-grp{cursor:pointer;background:var(--mtx-soft);border-bottom:1px solid var(--mtx-line)}
+.mtx-grp .mtx-cm{background:var(--mtx-soft);display:flex;align-items:center;gap:.5rem;padding:.5rem 1rem;font-size:.74rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mtx-ink)}
+.mtx-grp .mtx-cs{background:var(--mtx-soft);display:flex;align-items:center;padding:0 1rem;font-size:.7rem;color:var(--mtx-sub);white-space:nowrap}
+.mtx-grp .mtx-ct{background:var(--mtx-soft)}
+.mtx-chev{display:inline-block;transition:transform .15s;color:var(--mtx-sub);font-size:.7rem}
+.mtx-grp.col .mtx-chev{transform:rotate(-90deg)}
+.mtx-cnt{font-size:.66rem;font-weight:700;background:var(--mtx-card);border:1px solid var(--mtx-line);border-radius:999px;padding:0 .45rem;color:var(--mtx-sub);letter-spacing:0}
+
+.mtx-row{border-bottom:1px solid var(--mtx-line);transition:background .12s}
+.mtx-row:hover,.mtx-row:hover .mtx-cm,.mtx-row:hover .mtx-cs{background:color-mix(in srgb,var(--mtx-pp1) 3.5%,var(--mtx-card))}
+.mtx-row.sel,.mtx-row.sel .mtx-cm,.mtx-row.sel .mtx-cs{background:color-mix(in srgb,var(--mtx-pp1) 7%,var(--mtx-card))}
+.mtx-row.sel .mtx-cm{box-shadow:inset 3px 0 0 var(--mtx-pp1)}
+.mtx-row .mtx-cm{padding:.7rem 1rem;cursor:pointer;min-height:64px;display:flex;flex-direction:column;justify-content:center}
+.mtx-name{font-size:.86rem;font-weight:700;color:var(--mtx-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mtx-meta{font-size:.7rem;color:var(--mtx-sub);margin-top:.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mtx-prog{display:flex;align-items:center;gap:.5rem;margin-top:.4rem}
+.mtx-prog-t{flex:1;height:4px;border-radius:4px;background:var(--mtx-soft);overflow:hidden;display:flex;gap:2px}
+.mtx-prog-t i{flex:1;background:color-mix(in srgb,var(--mtx-line) 80%,transparent)}
+.mtx-prog-t i.d{background:var(--c)}
+.mtx-prog-p{font-size:.66rem;font-weight:700;color:var(--mtx-sub);min-width:2.2rem;text-align:right}
+.mtx-row .mtx-cs{padding:.6rem 1rem;display:flex;flex-direction:column;justify-content:center;gap:.3rem}
+.mtx-pill{display:inline-flex;align-items:center;gap:.35rem;align-self:flex-start;font-size:.68rem;font-weight:700;padding:.2rem .55rem;border-radius:999px;border:1px solid color-mix(in srgb,var(--c) 30%,transparent);color:var(--c);background:color-mix(in srgb,var(--c) 9%,transparent);white-space:nowrap}
+.mtx-pill::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--c)}
+.mtx-cd{font-size:.7rem;color:var(--mtx-sub);white-space:nowrap}
+.mtx-cd b{color:var(--mtx-ink)}
+.mtx-cd.urgent b{color:var(--mtx-today)} .mtx-cd.warning b{color:var(--mtx-or)}
+
+.mtx-ct.tl{cursor:crosshair}
+.mtx-q{position:absolute;top:0;bottom:0;background:color-mix(in srgb,var(--mtx-soft) 60%,transparent)}
+.mtx-vl{position:absolute;top:0;bottom:0;width:1px;background:color-mix(in srgb,var(--mtx-line) 55%,transparent)}
+.mtx-vl.y{background:color-mix(in srgb,var(--mtx-ink) 18%,transparent)}
+.mtx-now{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--mtx-today);opacity:.85;z-index:2;pointer-events:none}
+.mtx-seg{position:absolute;top:50%;height:8px;margin-top:-4px;border-radius:4px;background:var(--c);z-index:1}
+.mtx-seg.fut{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--c) 30%,transparent) 0 5px,color-mix(in srgb,var(--c) 14%,transparent) 5px 10px);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 45%,transparent)}
+.mtx-ms{position:absolute;top:50%;width:0;height:0;z-index:4;cursor:pointer}
+.mtx-dm{position:absolute;left:-7px;top:-7px;width:14px;height:14px;transform:rotate(45deg);border-radius:2.5px;background:var(--c);border:2px solid var(--mtx-card);box-shadow:0 0 0 1px var(--c),0 1px 3px rgba(15,23,42,.25);transition:transform .12s}
+.mtx-ms.fut .mtx-dm{background:var(--mtx-card);border:2.5px solid var(--c);box-shadow:0 1px 3px rgba(15,23,42,.18)}
+.mtx-ms:hover .mtx-dm{transform:rotate(45deg) scale(1.25)}
+.mtx-ms-k{position:absolute;bottom:11px;left:0;transform:translateX(-50%);font-size:.62rem;font-weight:800;letter-spacing:.04em;color:var(--c);white-space:nowrap;pointer-events:none}
+.mtx-ms-d{position:absolute;top:11px;left:0;transform:translateX(-50%);font-size:.6rem;color:var(--mtx-sub);white-space:nowrap;pointer-events:none}
+.mtx-ms.hot .mtx-dm{animation:mtxPulse 1.8s ease-out infinite !important;animation-duration:1.8s !important}
+@keyframes mtxPulse{0%{box-shadow:0 0 0 1px var(--c),0 0 0 0 color-mix(in srgb,var(--c) 45%,transparent)}100%{box-shadow:0 0 0 1px var(--c),0 0 0 9px transparent}}
+.mtx-foot{padding:.55rem 1rem;font-size:.7rem;color:var(--mtx-sub);border-top:1px solid var(--mtx-line);display:flex;gap:1rem;flex-wrap:wrap}
+
+/* ── Side panel ── */
+#page-modeltracker.mtx .mt-side.mt-side-open{width:340px;border-radius:12px;border-color:var(--mtx-line);background:var(--mtx-card)}
+.mtx-sh{padding:1.1rem 1.2rem .9rem;border-bottom:1px solid var(--mtx-line)}
+.mtx-sh-t{display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem}
+.mtx-sh h3{font-size:1.1rem;font-weight:700;margin:0;color:var(--mtx-ink);line-height:1.25}
+.mtx-x{border:0;background:none;color:var(--mtx-sub);cursor:pointer;font-size:1.1rem;line-height:1;padding:.1rem .25rem;border-radius:6px}
+.mtx-x:hover{background:var(--mtx-soft);color:var(--mtx-ink)}
+.mtx-sh p{margin:.25rem 0 .6rem;font-size:.76rem;color:var(--mtx-sub)}
+.mtx-hl{margin:1rem 1.2rem 0;border-radius:10px;padding:.9rem 1rem;background:color-mix(in srgb,var(--c) 8%,var(--mtx-card));border:1px solid color-mix(in srgb,var(--c) 25%,var(--mtx-line))}
+.mtx-hl-k{font-size:.64rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--c)}
+.mtx-hl-v{font-size:1.35rem;font-weight:700;color:var(--mtx-ink);margin-top:.15rem}
+.mtx-hl-s{font-size:.74rem;color:var(--mtx-sub);margin-top:.1rem}
+.mtx-kv{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin:.8rem 1.2rem 0}
+.mtx-kv div{border:1px solid var(--mtx-line);border-radius:10px;padding:.6rem .75rem}
+.mtx-kv small{display:block;font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mtx-sub)}
+.mtx-kv b{font-size:.84rem;line-height:1.3;display:block;color:var(--mtx-ink)}
+.mtx-steps-h{margin:1.1rem 1.2rem .5rem;font-size:.64rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mtx-sub)}
+.mtx-steps{list-style:none;margin:0;padding:0 1.2rem 1rem}
+.mtx-step{position:relative;display:flex;gap:.75rem;padding:0 0 .9rem}
+.mtx-step:not(:last-child)::before{content:"";position:absolute;left:8px;top:18px;bottom:-2px;width:2px;background:var(--mtx-line)}
+.mtx-step.done:not(:last-child)::before{background:var(--c)}
+.mtx-dot{flex:0 0 18px;height:18px;border-radius:50%;border:2px solid var(--mtx-line);background:var(--mtx-card);margin-top:1px;position:relative;z-index:1;display:grid;place-items:center}
+.mtx-step.done .mtx-dot{background:var(--c);border-color:var(--c)}
+.mtx-step.done .mtx-dot::after{content:"";width:5px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.mtx-step.next .mtx-dot{border-color:var(--c);box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 18%,transparent)}
+.mtx-step-b{flex:1;min-width:0}
+.mtx-step-n{font-size:.8rem;font-weight:700;color:var(--mtx-ink);display:flex;justify-content:space-between;gap:.5rem}
+.mtx-step-n span{font-weight:600;color:var(--mtx-sub);font-size:.74rem;white-space:nowrap}
+.mtx-step.none .mtx-step-n{color:var(--mtx-sub);font-weight:600}
+.mtx-step-note{font-size:.72rem;color:var(--mtx-sub);margin-top:.1rem}
+.mtx-step-e{border:0;background:none;color:var(--mtx-sub);cursor:pointer;padding:.1rem .25rem;border-radius:5px;opacity:0;transition:opacity .12s}
+.mtx-step:hover .mtx-step-e{opacity:1}
+.mtx-step-e:hover{background:var(--mtx-soft);color:var(--mtx-ink)}
+#page-modeltracker.mtx .mt-side-foot{border-top:1px solid var(--mtx-line);background:var(--mtx-card)}
+#page-modeltracker.mtx .mt-side-actions{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+#page-modeltracker.mtx .mt-side-actions .btn{justify-content:center;border-radius:8px}
+
+@media (max-width:1100px){ .mtx-pipe{grid-template-columns:repeat(4,minmax(0,1fr))} .mtx-st:nth-child(4){border-right:0} .mtx-st:nth-child(-n+4){border-bottom:1px solid var(--mtx-line)} #page-modeltracker.mtx .mt-kpi-bar{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (max-width:700px){ #page-modeltracker.mtx{--mtx-cm:150px;--mtx-cs:0px} .mtx-cs{display:none !important} .mtx-pipe{grid-template-columns:repeat(2,minmax(0,1fr))} .mtx-st{border-bottom:1px solid var(--mtx-line)} .mtx-legend{display:none} }
+</style>
+<script id="mtx-js">
+(function(){
+  if (typeof mtRenderGantt !== 'function') return;
+  const MO = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const ORDER = ['forecast','pp1','pp2','pp3','order','mp'];
+  const ST = {
+    forecast:{k:'FC',  n:'Forecast',        f:'Forecast',         th:'คาดการณ์',        c:'var(--mtx-fc)'},
+    pp1:     {k:'PP1', n:'PP1', f:'Pre-Production 1',             th:'Pre-Production 1', c:'var(--mtx-pp1)'},
+    pp2:     {k:'PP2', n:'PP2', f:'Pre-Production 2',             th:'Pre-Production 2', c:'var(--mtx-pp2)'},
+    pp3:     {k:'PP3', n:'PP3', f:'Pre-Production 3',             th:'Pre-Production 3', c:'var(--mtx-pp3)'},
+    order:   {k:'OR',  n:'CCI Order', f:'CCI Order',       th:'สั่งซื้อ',            c:'var(--mtx-or)'},
+    mp:      {k:'MP',  n:'Mass Production', f:'Mass Production', th:'ผลิตจริง',           c:'var(--mtx-mp)'}
+  };
+  let stageFilter = '';
+  const E = s => mtEsc(s);
+  const fmtMY = iso => { if(!iso) return '—'; const d=new Date(iso+'T00:00:00'); return MO[d.getMonth()]+' '+d.getFullYear(); };
+  const fmtShort = iso => { const d=new Date(iso+'T00:00:00'); return MO[d.getMonth()]+" '"+String(d.getFullYear()).slice(2); };
+
+  function stageOf(m){
+    const t = mtTodayISO(); let cur = '';
+    ORDER.forEach(k => { if (m.milestones.some(x => x.type===k && x.date && x.date<=t)) cur = k; });
+    if (cur) return cur;
+    return m.milestones.some(x=>x.date) ? 'pre' : 'none';
+  }
+  function nextOf(m){
+    const t = mtTodayISO();
+    return [...m.milestones].filter(x=>x.date && x.date>t).sort((a,b)=>a.date.localeCompare(b.date))[0] || null;
+  }
+
+  /* ── ข้อความ/รูปแบบวันที่แบบสากล ── */
+  window.mtFmtMonthYearTH = fmtMY;
+  window.mtFmtDateTH = iso => { if(!iso) return '—'; const d=new Date(iso+'T00:00:00'); return d.getDate()+' '+MO[d.getMonth()]+' '+d.getFullYear(); };
+  window.mtUpdateYearLabel = function(){ const el=document.getElementById('mt-yearLabel'); if(el) el.textContent = MT_YEAR_START+' – '+MT_YEAR_END; };
+  window.mtStatusBadge = function(m){
+    const s = mtModelStatus(m);
+    if (s==='mass') return {cls:'mt-mass', text:'Mass Production', c:'var(--mtx-mp)'};
+    if (s==='inprogress_mp_set') return {cls:'mt-inprogress', text:'In Development', c:'var(--mtx-pp1)'};
+    if (s==='inprogress') return {cls:'mt-upcoming', text:'Planning', c:'var(--mtx-or)'};
+    return {cls:'mt-nodate', text:'Awaiting REF.NM', c:'var(--mtx-fc)'};
+  };
+  window.mtCountdown = function(m){
+    const mp = mtGetMpMs(m); if (!mp) return null;
+    const days = Math.round((new Date(mp.date) - new Date(mtTodayISO())) / 86400000);
+    if (days < 0)  return {cls:'done',   html:`In production <b>${Math.abs(days)}</b> days`, text:`In production ${Math.abs(days)} days`};
+    if (days === 0) return {cls:'urgent', html:`<b>M/P today</b>`, text:'M/P today'};
+    const cls = days<=30 ? 'urgent' : days<=90 ? 'warning' : 'ok';
+    return {cls, html:`M/P in <b>${days}</b> days`, text:`M/P in ${days} days`};
+  };
+
+  /* ── กรองตาม Stage ── */
+  const baseFilter = mtGetFiltered;
+  window.mtGetFiltered = function(){ const l = baseFilter(); return stageFilter ? l.filter(m => stageOf(m)===stageFilter) : l; };
+
+  /* ── ส่วนหัว + Pipeline ── */
+  function ensureChrome(){
+    const page = document.getElementById('page-modeltracker'); if (!page) return;
+    page.classList.add('mtx');
+    if (!page.querySelector('.mtx-hero')) {
+      const legend = Object.keys(ST).map(k => `<span style="--c:${ST[k].c}"><i></i>${ST[k].n}</span>`).join('') + '<span class="t"><i></i>Today</span>';
+      page.insertAdjacentHTML('afterbegin', `
+        <div class="mtx-hero">
+          <div><div class="mtx-eyebrow">Program Management · New Model Launch</div>
+            <div class="mtx-title">Model Milestone Overview</div>
+            <div class="mtx-desc">ติดตามความพร้อมของ Model ใหม่ ตั้งแต่ Forecast จนถึง Mass Production · <span id="mtx-asof"></span></div></div>
+          <div class="mtx-legend">${legend}</div>
+        </div>
+        <div class="mtx-pipe" id="mtx-pipe"></div>`);
+      const kb = document.getElementById('mt-kpiBar');
+      const lab = (cls, l, s) => { const c = kb && kb.querySelector('.'+cls); if (c) { c.querySelector('.mt-kpi-label').textContent = l; c.dataset.mtxSub = s; } };
+      lab('kpi-total','Total Models','Across all customers');
+      lab('kpi-prog','In Progress','Milestones scheduled');
+      lab('kpi-soon','Forecast · 60 Days','Upcoming forecasts');
+      lab('kpi-mass','CCI Order · 60 Days','Orders to place');
+    }
+    const asof = document.getElementById('mtx-asof');
+    if (asof) { const d = new Date(); asof.textContent = 'As of ' + d.getDate()+' '+MO[d.getMonth()]+' '+d.getFullYear(); }
+  }
+  function renderPipe(){
+    const el = document.getElementById('mtx-pipe'); if (!el) return;
+    const cnt = {none:0, pre:0}; ORDER.forEach(k => cnt[k]=0);
+    MT_DATA.forEach(m => cnt[stageOf(m)]++);
+    const total = MT_DATA.length || 1;
+    const cells = [{k:'pre', n:'Not Started', th:'มีแผนแล้ว ยังไม่ถึง Milestone แรก', c:'#94A3B8', v:cnt.pre + cnt.none}]
+      .concat(ORDER.map(k => ({k, n:ST[k].f, th:ST[k].th, c:ST[k].c, v:cnt[k]})));
+    el.innerHTML = cells.map(s => `<button class="mtx-st${stageFilter===s.k?' on':''}" data-st="${s.k}" style="--c:${s.c}" title="กรองเฉพาะ Model ที่อยู่ในขั้น ${s.n}">
+        <div class="mtx-st-k">${s.k==='pre'?'Stage 0':ST[s.k].k}</div><div class="mtx-st-n">${s.v}</div>
+        <div class="mtx-st-l">${s.n}</div><div class="mtx-st-bar"><b style="width:${Math.round(s.v/total*100)}%"></b></div></button>`).join('');
+    el.querySelectorAll('.mtx-st').forEach(b => b.onclick = () => { stageFilter = stageFilter===b.dataset.st ? '' : b.dataset.st; renderPipe(); mtRenderGantt(); });
+  }
+  // stage 'pre' รวม 'none'
+  const _stageOf = stageOf;
+  stageOf = function(m){ const s=_stageOf(m); return s==='none' ? 'pre' : s; };
+
+  const baseKpi = mtUpdateKpi;
+  window.mtUpdateKpi = function(){
+    baseKpi();
+    document.querySelectorAll('#mt-kpiBar .mt-kpi-card').forEach(c => {
+      const sub = c.querySelector('.mt-kpi-sub'); if (!sub || !c.dataset.mtxSub) return;
+      const v = +(c.querySelector('.mt-kpi-val')||{}).textContent || 0;
+      sub.textContent = (c.classList.contains('kpi-soon')||c.classList.contains('kpi-mass')) && !v ? 'Nothing due' : c.dataset.mtxSub;
+    });
+  };
+
+  /* ── Gantt ── */
+  window.mtRenderGantt = function(){
+    ensureChrome(); renderPipe();
+    const wrap = document.getElementById('mt-ganttWrap'); if (!wrap) return;
+    const list = mtGetFiltered();
+    document.getElementById('mt-modelCount').textContent = list.length + (list.length===1?' model':' models');
+    mtUpdateKpi();
+    if (!list.length) {
+      wrap.innerHTML = `<div class="mt-empty-state" style="padding:4rem 1rem;text-align:center;color:var(--mtx-sub)">
+        <div style="font-weight:700;color:var(--mtx-ink);margin-bottom:.25rem">No models match the current filters</div>
+        <div style="font-size:.78rem">ไม่พบ Model ตามตัวกรองที่เลือก${stageFilter?' — กดที่ Stage อีกครั้งเพื่อยกเลิกตัวกรอง':''}</div></div>`;
+      return;
+    }
+    const cw = 60, months = mtTotalMonths(), W = months*cw;
+    const xOf = iso => { const d=new Date(iso+'T00:00:00'); return ((d.getFullYear()-MT_YEAR_START)*12 + d.getMonth() + 0.5) * cw; };
+    const now = new Date(), today = mtTodayISO();
+    const nowX = ((now.getFullYear()-MT_YEAR_START)*12 + now.getMonth() + (now.getDate()-1)/new Date(now.getFullYear(),now.getMonth()+1,0).getDate()) * cw;
+    const showNow = nowX>=0 && nowX<=W;
+    const nowIdx = (now.getFullYear()-MT_YEAR_START)*12 + now.getMonth();
+
+    // พื้นหลังเส้นกริด (ใช้ซ้ำทุกแถว)
+    let grid = '';
+    for (let q=0; q<months/3; q++) if (q%2===1) grid += `<div class="mtx-q" style="left:${q*3*cw}px;width:${3*cw}px"></div>`;
+    for (let i=1; i<months; i++) grid += `<div class="mtx-vl${i%12===0?' y':''}" style="left:${i*cw}px"></div>`;
+    if (showNow) grid += `<div class="mtx-now" style="left:${nowX}px"></div>`;
+
+    let h = `<div class="mtx-g" style="width:calc(var(--mtx-cm) + var(--mtx-cs) + ${W}px)">`;
+    // header
+    h += `<div class="mtx-r mtx-head"><div class="mtx-c mtx-cm">Model</div><div class="mtx-c mtx-cs">Status</div><div class="mtx-c mtx-ct" style="width:${W}px">`;
+    h += '<div class="mtx-yrs">';
+    for (let y=MT_YEAR_START; y<=MT_YEAR_END; y++) h += `<div class="mtx-yr" style="width:${12*cw}px"><span>${y}<small>พ.ศ. ${y+543}</small></span></div>`;
+    h += '</div><div class="mtx-mos">';
+    for (let i=0; i<months; i++) h += `<div class="mtx-mo${i%12===0&&i?' y':i%3===0?' q':''}${i===nowIdx?' now':''}">${MO[i%12]}</div>`;
+    h += '</div>' + (showNow ? `<div class="mtx-tag" style="left:${nowX}px">Today</div>` : '') + '</div></div>';
+
+    // groups
+    const groups = {};
+    list.forEach(m => { const k = m.customer || '(ไม่ระบุลูกค้า)'; (groups[k] = groups[k] || []).push(m); });
+    Object.entries(groups).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([cust, models]) => {
+      const col = !!mtCollapsed[cust];
+      const mps = models.map(mtGetMpMs).filter(Boolean).map(x=>x.date).sort();
+      const range = mps.length ? 'M/P ' + fmtMY(mps[0]) + (mps.length>1 && mps[0]!==mps[mps.length-1] ? ' – ' + fmtMY(mps[mps.length-1]) : '') : 'M/P not scheduled';
+      h += `<div class="mtx-r mtx-grp${col?' col':''}" data-mt-group="${E(cust)}"><div class="mtx-c mtx-cm"><span class="mtx-chev">▾</span>${E(cust)}<span class="mtx-cnt">${models.length}</span></div><div class="mtx-c mtx-cs">${range}</div><div class="mtx-c mtx-ct" style="width:${W}px"></div></div>`;
+      if (col) return;
+      models.forEach(m => {
+        const badge = mtStatusBadge(m), cd = mtCountdown(m), stg = stageOf(m);
+        const has = new Set(m.milestones.filter(x=>x.date).map(x=>x.type));
+        const doneN = ORDER.filter(k => m.milestones.some(x=>x.type===k && x.date && x.date<=today)).length;
+        const totN = ORDER.filter(k => has.has(k)).length || ORDER.length;
+        const pct = Math.round(doneN/totN*100);
+        const nx = nextOf(m);
+        const segs = ORDER.filter(k=>has.has(k)).map(k => `<i class="${m.milestones.some(x=>x.type===k&&x.date&&x.date<=today)?'d':''}" style="--c:${ST[k].c}"></i>`).join('') || '<i></i>';
+        h += `<div class="mtx-r mtx-row${m.id===mtSelectedId?' sel':''}" data-mtid="${m.id}">`;
+        h += `<div class="mtx-c mtx-cm" data-mt-action="select" data-mtid="${m.id}">
+                <div class="mtx-name" title="${E(m.model)}">${E(m.model)}</div>
+                <div class="mtx-meta">${m.volume?'Vol. '+E(m.volume)+' · ':''}${stg==='pre'?'Not started':'Stage: '+ST[stg].n}</div>
+                <div class="mtx-prog"><div class="mtx-prog-t">${segs}</div><span class="mtx-prog-p">${pct}%</span></div></div>`;
+        h += `<div class="mtx-c mtx-cs"><span class="mtx-pill" style="--c:${badge.c}">${badge.text}</span>
+                ${cd ? `<div class="mtx-cd ${cd.cls}">${cd.html}</div>` : nx ? `<div class="mtx-cd">Next: <b>${ST[nx.type].n}</b> · ${fmtShort(nx.date)}</div>` : ''}</div>`;
+        h += `<div class="mtx-c mtx-ct tl" style="width:${W}px" data-mt-action="timeline" data-mtid="${m.id}" title="ดับเบิลคลิกเพื่อเพิ่ม Milestone">${grid}`;
+        const ms = [...m.milestones].filter(x=>x.date).sort((a,b)=>a.date.localeCompare(b.date) || ORDER.indexOf(a.type)-ORDER.indexOf(b.type));
+        for (let i=0; i<ms.length-1; i++) {
+          const a = ms[i], b = ms[i+1], x1 = xOf(a.date), x2 = xOf(b.date); if (x2 <= x1) continue;
+          const c = ST[a.type].c;
+          if (b.date <= today) h += `<div class="mtx-seg" style="left:${x1}px;width:${x2-x1}px;--c:${c}"></div>`;
+          else if (a.date >= today) h += `<div class="mtx-seg fut" style="left:${x1}px;width:${x2-x1}px;--c:${c}"></div>`;
+          else { const nx2 = Math.max(x1, Math.min(nowX, x2)); h += `<div class="mtx-seg" style="left:${x1}px;width:${nx2-x1}px;--c:${c};border-radius:4px 0 0 4px"></div><div class="mtx-seg fut" style="left:${nx2}px;width:${x2-nx2}px;--c:${c};border-radius:0 4px 4px 0"></div>`; }
+        }
+        // กันป้ายชนกัน: เดือนเดียวกันเลื่อนซ้าย/ขวา
+        const byX = {}; ms.forEach(x => { const k = x.date.slice(0,7); (byX[k] = byX[k] || []).push(x); });
+        let lastDateX = -1e9;
+        ms.forEach(x => {
+          const grp = byX[x.date.slice(0,7)], gi = grp.indexOf(x), off = (gi - (grp.length-1)/2) * 17;
+          const px = xOf(x.date) + off, t = ST[x.type], fut = x.date > today;
+          const hot = nx && nx.id===x.id && (new Date(x.date) - new Date(today))/86400000 <= 30;
+          const showD = gi===grp.length-1 && (px - lastDateX) >= 46; if (showD) lastDateX = px;
+          h += `<div class="mtx-ms${fut?' fut':''}${hot?' hot':''}" style="left:${px}px;--c:${t.c}" data-mt-action="editms" data-mt-model="${m.id}" data-mt-ms="${x.id}" title="${E(t.n)} — ${fmtMY(x.date)}${x.note?' · '+E(x.note):''}">
+                  <div class="mtx-dm"></div><div class="mtx-ms-k">${t.k}</div>${showD?`<div class="mtx-ms-d">${fmtShort(x.date)}</div>`:''}</div>`;
+        });
+        h += '</div></div>';
+      });
+    });
+    h += '</div>';
+    const all = list.flatMap(m=>m.milestones.map(x=>x.date)).filter(Boolean).map(d=>+d.slice(0,4));
+    const notes = [];
+    if (all.length && Math.min(...all) < MT_YEAR_START) notes.push('◀ มี Milestone ก่อนปี ' + MT_YEAR_START);
+    if (all.length && Math.max(...all) > MT_YEAR_END) notes.push('มี Milestone หลังปี ' + MT_YEAR_END + ' ▶');
+    wrap.innerHTML = h + (notes.length ? `<div class="mtx-foot">${notes.map(n=>`<span>${n}</span>`).join('')}</div>` : '');
+
+    wrap.querySelectorAll('.mtx-grp').forEach(el => el.addEventListener('click', () => { const c = el.dataset.mtGroup; mtCollapsed[c] = !mtCollapsed[c]; mtRenderGantt(); }));
+    wrap.querySelectorAll('[data-mt-action="select"]').forEach(el => el.addEventListener('click', () => mtSelectModel(el.dataset.mtid)));
+    wrap.querySelectorAll('[data-mt-action="timeline"]').forEach(el => el.addEventListener('dblclick', e => { if (e.target.closest('.mtx-ms')) return; mtOpenMsModal(el.dataset.mtid, null); }));
+    wrap.querySelectorAll('[data-mt-action="editms"]').forEach(el => el.addEventListener('click', e => { e.stopPropagation(); mtOpenMsModal(el.dataset.mtModel, el.dataset.mtMs); }));
+    // เลื่อนให้เห็นวันนี้ครั้งแรก
+    if (!wrap.dataset.mtxScrolled && showNow) { wrap.dataset.mtxScrolled = '1'; const side = wrap.querySelector('.mtx-cm').offsetWidth + (wrap.querySelector('.mtx-cs').offsetWidth||0); wrap.scrollLeft = Math.max(0, nowX - (wrap.clientWidth - side) * 0.3); }
+  };
+
+  /* ── Side panel ── */
+  window.mtRenderSide = function(){
+    const panel = document.getElementById('mt-sidePanel'); if (!panel) return;
+    if (!mtSelectedId) { panel.classList.remove('mt-side-open'); panel.innerHTML=''; return; }
+    const m = MT_DATA.find(x => x.id===mtSelectedId);
+    if (!m) { mtSelectedId = null; return mtRenderSide(); }
+    panel.classList.add('mt-side-open');
+    const today = mtTodayISO(), badge = mtStatusBadge(m), mp = mtGetMpMs(m), cd = mtCountdown(m), nx = nextOf(m);
+    const fc = m.milestones.find(x=>x.type==='forecast'&&x.date), ord = m.milestones.find(x=>x.type==='order'&&x.date);
+    let hl;
+    if (mp) hl = `<div class="mtx-hl" style="--c:var(--mtx-mp)"><div class="mtx-hl-k">${mp.date<=today?'Mass Production started':'Mass Production target'}</div><div class="mtx-hl-v">${fmtMY(mp.date)}</div><div class="mtx-hl-s">${cd?cd.text:''}</div></div>`;
+    else hl = `<div class="mtx-hl" style="--c:var(--mtx-fc)"><div class="mtx-hl-k">Mass Production</div><div class="mtx-hl-v" style="color:var(--mtx-sub)">Not scheduled</div><div class="mtx-hl-s">ดับเบิลคลิกบน Timeline เพื่อเพิ่ม M/P</div></div>`;
+    const firstNext = ORDER.find(k => { const x = m.milestones.find(y=>y.type===k&&y.date); return x && x.date>today; });
+    const steps = ORDER.map(k => {
+      const items = m.milestones.filter(x=>x.type===k);
+      const x = items.find(y=>y.date) || items[0];
+      const done = x && x.date && x.date<=today, cls = done ? 'done' : (k===firstNext ? 'next' : (x && x.date ? '' : 'none'));
+      return `<li class="mtx-step ${cls}" style="--c:${ST[k].c}"><div class="mtx-dot"></div><div class="mtx-step-b">
+          <div class="mtx-step-n">${ST[k].n}<span>${x && x.date ? fmtMY(x.date) : 'Not set'}</span></div>
+          <div class="mtx-step-note">${ST[k].th}${x && x.note ? ' · '+E(x.note) : ''}</div></div>
+          ${x ? `<button class="mtx-step-e" data-mt-action2="editms2" data-mt-model="${m.id}" data-mt-ms="${x.id}" title="แก้ไข"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>` : ''}</li>`;
+    }).join('');
+    panel.innerHTML = `
+      <div class="mtx-sh"><div class="mtx-sh-t"><h3>${E(m.model)}</h3><button class="mtx-x" id="mtx-close" title="ปิด">×</button></div>
+        <p>${E(m.customer||'ไม่ระบุลูกค้า')}${m.volume?' · Volume '+E(m.volume):''}</p>
+        <span class="mtx-pill" style="--c:${badge.c}">${badge.text}</span></div>
+      <div class="mt-side-body" style="padding:0">
+        ${hl}
+        <div class="mtx-kv"><div><small>Forecast</small><b>${fc?fmtMY(fc.date):'—'}</b></div><div><small>CCI Order</small><b>${ord?fmtMY(ord.date):'—'}</b></div>
+          <div><small>Next milestone</small><b>${nx?ST[nx.type].n:'—'}</b></div><div><small>Due</small><b>${nx?fmtMY(nx.date):'—'}</b></div></div>
+        <div class="mtx-steps-h">Milestone Roadmap</div><ol class="mtx-steps">${steps}</ol>
+      </div>
+      <div class="mt-side-foot"><div class="mt-side-actions">
+        <button class="btn btn-sm" id="mt-btnAddMsFromSide">+ Milestone</button>
+        <button class="btn btn-sm" id="mt-btnEditModel">แก้ไข Model</button></div></div>`;
+    panel.querySelectorAll('[data-mt-action2="editms2"]').forEach(el => el.addEventListener('click', () => mtOpenMsModal(el.dataset.mtModel, el.dataset.mtMs)));
+    document.getElementById('mt-btnAddMsFromSide').addEventListener('click', () => mtOpenMsModal(m.id, null));
+    document.getElementById('mt-btnEditModel').addEventListener('click', () => mtOpenModelModal(m.id));
+    document.getElementById('mtx-close').addEventListener('click', () => mtSelectModel(m.id));
+  };
+
+  const init = () => { ensureChrome(); mtUpdateYearLabel(); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+</script>
 </body>
 </html>
