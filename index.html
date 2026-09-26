@@ -20924,7 +20924,7 @@ function endTour() {
 
   /* ══════════════════════ หน้าหลัก: การ์ด Maker แสดง 3 รายการแรก ที่เหลือเลื่อนดู ══════════════════════ */
   const BriefFit = {
-    MAX: 3,
+    MAX: 3, pos: {},   // จำตำแหน่งเลื่อนของแต่ละ Maker ไว้ เวลาข้อมูลซิงค์ใหม่จะได้ไม่เด้งกลับบนสุด
     fit() {
       document.querySelectorAll('#briefingPanel .briefing-group .briefing-items').forEach(box => {
         const items = [...box.children].filter(c => c.classList.contains('briefing-item'));
@@ -20935,25 +20935,29 @@ function endTour() {
           if (more) more.remove();
           return;
         }
+        // วัดตำแหน่งรายการที่ 4 ได้เลยโดยไม่ต้องปลด max-height (กันตำแหน่งเลื่อนเด้งกลับบนสุด)
+        const makerName = (group.querySelector('.briefing-maker-name') || {}).textContent || '';
+        const keep = box._biBound ? box.scrollTop : (this.pos[makerName] || 0);
         box.classList.add('bi-scroll');
-        box.style.maxHeight = 'none';
         const gap = parseFloat(getComputedStyle(box).rowGap) || 0;
-        const h = items[this.MAX].offsetTop - items[0].offsetTop - gap / 2;
-        box.style.maxHeight = Math.max(120, Math.round(h)) + 'px';
+        const h = Math.max(120, Math.round(items[this.MAX].offsetTop - items[0].offsetTop - gap / 2)) + 'px';
+        if (box.style.maxHeight !== h) box.style.maxHeight = h;
+        if (box.scrollTop !== keep) box.scrollTop = keep;
         if (!more) {
           more = document.createElement('button');
           more.type = 'button'; more.className = 'bi-more';
           more.onclick = e => { e.stopPropagation(); box.scrollBy({ top: box.clientHeight * 0.8, behavior: 'smooth' }); };
           box.after(more);
         }
-        const update = () => {
+        const update = box._biUpdate = () => {
           const atEnd = box.scrollTop + box.clientHeight >= box.scrollHeight - 4;
           box.classList.toggle('at-end', atEnd);
           const hidden = items.filter(it => it.offsetTop - items[0].offsetTop >= box.scrollTop + box.clientHeight - 8).length;
-          more.hidden = atEnd || !hidden;
-          more.innerHTML = `เลื่อนดูอีก ${hidden} รายการ <svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>`;
+          if (more.hidden !== (atEnd || !hidden)) more.hidden = atEnd || !hidden;
+          const txt = `เลื่อนดูอีก ${hidden} รายการ`;
+          if (more.dataset.txt !== txt) { more.dataset.txt = txt; more.innerHTML = `${txt} <svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>`; }
         };
-        if (!box._biBound) { box.addEventListener('scroll', () => requestAnimationFrame(update), { passive: true }); box._biBound = true; }
+        if (!box._biBound) { box.addEventListener('scroll', () => { this.pos[makerName] = box.scrollTop; requestAnimationFrame(() => box._biUpdate && box._biUpdate()); }, { passive: true }); box._biBound = true; }
         update();
       });
     },
@@ -20963,7 +20967,10 @@ function endTour() {
   const bfBoot = () => {
     const panel = document.getElementById('briefingPanel');
     if (!panel) return;
-    new MutationObserver(() => BriefFit.schedule()).observe(panel, { childList: true, subtree: true });
+    // จัดใหม่เฉพาะตอนรายการในการ์ดเปลี่ยนจริง — ไม่นับการอัปเดตปุ่ม "เลื่อนดูอีก" ของตัวเอง
+    new MutationObserver(list => {
+      if (list.some(m => !(m.target.closest && m.target.closest('.bi-more')) && ![...m.addedNodes, ...m.removedNodes].every(n => n.classList && n.classList.contains('bi-more')))) BriefFit.schedule();
+    }).observe(panel, { childList: true, subtree: true });
     panel.addEventListener('click', () => BriefFit.schedule());   // เปิด/ปิดช่องคอมเมนต์ในการ์ด ทำให้ความสูงเปลี่ยน
     window.addEventListener('resize', () => BriefFit.schedule());
     BriefFit.schedule();
