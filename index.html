@@ -5942,6 +5942,38 @@ html body .us-table thead th, html body .gd-table thead th { padding: .55rem .75
 .pf-av-img, .pf-big, .us-av, .pf-team-av { box-sizing: border-box; flex-shrink: 0; }
 html body .account-pill .account-pill-avatar > .pf-av-img, html body .account-popover .pf-pop-av > .pf-av-img { width: 100% !important; height: 100% !important; aspect-ratio: 1 / 1; border-radius: 50% !important; }
 .pf-initials { display: grid !important; place-items: center; line-height: 1; }
+
+/* ════════ สร้างบัญชีจากหน้า Login ════════ */
+#welcomeScreen .wl-card[hidden] { display: none !important; }
+#welcomeScreen .wl-reg-link { margin-top: 1rem; text-align: center; font-size: .84rem; color: #93A4C2; }
+#welcomeScreen .wl-reg-link button { border: 0; background: none; padding: 0 .15rem; color: #8FB0FF; font: inherit; font-weight: 700; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+#welcomeScreen .wl-reg-link button:hover { color: #B7CBFF; }
+#welcomeScreen .wl-reg-card .wl-form-group { margin-bottom: .75rem; }
+#welcomeScreen .wl-reg-row { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
+#welcomeScreen .wl-reg-hint { margin-top: .3rem; font-size: .72rem; color: #7F90AE; }
+#welcomeScreen .wl-reg-meter { display: flex; align-items: center; gap: .6rem; margin: -.2rem 0 .8rem; min-height: 1rem; }
+#welcomeScreen .wl-reg-meter i { flex: 1; height: 4px; border-radius: 99px; background: rgba(255,255,255,.1); position: relative; overflow: hidden; }
+#welcomeScreen .wl-reg-meter i::after { content: ''; position: absolute; inset: 0 auto 0 0; width: 0; border-radius: 99px; background: #F2645D; transition: width .25s ease, background-color .25s ease !important; }
+#welcomeScreen .wl-reg-meter[data-s=""] i { visibility: hidden; }
+#welcomeScreen .wl-reg-meter[data-s="0"] i::after { width: 15%; }
+#welcomeScreen .wl-reg-meter[data-s="1"] i::after { width: 40%; background: #F2B04A; }
+#welcomeScreen .wl-reg-meter[data-s="2"] i::after { width: 65%; background: #3AD4EC; }
+#welcomeScreen .wl-reg-meter[data-s="3"] i::after, #welcomeScreen .wl-reg-meter[data-s="4"] i::after { width: 100%; background: #34C08A; }
+#welcomeScreen .wl-reg-meter span { font-size: .72rem; color: #93A4C2; min-width: 5.5em; text-align: right; }
+#welcomeScreen .wl-reg-ok { display: grid; gap: .6rem; text-align: center; padding: .6rem 0 .2rem; }
+#welcomeScreen .wl-reg-ok[hidden] { display: none; }
+#welcomeScreen .wl-reg-ok b { font-size: 1.05rem; color: #5EE0A8; }
+#welcomeScreen .wl-reg-ok span { font-size: .86rem; color: #C9D5EA; line-height: 1.6; }
+#welcomeScreen .wl-reg-ok code { font-family: var(--mono); color: #fff; background: rgba(255,255,255,.08); padding: .05rem .4rem; border-radius: 5px; }
+#welcomeScreen #wlRegForm[hidden] { display: none; }
+@media (max-width: 520px) { #welcomeScreen .wl-reg-row { grid-template-columns: 1fr; } }
+.pf-badge { margin-left: auto; font-size: .68rem; font-weight: 700; padding: .1rem .45rem; border-radius: 99px; background: var(--danger); color: #fff; }
+.us-pending { padding: .8rem .9rem; border-bottom: 1px solid var(--border); background: color-mix(in srgb, var(--warn) 7%, var(--surface)); }
+.us-pending h4 { margin: 0 0 .55rem; font-size: .86rem; color: var(--warn); }
+.us-pend-row { display: flex; align-items: center; gap: .6rem; padding: .45rem 0; border-top: 1px dashed var(--border); }
+.us-pend-row:first-of-type { border-top: 0; }
+.us-pend-row > div { flex: 1; display: grid; gap: .1rem; min-width: 0; }
+.us-pend-row small { font-size: .74rem; color: var(--muted); }
 </style>
 </head>
 <body class="light-theme">
@@ -20348,7 +20380,7 @@ function endTour() {
         const admin = window.CCIPAuth && CCIPAuth.isAdmin();
         act.insertAdjacentHTML('afterbegin', `<button class="pf-edit" onclick="closeAccountPopover();CCIPProfile.edit()">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>${p && p.id && !p.legacy ? 'โปรไฟล์และรหัสผ่าน' : 'แก้ไขโปรไฟล์'}</button>${admin ? `
-          <button class="pf-edit" onclick="closeAccountPopover();CCIPUsers.open()"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.5 3-5.5 6.5-5.5s6.5 2 6.5 5.5"/><path d="M17 11h5M19.5 8.5v5"/></svg>จัดการผู้ใช้และรหัสผ่าน</button>` : ''}`);
+          <button class="pf-edit" onclick="closeAccountPopover();CCIPUsers.open()"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.5 3-5.5 6.5-5.5s6.5 2 6.5 5.5"/><path d="M17 11h5M19.5 8.5v5"/></svg>จัดการผู้ใช้และรหัสผ่าน${(CCIPAuth.user() || {}).pendingCount ? `<span class="pf-badge">${CCIPAuth.user().pendingCount} รออนุมัติ</span>` : ''}</button>` : ''}`);
       }
     },
     async cropPhoto(file) {
@@ -20518,18 +20550,19 @@ function endTour() {
     if (!res.success) {
       wlBusy(false);
       wlError(res.net ? 'ติดต่อเซิร์ฟเวอร์ไม่ได้ ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่' : (res.error || 'เข้าสู่ระบบไม่สำเร็จ'));
-      if (!res.locked) { $('#wlPassword').value = ''; $('#wlPassword').focus(); }
+      if (!res.locked && !res.pending) { $('#wlPassword').value = ''; $('#wlPassword').focus(); }
       return;
     }
     if (remember) localStorage.setItem(REMEMBER_KEY, JSON.stringify({ id, password: '' })); else localStorage.removeItem(REMEMBER_KEY);
     $('#wlPassword').value = '';
-    if (res.token) { Auth.save({ token: res.token, user: res.user }, remember); Profile.fromAccount(res.user); }
+    if (res.token) { Auth.save({ token: res.token, user: Object.assign({}, res.user, { pendingCount: res.pendingCount || 0 }) }, remember); Profile.fromAccount(res.user); }
     else { Auth.clear(); setTimeout(askProfile, 2600); }
     wlBusy(true, 'เข้าสู่ระบบสำเร็จ');
     setTimeout(() => {
       enterApp();
       if (res.setup) setTimeout(() => Users.open(true), 900);
       else if (res.user && res.user.name) setTimeout(() => toast(`ยินดีต้อนรับ คุณ${res.user.name.split(/\s+/)[0]}`, 'success'), 700);
+      if (res.pendingCount) setTimeout(() => toast(`มีคำขอสร้างบัญชีรออนุมัติ ${res.pendingCount} รายการ — ดูที่ เมนูบัญชี → จัดการผู้ใช้`, 'info'), 1800);
       else if (res.user) setTimeout(() => Profile.edit(true), 900);
     }, 250);
   };
@@ -20547,7 +20580,7 @@ function endTour() {
     try {
       const j = await Auth.call({ action: 'authCheck', token: Auth.token() || '' });
       if (!j.success && /unknown action/i.test(j.error || '')) return;           // Apps Script เวอร์ชันเก่า
-      if (j.success) { Auth.update(j.user); Profile.fromAccount(j.user); return; }
+      if (j.success) { Auth.update(Object.assign({}, j.user, { pendingCount: j.pendingCount || 0 })); Profile.fromAccount(j.user); return; }
       if (Auth.token() || j.accounts) {                                          // หมดอายุ / ถูกปิด / ต้องใช้บัญชีส่วนตัวแล้ว
         doLogout();
         setTimeout(() => wlError(Auth.token() ? 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่' : 'ระบบเปลี่ยนเป็นบัญชีรายบุคคลแล้ว — เข้าสู่ระบบด้วยรหัสของคุณ'), 300);
@@ -20645,12 +20678,17 @@ function endTour() {
     },
     draw() {
       const me = Auth.user() || {};
-      const cnt = $('#usCount'); if (cnt) cnt.textContent = `ผู้ใช้ทั้งหมด ${this.list.length} คน · admin ${this.list.filter(u => u.role === 'admin').length}`;
+      const cnt = $('#usCount'); if (cnt) cnt.textContent = `ผู้ใช้ ${this.list.filter(u => u.status !== 'pending').length} คน · admin ${this.list.filter(u => u.role === 'admin').length}${this.list.some(u => u.status === 'pending') ? ` · รออนุมัติ ${this.list.filter(u => u.status === 'pending').length}` : ''}`;
       const host = $('#usList'); if (!host) return;
       if (!this.list.length) { host.innerHTML = '<div class="gx-empty"><strong>ยังไม่มีผู้ใช้</strong><span>เพิ่มผู้ใช้คนแรกด้านบน</span></div>'; return; }
       const fmt = s => { const d = s ? new Date(s) : null; return d && !isNaN(d) ? d.toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) : '—'; };
-      host.innerHTML = `<table class="gx-table us-table"><thead><tr><th>ผู้ใช้</th><th>รหัสผู้ใช้</th><th>ตำแหน่ง</th><th>สิทธิ์</th><th>สถานะ</th><th>เข้าใช้ล่าสุด</th><th></th></tr></thead><tbody>
-        ${this.list.map((u, i) => `<tr class="${u.active ? '' : 'off'}">
+      const pend = this.list.filter(u => u.status === 'pending');
+      const au = Auth.user(); if (au) { au.pendingCount = pend.length; Auth.update(au); Profile.apply(); }
+      const pendHtml = pend.length ? `<div class="us-pending"><h4>คำขอสร้างบัญชีรออนุมัติ (${pend.length})</h4>${pend.map(u => `<div class="us-pend-row">
+          ${Profile.avatar(u, 'us-av')}<div><b>${esc(u.name || '—')}</b><small><span class="gx-code">${esc(u.id)}</span> · ${esc(u.position || 'ไม่ระบุตำแหน่ง')}</small></div>
+          <button class="gx-btn primary us-mini" data-approve="${esc(u.id)}">อนุมัติ</button><button class="gx-btn ghost us-mini" data-reject="${esc(u.id)}">ปฏิเสธ</button></div>`).join('')}</div>` : '';
+      host.innerHTML = pendHtml + `<table class="gx-table us-table"><thead><tr><th>ผู้ใช้</th><th>รหัสผู้ใช้</th><th>ตำแหน่ง</th><th>สิทธิ์</th><th>สถานะ</th><th>เข้าใช้ล่าสุด</th><th></th></tr></thead><tbody>
+        ${this.list.map((u, i) => u.status === 'pending' ? '' : `<tr class="${u.active ? '' : 'off'}">
           <td><div class="us-user">${Profile.avatar(u, 'us-av')}<b>${esc(u.name || '—')}</b></div></td>
           <td><span class="gx-code">${esc(u.id)}</span>${u.id === me.id ? ' <small class="us-me">คุณ</small>' : ''}</td>
           <td>${esc(u.position || '—')}</td>
@@ -20664,6 +20702,13 @@ function endTour() {
           </td></tr>`).join('')}</tbody></table>`;
       host.onclick = async e => {
         const b = e.target.closest('button'); if (!b) return;
+        if (b.dataset.approve || b.dataset.reject) {
+          const id = b.dataset.approve || b.dataset.reject, approve = !!b.dataset.approve;
+          if (!approve && !b.dataset.sure) { b.dataset.sure = '1'; b.textContent = 'ยืนยันปฏิเสธ?'; b.classList.add('warn'); setTimeout(() => { delete b.dataset.sure; b.textContent = 'ปฏิเสธ'; b.classList.remove('warn'); }, 3500); return; }
+          try { setBusy(b, true, ''); const j = await Auth.api('adminApproveUser', { id, approve }); this.list = j.users; this.draw(); toast(approve ? `อนุมัติบัญชี ${id} แล้ว` : `ปฏิเสธคำขอของ ${id} แล้ว`, 'success'); }
+          catch (err) { setBusy(b, false); $('#usErr').textContent = err.message; }
+          return;
+        }
         const u = this.list[+(b.dataset.edit || b.dataset.reset || b.dataset.del)];
         if (b.dataset.edit != null) this.startEdit(u);
         if (b.dataset.reset != null) {
@@ -20681,6 +20726,85 @@ function endTour() {
     }
   };
   window.CCIPUsers = Users;
+
+  /* ── สร้างบัญชีใหม่จากหน้า Login (รอ admin อนุมัติ) ── */
+  const Register = {
+    mount() {
+      const card = document.querySelector('#welcomeScreen .wl-card');
+      if (!card || $('#wlRegCard')) return;
+      card.id = 'wlLoginCard';
+      card.insertAdjacentHTML('beforeend', `<div class="wl-reg-link">ยังไม่มีบัญชี? <button type="button" onclick="CCIPRegister.show()">สร้างบัญชีใหม่</button></div>`);
+      const ico = d => `<svg class="wl-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+      const USER = '<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>';
+      const ID = '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10h4M7 14h7"/>';
+      const BAG = '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/>';
+      const LOCK = '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/>';
+      const field = (id, label, icon, attrs, hint) => `<div class="wl-form-group"><label class="wl-form-label" for="${id}">${label}</label>
+        <div class="wl-input-wrap">${ico(icon)}<input id="${id}" class="wl-input" ${attrs}></div>${hint ? `<div class="wl-reg-hint">${hint}</div>` : ''}</div>`;
+      card.insertAdjacentHTML('afterend', `<div class="wl-card wl-reg-card" id="wlRegCard" hidden>
+        <div class="wl-welcome" style="text-align:center;margin-bottom:.4rem">สร้างบัญชีใหม่</div>
+        <div class="wl-welcome-sub" style="text-align:center">กรอกข้อมูลแล้วส่งคำขอ — ใช้งานได้หลังผู้ดูแลระบบอนุมัติ</div>
+        <form id="wlRegForm" novalidate>
+          ${field('wrId', 'รหัสผู้ใช้ (ID) *', ID, 'type="text" autocomplete="username" placeholder="เช่น somchai.k" maxlength="40"', 'ภาษาอังกฤษ/ตัวเลข 3–40 ตัว ใช้ . _ - @ ได้')}
+          ${field('wrName', 'ชื่อ – นามสกุล *', USER, 'type="text" autocomplete="name" placeholder="เช่น สมชาย ขยันดี"')}
+          ${field('wrPos', 'ตำแหน่งงาน', BAG, 'type="text" list="wrPosList" placeholder="เช่น Purchasing Engineer"')}
+          <datalist id="wrPosList">${Profile.POSITIONS.map(p => `<option value="${esc(p)}">`).join('')}</datalist>
+          <div class="wl-reg-row">
+            ${field('wrPw', 'รหัสผ่าน *', LOCK, 'type="password" autocomplete="new-password" placeholder="อย่างน้อย 6 ตัว"')}
+            ${field('wrPw2', 'ยืนยันรหัสผ่าน *', LOCK, 'type="password" autocomplete="new-password" placeholder="พิมพ์อีกครั้ง"')}
+          </div>
+          <div class="wl-reg-meter" id="wrMeter" aria-live="polite"><i></i><span></span></div>
+          <div class="wl-error-msg" id="wrErr" style="display:none"><span></span></div>
+          <button type="submit" class="wl-btn" id="wrBtn"><span id="wrBtnText">ส่งคำขอสร้างบัญชี</span></button>
+        </form>
+        <div class="wl-reg-ok" id="wrOk" hidden></div>
+        <div class="wl-reg-link">มีบัญชีแล้ว? <button type="button" onclick="CCIPRegister.hide()">กลับไปเข้าสู่ระบบ</button></div>
+      </div>`);
+      const pw = $('#wrPw');
+      pw.addEventListener('input', () => {
+        const v = pw.value; let s = 0;
+        if (v.length >= 6) s++; if (v.length >= 10) s++; if (/[A-Z]/.test(v) && /[a-z]/.test(v)) s++; if (/\d/.test(v) && /[^A-Za-z0-9]/.test(v)) s++;
+        const m = $('#wrMeter'); m.dataset.s = v ? s : '';
+        m.querySelector('span').textContent = !v ? '' : ['สั้นเกินไป', 'พอใช้', 'ดี', 'ดีมาก', 'แข็งแรงมาก'][s];
+      });
+      $('#wlRegForm').addEventListener('submit', e => { e.preventDefault(); this.submit(); });
+    },
+    err(msg) { const b = $('#wrErr'); b.querySelector('span').textContent = msg; b.style.display = msg ? 'flex' : 'none'; },
+    show() {
+      this.mount();
+      $('#wlLoginCard').hidden = true; $('#wlRegCard').hidden = false;
+      $('#wrOk').hidden = true; $('#wlRegForm').hidden = false; this.err('');
+      setTimeout(() => $('#wrId').focus(), 50);
+    },
+    hide(id) {
+      $('#wlRegCard').hidden = true; $('#wlLoginCard').hidden = false;
+      if (id) { $('#wlUserId').value = id; $('#wlPassword').value = ''; setTimeout(() => $('#wlPassword').focus(), 50); }
+    },
+    async submit() {
+      const id = $('#wrId').value.trim(), name = $('#wrName').value.trim(), position = $('#wrPos').value.trim();
+      const pw = $('#wrPw').value, pw2 = $('#wrPw2').value;
+      if (!/^[A-Za-z0-9._\-@]{3,40}$/.test(id)) return this.err('รหัสผู้ใช้ต้องเป็นภาษาอังกฤษ/ตัวเลข 3–40 ตัว (ใช้ . _ - @ ได้)');
+      if (!name) return this.err('กรอกชื่อ – นามสกุล');
+      if (pw.length < 6) return this.err('รหัสผ่านต้องยาวอย่างน้อย 6 ตัวอักษร');
+      if (pw !== pw2) return this.err('ยืนยันรหัสผ่านไม่ตรงกัน');
+      if (!url()) return this.err('ยังไม่ได้ตั้งค่าการเชื่อมต่อระบบ ติดต่อผู้ดูแลระบบ');
+      this.err('');
+      const btn = $('#wrBtn'); btn.disabled = true; $('#wrBtnText').textContent = 'กำลังส่งคำขอ...';
+      try {
+        const j = await Auth.call({ action: 'authRegister', id, name, position, password: pw });
+        if (!j.success) throw new Error(/unknown action/i.test(j.error || '') ? 'ระบบยังไม่เปิดให้สร้างบัญชีเอง ติดต่อผู้ดูแลระบบ' : j.error);
+        $('#wlRegForm').hidden = true;
+        const ok = $('#wrOk'); ok.hidden = false;
+        ok.innerHTML = `<b>ส่งคำขอแล้ว</b><span>บัญชี <code>${esc(id)}</code> รอผู้ดูแลระบบอนุมัติ เมื่ออนุมัติแล้วเข้าสู่ระบบด้วยรหัสผ่านที่ตั้งไว้ได้เลย</span>
+          <button type="button" class="wl-btn" onclick="CCIPRegister.hide('${esc(id)}')">กลับไปหน้าเข้าสู่ระบบ</button>`;
+        $('#wlRegForm').reset(); $('#wrMeter').dataset.s = '';
+      } catch (e) {
+        this.err(/failed to fetch/i.test(e.message) ? 'ติดต่อเซิร์ฟเวอร์ไม่ได้ ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่' : e.message);
+      } finally { btn.disabled = false; $('#wrBtnText').textContent = 'ส่งคำขอสร้างบัญชี'; }
+    }
+  };
+  window.CCIPRegister = Register;
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => Register.mount()); else Register.mount();
 
   /* ══════════════════════ COMMAND PALETTE เดิม (Ctrl/⌘ + K) — เพิ่มหน้าใหม่และค้นข้อมูล GO WORK / Meeting ══════════════════════ */
   try {
