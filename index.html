@@ -22671,9 +22671,14 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
 #pcSheet input,#pcSheet input:hover,#pcSheet input:focus,#pcSheet input:focus-visible{background:transparent !important;box-shadow:none !important;outline:none !important;border:0 !important}
 #pcSheet .r input{text-align:right}
 #pcSheet .c,#pcSheet .c input{text-align:center}
-#pcSheet input{text-align:center !important}
-#pcSheet .u{display:flex;align-items:center;justify-content:center;gap:4px}
-#pcSheet .u input{flex:0 0 auto;width:4ch;min-width:3ch;max-width:100%}
+#pcSheet .u{display:flex;align-items:center;gap:4px}
+#pcSheet .u input{flex:1 1 auto;min-width:0;text-align:center}
+#pcSheet .u span{flex:0 0 auto}
+#pcSheet .pcs-vol{display:flex;align-items:stretch;height:23px}
+#pcSheet .pcs-vol > .u{flex:1;padding:0 6px}
+#pcSheet .pcs-vol > .sl{flex:0 0 22px;border-left:1px solid var(--ln);border-right:1px solid var(--ln);display:flex;align-items:center;justify-content:center;color:#111827}
+#pcSheet .pcs-vol > .yr{flex:0 0 72px}
+#pcSheet .pcs-vol .un{font-size:12px !important;font-weight:400 !important;color:#111827 !important}
 #pcSheet .u span{font-size:10.5px;color:#4B5563;font-weight:600}
 #pcSheet .cu{background:var(--cu) !important}
 #pcSheet .mk{background:var(--mk) !important}
@@ -22820,7 +22825,7 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
               <table style="flex:1"><colgroup><col style="width:96px"><col><col style="width:44px"><col style="width:52px"><col style="width:92px"><col style="width:84px"></colgroup>
                 <tr><td class="lb">PART NAME</td><td>${F('partName')}</td><th colspan="4" class="sec">แผนการเรียกชิ้นงานสำหรับ TRIAL</th></tr>
                 ${['partNo','rev','model'].map((k, i) => `<tr><td class="lb">${['PART NO.','REV.','MODEL'][i]}</td><td>${F(k)}</td><td class="lb c">PP ${i + 1}</td><td class="lb c">DATE</td><td>${F('trial.' + i + '.date', 'c')}</td><td class="r"><div class="u">${F('trial.' + i + '.pcs')}<span>PCS</span></div></td></tr>`).join('')}
-                <tr><td class="lb">VOLUME</td><td class="r"><div class="u">${F('volume')}<span>PCS</span><span style="margin:0 6px;color:#9CA3AF">/</span><input data-k="years" value="${esc(d.years)}" style="width:40px;text-align:right" autocomplete="off"><span>YEAR</span></div></td><td colspan="4" style="background:#FAFAFA"></td></tr>
+                <tr><td class="lb">VOLUME</td><td style="padding:0"><div class="pcs-vol"><div class="u">${F('volume', '', 'text-align:right')}<span class="un">PCS</span></div><div class="sl">/</div><div class="u yr">${F('years', '', 'text-align:right')}<span class="un">Y</span></div></div></td><td colspan="4" style="background:#FAFAFA"></td></tr>
               </table></div>
             <div style="display:flex;gap:24px;justify-content:space-between;margin-top:10px;align-items:stretch">
             <div style="flex:0 0 330px"><table><colgroup><col style="width:118px"><col><col style="width:22px"><col style="width:96px"></colgroup>
@@ -22857,7 +22862,6 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
           if (f !== inp.value) { inp.value = f; let n = 0, i = 0; while (i < f.length && n < before) { if (/[\d.]/.test(f[i])) n++; i++; } inp.setSelectionRange(i, i); }
         }
         this.set(inp.dataset.k, inp.value); this.save();
-        if (inp.closest('.u')) inp.style.width = Math.max(3, inp.value.length + 1) + 'ch';
         this.calc();
       }));
       page.querySelectorAll('.pcs-chk').forEach(c => c.onclick = () => { this.d.plant = this.d.plant === c.dataset.p ? '' : c.dataset.p; this.save();
@@ -22874,7 +22878,7 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
       this.calc();
     },
     /* ช่องตัวเลขที่มีหน่วยต่อท้าย: ปรับความกว้างตามข้อความ ให้ตัวเลข + หน่วยอยู่กลางช่องด้วยกัน */
-    fit(root){ (root || document).querySelectorAll('#pcSheet .u input').forEach(i => { i.style.width = Math.max(3, (i.value || '').length + 1) + 'ch'; }); },
+    fit(){},
 
     /* ตาราง Capacity: สูตรเดียวกับ Excel (ปี × 12 เดือน, เดือนละ 26 วัน, วันละ 8 ชม.) */
     calc(){
@@ -23095,6 +23099,9 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install); else install();
 })();
 </script>
+
+
+
 
 
 
