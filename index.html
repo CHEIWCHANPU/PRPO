@@ -22,7 +22,7 @@
   var nativeFetch = window.fetch.bind(window);
   var inflight = new Map();
   var READ_TIMEOUT = 25000, WRITE_TIMEOUT = 90000;
-  var BATCHABLE = ['getData', 'getCer', 'getSuppliers', 'getWorkplan', 'getTodos', 'getGoWork', 'getMeetings'];
+  var BATCHABLE = ['getData', 'getCer', 'getSuppliers', 'getWorkplan', 'getTodos', 'getGoWork', 'getMeetings', 'getCerFiles'];
   var BATCH_FLAG = 'ccip_batch_unsupported_until';
   var net = window.__net = { pending: 0, lastOk: 0, lastFail: 0, lastError: '', batched: 0 };
 
@@ -6147,6 +6147,32 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
 .pf-switch.on i { transform: translateX(16px); }
 .pf-kbd { font-family: var(--mono); font-size: .66rem; color: var(--muted); border: 1px solid var(--border); border-radius: 5px; padding: .05rem .35rem; }
 @media (min-width: 1600px) { html body .topbar.tb2 { grid-template-columns: minmax(0, 1fr) minmax(320px, 520px) minmax(0, 1fr) !important; } }
+
+/* ════════ ไฟล์ใบรับรอง CER ════════ */
+.cer-file-btn { display: inline-flex; align-items: center; gap: .3rem; padding: 0; border: 0; background: none; cursor: zoom-in; font: inherit; }
+.cer-file-btn .badge { cursor: zoom-in; transition: box-shadow .15s ease !important; }
+.cer-file-btn:hover .badge { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent) !important; }
+.cer-file-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.cer-clip { width: 14px; height: 14px; fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+.gx-modal.cer-modal { width: min(980px, 100%); }
+.cer-viewer { border-radius: 10px; overflow: hidden; background: #525659; border: 1px solid var(--border); }
+.cer-viewer iframe { display: block; width: 100%; height: min(72vh, 900px); border: 0; }
+.cer-viewer.img { background: var(--surface2); }
+.cer-img-wrap { display: grid; place-items: center; min-height: 320px; max-height: 72vh; overflow: auto; padding: .6rem; }
+.cer-img-wrap img { max-width: 100%; height: auto; border-radius: 6px; box-shadow: 0 8px 26px -12px rgba(0,0,0,.4) !important; background: #fff; }
+.cer-spin { border-color: color-mix(in srgb, var(--accent) 25%, transparent) !important; border-top-color: var(--accent) !important; width: 30px !important; height: 30px !important; }
+.cer-fail { color: var(--muted); font-size: .88rem; padding: 2rem; text-align: center; }
+.cerf-slot { margin-top: -.35rem; }
+.cerf-drop { display: flex; align-items: center; gap: .6rem; padding: .55rem .75rem; border-radius: 9px; border: 1px dashed color-mix(in srgb, var(--accent) 45%, var(--border)); background: color-mix(in srgb, var(--accent) 4%, var(--surface)); color: var(--accent); cursor: pointer; font-size: .8rem; font-weight: 600; }
+.cerf-drop:hover { background: color-mix(in srgb, var(--accent) 9%, var(--surface)); }
+.cerf-drop small { display: block; font-weight: 400; color: var(--muted); font-size: .72rem; }
+.cerf-drop svg, .cerf-file svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+.cerf-file { display: flex; align-items: center; gap: .5rem; padding: .45rem .6rem; border-radius: 9px; border: 1px solid color-mix(in srgb, var(--success) 40%, var(--border)); background: color-mix(in srgb, var(--success) 6%, var(--surface)); color: var(--success); }
+.cerf-name { flex: 1; min-width: 0; text-align: left; border: 0; background: none; padding: 0; color: var(--text); font: inherit; font-size: .8rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: zoom-in; }
+.cerf-name:hover { color: var(--accent); text-decoration: underline; }
+.cerf-act { flex-shrink: 0; height: 28px; padding: 0 .6rem; display: inline-flex; align-items: center; border-radius: 7px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; font-size: .74rem; font-weight: 600; cursor: pointer; }
+.cerf-act:hover { border-color: var(--accent); color: var(--accent); }
+.cerf-act.danger:hover { border-color: var(--danger); color: var(--danger); }
 </style>
 </head>
 <body class="light-theme">
@@ -21106,8 +21132,8 @@ function endTour() {
      - ระหว่างส่งไฟล์ แสดงหน้าต่าง "กำลังอัปโหลด" บังทั้งจอ → กดปุ่มซ้ำไม่ได้
      - คำขอเดียวกันที่ยังส่งอยู่ → ใช้ผลเดียวกัน, ไฟล์เดิมที่เพิ่งอัปโหลดสำเร็จภายใน 2 นาที → ไม่อัปโหลดซ้ำ */
   const UploadGuard = (() => {
-    const LABEL = { addManual: 'คู่มือการทำงาน (PDF)', uploadFile: 'ไฟล์แนบ PR/PO', uploadMeetingImage: 'รูป Summary Meeting' };
-    const SHOW_OVERLAY = { addManual: true, uploadFile: true };      // รูป Meeting มีแถบความคืบหน้าในหน้าต่างของตัวเองอยู่แล้ว
+    const LABEL = { addManual: 'คู่มือการทำงาน (PDF)', uploadFile: 'ไฟล์แนบ PR/PO', uploadMeetingImage: 'รูป Summary Meeting', uploadCerFile: 'ใบรับรอง CER' };
+    const SHOW_OVERLAY = { addManual: true, uploadFile: true, uploadCerFile: true };      // รูป Meeting มีแถบความคืบหน้าในหน้าต่างของตัวเองอยู่แล้ว
     const inflight = new Map(), recent = new Map();
     let el = null, timer = null, t0 = 0;
     const kb = n => n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
@@ -21231,6 +21257,151 @@ function endTour() {
   window.CCIPTopbar = Topbar;
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => Topbar.boot()); else Topbar.boot();
 
+  /* ══════════════════════ ไฟล์ใบรับรอง CER (PDF / JPG) → Google Drive ══════════════════════
+     แนบในหน้าต่าง แก้ไข/เพิ่มบริษัท · ดูได้โดยกดสถานะใบรับรองในตาราง (มีไอคอนคลิปหนีบกระดาษ) */
+  const CerFiles = {
+    KEY: 'ccip_cer_files',
+    TYPES: { iso9001: 'ISO 9001', iso14001: 'ISO 14001', iatf: 'IATF 16949' },
+    list: [], supported: true,
+    k(company) { return String(company || '').trim().toLowerCase().replace(/\s+/g, ' '); },
+    find(company, cert) { const k = this.k(company); return this.list.find(f => this.k(f.company) === k && f.cert === cert); },
+    async load() {
+      try { const c = JSON.parse(localStorage.getItem(this.KEY) || 'null'); if (Array.isArray(c) && !this.list.length) { this.list = c; this.decorate(); } } catch (e) {}
+      if (!url()) return;
+      try {
+        const j = await api.get('getCerFiles');
+        this.supported = true; this.list = Array.isArray(j.data) ? j.data : [];
+        localStorage.setItem(this.KEY, JSON.stringify(this.list));
+        this.decorate();
+      } catch (e) { if (/unknown/i.test(e.message)) this.supported = false; }
+    },
+    /* ตาราง: ใส่ไอคอนคลิปหนีบ + ทำให้สถานะกดดูไฟล์ได้ */
+    decorate() {
+      const tbody = document.getElementById('cerTableBody'); if (!tbody) return;
+      const cols = [['iso9001', 2], ['iso14001', 4], ['iatf', 6]];
+      tbody.querySelectorAll('tr').forEach(tr => {
+        const nameCell = tr.querySelector('td.part-name'); if (!nameCell) return;
+        const company = nameCell.textContent.trim();
+        cols.forEach(([cert, idx]) => {
+          const td = tr.children[idx]; if (!td) return;
+          const f = this.find(company, cert);
+          td.classList.toggle('cer-has-file', !!f);
+          const old = td.querySelector('.cer-file-btn');
+          if (!f) { if (old) { const inner = old.querySelector('.badge'); if (inner) old.replaceWith(inner); else old.remove(); } return; }
+          if (old) return;
+          const badge = td.querySelector('.badge') || td.firstElementChild;
+          const btn = document.createElement('button');
+          btn.type = 'button'; btn.className = 'cer-file-btn';
+          btn.title = `ดูใบรับรอง ${this.TYPES[cert]} ของ ${company}`;
+          btn.setAttribute('aria-label', btn.title);
+          if (badge) btn.appendChild(badge.cloneNode(true)); else btn.textContent = 'ดูไฟล์';
+          btn.insertAdjacentHTML('beforeend', '<svg class="cer-clip" viewBox="0 0 24 24"><path d="m21.4 11.1-8.5 8.5a6 6 0 0 1-8.5-8.5l8.5-8.5a4 4 0 0 1 5.7 5.7l-8.5 8.5a2 2 0 0 1-2.8-2.8l7.8-7.8"/></svg>');
+          btn.onclick = e => { e.stopPropagation(); this.view(company, cert); };
+          if (badge) badge.replaceWith(btn); else td.prepend(btn);
+        });
+      });
+    },
+    view(company, cert) {
+      const f = this.find(company, cert); if (!f) return;
+      const isPdf = /pdf/i.test(f.mime || f.name);
+      const drive = `https://drive.google.com/file/d/${encodeURIComponent(f.fileId)}/view`;
+      const el = openModal({
+        wide: true, title: `${company} · ${this.TYPES[cert]}`,
+        sub: `${f.expiry ? 'หมดอายุ ' + f.expiry + ' · ' : ''}${f.name}${f.by ? ' · อัปโหลดโดย ' + f.by : ''}`,
+        body: `<div class="cer-viewer ${isPdf ? 'pdf' : 'img'}">
+            ${isPdf ? `<iframe src="https://drive.google.com/file/d/${encodeURIComponent(f.fileId)}/preview" title="${esc(f.name)}" allow="autoplay"></iframe>`
+                    : `<div class="cer-img-wrap"><div class="gx-spin cer-spin"></div><img alt="${esc(f.name)}" src="https://drive.google.com/thumbnail?id=${encodeURIComponent(f.fileId)}&sz=w2400"
+                        onload="this.previousElementSibling.remove()" onerror="this.previousElementSibling.remove();this.replaceWith(Object.assign(document.createElement('p'),{className:'cer-fail',textContent:'แสดงรูปในหน้านี้ไม่ได้ — กด เปิดใน Google Drive'}))"></div>`}
+          </div>`,
+        foot: `<a class="gx-btn ghost" href="${drive}" target="_blank" rel="noopener" style="margin-right:auto">เปิดใน Google Drive</a><button class="gx-btn ghost" data-edit>แทนที่ / ลบไฟล์</button><button class="gx-btn primary" data-close2>ปิด</button>`
+      });
+      el.querySelector('.gx-modal').classList.add('cer-modal');
+      el.querySelector('[data-close2]').onclick = closeModal;
+      el.querySelector('[data-edit]').onclick = () => {
+        closeModal();
+        const r = (typeof cerData !== 'undefined' ? cerData : []).find(x => this.k(x.name) === this.k(company));
+        if (r) openCerModal(r.rowIndex);
+      };
+    },
+    /* หน้าต่างแก้ไข: ช่องแนบไฟล์ใต้แต่ละใบรับรอง */
+    mountModal() {
+      const map = { iso9001: 'cer-iso9001Date', iso14001: 'cer-iso14001Date', iatf: 'cer-iatfDate' };
+      Object.entries(map).forEach(([cert, dateId]) => {
+        const group = document.getElementById(dateId) && document.getElementById(dateId).closest('.form-group');
+        if (!group || document.getElementById('cerf-' + cert)) return;
+        group.insertAdjacentHTML('afterend', `<div class="form-group full cerf-slot" id="cerf-${cert}" data-cert="${cert}"></div>`);
+      });
+      this.drawSlots();
+    },
+    drawSlots() {
+      const company = (document.getElementById('cer-name') || {}).value || '';
+      Object.keys(this.TYPES).forEach(cert => {
+        const slot = document.getElementById('cerf-' + cert); if (!slot) return;
+        const f = company.trim() ? this.find(company, cert) : null;
+        slot.innerHTML = f
+          ? `<div class="cerf-file"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+              <button type="button" class="cerf-name" data-view title="ดูไฟล์">${esc(f.name)}</button>
+              <label class="cerf-act">แทนที่<input type="file" accept="application/pdf,image/jpeg,image/png" hidden></label>
+              <button type="button" class="cerf-act danger" data-rm>ลบ</button></div>`
+          : `<label class="cerf-drop"><svg viewBox="0 0 24 24"><path d="m21.4 11.1-8.5 8.5a6 6 0 0 1-8.5-8.5l8.5-8.5a4 4 0 0 1 5.7 5.7l-8.5 8.5a2 2 0 0 1-2.8-2.8l7.8-7.8"/></svg>
+              <span>แนบไฟล์ใบรับรอง ${this.TYPES[cert]} <small>PDF หรือ JPG · ส่งเข้า Google Drive ทันที</small></span>
+              <input type="file" accept="application/pdf,image/jpeg,image/png" hidden></label>`;
+        const inp = slot.querySelector('input[type=file]');
+        if (inp) inp.onchange = () => { const file = inp.files[0]; inp.value = ''; if (file) this.upload(cert, file); };
+        const v = slot.querySelector('[data-view]'); if (v) v.onclick = () => this.view(company.trim(), cert);
+        const rm = slot.querySelector('[data-rm]');
+        if (rm) rm.onclick = async () => {
+          if (!rm.dataset.sure) { rm.dataset.sure = '1'; rm.textContent = 'ยืนยันลบ?'; setTimeout(() => { if (rm.isConnected) { delete rm.dataset.sure; rm.textContent = 'ลบ'; } }, 3000); return; }
+          try { await api.post({ action: 'removeCerFile', company: company.trim(), cert }); this.list = this.list.filter(x => x !== f); localStorage.setItem(this.KEY, JSON.stringify(this.list)); this.drawSlots(); this.decorate(); toast('ลบไฟล์ใบรับรองแล้ว', 'success'); }
+          catch (e) { toast('ลบไม่สำเร็จ: ' + e.message, 'error'); }
+        };
+      });
+    },
+    async upload(cert, file) {
+      const company = ((document.getElementById('cer-name') || {}).value || '').trim();
+      if (!company) { toast('กรอกชื่อบริษัทก่อนแนบไฟล์', 'error'); document.getElementById('cer-name').focus(); return; }
+      if (!url()) { toast('ยังไม่ได้ตั้งค่าการเชื่อมต่อระบบ', 'error'); return; }
+      const isPdf = /pdf/i.test(file.type) || /\.pdf$/i.test(file.name);
+      if (!isPdf && !/^image\//.test(file.type)) { toast('รองรับเฉพาะ PDF, JPG หรือ PNG', 'error'); return; }
+      if (file.size > 20 * 1048576) { toast('ไฟล์ใหญ่เกิน 20 MB', 'error'); return; }
+      const dateId = { iso9001: 'cer-iso9001Date', iso14001: 'cer-iso14001Date', iatf: 'cer-iatfDate' }[cert];
+      const expiry = ((document.getElementById(dateId) || {}).value || '').trim();
+      try {
+        let base64, mime = isPdf ? 'application/pdf' : file.type;
+        if (isPdf) base64 = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(file); });
+        else {   // รูป: ย่อไม่เกิน 2400px ให้ตัวหนังสือบนใบรับรองยังอ่านชัด
+          const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('อ่านรูปไม่ได้')); i.src = URL.createObjectURL(file); });
+          const sc = Math.min(1, 2400 / Math.max(img.naturalWidth, img.naturalHeight));
+          const c = document.createElement('canvas'); c.width = Math.round(img.naturalWidth * sc); c.height = Math.round(img.naturalHeight * sc);
+          const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height); ctx.drawImage(img, 0, 0, c.width, c.height);
+          base64 = c.toDataURL('image/jpeg', 0.9).split(',')[1]; mime = 'image/jpeg';
+        }
+        const j = await api.post({ action: 'uploadCerFile', company, cert, expiry, mime, base64, fileName: file.name, by: localStorage.getItem('prpo_username') || '', batch: 'CER' + Date.now().toString(36) });
+        this.list = this.list.filter(x => !(this.k(x.company) === this.k(company) && x.cert === cert)).concat([j.data]);
+        localStorage.setItem(this.KEY, JSON.stringify(this.list));
+        this.drawSlots(); this.decorate();
+        toast(`แนบใบรับรอง ${this.TYPES[cert]} ของ ${company} เข้า Google Drive แล้ว`, 'success');
+      } catch (e) {
+        toast(/unknown/i.test(e.message) ? 'ต้องอัปเดต CCIP_Extension.gs ใน Apps Script ก่อน' : 'อัปโหลดไม่สำเร็จ: ' + e.message, 'error');
+      }
+    }
+  };
+  window.CCIPCerFiles = CerFiles;
+  const cerBoot = () => {
+    CerFiles.mountModal();
+    const nm = document.getElementById('cer-name'); if (nm) nm.addEventListener('input', () => CerFiles.drawSlots());
+    if (typeof window.renderCerTable === 'function') {
+      const orig = window.renderCerTable;
+      window.renderCerTable = function () { const r = orig.apply(this, arguments); try { CerFiles.decorate(); } catch (e) {} return r; };
+    }
+    if (typeof window.openCerModal === 'function') {
+      const origOpen = window.openCerModal;
+      window.openCerModal = function () { const r = origOpen.apply(this, arguments); CerFiles.drawSlots(); return r; };
+    }
+    CerFiles.load();
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', cerBoot); else cerBoot();
+
   /* ══════════════════════ COMMAND PALETTE เดิม (Ctrl/⌘ + K) — เพิ่มหน้าใหม่และค้นข้อมูล GO WORK / Meeting ══════════════════════ */
   try {
     const svg = d => `<svg viewBox="0 0 24 24">${d}</svg>`;
@@ -21298,7 +21469,7 @@ function endTour() {
   };
   // ซิงค์ GO WORK / Meeting ไปพร้อมกับข้อมูลชุดอื่นในคำขอเดียวกัน (ถูกรวมเป็น getAll)
   const origSync = window.syncData;
-  window.syncData = function () { const p = origSync.apply(this, arguments); GoWork.load(); Meeting.load(); return p; };
+  window.syncData = function () { const p = origSync.apply(this, arguments); GoWork.load(); Meeting.load(); try { CCIPCerFiles.load(); } catch (e) {} return p; };
   const origTick = window.autoSyncTick;
   if (typeof origTick === 'function') {
     window.autoSyncTick = function () { const p = origTick.apply(this, arguments); if (!document.hidden && url()) { GoWork.refresh(); Meeting.refresh(); } return p; };
