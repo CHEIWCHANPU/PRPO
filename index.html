@@ -19264,7 +19264,8 @@ function endTour() {
       if (!url()) throw new Error('ยังไม่ได้ตั้งค่า Web App URL (หน้า ตั้งค่า)');
       const r = await fetch(url(), { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) });
       const j = await r.json();
-      if (!j.success) throw new Error(j.error || 'บันทึกไม่สำเร็จ');
+      if (j && j.success === undefined && !j.error) throw new Error('unknown action: เซิร์ฟเวอร์ยังไม่รู้จักคำสั่ง ' + body.action);
+      if (!j.success) throw new Error(j.error || j.message || 'บันทึกไม่สำเร็จ');
       return j;
     }
   };
@@ -21382,7 +21383,7 @@ function endTour() {
         this.drawSlots(); this.decorate();
         toast(`แนบใบรับรอง ${this.TYPES[cert]} ของ ${company} เข้า Google Drive แล้ว`, 'success');
       } catch (e) {
-        toast(/unknown/i.test(e.message) ? 'ต้องอัปเดต CCIP_Extension.gs ใน Apps Script ก่อน' : 'อัปโหลดไม่สำเร็จ: ' + e.message, 'error');
+        toast(/unknown/i.test(e.message) ? 'เซิร์ฟเวอร์ยังไม่รองรับการแนบไฟล์ — วาง CCIP_Extension.gs ตัวล่าสุด แล้ว Deploy เป็น New version' : 'อัปโหลดไม่สำเร็จ: ' + e.message, 'error');
       }
     }
   };
@@ -21706,6 +21707,108 @@ function endTour() {
       ctx.restore();
     }
   });
+})();
+</script>
+<!-- ═══ SCROLL LOCK: popup เปิดอยู่ หน้าหลักไม่เลื่อนตาม ═══ -->
+<style id="ccip-scroll-lock-css">
+html{scrollbar-gutter:stable}
+html.ccip-lock,html.ccip-lock body{overflow:hidden !important}
+.modal-overlay,.modal,.modal-body,.gx-overlay,.gx-modal,.gx-modal *,.gx-lightbox,.ug-overlay,.cmdk-overlay,.cmdk-overlay *,
+.detail-overlay,.detail-overlay *,.result-modal-overlay,.wp-modal-overlay,.wp-modal-body,.bc-panel,.exec-panel,
+#accountPopover,#accountPopover *,#accentPopover,#notifPanel,#notifPanel *,#filterMakerPanel,#filterMakerPanel *,#adminPinModal,#makerOverlay,
+[role="dialog"],[class*="popover"],[class*="dropdown"]{overscroll-behavior:contain}
+</style>
+<script id="ccip-scroll-lock">
+(function CCIP_SCROLL_LOCK(){
+  var W=window,D=document;
+  if(W.__ccipScrollLock) return; W.__ccipScrollLock=1;
+  var OVL='.modal-overlay,.gx-overlay,.gx-lightbox,.ug-overlay,.cmdk-overlay,.detail-overlay,.result-modal-overlay,.wp-modal-overlay,'+
+          '#adminPinModal,#makerOverlay,[role="dialog"],[aria-modal="true"],[class*="overlay"],[class*="lightbox"],[id*="Overlay"],[id*="Modal"]';
+  var FLOAT_RE=/pop|panel|dropdown|menu|modal|overlay|lightbox|sheet|drawer|picker|suggest|dialog|cmdk|toast-list/i;
+  var NOT_FLOAT_RE=/topbar|sidebar|side-nav|navbar|^tb2$|app-shell/i;
+  var open=[];
+  function visible(el){
+    if(!el.isConnected) return false;
+    var cs=getComputedStyle(el);
+    if(cs.display==='none'||cs.visibility==='hidden'||parseFloat(cs.opacity)<0.05||cs.pointerEvents==='none') return false;
+    if(cs.position!=='fixed'&&cs.position!=='absolute') return false;
+    var r=el.getBoundingClientRect();
+    return r.width>=W.innerWidth*0.7&&r.height>=W.innerHeight*0.7;
+  }
+  function scan(){
+    var list=[],els=D.querySelectorAll(OVL);
+    for(var i=0;i<els.length;i++){ if(visible(els[i])) list.push(els[i]); }
+    // ตัดตัวที่ซ้อนอยู่ใน overlay อื่นออก
+    open=list.filter(function(el){return !list.some(function(o){return o!==el&&o.contains(el);});});
+    D.documentElement.classList.toggle('ccip-lock',open.length>0);
+  }
+  var t=0;function queue(){ if(t) return; t=requestAnimationFrame(function(){t=0;scan();}); }
+  new MutationObserver(queue).observe(D.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style','hidden','open','aria-hidden']});
+  W.addEventListener('resize',queue);
+  D.addEventListener('transitionend',queue,true);
+  D.addEventListener('animationend',queue,true);
+  scan(); setTimeout(scan,400);
+
+  function isFloat(el){
+    var id=el.id||'',cls=typeof el.className==='string'?el.className:'';
+    var key=id+' '+cls;
+    if(!FLOAT_RE.test(key)||NOT_FLOAT_RE.test(key)) return false;
+    var p=getComputedStyle(el).position; return p==='fixed'||p==='absolute';
+  }
+  function canScroll(el,dx,dy){
+    var cs=getComputedStyle(el);
+    if(dy){
+      if(/(auto|scroll|overlay)/.test(cs.overflowY)&&el.scrollHeight>el.clientHeight+1){
+        if(dy<0&&el.scrollTop>0) return true;
+        if(dy>0&&el.scrollTop+el.clientHeight<el.scrollHeight-1) return true;
+      }
+    }
+    if(dx){
+      if(/(auto|scroll|overlay)/.test(cs.overflowX)&&el.scrollWidth>el.clientWidth+1){
+        if(dx<0&&el.scrollLeft>0) return true;
+        if(dx>0&&el.scrollLeft+el.clientWidth<el.scrollWidth-1) return true;
+      }
+    }
+    return false;
+  }
+  function guard(e,dx,dy){
+    var tg=e.target; if(!tg||tg.nodeType!==1) tg=tg&&tg.parentElement; if(!tg) return;
+    var inOverlay=null;
+    for(var i=0;i<open.length;i++){ if(open[i].contains(tg)){ inOverlay=open[i]; break; } }
+    if(open.length&&!inOverlay){ e.preventDefault(); return; }
+    // หา root ของ popup/panel ที่ลอยอยู่
+    var root=inOverlay,el=tg;
+    if(!root){ while(el&&el!==D.body&&el!==D.documentElement){ if(isFloat(el)){root=el;break;} el=el.parentElement; } }
+    if(!root) return; // อยู่ในหน้าหลักปกติ
+    el=tg;
+    while(el){ if(canScroll(el,dx,dy)) return; if(el===root) break; el=el.parentElement; }
+    e.preventDefault(); // ชนขอบ/ไม่มีอะไรให้เลื่อน → ไม่ส่งต่อไปหน้าหลัก
+  }
+  D.addEventListener('wheel',function(e){ if(e.ctrlKey) return; guard(e,e.deltaX,e.deltaY); },{capture:true,passive:false});
+  var ty=0,tx=0;
+  D.addEventListener('touchstart',function(e){ if(e.touches.length===1){ty=e.touches[0].clientY;tx=e.touches[0].clientX;} },{capture:true,passive:true});
+  D.addEventListener('touchmove',function(e){ if(e.touches.length!==1) return; var y=e.touches[0].clientY,x=e.touches[0].clientX; guard(e,tx-x,ty-y); ty=y;tx=x; },{capture:true,passive:false});
+  // ปุ่มคีย์บอร์ด (Space/PageDown/ลูกศร) ขณะ popup เปิด ไม่ให้หน้าหลักเลื่อน
+  D.addEventListener('keydown',function(e){
+    if(!open.length) return;
+    if(!/^( |Spacebar|PageUp|PageDown|Home|End|ArrowUp|ArrowDown)$/.test(e.key)) return;
+    var a=D.activeElement; if(a&&(/INPUT|TEXTAREA|SELECT/.test(a.tagName)||a.isContentEditable)) return;
+    if(!open.some(function(o){return a&&o.contains(a);})) e.preventDefault();
+  },true);
+  // iframe ภายใน (เช่น RFQ E-Form) ที่เป็น same-origin → ติดตั้งตัวเดียวกัน
+  var SRC='('+CCIP_SCROLL_LOCK.toString()+')();';
+  var CSS=(D.getElementById('ccip-scroll-lock-css')||{}).textContent||'';
+  function hookFrame(f){
+    function inj(){ try{ var d=f.contentDocument; if(!d||!d.documentElement||f.contentWindow.__ccipScrollLock) return;
+      var s=d.createElement('style'); s.id='ccip-scroll-lock-css'; s.textContent=CSS; (d.head||d.documentElement).appendChild(s);
+      var sc=d.createElement('script'); sc.textContent=SRC; (d.body||d.documentElement).appendChild(sc);
+    }catch(_){} }
+    if(!f.__ccipHooked){ f.__ccipHooked=1; f.addEventListener('load',inj); }
+    inj();
+  }
+  function hookAll(){ var fs=D.getElementsByTagName('iframe'); for(var i=0;i<fs.length;i++) hookFrame(fs[i]); }
+  new MutationObserver(function(ms){ for(var i=0;i<ms.length;i++) if(ms[i].addedNodes.length){ hookAll(); break; } }).observe(D.documentElement,{childList:true,subtree:true});
+  hookAll();
 })();
 </script>
 </body>
