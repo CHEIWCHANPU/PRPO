@@ -22224,13 +22224,13 @@ body.dark-theme #page-modeltracker.mtx .kpi-total{--k:#CBD5E1}
 </script>
 <!-- ═══ DELIVERY STATUS · Executive UI (dsx) ═══ -->
 <style id="dsx-css">
-#briefingPanel.dsx{
+#page-home.dsx-home,#briefingPanel.dsx{
   --dx-red:#DC2626; --dx-amb:#D97706; --dx-blu:#2563EB; --dx-sla:#64748B;
   --dx-ink:var(--text,#0F172A); --dx-sub:var(--muted,#64748B); --dx-card:var(--surface,#fff); --dx-soft:var(--surface2,#F3F5F9); --dx-line:var(--border,#E3E7EE);
-  background:transparent !important; border:0 !important; box-shadow:none !important; padding:0 !important; overflow:visible !important;
+  background:transparent !important; border:0 !important; box-shadow:none !important; padding:0 !important; overflow:visible !important; min-height:0 !important; margin-bottom:0 !important;
   font-variant-numeric:tabular-nums;
 }
-body.dark-theme #briefingPanel.dsx{ --dx-red:#F87171; --dx-amb:#FBBF24; --dx-blu:#60A5FA; --dx-sla:#94A3B8; }
+body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red:#F87171; --dx-amb:#FBBF24; --dx-blu:#60A5FA; --dx-sla:#94A3B8; }
 #briefingPanel.dsx > .briefing-head{display:none !important}
 #briefingPanel.dsx > .briefing-body, #briefingPanel.dsx #briefingBody{background:transparent !important;padding:0 !important;border:0 !important}
 
@@ -22365,8 +22365,10 @@ body.dark-theme #briefingPanel.dsx{ --dx-red:#F87171; --dx-amb:#FBBF24; --dx-blu
   const noteCount = r => { try { return (bcLoad(r.rowIndex) || []).length || ''; } catch (e) { return ''; } };
 
   function hero(panel){
-    let h = panel.querySelector('.dsx-hero');
-    if (!h) { h = document.createElement('div'); h.className = 'dsx-hero'; panel.insertBefore(h, panel.firstChild); }
+    let h = null;
+    if (!h) { h = document.querySelector('#page-home > .dsx-hero'); }
+    if (!h) { h = document.createElement('div'); h.className = 'dsx-hero'; panel.parentNode.insertBefore(h, panel); }
+    panel.parentNode.classList.add('dsx-home');
     const v = id => +(document.getElementById(id) || {}).textContent || 0;
     const o = v('brief-overdue'), t = v('brief-duetoday'), s = v('brief-soon'), a = v('brief-total');
     const d = new Date();
@@ -22476,5 +22478,168 @@ body.dark-theme #briefingPanel.dsx{ --dx-red:#F87171; --dx-amb:#FBBF24; --dx-blu
   if (document.getElementById('briefingPanel') && document.querySelector('#briefingPanel .briefing-maker-grid')) { try { build(); } catch (e) {} }
 })();
 </script>
+<!-- ═══ HOME · Executive UI part 2 (field schedule, follow-ups, certificates) ═══ -->
+<style id="dsx2-css">
+#page-home.dsx-home{display:flex;flex-direction:column}
+.dsx-duo{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:1rem;align-items:start}
+.dsx-duo:has(> #briefingCerWidget[style*="none"]){grid-template-columns:1fr}
+@media (max-width:1100px){.dsx-duo{grid-template-columns:1fr}}
+#page-home.dsx-home #todoHomeWidget,#page-home.dsx-home #briefingCerWidget{margin:0 !important;background:var(--dx-card) !important;border:1px solid var(--dx-line) !important;border-radius:14px !important;padding:0 !important;box-shadow:none !important;overflow:hidden}
+#page-home.dsx-home #todoHomeWidget > .chart-header{display:none !important}
+#page-home.dsx-home #todoHomeList{margin:0 !important;max-height:none !important;overflow:visible !important}
+#page-home.dsx-home #briefingBodyCer{display:block !important;gap:0 !important}
+.dsx-card-h{display:flex;justify-content:space-between;align-items:flex-end;gap:.8rem;padding:1.05rem 1.25rem .85rem;border-bottom:1px solid var(--dx-line)}
+.dsx-card-h h2{margin:.2rem 0 0;font-size:1.02rem;font-weight:700;color:var(--dx-ink)}
+.dsx-card-h h2 em{font-style:normal;font-weight:600;color:var(--dx-sub);font-size:.82rem;margin-left:.35rem}
+.dsx-link{border:1px solid var(--dx-line);background:var(--dx-card);color:var(--dx-ink);border-radius:8px;font:inherit;font-size:.74rem;font-weight:600;padding:.35rem .7rem;cursor:pointer;white-space:nowrap}
+.dsx-link:hover{border-color:color-mix(in srgb,var(--dx-blu) 45%,var(--dx-line));color:var(--dx-blu)}
+.dsx-scroll{max-height:372px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.dsx-scroll:has(.bc-panel.open){max-height:none}
+
+/* agenda (field schedule) */
+.dsx-agenda{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:.75rem;padding:1rem 1.35rem 1.2rem}
+.dsx-ag{display:flex;gap:.85rem;align-items:stretch;border:1px solid var(--dx-line);border-radius:12px;padding:.75rem .9rem;cursor:pointer;background:var(--dx-card);transition:border-color .12s,background .12s;position:relative}
+.dsx-ag:hover{border-color:color-mix(in srgb,var(--dx-blu) 35%,var(--dx-line));background:color-mix(in srgb,var(--dx-blu) 3%,var(--dx-card))}
+.dsx-ag-d{flex:0 0 52px;border-radius:9px;background:var(--dx-soft);display:flex;flex-direction:column;align-items:center;justify-content:center;border-top:3px solid var(--c)}
+.dsx-ag-d b{font-size:1.25rem;line-height:1;color:var(--dx-ink)}
+.dsx-ag-d small{font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dx-sub);margin-top:.15rem}
+.dsx-ag-m{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:.25rem}
+.dsx-ag-t{display:flex;gap:.5rem;align-items:center}
+.dsx-ag-t b{flex:1;min-width:0;font-size:.84rem;color:var(--dx-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dsx-ag-s{display:flex;gap:.45rem;align-items:center;flex-wrap:wrap;font-size:.72rem;color:var(--dx-sub)}
+.dsx-ag-s .dot{opacity:.5}
+.dsx-ag-s .wp-status-badge{font-size:.64rem !important;padding:.08rem .45rem !important}
+.dsx-tag{font-size:.64rem;font-weight:700;letter-spacing:.04em;color:var(--dx-sub);border:1px solid var(--dx-line);border-radius:5px;padding:0 .35rem;white-space:nowrap}
+
+/* follow-ups */
+.dsx-td{display:flex;gap:.8rem;align-items:center;padding:.75rem 1.25rem;border-bottom:1px solid color-mix(in srgb,var(--dx-line) 70%,transparent);transition:background .12s}
+.dsx-td:last-child{border-bottom:0}
+.dsx-td:hover{background:color-mix(in srgb,var(--dx-blu) 3%,transparent)}
+.dsx-chk{flex:0 0 20px;height:20px;border-radius:6px;border:1.5px solid color-mix(in srgb,var(--dx-sub) 55%,transparent);background:var(--dx-card);cursor:pointer;display:grid;place-items:center;transition:all .12s;padding:0}
+.dsx-chk:hover{border-color:var(--dx-blu);background:color-mix(in srgb,var(--dx-blu) 8%,transparent)}
+.dsx-chk:hover::after{content:"";width:5px;height:9px;border:solid var(--dx-blu);border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.dsx-td-m{flex:1;min-width:0}
+.dsx-td-m b{display:block;font-size:.84rem;font-weight:600;color:var(--dx-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dsx-td-s{display:flex;gap:.4rem;align-items:center;margin-top:.2rem;font-size:.7rem;color:var(--dx-sub)}
+.dsx-td-s i{width:7px;height:7px;border-radius:50%;background:var(--cat);display:inline-block}
+
+/* certificates */
+.dsx-cer{display:grid;grid-template-columns:3px 1fr auto;column-gap:.8rem;align-items:center;padding:.75rem 1.25rem .75rem 1rem;border-bottom:1px solid color-mix(in srgb,var(--dx-line) 70%,transparent);cursor:pointer;transition:background .12s}
+.dsx-cer:hover{background:color-mix(in srgb,var(--dx-blu) 3%,transparent)}
+.dsx-cer-m{min-width:0}
+.dsx-cer-m b{display:block;font-size:.84rem;color:var(--dx-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dsx-cer-s{display:flex;gap:.4rem;align-items:center;margin-top:.2rem;font-size:.7rem;color:var(--dx-sub);white-space:nowrap}
+.dsx-cer-s .badge{font-size:.62rem !important;padding:.05rem .4rem !important}
+.dsx-cer-r{display:flex;align-items:center;gap:.4rem}
+.dsx-cer-x{grid-column:2 / 4}
+.dsx-cer-x:empty{display:none}
+.dsx-cer-x .bc-latest{margin:.45rem 0 0 !important}
+.dsx-none{padding:2rem 1rem;text-align:center;font-size:.8rem;color:var(--dx-sub)}
+</style>
+<script id="dsx2-js">
+(function(){
+  if (typeof renderDailyBriefing !== 'function') return;
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const col = d => d < 0 ? 'var(--dx-red)' : d === 0 ? 'var(--dx-amb)' : d <= 3 ? 'var(--dx-blu)' : 'var(--dx-sla)';
+  const dayTh = d => d < 0 ? `เลยกำหนด ${-d} วัน` : d === 0 ? 'วันนี้' : d === 1 ? 'พรุ่งนี้' : `อีก ${d} วัน`;
+  const pill = d => `<span class="dsx-pill" style="--c:${col(d)}">${dayTh(d)}</span>`;
+  const MO = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const noteIco = '<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
+  const today0 = () => { const t = new Date(); t.setHours(0,0,0,0); return t; };
+
+  /* ── โครงหน้า: การ์ด 2 คอลัมน์ (งานค้าง + ใบรับรอง) ── */
+  function layout(){
+    const page = document.getElementById('page-home'); if (!page) return;
+    page.classList.add('dsx-home');
+    const todo = document.getElementById('todoHomeWidget'), cer = document.getElementById('briefingCerWidget');
+    if (todo && cer && !page.querySelector('.dsx-duo')) {
+      const duo = document.createElement('div'); duo.className = 'dsx-duo';
+      todo.parentNode.insertBefore(duo, todo); duo.appendChild(todo); duo.appendChild(cer);
+    }
+    if (todo && !todo.querySelector('.dsx-card-h')) {
+      todo.insertAdjacentHTML('afterbegin', `<div class="dsx-card-h"><div><div class="dsx-eyebrow">Follow-ups · To-Do</div><h2>งานที่ค้าง / ต้องติดตาม<em id="dsxTodoCnt"></em></h2></div>
+        <button class="dsx-link" onclick="showPage('todo', document.getElementById('nav-todo'))">ดูทั้งหมด →</button></div>`);
+      const list = document.getElementById('todoHomeList'); if (list) list.classList.add('dsx-scroll');
+    }
+  }
+
+  /* ── แผนงานนอกสถานที่ / นัดหมาย ── */
+  function buildAgenda(panel){
+    const old = [...panel.querySelectorAll('.briefing-category')].find(c => c.querySelector('.briefing-flat-items'));
+    if (!old || typeof wpData === 'undefined') return;
+    const t0 = today0(), lead = typeof WORKPLAN_BRIEFING_LEAD_DAYS !== 'undefined' ? WORKPLAN_BRIEFING_LEAD_DAYS : 15;
+    const list = [];
+    wpData.forEach(r => { if (r.status === 'เสร็จสิ้น') return; const d = wpParseDate(r.date); if (!d) return; d.setHours(0,0,0,0); const n = Math.round((d - t0) / 86400000); if (n <= lead) list.push({r, d, n}); });
+    list.sort((a, b) => a.n - b.n);
+    const sec = document.createElement('div'); sec.className = 'briefing-category dsx-sec';
+    sec.innerHTML = `<div class="dsx-sec-h"><div><div class="dsx-eyebrow">Field Schedule · Next ${lead} Days</div><h2>แผนงานนอกสถานที่ / นัดหมาย<em>${list.length} รายการ</em></h2></div>
+        <div class="dsx-tools"><button class="dsx-link" onclick="showPage('workplan', document.getElementById('nav-workplan'))">เปิดตารางแผนงาน →</button></div></div>
+      <div class="dsx-agenda">${list.map(({r, d, n}) => {
+        const time = (r.timeStart || r.timeEnd) ? `${esc(wpTimeDisplay(r.timeStart) || '—')}${r.timeEnd ? ' – ' + esc(wpTimeDisplay(r.timeEnd)) : ''}` : '';
+        return `<div class="dsx-ag" style="--c:${col(n)}" onclick="showPage('workplan', document.getElementById('nav-workplan'))" title="เปิดตารางแผนงาน">
+          <div class="dsx-ag-d"><b>${d.getDate()}</b><small>${MO[d.getMonth()]}</small></div>
+          <div class="dsx-ag-m"><div class="dsx-ag-t"><b title="${esc(r.name)}">${esc(r.name || '(ไม่มีชื่องาน)')}</b>${pill(n)}</div>
+            <div class="dsx-ag-s">${r.type ? `<span class="dsx-tag">${esc(r.type)}</span>` : ''}${r.location ? `<span>${esc(r.location)}</span>` : ''}${time ? `<span class="dot">·</span><span>${time}</span>` : ''}${typeof wpStatusHtml === 'function' ? wpStatusHtml(r.status) : ''}</div></div></div>`;
+      }).join('')}</div>`;
+    old.replaceWith(sec);
+  }
+
+  /* ── ใบรับรอง CER ใกล้หมดอายุ ── */
+  function buildCer(){
+    const body = document.getElementById('briefingBodyCer'), wid = document.getElementById('briefingCerWidget');
+    if (!body || !wid || wid.style.display === 'none' || body.querySelector('.dsx-card-h') || typeof cerData === 'undefined') return;
+    const P = {};
+    body.querySelectorAll('.bc-panel[id^="bcp-"]').forEach(p => { (P[p.id.slice(4)] = P[p.id.slice(4)] || {}).panel = p; });
+    body.querySelectorAll('.bc-latest[id^="bcLatest-"]').forEach(p => { (P[p.id.slice(9)] = P[p.id.slice(9)] || {}).latest = p; });
+    const t0 = today0(), lead = typeof CER_BRIEFING_LEAD_DAYS !== 'undefined' ? CER_BRIEFING_LEAD_DAYS : 30, rows = [];
+    cerData.forEach(r => [['iso9001Date','ISO 9001','iso9001Has'],['iso14001Date','ISO 14001','iso14001Has'],['iatfDate','IATF 16949','iatfHas']].forEach(([k, l, h]) => {
+      const ds = r[k]; if (!ds) return; const e = parseThaiDate(ds); if (!e) return; const n = Math.round((e - t0) / 86400000);
+      if (n <= lead) rows.push({supplier: r, certLabel: l, dateStr: ds, daysLeft: n, has: r[h]});
+    }));
+    rows.sort((a, b) => a.daysLeft - b.daysLeft);
+    const expired = rows.filter(x => x.daysLeft < 0).length;
+    body.innerHTML = `<div class="dsx-card-h"><div><div class="dsx-eyebrow">Supplier Certificates · Next ${lead} Days</div><h2>ใบรับรอง (CER) ใกล้หมดอายุ<em>${rows.length} ใบ${expired ? ` · หมดอายุแล้ว ${expired}` : ''}</em></h2></div>
+        <button class="dsx-link" onclick="showPage('cer', document.getElementById('nav-cer'))">ดูทั้งหมด →</button></div>
+      <div class="dsx-scroll">${rows.map(c => {
+        const id = cerCommentId(c), n = (() => { try { return (bcLoad(id) || []).length || ''; } catch (e) { return ''; } })();
+        return `<div class="dsx-cer" data-cid="${esc(id)}" style="--c:${col(c.daysLeft)}"><div class="dsx-rail" style="align-self:stretch"></div>
+          <div class="dsx-cer-m"><b title="${esc(c.supplier.name)}">${esc(c.supplier.name || '—')}</b>
+            <div class="dsx-cer-s"><span class="dsx-tag">${c.certLabel}</span><span>หมดอายุ ${esc(c.dateStr)}</span>${typeof cerBadge === 'function' ? cerBadge(c.dateStr, c.has) : ''}</div></div>
+          <div class="dsx-cer-r">${pill(c.daysLeft)}<button class="dsx-note" id="bcb-${esc(id)}" data-cnote="${esc(id)}" title="บันทึกการติดตาม">${noteIco}<span id="bcc-${esc(id)}">${n}</span></button></div>
+          <div class="dsx-cer-x" data-cslot="${esc(id)}"></div></div>`;
+      }).join('') || '<div class="dsx-none">ไม่มีใบรับรองที่ใกล้หมดอายุ</div>'}</div>`;
+    body.querySelectorAll('[data-cslot]').forEach(s => { const x = P[s.dataset.cslot]; if (!x) return; if (x.latest) s.appendChild(x.latest); if (x.panel) s.appendChild(x.panel); });
+    body.querySelectorAll('.dsx-cer').forEach(el => el.addEventListener('click', e => { if (e.target.closest('.bc-panel')) return; bcToggle(el.dataset.cid, e); }));
+  }
+
+  /* ── งานที่ค้าง / ต้องติดตาม ── */
+  if (typeof renderTodoHomeWidget === 'function') {
+    window.renderTodoHomeWidget = function(){
+      layout();
+      const box = document.getElementById('todoHomeList'); if (!box || typeof todoTasks === 'undefined') return;
+      const list = todoTasks.filter(t => !t.done).map(t => ({...t, d: todoDaysLeft(t.date)}))
+        .sort((a, b) => (a.d === null) - (b.d === null) || (a.d || 0) - (b.d || 0));
+      const cnt = document.getElementById('dsxTodoCnt'); if (cnt) cnt.textContent = list.length ? list.length + ' งาน' : '';
+      if (!list.length) { box.innerHTML = '<div class="dsx-none">ไม่มีงานค้าง — เรียบร้อยดี</div>'; return; }
+      box.innerHTML = list.map(t => {
+        const info = (typeof TODO_CATEGORIES !== 'undefined' && (TODO_CATEGORIES[t.category] || TODO_CATEGORIES.other)) || {label: '', color: '#94A3B8'};
+        return `<div class="dsx-td"><button class="dsx-chk" title="ทำเสร็จแล้ว" data-done="${esc(t.id)}"></button>
+          <div class="dsx-td-m"><b title="${esc(t.title)}">${esc(t.title)}</b><div class="dsx-td-s"><i style="--cat:${info.color}"></i>${esc(info.label)}${t.date ? `<span style="opacity:.5">·</span>${esc(t.date)}` : ''}</div></div>
+          ${t.d === null ? '' : pill(t.d)}</div>`;
+      }).join('');
+      box.querySelectorAll('[data-done]').forEach(b => b.onclick = async () => { const p = toggleTodoDone(b.dataset.done); window.renderTodoHomeWidget(); try { await p; } catch (e) {} window.renderTodoHomeWidget(); });
+    };
+  }
+
+  const base = renderDailyBriefing;
+  window.renderDailyBriefing = function(){
+    const r = base.apply(this, arguments);
+    try { layout(); const panel = document.getElementById('briefingPanel'); if (panel) buildAgenda(panel); buildCer(); } catch (e) { console.error('dsx2', e); }
+    return r;
+  };
+  try { layout(); if (typeof todoTasks !== 'undefined') window.renderTodoHomeWidget(); } catch (e) {}
+})();
+</script>
+
 </body>
 </html>
