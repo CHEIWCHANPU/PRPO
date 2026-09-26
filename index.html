@@ -22222,5 +22222,259 @@ body.dark-theme #page-modeltracker.mtx .kpi-total{--k:#CBD5E1}
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
 </script>
+<!-- ═══ DELIVERY STATUS · Executive UI (dsx) ═══ -->
+<style id="dsx-css">
+#briefingPanel.dsx{
+  --dx-red:#DC2626; --dx-amb:#D97706; --dx-blu:#2563EB; --dx-sla:#64748B;
+  --dx-ink:var(--text,#0F172A); --dx-sub:var(--muted,#64748B); --dx-card:var(--surface,#fff); --dx-soft:var(--surface2,#F3F5F9); --dx-line:var(--border,#E3E7EE);
+  background:transparent !important; border:0 !important; box-shadow:none !important; padding:0 !important; overflow:visible !important;
+  font-variant-numeric:tabular-nums;
+}
+body.dark-theme #briefingPanel.dsx{ --dx-red:#F87171; --dx-amb:#FBBF24; --dx-blu:#60A5FA; --dx-sla:#94A3B8; }
+#briefingPanel.dsx > .briefing-head{display:none !important}
+#briefingPanel.dsx > .briefing-body, #briefingPanel.dsx #briefingBody{background:transparent !important;padding:0 !important;border:0 !important}
+
+/* hero */
+.dsx-hero{display:flex;justify-content:space-between;align-items:stretch;gap:1.25rem;flex-wrap:wrap;background:var(--dx-card);border:1px solid var(--dx-line);border-radius:14px;padding:1.2rem 1.35rem;margin-bottom:1rem}
+.dsx-eyebrow{font-size:.68rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--dx-sub)}
+.dsx-hero h1{font-size:1.4rem;font-weight:700;margin:.25rem 0 .2rem;color:var(--dx-ink);letter-spacing:-.01em;line-height:1.25}
+.dsx-hero-sub{font-size:.78rem;color:var(--dx-sub)}
+.dsx-kpis{display:grid;grid-template-columns:repeat(4,minmax(118px,1fr));gap:.6rem;flex:1 1 520px;max-width:720px}
+.dsx-kpi{border:1px solid var(--dx-line);border-radius:10px;padding:.7rem .85rem;background:var(--dx-card);position:relative}
+.dsx-kpi small{display:flex;align-items:center;gap:.4rem;font-size:.64rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dx-sub);white-space:nowrap}
+.dsx-kpi small::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--c)}
+.dsx-kpi b{display:block;font-size:1.75rem;font-weight:700;line-height:1.15;margin-top:.2rem;color:var(--dx-ink);letter-spacing:-.02em}
+.dsx-kpi.hot b{color:var(--c)}
+.dsx-kpi span{font-size:.7rem;color:var(--dx-sub)}
+
+/* section */
+.dsx-sec{background:var(--dx-card);border:1px solid var(--dx-line);border-radius:14px;overflow:hidden;margin-bottom:1rem}
+.dsx-sec-h{display:flex;justify-content:space-between;align-items:flex-end;gap:1rem;flex-wrap:wrap;padding:1.1rem 1.35rem .9rem;border-bottom:1px solid var(--dx-line)}
+.dsx-sec-h h2{margin:.2rem 0 0;font-size:1.1rem;font-weight:700;color:var(--dx-ink)}
+.dsx-sec-h h2 em{font-style:normal;font-weight:600;color:var(--dx-sub);font-size:.85rem;margin-left:.35rem}
+.dsx-tools{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+.dsx-seg{display:inline-flex;background:var(--dx-soft);border:1px solid var(--dx-line);border-radius:9px;padding:2px}
+.dsx-seg button{border:0;background:none;font:inherit;font-size:.74rem;font-weight:600;color:var(--dx-sub);padding:.35rem .75rem;border-radius:7px;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem;white-space:nowrap}
+.dsx-seg button.on{background:var(--dx-card);color:var(--dx-ink);box-shadow:0 1px 2px rgba(15,23,42,.12)}
+.dsx-seg button i{font-style:normal;font-size:.66rem;font-weight:700;color:var(--dx-sub);background:var(--dx-soft);border-radius:999px;padding:0 .4rem;min-width:1.2rem;text-align:center}
+.dsx-seg button.on i{background:color-mix(in srgb,var(--c,var(--dx-blu)) 14%,transparent);color:var(--c,var(--dx-ink))}
+.dsx-seg svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* distribution */
+.dsx-dist{padding:1rem 1.35rem 1.1rem;border-bottom:1px solid var(--dx-line)}
+.dsx-bar{display:flex;height:10px;border-radius:6px;overflow:hidden;background:var(--dx-soft);gap:2px}
+.dsx-bar b{background:var(--c);min-width:4px}
+.dsx-leg{display:flex;gap:1.4rem;flex-wrap:wrap;margin-top:.65rem;font-size:.74rem;color:var(--dx-sub)}
+.dsx-leg span{display:inline-flex;align-items:center;gap:.4rem}
+.dsx-leg span::before{content:"";width:9px;height:9px;border-radius:2px;background:var(--c)}
+.dsx-leg b{color:var(--dx-ink);font-weight:700}
+.dsx-leg .r{margin-left:auto}
+
+/* pills */
+.dsx-pill{display:inline-flex;align-items:center;gap:.3rem;font-size:.68rem;font-weight:700;padding:.18rem .55rem;border-radius:999px;white-space:nowrap;color:var(--c);background:color-mix(in srgb,var(--c) 10%,transparent);border:1px solid color-mix(in srgb,var(--c) 28%,transparent)}
+.dsx-pill::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--c)}
+.dsx-st{font-size:.68rem;font-weight:600;color:var(--dx-sub);white-space:nowrap}
+.dsx-st.warn{color:var(--dx-amb)}
+.dsx-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.72rem;color:var(--dx-sub)}
+.dsx-note{border:1px solid var(--dx-line);background:var(--dx-card);color:var(--dx-sub);border-radius:7px;padding:.2rem .45rem;font-size:.68rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:.3rem}
+.dsx-note:hover,.dsx-note.open{color:var(--dx-blu);border-color:color-mix(in srgb,var(--dx-blu) 40%,var(--dx-line))}
+.dsx-note svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.dsx-note span:empty{display:none}
+.dsx-note span{background:var(--dx-blu);color:#fff;border-radius:999px;padding:0 .35rem;font-size:.6rem}
+
+/* board */
+.dsx-board{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:1rem;padding:1.1rem 1.35rem 1.35rem}
+.dsx-mk{border:1px solid var(--dx-line);border-radius:12px;display:flex;flex-direction:column;min-width:0;background:var(--dx-card)}
+.dsx-mk-h{display:flex;gap:.75rem;align-items:center;padding:.9rem 1rem .75rem}
+.dsx-av{flex:0 0 38px;height:38px;border-radius:10px;display:grid;place-items:center;font-size:.8rem;font-weight:700;color:var(--dx-ink);background:var(--dx-soft);border:1px solid var(--dx-line)}
+.dsx-mk-n{flex:1;min-width:0}
+.dsx-mk-n b{display:block;font-size:.9rem;color:var(--dx-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dsx-mk-n div{font-size:.72rem;color:var(--dx-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:.1rem}
+.dsx-mk-n a{color:var(--dx-blu);text-decoration:none;font-weight:600}
+.dsx-mk-n a:hover{text-decoration:underline}
+.dsx-mk-c{text-align:right}
+.dsx-mk-c b{display:block;font-size:1.35rem;line-height:1;color:var(--dx-ink)}
+.dsx-mk-c small{font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--dx-sub)}
+.dsx-mk .dsx-bar{height:4px;margin:0 1rem .6rem;border-radius:3px}
+.dsx-list{border-top:1px solid var(--dx-line);max-height:calc(3 * 66px + 2px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.dsx-it{display:grid;grid-template-columns:3px 1fr;column-gap:.75rem;min-height:66px;align-items:center;padding:.6rem 1rem .6rem .7rem;border-bottom:1px solid color-mix(in srgb,var(--dx-line) 70%,transparent);cursor:pointer;transition:background .12s}
+.dsx-list:has(.bc-panel.open){max-height:none}
+.dsx-it:hover{background:color-mix(in srgb,var(--dx-blu) 4%,transparent)}
+.dsx-it:last-child{border-bottom:0}
+.dsx-rail{border-radius:3px;background:var(--c);align-self:stretch}
+.dsx-it-s{display:flex;align-items:center;gap:.35rem;font-size:.7rem;color:var(--dx-sub);margin-top:.2rem;white-space:nowrap;overflow:hidden}
+.dsx-it-s .dsx-mono{flex:0 1 auto;overflow:hidden;text-overflow:ellipsis}
+.dsx-it-s .dot{opacity:.5}
+.dsx-it-m{min-width:0}
+.dsx-it-m b{display:block;font-size:.82rem;color:var(--dx-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dsx-it-m .dsx-mono{display:block;margin-top:.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dsx-it-r{display:flex;align-items:center;gap:.4rem}
+.dsx-list .bc-latest,.dsx-tbl .bc-latest{margin:0 !important}
+.dsx-it-x{margin-top:.45rem}
+.dsx-l1,.dsx-l2{display:flex;align-items:center;gap:.5rem;min-width:0}
+.dsx-l1 b{flex:1;min-width:0;font-size:.82rem;color:var(--dx-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dsx-l2{margin-top:.25rem;font-size:.7rem;color:var(--dx-sub);gap:.35rem;white-space:nowrap}
+.dsx-l2 .dsx-mono{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.dsx-l2 .due{flex:0 0 auto}.dsx-l2 .dot{opacity:.5}.dsx-l2 .sp{flex:1}
+.dsx-l2 .dsx-note{padding:.12rem .4rem}
+.dsx-it-x:empty{display:none}
+
+/* table */
+.dsx-tw{overflow-x:auto}
+.dsx-tbl{width:100%;border-collapse:collapse;font-size:.8rem}
+.dsx-tbl th{text-align:left !important;font-size:.64rem !important;font-weight:700 !important;letter-spacing:.1em !important;text-transform:uppercase !important;color:var(--dx-sub) !important;padding:.6rem .9rem !important;border-bottom:1px solid var(--dx-line) !important;background:var(--dx-soft) !important;white-space:nowrap}
+.dsx-tbl td{padding:.62rem .9rem !important;border-bottom:1px solid color-mix(in srgb,var(--dx-line) 70%,transparent);vertical-align:middle;color:var(--dx-ink)}
+.dsx-tbl tr.r{cursor:pointer;transition:background .12s}
+.dsx-tbl tr.r:hover td{background:color-mix(in srgb,var(--dx-blu) 4%,transparent)}
+.dsx-tbl tr.r td:first-child{box-shadow:inset 3px 0 0 var(--c)}
+.dsx-tbl .pn b{display:block;font-weight:700}
+.dsx-tbl .mk{white-space:nowrap}
+.dsx-tbl .mk small{display:block;color:var(--dx-sub);font-size:.7rem}
+.dsx-tbl .mk a{color:var(--dx-blu);text-decoration:none}
+.dsx-tbl tr.bcr:not(:has(.bc-panel.open)){display:none}
+.dsx-tbl tr.bcr td{padding:0 .9rem .8rem !important}
+.dsx-tbl .up{max-width:280px}
+.dsx-tbl .up .bc-latest{max-width:280px}
+.dsx-empty{padding:2.2rem 1rem;text-align:center;color:var(--dx-sub);font-size:.82rem}
+.dsx-mk-more{padding:.5rem 1rem;font-size:.7rem;color:var(--dx-sub);border-top:1px solid var(--dx-line);text-align:center}
+
+/* other briefing categories get matching frame */
+#briefingPanel.dsx .briefing-category:not(.dsx-sec){background:var(--dx-card);border:1px solid var(--dx-line);border-radius:14px;padding:1.1rem 1.35rem;margin-bottom:1rem}
+
+@media (max-width:760px){ .dsx-kpis{grid-template-columns:repeat(2,minmax(0,1fr))} .dsx-board{grid-template-columns:1fr;padding:1rem} .dsx-hero,.dsx-sec-h,.dsx-dist{padding-left:1rem;padding-right:1rem} .dsx-leg .r{margin-left:0} }
+</style>
+<script id="dsx-js">
+(function(){
+  if (typeof renderDailyBriefing !== 'function') return;
+  const KEY = 'ccip_dsx_view';
+  let view = 'board', filt = 'all', rows = [];
+  try { view = localStorage.getItem(KEY) || 'board'; } catch (e) {}
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const BK = [
+    {k:'over',  l:'Overdue',     th:'เลยกำหนด',   c:'var(--dx-red)', t:d => d < 0},
+    {k:'today', l:'Due Today',   th:'ครบกำหนดวันนี้', c:'var(--dx-amb)', t:d => d === 0},
+    {k:'d3',    l:'1–3 Days',    th:'ภายใน 3 วัน',  c:'var(--dx-blu)', t:d => d >= 1 && d <= 3},
+    {k:'d7',    l:'4–7 Days',    th:'ภายใน 7 วัน',  c:'var(--dx-sla)', t:d => d >= 4}
+  ];
+  const bucket = d => BK.find(b => b.t(d)) || BK[3];
+  const dayText = d => d < 0 ? `Overdue ${-d}d` : d === 0 ? 'Due today' : `${d} day${d>1?'s':''} left`;
+  const stText = s => { s = (typeof normalizeStatus === 'function' ? normalizeStatus(s) : s) || ''; if (s.includes('ยังไม่ครบ')) return '<span class="dsx-st warn">ส่งไม่ครบ</span>'; if (s.includes('กำลังดำเนินการ')) return '<span class="dsx-st">กำลังดำเนินการ</span>'; return s ? `<span class="dsx-st">${esc(s)}</span>` : ''; };
+  const initials = n => { const w = String(n).replace(/บริษัท|จำกัด|\(.*?\)|co\.?,?|ltd\.?/gi,'').trim().split(/\s+/).filter(Boolean); if (!w.length) return '—'; return /[A-Za-z0-9]/.test(w[0][0]) ? (w[0][0] + (w[1] ? w[1][0] : (w[0][1]||''))).toUpperCase() : w[0].slice(0,2); };
+  const noteIco = '<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
+  const distBar = list => { const n = list.length || 1; return `<div class="dsx-bar">${BK.map(b => { const c = list.filter(r => b.t(+r.daysLeft)).length; return c ? `<b style="--c:${b.c};flex:${c}" title="${b.th}: ${c}"></b>` : ''; }).join('')}</div>`; };
+  const noteCount = r => { try { return (bcLoad(r.rowIndex) || []).length || ''; } catch (e) { return ''; } };
+
+  function hero(panel){
+    let h = panel.querySelector('.dsx-hero');
+    if (!h) { h = document.createElement('div'); h.className = 'dsx-hero'; panel.insertBefore(h, panel.firstChild); }
+    const v = id => +(document.getElementById(id) || {}).textContent || 0;
+    const o = v('brief-overdue'), t = v('brief-duetoday'), s = v('brief-soon'), a = v('brief-total');
+    const d = new Date();
+    h.innerHTML = `<div><div class="dsx-eyebrow">Daily Briefing · ${d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div>
+        <h1>งานที่ต้องติดตามวันนี้</h1>
+        <div class="dsx-hero-sub">${esc((document.getElementById('briefingDate')||{}).textContent||'')} · รวมทุกหมวด · Maker ล่วงหน้า ${typeof BRIEFING_LEAD_DAYS!=='undefined'?BRIEFING_LEAD_DAYS:7} วัน · แผนงานนอกสถานที่ ${typeof WORKPLAN_BRIEFING_LEAD_DAYS!=='undefined'?WORKPLAN_BRIEFING_LEAD_DAYS:15} วัน</div></div>
+      <div class="dsx-kpis">
+        <div class="dsx-kpi${o?' hot':''}" style="--c:var(--dx-red)"><small>Overdue</small><b>${o}</b><span>เลยกำหนดแล้ว</span></div>
+        <div class="dsx-kpi${t?' hot':''}" style="--c:var(--dx-amb)"><small>Due Today</small><b>${t}</b><span>ครบกำหนดวันนี้</span></div>
+        <div class="dsx-kpi" style="--c:var(--dx-blu)"><small>Upcoming</small><b>${s}</b><span>ใกล้ครบกำหนด</span></div>
+        <div class="dsx-kpi" style="--c:var(--dx-sla)"><small>Total</small><b>${a}</b><span>รวมทุกหมวดหมู่</span></div>
+      </div>`;
+  }
+
+  /* เก็บช่องบันทึก (comment) เดิมไว้ใช้ต่อ ไม่ต้องสร้างใหม่ */
+  function harvest(root){
+    const map = {};
+    root.querySelectorAll('.bc-panel[id^="bcp-"]').forEach(p => { const id = p.id.slice(4); (map[id] = map[id] || {}).panel = p; });
+    root.querySelectorAll('.bc-latest[id^="bcLatest-"]').forEach(p => { const id = p.id.slice(9); (map[id] = map[id] || {}).latest = p; });
+    return map;
+  }
+
+  function itemBoard(r, P){
+    const d = +r.daysLeft, b = bucket(d), n = noteCount(r), st = /ยังไม่ครบ/.test(r.status || '') ? stText(r.status) : '';
+    return `<div class="dsx-it" data-ri="${r.rowIndex}" style="--c:${b.c}"><div class="dsx-rail"></div>
+        <div class="dsx-it-m">
+          <div class="dsx-l1"><b title="${esc(r.partName)}">${esc(r.partName)}</b><span class="dsx-pill">${dayText(d)}</span></div>
+          <div class="dsx-l2"><span class="dsx-mono" title="${esc(r.partNo)}">${esc(r.partNo || '—')}</span><span class="dot">·</span><span class="due">Due ${esc(r.dueDate || '—')}</span>${st}<span class="sp"></span>
+            <button class="dsx-note" id="bcb-${r.rowIndex}" data-note="${r.rowIndex}" title="บันทึก / อัปเดตสถานะ">${noteIco}<span id="bcc-${r.rowIndex}">${n}</span></button></div>
+          <div class="dsx-it-x" data-slot="${r.rowIndex}"></div></div></div>`;
+  }
+
+  function renderBody(sec, P){
+    const body = sec.querySelector('.dsx-body');
+    const list = rows.filter(r => filt === 'all' || bucket(+r.daysLeft).k === filt);
+    if (!list.length) { body.innerHTML = '<div class="dsx-empty">ไม่มีรายการในช่วงที่เลือก</div>'; return; }
+    const sup = {}; (typeof suppliers !== 'undefined' ? suppliers : []).forEach(s => { if (s && s.name) sup[String(s.name).trim()] = s; });
+    if (view === 'board') {
+      const g = {}; list.forEach(r => { const m = r.maker || 'ไม่ระบุ Maker'; (g[m] = g[m] || []).push(r); });
+      const ents = Object.entries(g).sort((a, b) => Math.min(...a[1].map(r => +r.daysLeft)) - Math.min(...b[1].map(r => +r.daysLeft)) || b[1].length - a[1].length);
+      body.innerHTML = `<div class="dsx-board">${ents.map(([m, its]) => {
+        const s = sup[String(m).trim()], worst = bucket(Math.min(...its.map(r => +r.daysLeft)));
+        const contact = s && (s.contact || s.phone) ? `${esc(s.contact || '')}${s.contact && s.phone ? ' · ' : ''}${s.phone ? `<a href="tel:${esc(s.phone)}" onclick="event.stopPropagation()">${esc(s.phone)}</a>` : ''}` : 'ยังไม่มีข้อมูลผู้ติดต่อ';
+        return `<div class="dsx-mk"><div class="dsx-mk-h"><div class="dsx-av" style="box-shadow:inset 0 -3px 0 ${worst.c}">${esc(initials(m))}</div>
+            <div class="dsx-mk-n"><b title="${esc(m)}">${esc(m)}</b><div>${contact}</div></div>
+            <div class="dsx-mk-c"><b>${its.length}</b><small>Parts</small></div></div>
+          ${distBar(its)}
+          <div class="dsx-list">${[...its].sort((a, b) => a.daysLeft - b.daysLeft).map(r => itemBoard(r, P)).join('')}</div></div>`;
+      }).join('')}</div>`;
+    } else {
+      const sorted = [...list].sort((a, b) => a.daysLeft - b.daysLeft || String(a.maker).localeCompare(String(b.maker)));
+      body.innerHTML = `<div class="dsx-tw"><table class="dsx-tbl"><thead><tr><th>Status</th><th>Part</th><th>Maker</th><th>Due Date</th><th>Progress</th><th>Latest Update</th><th></th></tr></thead><tbody>${sorted.map(r => {
+        const d = +r.daysLeft, b = bucket(d), s = sup[String(r.maker || '').trim()], n = noteCount(r);
+        return `<tr class="r" data-ri="${r.rowIndex}" style="--c:${b.c}"><td><span class="dsx-pill">${dayText(d)}</span></td>
+          <td class="pn"><b>${esc(r.partName)}</b><span class="dsx-mono">${esc(r.partNo || '—')}</span></td>
+          <td class="mk">${esc(r.maker || '—')}${s && s.phone ? `<small>${esc(s.contact || '')} · <a href="tel:${esc(s.phone)}" onclick="event.stopPropagation()">${esc(s.phone)}</a></small>` : ''}</td>
+          <td style="white-space:nowrap">${esc(r.dueDate || '—')}</td><td>${stText(r.status)}</td>
+          <td class="up" data-lslot="${r.rowIndex}"></td>
+          <td style="text-align:right"><button class="dsx-note" id="bcb-${r.rowIndex}" data-note="${r.rowIndex}" title="บันทึก / อัปเดตสถานะ">${noteIco}<span id="bcc-${r.rowIndex}">${n}</span></button></td></tr>
+          <tr class="bcr"><td colspan="7" data-slot="${r.rowIndex}"></td></tr>`;
+      }).join('')}</tbody></table></div>`;
+    }
+    // วางช่องบันทึกเดิมกลับเข้าไป
+    body.querySelectorAll('[data-slot]').forEach(slot => { const x = P[slot.dataset.slot]; if (x && x.panel) slot.appendChild(x.panel); });
+    body.querySelectorAll('.dsx-it').forEach(it => { const x = P[it.dataset.ri]; if (x && x.latest) it.querySelector('.dsx-it-x').prepend(x.latest); });
+    body.querySelectorAll('[data-lslot]').forEach(c => { const x = P[c.dataset.lslot]; if (x && x.latest) c.appendChild(x.latest); });
+    body.querySelectorAll('[data-ri]').forEach(el => el.addEventListener('click', e => {
+      if (e.target.closest('a,button,.bc-panel,.bc-latest')) return;
+      const r = rows.find(x => String(x.rowIndex) === el.dataset.ri); if (r && typeof openDetail === 'function') openDetail(r);
+    }));
+    body.querySelectorAll('[data-note]').forEach(bn => bn.addEventListener('click', e => { e.stopPropagation(); bcToggle(isNaN(+bn.dataset.note) ? bn.dataset.note : +bn.dataset.note, e); bn.classList.toggle('open', !!(document.getElementById('bcp-' + bn.dataset.note) || {}).classList?.contains('open')); }));
+  }
+
+  function build(){
+    const panel = document.getElementById('briefingPanel'); if (!panel) return;
+    panel.classList.add('dsx');
+    hero(panel);
+    const grid = panel.querySelector('.briefing-maker-grid');
+    const old = grid && grid.closest('.briefing-category');
+    let sec = panel.querySelector('.dsx-sec');
+    rows = (typeof allData !== 'undefined' ? allData : []).filter(r => !(r.status || '').includes('เสร็จแล้ว') && typeof r.daysLeft === 'number' && r.daysLeft <= (typeof BRIEFING_LEAD_DAYS !== 'undefined' ? BRIEFING_LEAD_DAYS : 7));
+    if (!old) { if (sec && !rows.length) sec.remove(); return; }
+    const P = harvest(old);
+    sec = document.createElement('div'); sec.className = 'briefing-category dsx-sec';
+    const makers = new Set(rows.map(r => r.maker || '—')).size;
+    const cnt = BK.map(b => rows.filter(r => b.t(+r.daysLeft)).length);
+    sec.innerHTML = `<div class="dsx-sec-h"><div><div class="dsx-eyebrow">Delivery Status · Maker Commitments</div><h2>สถานะการจัดส่ง<em>${rows.length} parts · ${makers} makers</em></h2></div>
+        <div class="dsx-tools">
+          <div class="dsx-seg" data-g="f"><button data-f="all">All<i>${rows.length}</i></button>${BK.map((b, i) => `<button data-f="${b.k}" style="--c:${b.c}">${b.l}<i>${cnt[i]}</i></button>`).join('')}</div>
+          <div class="dsx-seg" data-g="v"><button data-v="board" title="มุมมองตาม Maker"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Makers</button><button data-v="table" title="มุมมองตาราง"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>Table</button></div>
+        </div></div>
+      <div class="dsx-dist">${distBar(rows)}<div class="dsx-leg">${BK.map((b, i) => `<span style="--c:${b.c}">${b.th} <b>${cnt[i]}</b></span>`).join('')}<span class="r" style="--c:transparent">On-time risk: <b>${rows.length ? Math.round((cnt[0] + cnt[1]) / rows.length * 100) : 0}%</b> ต้องเร่งติดตามวันนี้</span></div></div>
+      <div class="dsx-body"></div>`;
+    old.replaceWith(sec);
+    const sync = () => {
+      sec.querySelectorAll('[data-f]').forEach(b => b.classList.toggle('on', b.dataset.f === filt));
+      sec.querySelectorAll('[data-v]').forEach(b => b.classList.toggle('on', b.dataset.v === view));
+    };
+    const rerender = () => { const keep = harvest(sec); sync(); renderBody(sec, keep); };
+    sec.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { filt = b.dataset.f; rerender(); });
+    sec.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { view = b.dataset.v; try { localStorage.setItem(KEY, view); } catch (e) {} rerender(); });
+    sync(); renderBody(sec, P);
+  }
+
+  const base = renderDailyBriefing;
+  window.renderDailyBriefing = function(){ const r = base.apply(this, arguments); try { build(); } catch (e) { console.error('dsx', e); } return r; };
+  if (document.getElementById('briefingPanel') && document.querySelector('#briefingPanel .briefing-maker-grid')) { try { build(); } catch (e) {} }
+})();
+</script>
 </body>
 </html>
