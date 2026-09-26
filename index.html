@@ -6037,10 +6037,10 @@ html body .account-pill .account-pill-avatar { width: 36px !important; height: 3
 #briefingPanel .briefing-items.bi-scroll {
   position: relative; overflow-y: auto; overscroll-behavior: contain; padding-right: 4px; margin-right: -4px;
   scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--accent) 35%, transparent) transparent;
-  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
-          mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
+  -webkit-mask: linear-gradient(to bottom, #000 calc(100% - 28px), transparent) !important;
+          mask: linear-gradient(to bottom, #000 calc(100% - 28px), transparent) !important;
 }
-#briefingPanel .briefing-items.bi-scroll.at-end { -webkit-mask-image: none; mask-image: none; }
+#briefingPanel .briefing-items.bi-scroll.at-end { -webkit-mask: none !important; mask: none !important; }
 #briefingPanel .briefing-items.bi-scroll::-webkit-scrollbar { width: 6px; }
 #briefingPanel .briefing-items.bi-scroll::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--accent) 35%, transparent); border-radius: 99px; }
 #briefingPanel .briefing-items.bi-scroll::-webkit-scrollbar-track { background: transparent; }
@@ -6065,6 +6065,66 @@ html body .notif-item:hover .notif-icon { color: var(--text) !important; }
 #adminPinTitle ~ * .ccip-ico, html body .ccip-ico[width="26"] { color: var(--accent); }
 html body .notif-panel { background: var(--surface) !important; }
 .mnl-folder-btn { display: inline-flex; align-items: center; gap: .4rem; }
+
+/* ════════ ป๊อปอัประหว่างอัปโหลดเข้า Google Drive ════════ */
+.ug-overlay { position: fixed; inset: 0; z-index: 9000; display: grid; place-items: center; padding: 1rem; background: rgba(6, 12, 24, .55); backdrop-filter: blur(3px) !important; -webkit-backdrop-filter: blur(3px) !important; cursor: progress; }
+.ug-box { width: min(380px, 100%); text-align: center; padding: 1.6rem 1.5rem 1.3rem; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); box-shadow: 0 30px 70px -25px rgba(6,12,24,.6) !important; }
+.ug-ring { width: 58px; height: 58px; margin: 0 auto .9rem; border-radius: 50%; display: grid; place-items: center; color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--surface)); position: relative; }
+.ug-ring::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--accent); animation: gxSpin .9s linear infinite !important; animation-duration: .9s !important; animation-iteration-count: infinite !important; }
+.ug-ring svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.ug-box h3 { margin: 0 0 .35rem; font-size: 1.02rem; font-weight: 700; color: var(--text); }
+.ug-file { margin: 0; font-size: .88rem; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ug-meta { margin: .2rem 0 .9rem; font-size: .76rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ug-bar { height: 5px; border-radius: 99px; background: var(--surface2); overflow: hidden; position: relative; margin-bottom: .8rem; }
+.ug-bar i { position: absolute; top: 0; bottom: 0; width: 38%; border-radius: 99px; background: linear-gradient(90deg, var(--accent), var(--live)); animation: ccipRailScan 1.2s cubic-bezier(.45,0,.25,1) infinite !important; animation-duration: 1.2s !important; animation-iteration-count: infinite !important; }
+.ug-box small { font-size: .74rem; color: var(--muted); }
+
+/* ════════ แถบบน (Topbar) แบบองค์กร ════════ */
+html body .topbar { height: 64px !important; min-height: 64px !important; padding: 0 1.25rem !important; gap: 1rem !important; }
+html body .topbar .topbar-left { gap: .75rem !important; min-width: 0; }
+html body .topbar .topbar-title { font-size: 1.12rem !important; font-weight: 600 !important; white-space: nowrap; }
+html body .topbar .topbar-divider { display: none !important; }
+html body .topbar .topbar-right { display: flex !important; align-items: center !important; gap: .6rem !important; }
+.tb-status { display: flex; align-items: center; gap: .5rem; }
+.tb-tools { display: flex; align-items: center; gap: 2px; height: 40px; padding: 0 3px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); }
+.tb-sep { width: 1px; height: 20px; margin: 0 3px; background: var(--border); flex-shrink: 0; }
+/* ปุ่มไอคอนในกลุ่มเครื่องมือ: ขนาดเท่ากันทุกตัว */
+html body .tb-tools .icon-action, html body .tb-tools .mute-pill, html body .tb-tools .theme-pill {
+  width: 34px !important; height: 34px !important; min-width: 34px; padding: 0 !important; margin: 0 !important;
+  display: grid !important; place-items: center; border-radius: 9px !important; border: 0 !important; background: transparent !important;
+  color: var(--muted) !important; cursor: pointer; box-shadow: none !important; transition: background-color .15s ease, color .15s ease !important;
+}
+html body .tb-tools .icon-action:hover, html body .tb-tools .mute-pill:hover, html body .tb-tools .theme-pill:hover { background: var(--surface2) !important; color: var(--text) !important; }
+html body .tb-tools svg { width: 18px !important; height: 18px !important; }
+html body .tb-tools .notif-wrap { position: relative; display: grid; }
+html body .tb-tools .notif-dot { top: 6px !important; right: 6px !important; width: 7px !important; height: 7px !important; border: 2px solid var(--surface) !important; box-sizing: content-box; }
+/* popup แจ้งเตือน: ไอคอนอย่างเดียว ขีดฆ่าเมื่อปิด */
+html body .tb-tools .mute-pill #muteBellLabel { display: none !important; }
+html body .tb-tools .mute-pill { position: relative; }
+html body .topbar .tb-tools #toastMuteBtn, html body .topbar .tb-tools #toastMuteBtn:hover { background: transparent !important; }
+html body .topbar .tb-tools #toastMuteBtn:hover { background: var(--surface2) !important; }
+html body .topbar .tb-tools #toastMuteBtn.is-off { color: var(--muted) !important; }
+html body .topbar .tb-tools #toastMuteBtn:not(.is-off) { color: var(--accent) !important; }
+/* ภาษา: ตัวอักษรย่อในกล่องเท่ากัน */
+html body .tb-tools #langToggle { font: 700 .72rem/1 var(--font) !important; letter-spacing: .04em; }
+/* ธีม: ไอคอนพระอาทิตย์/พระจันทร์แทนข้อความ (ต้องใส่ !important ชนะกฎปิด mask ของโหมดประหยัดเครื่อง) */
+html body .tb-tools #themeToggle { font-size: 0 !important; color: transparent !important; position: relative; }
+html body .tb-tools #themeToggle::before {
+  content: ''; position: absolute; inset: 0; margin: auto; width: 18px; height: 18px; background: var(--muted);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Cpath d='M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4'/%3E%3C/svg%3E") center / contain no-repeat !important; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Cpath d='M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4'/%3E%3C/svg%3E") center / contain no-repeat !important;
+}
+html body.dark-theme .tb-tools #themeToggle::before {
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z'/%3E%3C/svg%3E") center / contain no-repeat !important; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z'/%3E%3C/svg%3E") center / contain no-repeat !important;
+}
+html body .tb-tools #themeToggle:hover::before { background: var(--text); }
+/* กลุ่มสถานะ: วันที่ · ค้นหา · Sync สูงเท่ากัน */
+html body .tb-status .topbar-chip { height: 40px !important; display: flex !important; align-items: center; gap: .45rem; padding: 0 .85rem !important; border-radius: 12px !important; border: 1px solid var(--border) !important; background: var(--surface) !important; font-size: .78rem !important; color: var(--muted) !important; white-space: nowrap; }
+html body .tb-status .topbar-chip .chip-time { color: var(--text) !important; font-weight: 600; font-variant-numeric: tabular-nums; }
+html body .tb-status .gx-palette-hint { height: 40px !important; border-radius: 12px !important; background: var(--surface) !important; padding: 0 .6rem 0 .75rem !important; }
+html body .tb-status .sync-pill { height: 40px !important; border-radius: 12px !important; }
+html body .topbar .account-pill { height: 44px !important; border-radius: 14px !important; padding: 0 .6rem 0 .35rem !important; }
+@media (max-width: 1400px) { html body .tb-status .topbar-chip { display: none !important; } }
+@media (max-width: 1100px) { html body .tb-tools #pwaInstallTopbarBtn, html body .tb-tools #fullscreenBtn { display: none !important; } }
 </style>
 </head>
 <body class="light-theme">
@@ -13575,7 +13635,7 @@ async function saveManual() {
  closeManualModal();
  manuals.unshift(mapManualRow(json.data || {
  'ID': json.id, 'ชื่อคู่มือ': title, 'หมวดหมู่': category, 'รายละเอียด': description,
- 'ชื่อไฟล์': body.fileName, 'ลิงก์ไฟล์': json.url || '', 'สถานะ': 'ใช้งาน'
+ 'ชื่อไฟล์': body.fileName, 'ลิงก์ไฟล์': json.fileUrl || json.url || '', 'สถานะ': 'ใช้งาน'
  }));
  renderManuals();
  addHistoryLog('add', title, category, 'คู่มือการทำงาน: เพิ่มคู่มือใหม่');
@@ -21007,6 +21067,113 @@ function endTour() {
       toast(/unknown|ยังไม่ได้อัปเดต/i.test(e.message) ? 'ต้องอัปเดตไฟล์ 14_MANUALS.gs และ CCIP_Extension.gs ใน Apps Script ก่อน' : 'เปิดโฟลเดอร์ไม่สำเร็จ: ' + e.message, 'error');
     } finally { if (btn) setBusy(btn, false); }
   };
+
+  /* ══════════════════════ อัปโหลดเข้า Google Drive: ป๊อปอัปสถานะ + กันอัปโหลดซ้ำ (ทุกระบบ) ══════════════════════
+     - ระหว่างส่งไฟล์ แสดงหน้าต่าง "กำลังอัปโหลด" บังทั้งจอ → กดปุ่มซ้ำไม่ได้
+     - คำขอเดียวกันที่ยังส่งอยู่ → ใช้ผลเดียวกัน, ไฟล์เดิมที่เพิ่งอัปโหลดสำเร็จภายใน 2 นาที → ไม่อัปโหลดซ้ำ */
+  const UploadGuard = (() => {
+    const LABEL = { addManual: 'คู่มือการทำงาน (PDF)', uploadFile: 'ไฟล์แนบ PR/PO', uploadMeetingImage: 'รูป Summary Meeting' };
+    const SHOW_OVERLAY = { addManual: true, uploadFile: true };      // รูป Meeting มีแถบความคืบหน้าในหน้าต่างของตัวเองอยู่แล้ว
+    const inflight = new Map(), recent = new Map();
+    let el = null, timer = null, t0 = 0;
+    const kb = n => n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
+    function show(meta) {
+      hide();
+      el = document.createElement('div');
+      el.className = 'ug-overlay'; el.setAttribute('role', 'alertdialog'); el.setAttribute('aria-live', 'assertive');
+      el.innerHTML = `<div class="ug-box">
+          <div class="ug-ring"><svg viewBox="0 0 24 24"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 20h16"/></svg></div>
+          <h3>กำลังอัปโหลดเข้า Google Drive</h3>
+          <p class="ug-file">${esc(meta.name || 'ไฟล์')}</p>
+          <p class="ug-meta">${esc(LABEL[meta.action] || 'ไฟล์')}${meta.size ? ' · ' + kb(meta.size) : ''} · <span id="ugTime">0 วินาที</span></p>
+          <div class="ug-bar"><i></i></div>
+          <small>กรุณารอสักครู่ อย่าปิดหน้านี้หรือกดอัปโหลดซ้ำ</small>
+        </div>`;
+      document.body.appendChild(el);
+      t0 = Date.now();
+      timer = setInterval(() => { const s = Math.round((Date.now() - t0) / 1000); const x = document.getElementById('ugTime'); if (x) x.textContent = s + ' วินาที'; }, 500);
+    }
+    function hide() { clearInterval(timer); if (el) { el.remove(); el = null; } }
+    function metaOf(body) {
+      try {
+        const o = JSON.parse(body);
+        if (!LABEL[o.action] || !o.base64) return null;
+        const name = o.fileName || o.name || o.title || '';
+        return { action: o.action, name, size: Math.round(o.base64.length * 0.75), key: [o.action, o.id || '', name, o.base64.length, o.base64.slice(0, 64), o.base64.slice(-64)].join('|') };
+      } catch (e) { return null; }
+    }
+    const prevFetch = window.fetch;
+    window.fetch = function (input, init) {
+      const u = typeof input === 'string' ? input : (input && input.url) || '';
+      const isPost = init && String(init.method || '').toUpperCase() === 'POST' && typeof init.body === 'string';
+      const meta = isPost && /script\.google/.test(u) ? metaOf(init.body) : null;
+      if (!meta) return prevFetch.apply(this, arguments);
+      const done = recent.get(meta.key);
+      if (done && Date.now() - done.t < 120000) {
+        toast('ไฟล์นี้เพิ่งอัปโหลดสำเร็จไปแล้ว — ไม่อัปโหลดซ้ำ', 'info');
+        return Promise.resolve(new Response(done.text, { status: 200, headers: { 'Content-Type': 'application/json' } }));
+      }
+      if (inflight.has(meta.key)) {
+        toast('กำลังอัปโหลดไฟล์นี้อยู่ — รอสักครู่', 'info');
+        return inflight.get(meta.key).then(t => new Response(t, { status: 200, headers: { 'Content-Type': 'application/json' } }));
+      }
+      if (SHOW_OVERLAY[meta.action]) show(meta);
+      const p = prevFetch.apply(this, arguments).then(r => r.text()).then(text => {
+        try { if (JSON.parse(text).success) recent.set(meta.key, { t: Date.now(), text }); } catch (e) {}
+        return text;
+      });
+      inflight.set(meta.key, p);
+      p.finally(() => { inflight.delete(meta.key); if (SHOW_OVERLAY[meta.action]) hide(); }).catch(() => {});
+      return p.then(t => new Response(t, { status: 200, headers: { 'Content-Type': 'application/json' } }));
+    };
+    return { show, hide };
+  })();
+  // ปุ่มบันทึกคู่มือ: กดซ้ำระหว่างรอผล → ไม่ทำงานซ้ำ
+  if (typeof window.saveManual === 'function') {
+    const origSaveManual = window.saveManual; let mnlSaving = false;
+    window.saveManual = async function () {
+      if (mnlSaving) { toast('กำลังบันทึกอยู่ — รอสักครู่', 'info'); return; }
+      mnlSaving = true;
+      try { return await origSaveManual.apply(this, arguments); } finally { mnlSaving = false; }
+    };
+  }
+  window.CCIPUploadGuard = UploadGuard;
+
+  /* ══════════════════════ แถบบน: จัดกลุ่มปุ่มให้เป็นระเบียบ ══════════════════════ */
+  const tbBoot = () => {
+    const right = document.querySelector('.topbar .topbar-right');
+    if (!right || right.querySelector('.tb-tools')) return;
+    // ลบเส้นคั่นเดิมที่ใส่ไว้แบบ inline
+    [...right.children].forEach(c => { if (c.tagName === 'DIV' && !c.className && /width:\s*1px/.test(c.getAttribute('style') || '')) c.remove(); });
+    const tools = document.createElement('div');
+    tools.className = 'tb-tools'; tools.setAttribute('role', 'toolbar'); tools.setAttribute('aria-label', 'เครื่องมือ');
+    const pick = sel => right.querySelector(sel);
+    const groups = [
+      ['.notif-wrap', '#toastMuteBtn'],
+      ['#fullscreenBtn', '#pwaInstallTopbarBtn'],
+      ['.accent-popover-wrap', '#langToggle', '#themeToggle']
+    ];
+    groups.forEach((g, gi) => {
+      if (gi) { const sep = document.createElement('span'); sep.className = 'tb-sep'; tools.appendChild(sep); }
+      g.forEach(sel => { const el = pick(sel); if (el) tools.appendChild(el); });
+    });
+    const acct = right.querySelector('.account-popover-wrap');
+    right.insertBefore(tools, acct || null);
+    const status = document.createElement('div');
+    status.className = 'tb-status';
+    ['#currentDateChip', '.gx-palette-hint', '.sync-pill'].forEach(sel => { const el = pick(sel); if (el) status.appendChild(el); });
+    right.insertBefore(status, tools);
+    // ปุ่ม popup: แสดงเป็นไอคอน + บอกสถานะใน tooltip
+    const mute = document.getElementById('toastMuteBtn'), lbl = document.getElementById('muteBellLabel');
+    const syncMute = () => { if (!mute || !lbl) return; const off = /ปิด|off/i.test(lbl.textContent); mute.classList.toggle('is-off', off); mute.title = off ? 'ป๊อปอัปแจ้งเตือน: ปิดอยู่ (กดเพื่อเปิด)' : 'ป๊อปอัปแจ้งเตือน: เปิดอยู่ (กดเพื่อปิด)'; mute.setAttribute('aria-pressed', String(!off)); };
+    if (lbl) new MutationObserver(syncMute).observe(lbl, { childList: true, characterData: true, subtree: true });
+    syncMute();
+    const th = document.getElementById('themeToggle'); if (th) { th.title = 'สลับโหมดสว่าง / มืด'; th.setAttribute('aria-label', 'สลับโหมดสว่าง / มืด'); }
+    const lg = document.getElementById('langToggle'); if (lg) lg.setAttribute('aria-label', 'เปลี่ยนภาษา');
+    ['#notifBell', '#fullscreenBtn', '#pwaInstallTopbarBtn', '#accentBtn'].forEach(sel => { const b = document.querySelector(sel); if (b) { b.setAttribute('role', 'button'); b.setAttribute('tabindex', '0'); if (!b.getAttribute('aria-label')) b.setAttribute('aria-label', b.title || 'การแจ้งเตือน'); b.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); b.click(); } }); } });
+    const bell = document.getElementById('notifBell'); if (bell && !bell.title) bell.title = 'การแจ้งเตือน';
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', tbBoot); else tbBoot();
 
   /* ══════════════════════ COMMAND PALETTE เดิม (Ctrl/⌘ + K) — เพิ่มหน้าใหม่และค้นข้อมูล GO WORK / Meeting ══════════════════════ */
   try {
