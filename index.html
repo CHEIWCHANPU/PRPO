@@ -5974,6 +5974,8 @@ html body .account-pill .account-pill-avatar > .pf-av-img, html body .account-po
 .us-pend-row:first-of-type { border-top: 0; }
 .us-pend-row > div { flex: 1; display: grid; gap: .1rem; min-width: 0; }
 .us-pend-row small { font-size: .74rem; color: var(--muted); }
+/* Edge ใส่ปุ่มดูรหัสผ่านของตัวเองซ้อนกับปุ่มของระบบ → ซ่อนปุ่มของเบราว์เซอร์ */
+#wlPassword::-ms-reveal, #wlPassword::-ms-clear { display: none !important; width: 0; height: 0; }
 </style>
 </head>
 <body class="light-theme">
