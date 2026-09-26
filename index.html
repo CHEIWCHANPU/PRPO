@@ -22660,7 +22660,7 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
 
 /* ── แผ่นฟอร์ม E-Form (พื้นขาวเสมอ) ── */
 #pcSheet{--ln:#3A3F47;--lb:#F2F4F7;--hd:#1F3A5F;--cu:#DCE9F6;--mk:#E6E0F0;--mv:#FDF0E6;--bs:#E3EFDB;--cp:#FBE3D3;
-  width:1076px;min-height:740px;margin:0 auto;background:#fff;color:#111827;padding:14px 16px 12px;box-shadow:0 1px 3px rgba(0,0,0,.12),0 8px 24px rgba(0,0,0,.08);font-family:'Sarabun','Tahoma',sans-serif;font-size:12px;line-height:1.25}
+  width:1076px;min-height:752px;display:flex;flex-direction:column;margin:0 auto;background:#fff;color:#111827;padding:14px 16px 12px;box-shadow:0 1px 3px rgba(0,0,0,.12),0 8px 24px rgba(0,0,0,.08);font-family:'Sarabun','Tahoma',sans-serif;font-size:12px;line-height:1.25}
 #pcSheet *{box-sizing:border-box}
 #pcSheet table{border-collapse:collapse;width:100%;table-layout:fixed}
 #pcSheet tr{background:transparent !important}
@@ -22689,7 +22689,9 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
 #pcSheet .pcs-hd table{width:250px;border-left:1px solid var(--ln)}
 #pcSheet .pcs-hd td{border-top:0;border-right:0}
 #pcSheet .pcs-hd tr:last-child td{border-bottom:0}
-.pcs-grid{display:grid;grid-template-columns:1fr 330px;gap:10px;margin-top:6px}
+.pcs-grid{display:grid;grid-template-columns:1fr 330px;gap:10px;margin-top:6px;flex:1}
+.pcs-note{flex:1;min-height:70px}
+.pcs-imgs{display:flex;flex-direction:column}
 .pcs-row{display:flex;align-items:stretch}
 .pcs-vbox{flex:0 0 30px;border:1px solid var(--ln);border-right:0;display:flex;align-items:center;justify-content:center;background:var(--hd)}
 .pcs-vbox svg{display:block}
@@ -22698,8 +22700,8 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
 .pcs-chk i{width:13px;height:13px;border:1px solid var(--ln);display:inline-flex;align-items:center;justify-content:center;font-style:normal;font-size:11px;line-height:1;background:#fff}
 .pcs-cap{border:1px solid var(--ln);border-bottom:0;background:var(--lb);font-weight:700;font-size:11px;padding:4px 8px;display:flex;justify-content:space-between}
 .pcs-cap span{font-weight:600;color:#6B7280}
-.pcs-img{position:relative;border:1px solid var(--ln);height:170px;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;color:#9CA3AF;font-size:11.5px;outline:0;background:#fff}
-.pcs-img.sm{height:148px}
+.pcs-img{position:relative;border:1px solid var(--ln);flex:1;min-height:120px;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;color:#9CA3AF;font-size:11.5px;outline:0;background:#fff}
+.pcs-img.sm{min-height:110px}
 .pcs-img img{position:absolute;inset:3px;width:calc(100% - 6px);height:calc(100% - 6px);object-fit:contain}
 .pcs-hint{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;padding:0 12px;pointer-events:none}
 .pcs-hint b{color:#4B5563}
@@ -22732,7 +22734,7 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
 #pcSheet.pdf input:hover,#pcSheet.pdf input:focus{background:transparent;box-shadow:none}
 #pcSheet.pdf .pcs-add,#pcSheet.pdf .pcs-rm{display:none !important}
 #pcSheet.pdf .pcs-rmk-b:empty::before{content:''}
-#pcSheet.pdf{box-shadow:none;min-height:0}
+#pcSheet.pdf{box-shadow:none;padding:4px 5px;min-height:748px}
 @media print{
   body *{visibility:hidden !important}
   #pcSheet,#pcSheet *{visibility:visible !important}
@@ -22763,12 +22765,12 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
     partName:'', partNo:'', rev:'', model:'', volume:'', years:'',
     trial:[{date:'',pcs:''},{date:'',pcs:''},{date:'',pcs:''}],
     custCode:'TYM', custPrice:'', makers:[{name:'', price:''}], remark:'',
-    base:{partName:'', volume:'', years:'', maker:'', customer:'', plant:'CCIS', model:'', price:''},
+    base:{partName:'', volume:'', years:'', maker:'', customer:'', plant:'CCIS', model:'', price:'', makerPrice:'', custPrice:''},
     newStart:'', newFinish:'', remake:'', docNo:'', signPrep:'', signChk:'', signApp:'', images:{}
   });
   const load = () => { try { const d = JSON.parse(localStorage.getItem(DKEY) || ''); if (d && typeof d === 'object') return d; } catch (e) {} return blank(); };
   const norm = d => { const b = blank(); d = Object.assign(b, d || {}); d.base = Object.assign(blank().base, d.base || {}); d.images = d.images || {};
-    while (d.trial.length < 3) d.trial.push({date:'', pcs:''}); d.makers = (d.makers || []).filter((m, i) => i === 0 || m.name || m.price); if (!d.makers.length) d.makers.push({name:'', price:''}); d.remark = d.remark || ''; return d; };
+    while (d.trial.length < 3) d.trial.push({date:'', pcs:''}); d.makers = (d.makers || []).filter((m, i) => i === 0 || m.name || m.price); if (!d.makers.length) d.makers.push({name:'', price:''}); d.remark = d.remark || ''; try { if (d.signPrep && d.signPrep === localStorage.getItem('prpo_username')) d.signPrep = ''; } catch (e) {} return d; };
 
   const PC = {
     d: norm(load()),
@@ -22779,7 +22781,6 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
 
     render(){
       const page = $('#page-pcmp'), d = this.d;
-      if (!d.signPrep) { try { d.signPrep = localStorage.getItem('prpo_username') || ''; } catch (e) {} }
       const F = (k, cls, st) => `<input data-k="${k}" value="${esc(this.get(k))}"${cls ? ` class="${cls}"` : ''}${st ? ` style="${st}"` : ''} autocomplete="off">`;
       const U = (k, unit, st) => `<div style="display:flex;align-items:center">${F(k, '', 'text-align:right' + (st || ''))}<span style="white-space:nowrap">&nbsp;${unit}</span></div>`;
       page.innerHTML = `
@@ -22792,7 +22793,7 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
             <table><tr><td class="lb" style="width:84px">DOC NO.</td><td>${F('docNo','c')}</td></tr><tr><td class="lb">DATE</td><td><input data-k="docDate" class="c" value="${esc(d.docDate || today())}" title="ใส่วันที่วันนี้ให้อัตโนมัติ — แก้ไขได้"></td></tr></table></div>
           <table><colgroup><col style="width:124px"><col><col style="width:70px"><col><col style="width:82px"><col></colgroup>
             <tr><td class="lb">TYPE OF WORK</td><td>${F('typeOfWork')}</td><td class="lb">SPEC</td><td>${F('spec')}</td><td class="lb">PLATING</td><td>${F('plating')}</td></tr>
-            <tr><td class="lb">PLANT MASS PRO.</td><td colspan="5">${['CCI','CCIS','CNN'].map(p => `<span class="pcs-chk" data-p="${p}"><i>${d.plant === p ? '✓' : ''}</i>${p}</span>`).join('')}</td></tr></table>
+            <tr><td class="lb">PLANT MASS PRO.</td><td colspan="5">${['CCI','CCIS','CCIR','CNN'].map(p => `<span class="pcs-chk" data-p="${p}"><i>${d.plant === p ? '✓' : ''}</i>${p}</span>`).join('')}</td></tr></table>
           <div class="pcs-grid"><div style="display:flex;flex-direction:column">
             <div class="pcs-row"><div class="pcs-vbox"><svg width="22" height="100" viewBox="0 0 22 100"><text x="-50" y="16" transform="rotate(-90)" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" letter-spacing="3" fill="#fff">MAKER</text></svg></div>
               <table style="flex:1"><colgroup><col style="width:96px"><col><col style="width:44px"><col style="width:52px"><col style="width:92px"><col style="width:84px"></colgroup>
@@ -22803,18 +22804,19 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
             <div style="display:flex;gap:10px;margin-top:10px;align-items:stretch">
             <div style="flex:0 0 398px"><table><colgroup><col style="width:128px"><col><col style="width:24px"><col style="width:112px"></colgroup>
               <tr><td class="lb cu">ราคาที่เสนอลูกค้า</td><td class="cu">${F('custCode','c')}</td><td class="c cu">=</td><td class="r cu"><div class="u">${F('custPrice')}<span>THB</span></div></td></tr>
-              ${d.makers.map((m, i) => `<tr class="pcs-mk" data-mi="${i}"><td class="lb mk">${i ? '' : 'ราคาของ MAKER'}</td><td class="mv" style="position:relative">${F('makers.' + i + '.name')}${i ? `<button class="pcs-rm" data-rm="${i}" title="ลบแถวนี้">×</button>` : ''}</td><td class="c mv">=</td><td class="r mv"><div class="u">${F('makers.' + i + '.price')}<span>THB</span></div></td></tr>`).join('')}
+              ${d.makers.map((m, i) => `<tr class="pcs-mk" data-mi="${i}"><td class="lb mk">${i ? '' : 'ราคาของ MAKER'}</td><td class="mv" style="position:relative">${F('makers.' + i + '.name', 'c')}${i ? `<button class="pcs-rm" data-rm="${i}" title="ลบแถวนี้">×</button>` : ''}</td><td class="c mv">=</td><td class="r mv"><div class="u">${F('makers.' + i + '.price')}<span>THB</span></div></td></tr>`).join('')}
             </table>${d.makers.length < MROWS ? '<button class="pcs-add" id="pcsAddMk">+ เพิ่ม MAKER</button>' : ''}</div>
             <div class="pcs-rmk"><div class="pcs-cap">REMARK<span>หมายเหตุ</span></div><div class="pcs-rmk-b" id="pcsRemark" contenteditable="true" spellcheck="false">${esc(d.remark).replace(/\n/g, '<br>')}</div></div>
             </div>
-            <div class="pcs-row" style="margin-top:auto;padding-top:10px"><div class="pcs-bbox"><div>รายละเอียดของ</div><div>ชิ้นงานที่ใกล้เคียง</div><div>(BASE)</div></div>
+            <div class="pcs-note" title="พื้นที่ว่างสำหรับเขียนสรุป / Note หลังพิมพ์"></div>
+            <div class="pcs-row"><div class="pcs-bbox"><div>รายละเอียดของ</div><div>ชิ้นงานที่ใกล้เคียง</div><div>(BASE)</div></div>
               <table style="flex:1"><colgroup><col style="width:112px"><col><col style="width:80px"><col style="width:92px"><col style="width:82px"><col style="width:126px"></colgroup>
                 <tr><td class="lb bs">PART NAME / NO.</td><td colspan="5">${F('base.partName')}</td></tr>
                 <tr><td class="lb bs">VOLUME</td><td class="r"><div class="u">${F('base.volume')}<span>PCS</span></div></td><td class="r"><div class="u">${F('base.years')}<span>YEAR</span></div></td><th class="bs">MAKER</th><th class="bs">CUSTOMER</th><th class="bs">MASS PROD. PLANT</th></tr>
                 <tr><td class="lb bs">MODEL</td><td colspan="2">${F('base.model')}</td><td>${F('base.maker','c')}</td><td>${F('base.customer','c')}</td><td>${F('base.plant','c','font-weight:700')}</td></tr>
-                <tr><td class="lb bs">PRICE</td><td class="r"><div class="u">${F('base.price')}<span>THB</span></div></td><td style="background:#FAFAFA"></td><td style="background:#FAFAFA"></td><td style="background:#FAFAFA"></td><td style="background:#FAFAFA"></td></tr>
+                <tr><td class="lb bs">PRICE</td><td class="r"><div class="u">${F('base.price')}<span>THB</span></div></td><td style="background:#FAFAFA"></td><td class="r"><div class="u">${F('base.makerPrice')}<span>THB</span></div></td><td class="r"><div class="u">${F('base.custPrice')}<span>THB</span></div></td><td style="background:#FAFAFA"></td></tr>
               </table></div>
-          </div><div>
+          </div><div class="pcs-imgs">
             <div class="pcs-cap">รูปงานใหม่<span>NEW PART</span></div>${this.imgBox('new', '')}
             <div class="pcs-cap" style="margin-top:8px">รูปงานใกล้เคียง<span>SIMILAR PART (BASE)</span></div>${this.imgBox('base', 'sm')}
           </div></div>
@@ -22967,7 +22969,7 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
     },
     async pdf(){
       const btn = $('#pcPdf'), sheet = $('#pcSheet'); if (!sheet) return;
-      const name = ('สรุปราคา MAKER ก่อน GO WORK ' + (this.d.partNo || this.d.partName || '')).trim().replace(/[\\/:*?"<>|]/g, '-') + '.pdf';
+      const name = ('สรุปราคาก่อนGO ' + [this.d.partName, this.d.partNo].map(x => String(x || '').trim()).filter(Boolean).join(' , ')).trim().replace(/[\\/:*?"<>|]/g, '-') + '.pdf';
       btn.disabled = true; btn.lastChild.textContent = 'กำลังสร้าง PDF...';
       if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
       const st = sheet.querySelector('[data-k2="newStart"]'), stOld = st && st.value;
@@ -22977,9 +22979,18 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
       try {
         undoRmk = this.remarkToImg();
         const h2p = await this.lib();
-        await h2p().set({ margin:[6, 6, 6, 6], filename:name, image:{type:'jpeg', quality:0.97},
-          html2canvas:{scale:2, backgroundColor:'#ffffff', useCORS:true, logging:false, scrollX:0, scrollY:0},
-          jsPDF:{unit:'mm', format:'a4', orientation:'landscape'}, pagebreak:{mode:['avoid-all']} }).from(sheet).save();
+        const worker = h2p().set({ margin:0, image:{type:'jpeg', quality:0.97},
+          html2canvas:{scale:2.2, backgroundColor:'#ffffff', useCORS:true, logging:false, scrollX:0, scrollY:0},
+          jsPDF:{unit:'mm', format:'a4', orientation:'landscape'} }).from(sheet);
+        const canvas = await worker.toCanvas().get('canvas');
+        const doc = await worker.toPdf().get('pdf');
+        for (let n = doc.internal.getNumberOfPages(); n > 0; n--) doc.deletePage(n);   // วาดใหม่เป็นหน้าเดียวพอดี A4
+        doc.addPage('a4', 'landscape');
+        const PW = 297, PH = 210, M = 4;                                   // ขอบกระดาษ 4 มม.
+        const k = Math.min((PW - 2 * M) / canvas.width, (PH - 2 * M) / canvas.height);
+        const w = canvas.width * k, h = canvas.height * k;
+        doc.addImage(canvas.toDataURL('image/jpeg', 0.97), 'JPEG', (PW - w) / 2, (PH - h) / 2, w, h);
+        doc.save(name);
         toast('ดาวน์โหลด PDF แล้ว', 'success');
       } catch (e) {
         toast('สร้างไฟล์ PDF โดยตรงไม่ได้ — เปิดหน้าต่างพิมพ์แทน ให้เลือก "Save as PDF"', 'info');
@@ -23019,6 +23030,9 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install); else install();
 })();
 </script>
+
+
+
 
 
 
