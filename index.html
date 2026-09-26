@@ -6032,6 +6032,26 @@ html body .account-popover.pf-pop {
 .pf-count { min-width: 20px; height: 20px; padding: 0 .35rem; display: grid; place-items: center; border-radius: 99px; background: var(--danger); color: #fff; font-size: .7rem; font-weight: 700; }
 /* ปุ่มบัญชีบนแถบบน: รูปใหญ่ขึ้นเล็กน้อย */
 html body .account-pill .account-pill-avatar { width: 36px !important; height: 36px !important; box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--border) !important; }
+
+/* ════════ หน้าหลัก: การ์ด Maker เลื่อนดูรายการ ════════ */
+#briefingPanel .briefing-items.bi-scroll {
+  position: relative; overflow-y: auto; overscroll-behavior: contain; padding-right: 4px; margin-right: -4px;
+  scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--accent) 35%, transparent) transparent;
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
+          mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
+}
+#briefingPanel .briefing-items.bi-scroll.at-end { -webkit-mask-image: none; mask-image: none; }
+#briefingPanel .briefing-items.bi-scroll::-webkit-scrollbar { width: 6px; }
+#briefingPanel .briefing-items.bi-scroll::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--accent) 35%, transparent); border-radius: 99px; }
+#briefingPanel .briefing-items.bi-scroll::-webkit-scrollbar-track { background: transparent; }
+#briefingPanel .bi-more {
+  display: flex; align-items: center; justify-content: center; gap: .3rem; width: 100%; margin-top: .45rem; height: 28px;
+  border: 1px dashed color-mix(in srgb, var(--accent) 40%, var(--border)); border-radius: 8px; background: transparent;
+  color: var(--accent); font: inherit; font-size: .74rem; font-weight: 600; cursor: pointer;
+}
+#briefingPanel .bi-more:hover { background: color-mix(in srgb, var(--accent) 7%, transparent); }
+#briefingPanel .bi-more[hidden] { visibility: hidden; display: flex; }
+#briefingPanel .bi-more svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.2; }
 </style>
 </head>
 <body class="light-theme">
@@ -20901,6 +20921,54 @@ function endTour() {
   };
   window.CCIPRegister = Register;
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => Register.mount()); else Register.mount();
+
+  /* ══════════════════════ หน้าหลัก: การ์ด Maker แสดง 3 รายการแรก ที่เหลือเลื่อนดู ══════════════════════ */
+  const BriefFit = {
+    MAX: 3,
+    fit() {
+      document.querySelectorAll('#briefingPanel .briefing-group .briefing-items').forEach(box => {
+        const items = [...box.children].filter(c => c.classList.contains('briefing-item'));
+        const group = box.closest('.briefing-group');
+        let more = group.querySelector('.bi-more');
+        if (items.length <= this.MAX) {
+          box.classList.remove('bi-scroll'); box.style.maxHeight = '';
+          if (more) more.remove();
+          return;
+        }
+        box.classList.add('bi-scroll');
+        box.style.maxHeight = 'none';
+        const gap = parseFloat(getComputedStyle(box).rowGap) || 0;
+        const h = items[this.MAX].offsetTop - items[0].offsetTop - gap / 2;
+        box.style.maxHeight = Math.max(120, Math.round(h)) + 'px';
+        if (!more) {
+          more = document.createElement('button');
+          more.type = 'button'; more.className = 'bi-more';
+          more.onclick = e => { e.stopPropagation(); box.scrollBy({ top: box.clientHeight * 0.8, behavior: 'smooth' }); };
+          box.after(more);
+        }
+        const update = () => {
+          const atEnd = box.scrollTop + box.clientHeight >= box.scrollHeight - 4;
+          box.classList.toggle('at-end', atEnd);
+          const hidden = items.filter(it => it.offsetTop - items[0].offsetTop >= box.scrollTop + box.clientHeight - 8).length;
+          more.hidden = atEnd || !hidden;
+          more.innerHTML = `เลื่อนดูอีก ${hidden} รายการ <svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>`;
+        };
+        if (!box._biBound) { box.addEventListener('scroll', () => requestAnimationFrame(update), { passive: true }); box._biBound = true; }
+        update();
+      });
+    },
+    schedule() { clearTimeout(this._t); this._t = setTimeout(() => this.fit(), 60); }
+  };
+  window.CCIPBriefFit = BriefFit;
+  const bfBoot = () => {
+    const panel = document.getElementById('briefingPanel');
+    if (!panel) return;
+    new MutationObserver(() => BriefFit.schedule()).observe(panel, { childList: true, subtree: true });
+    panel.addEventListener('click', () => BriefFit.schedule());   // เปิด/ปิดช่องคอมเมนต์ในการ์ด ทำให้ความสูงเปลี่ยน
+    window.addEventListener('resize', () => BriefFit.schedule());
+    BriefFit.schedule();
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bfBoot); else bfBoot();
 
   /* ══════════════════════ COMMAND PALETTE เดิม (Ctrl/⌘ + K) — เพิ่มหน้าใหม่และค้นข้อมูล GO WORK / Meeting ══════════════════════ */
   try {
