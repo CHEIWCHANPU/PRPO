@@ -22668,8 +22668,7 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
 #pcSheet th{font-weight:700;font-size:11px;text-align:center}
 #pcSheet .lb{background:var(--lb);font-weight:700;font-size:11px;color:#1F2937}
 #pcSheet input{border:0;background:transparent;font:inherit;color:#111827;width:100%;height:22px;padding:0 2px;outline:0;border-radius:0;box-shadow:none;margin:0}
-#pcSheet input:hover{background:rgba(37,99,235,.06)}
-#pcSheet input:focus{background:rgba(37,99,235,.1);box-shadow:inset 0 -2px 0 #2563EB}
+#pcSheet input,#pcSheet input:hover,#pcSheet input:focus,#pcSheet input:focus-visible{background:transparent !important;box-shadow:none !important;outline:none !important;border:0 !important}
 #pcSheet .r input{text-align:right}
 #pcSheet .c,#pcSheet .c input{text-align:center}
 #pcSheet .u{display:flex;align-items:center;gap:4px}
@@ -22717,10 +22716,10 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
 .pcs-img .tools button{border:1px solid #ccc;background:#fff;border-radius:6px;font:inherit;font-size:11px;padding:2px 7px;cursor:pointer;color:#111}
 .pcs-img .tools button:hover{border-color:#2563EB;color:#2563EB}
 .pcs-foot{display:grid;grid-template-columns:1fr 420px;gap:10px;margin-top:8px;align-items:end}
-.pcs-rmk{flex:1;display:flex;flex-direction:column;min-width:0}
-.pcs-rmk-b{flex:1;min-height:72px;border:1px solid var(--ln);padding:6px 10px;font-size:15px;font-weight:700;line-height:1.5;white-space:pre-wrap;word-break:break-word;outline:0;color:#111827;background:#FFFDF5}
+.pcs-rmk{flex:0 0 240px;margin:8px 8px 0 0;display:flex;flex-direction:column;min-width:0}
+.pcs-rmk-b{flex:1;min-height:72px;display:flex;flex-direction:column;justify-content:center;text-align:center;border:1px solid var(--ln);padding:6px 10px;font-size:15px;font-weight:700;line-height:1.5;white-space:pre-wrap;word-break:break-word;outline:0;color:#111827;background:#FFFDF5}
 .pcs-rmk-b:empty::before{content:'พิมพ์หมายเหตุ เช่น งาน Prototype / เงื่อนไขพิเศษ ...';color:#B0B6BF}
-.pcs-rmk-b:focus{box-shadow:inset 0 0 0 2px rgba(37,99,235,.35)}
+.pcs-rmk-b:focus,.pcs-rmk-b:focus-visible{box-shadow:none !important;outline:none !important}
 .pcs-add{margin-top:5px;border:1px dashed #9CA3AF;background:#fff;color:#374151;border-radius:6px;font:inherit;font-size:11px;font-weight:600;padding:3px 10px;cursor:pointer}
 .pcs-add:hover{border-color:#2563EB;color:#2563EB}
 .pcs-rm{position:absolute;right:2px;top:50%;transform:translateY(-50%);border:0;background:none;color:#9CA3AF;font-size:14px;line-height:1;cursor:pointer;padding:2px 4px}
@@ -22753,6 +22752,9 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
   const num = v => { if (v === '' || v == null) return NaN; const n = +String(v).replace(/[,฿\s]/g, ''); return isFinite(n) ? n : NaN; };
   const f2 = v => isFinite(v) ? v.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) : '';
   const today = () => { const t = new Date(); return t.getDate() + '/' + (t.getMonth() + 1) + '/' + t.getFullYear(); };
+  /* ช่องจำนวน (Volume / PCS): ใส่ , คั่นหลักพันให้อัตโนมัติ */
+  const isQty = k => k === 'volume' || k === 'base.volume' || /^trial\.\d\.pcs$/.test(k);
+  const commas = v => { const t = String(v == null ? '' : v).replace(/[^\d.]/g, ''); if (!t) return ''; const [a, b] = t.split('.'); return a.replace(/^0+(?=\d)/, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',') + (b !== undefined ? '.' + b : ''); };
   const f0 = v => isFinite(v) ? Math.round(v).toLocaleString('en-US') : '';
   const I = {
     xls:'<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="m9 13 4 5M13 13l-4 5"/></svg>',
@@ -22781,7 +22783,7 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
 
     render(){
       const page = $('#page-pcmp'), d = this.d;
-      const F = (k, cls, st) => `<input data-k="${k}" value="${esc(this.get(k))}"${cls ? ` class="${cls}"` : ''}${st ? ` style="${st}"` : ''} autocomplete="off">`;
+      const F = (k, cls, st) => `<input data-k="${k}" value="${esc(isQty(k) ? commas(this.get(k)) : this.get(k))}"${isQty(k) ? ' inputmode="numeric"' : ''}${cls ? ` class="${cls}"` : ''}${st ? ` style="${st}"` : ''} autocomplete="off">`;
       const U = (k, unit, st) => `<div style="display:flex;align-items:center">${F(k, '', 'text-align:right' + (st || ''))}<span style="white-space:nowrap">&nbsp;${unit}</span></div>`;
       page.innerHTML = `
         <div class="pc-hero"><div><div class="pc-eyebrow">E-Form · Maker Price Summary · Before GO Work</div>
@@ -22801,8 +22803,8 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
                 ${['partNo','rev','model'].map((k, i) => `<tr><td class="lb">${['PART NO.','REV.','MODEL'][i]}</td><td>${F(k)}</td><td class="lb c">PP ${i + 1}</td><td class="lb c">DATE</td><td>${F('trial.' + i + '.date', 'c')}</td><td class="r"><div class="u">${F('trial.' + i + '.pcs')}<span>PCS</span></div></td></tr>`).join('')}
                 <tr><td class="lb">VOLUME</td><td class="r"><div class="u">${F('volume')}<span>PCS</span><span style="margin:0 6px;color:#9CA3AF">/</span><input data-k="years" value="${esc(d.years)}" style="width:40px;text-align:right" autocomplete="off"><span>YEAR</span></div></td><td colspan="4" style="background:#FAFAFA"></td></tr>
               </table></div>
-            <div style="display:flex;gap:10px;margin-top:10px;align-items:stretch">
-            <div style="flex:0 0 398px"><table><colgroup><col style="width:128px"><col><col style="width:24px"><col style="width:112px"></colgroup>
+            <div style="display:flex;gap:24px;justify-content:space-between;margin-top:10px;align-items:stretch">
+            <div style="flex:0 0 330px"><table><colgroup><col style="width:118px"><col><col style="width:22px"><col style="width:96px"></colgroup>
               <tr><td class="lb cu">ราคาที่เสนอลูกค้า</td><td class="cu">${F('custCode','c')}</td><td class="c cu">=</td><td class="r cu"><div class="u">${F('custPrice')}<span>THB</span></div></td></tr>
               ${d.makers.map((m, i) => `<tr class="pcs-mk" data-mi="${i}"><td class="lb mk">${i ? '' : 'ราคาของ MAKER'}</td><td class="mv" style="position:relative">${F('makers.' + i + '.name', 'c')}${i ? `<button class="pcs-rm" data-rm="${i}" title="ลบแถวนี้">×</button>` : ''}</td><td class="c mv">=</td><td class="r mv"><div class="u">${F('makers.' + i + '.price')}<span>THB</span></div></td></tr>`).join('')}
             </table>${d.makers.length < MROWS ? '<button class="pcs-add" id="pcsAddMk">+ เพิ่ม MAKER</button>' : ''}</div>
@@ -22830,6 +22832,11 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
           <div class="pcs-meta"><span>PURCHASE-EN-CCIP · E-FORM MAKER PRICE SUMMARY (BEFORE GO WORK)</span><span>${esc(d.partNo || '')}</span></div>
         </div></div>`;
       page.querySelectorAll('#pcSheet [data-k]').forEach(inp => inp.addEventListener('input', () => {
+        if (isQty(inp.dataset.k)) {   // จัดรูปแบบ 120000 → 120,000 โดยให้เคอร์เซอร์อยู่ตำแหน่งเดิม
+          const pos = inp.selectionStart, before = inp.value.slice(0, pos).replace(/[^\d.]/g, '').length;
+          const f = commas(inp.value);
+          if (f !== inp.value) { inp.value = f; let n = 0, i = 0; while (i < f.length && n < before) { if (/[\d.]/.test(f[i])) n++; i++; } inp.setSelectionRange(i, i); }
+        }
         this.set(inp.dataset.k, inp.value); this.save();
         this.calc();
       }));
@@ -22959,10 +22966,10 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
         parts.forEach(w => { if (g.measureText(line + w).width <= W || !line) line += w; else { lines.push(line); line = w.replace(/^\s+/, ''); } });
         lines.push(line);
       });
-      const H = Math.max(lines.length * lh, box.clientHeight - padY);
+      const H = Math.max(lines.length * lh, box.clientHeight - padY), top = (H - lines.length * lh) / 2;
       cv.width = Math.ceil(W * sc); cv.height = Math.ceil(H * sc);
-      g.scale(sc, sc); g.font = font; g.fillStyle = cs.color; g.textBaseline = 'middle';
-      lines.forEach((l, i) => g.fillText(l, 0, i * lh + lh / 2));
+      g.scale(sc, sc); g.font = font; g.fillStyle = cs.color; g.textBaseline = 'middle'; g.textAlign = 'center';
+      lines.forEach((l, i) => g.fillText(l, W / 2, top + i * lh + lh / 2));
       const old = box.innerHTML;
       box.innerHTML = `<img src="${cv.toDataURL('image/png')}" style="display:block;width:${W}px;height:${H}px">`;
       return () => { box.innerHTML = old; };
@@ -23030,6 +23037,12 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install); else install();
 })();
 </script>
+
+
+
+
+
+
 
 
 
