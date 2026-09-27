@@ -23905,5 +23905,268 @@ body.dark-theme #page-mkmap{--m-blu:#60A5FA;--m-cy:#22D3EE;--m-grn:#34D399;--m-a
   }, true);
 })();
 </script>
+<!-- ═══ SUPPLIER · นำเข้าจาก Excel (spx) ═══ -->
+<style id="spx-css">
+.spx-bar{display:flex;gap:.5rem;margin-left:auto;align-items:center}
+.spx-bar .btn{display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap}
+.spx-bar svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.spx-sum{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin-bottom:.9rem}
+.spx-k{border:1px solid var(--border,#E2E8F0);border-radius:10px;padding:.6rem .75rem;background:var(--surface,#fff)}
+.spx-k b{display:block;font-size:1.35rem;line-height:1.2}
+.spx-k span{font-size:.72rem;color:var(--text3,#64748B);font-weight:600;letter-spacing:.02em}
+.spx-k.new b{color:#16A34A}.spx-k.upd b{color:#2563EB}.spx-k.same b{color:#64748B}.spx-k.err b{color:#DC2626}
+.spx-tbl{max-height:46vh;overflow:auto;border:1px solid var(--border,#E2E8F0);border-radius:10px}
+.spx-tbl table{width:100%;border-collapse:collapse;font-size:.8rem}
+.spx-tbl th{position:sticky;top:0;background:var(--surface2,#F1F5F9);text-align:left;padding:.5rem .6rem;font-size:.72rem;color:var(--text3,#64748B);font-weight:700;z-index:1}
+.spx-tbl td{padding:.45rem .6rem;border-top:1px solid var(--border,#E2E8F0);vertical-align:top;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.spx-tbl td.chg{background:rgba(37,99,235,.08)}
+.spx-tag{display:inline-block;padding:.1rem .45rem;border-radius:5px;font-size:.7rem;font-weight:700}
+.spx-tag.new{background:#DCFCE7;color:#15803D}.spx-tag.upd{background:#DBEAFE;color:#1D4ED8}.spx-tag.same{background:#F1F5F9;color:#64748B}.spx-tag.err{background:#FEE2E2;color:#B91C1C}.spx-tag.ok{background:#DCFCE7;color:#15803D}
+.spx-f{display:flex;gap:1rem;align-items:center;font-size:.8rem;color:var(--text2,#334155);margin-top:.75rem;flex-wrap:wrap}
+.spx-f label{display:inline-flex;gap:.35rem;align-items:center;cursor:pointer}
+.spx-prog{height:8px;border-radius:8px;background:var(--surface2,#E2E8F0);overflow:hidden;margin-top:.8rem;display:none}
+.spx-prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#2563EB,#60A5FA);transition:width .25s !important;transition-duration:.25s !important}
+.spx-ptxt{font-size:.78rem;color:var(--text3,#64748B);margin-top:.35rem;display:none}
+.spx-busy .spx-prog,.spx-busy .spx-ptxt{display:block}
+@media (max-width:700px){.spx-sum{grid-template-columns:repeat(2,1fr)}.spx-bar .btn span{display:none}}
+</style>
+<div class="modal-overlay" id="spxOverlay">
+ <div class="modal" style="max-width:980px;width:95vw">
+  <div class="modal-header">
+   <div class="modal-title">นำเข้า Supplier จาก Excel</div>
+   <button class="modal-close" onclick="CCIPSupplierXL.close()"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  </div>
+  <div class="modal-body" id="spxBody"></div>
+  <div class="modal-footer">
+   <button class="btn btn-ghost" id="spxCancel" onclick="CCIPSupplierXL.close()">ยกเลิก</button>
+   <button class="btn btn-primary" id="spxGo" onclick="CCIPSupplierXL.run()">นำเข้าข้อมูล</button>
+  </div>
+ </div>
+</div>
+<input type="file" id="spxFile" accept=".xlsx,.xls,.csv" style="display:none">
+<script id="spx-js">
+(function(){
+  const COLS = [
+    ['name',     'ชื่อบริษัท / Maker *', 28],
+    ['contact',  'ชื่อผู้ติดต่อ',          20],
+    ['phone',    'เบอร์โทร',             22],
+    ['email',    'Email',                28],
+    ['category', 'หมวดหมู่สินค้า',        20],
+    ['leadtime', 'Lead Time (วัน)',       14],
+    ['maplink',  'ลิงก์ Google Maps',      40],
+    ['note',     'หมายเหตุ',              30]
+  ];
+  const LABEL = Object.fromEntries(COLS.map(c => [c[0], c[1]]));
+  const norm = s => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  let plan = [], busy = false, stats = null;
+
+  /* ── ปุ่มบนหน้า Supplier ── */
+  function mountButtons(){
+    const add = document.querySelector('#page-supplier .toolbar button[onclick="openSupplierModal()"]') ||
+                [...document.querySelectorAll('button[onclick="openSupplierModal()"]')][0];
+    if (!add || document.querySelector('.spx-bar')) return;
+    const bar = document.createElement('div'); bar.className = 'spx-bar';
+    bar.innerHTML =
+      '<button class="btn btn-ghost" id="spxTplBtn" title="ดาวน์โหลดไฟล์ Excel สำหรับกรอกข้อมูล (มีรายชื่อเดิมอยู่แล้ว)"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg><span>ดาวน์โหลดฟอร์ม Excel</span></button>' +
+      '<button class="btn btn-ghost" id="spxUpBtn" title="อัปโหลดไฟล์ Excel ที่กรอกแล้ว"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg><span>นำเข้าจาก Excel</span></button>';
+    add.style.marginLeft = '0';
+    add.parentNode.insertBefore(bar, add); bar.appendChild(add);
+    bar.querySelector('#spxTplBtn').onclick = downloadTemplate;
+    bar.querySelector('#spxUpBtn').onclick = () => { const f = document.getElementById('spxFile'); f.value = ''; f.click(); };
+    document.getElementById('spxFile').onchange = e => { const f = e.target.files[0]; if (f) readFile(f); e.target.value = ''; };
+  }
+
+  /* ── ดาวน์โหลดฟอร์ม (ใส่รายชื่อเดิมไว้ให้แล้ว แก้ไข/เพิ่มต่อท้ายได้เลย) ── */
+  function downloadTemplate(){
+    if (typeof XLSX === 'undefined') { showToast('ยังโหลดตัวอ่าน Excel ไม่เสร็จ ลองใหม่อีกครั้ง', 'error'); return; }
+    const list = (window.suppliers || (typeof suppliers !== 'undefined' ? suppliers : [])).slice()
+      .sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'th'));
+    const aoa = [COLS.map(c => c[1])];
+    list.forEach(s => aoa.push(COLS.map(c => c[0] === 'leadtime' ? (s.leadtime ? Number(s.leadtime) || s.leadtime : '') : String(s[c[0]] ?? ''))));
+    const EXTRA = 300;
+    for (let i = 0; i < EXTRA; i++) aoa.push(COLS.map(() => ''));
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    ws['!cols'] = COLS.map(c => ({ wch: c[2] }));
+    ws['!autofilter'] = { ref: 'A1:' + XLSX.utils.encode_col(COLS.length - 1) + '1' };
+    // คอลัมน์เบอร์โทร = ข้อความ (กันเลข 0 นำหน้าหาย)
+    for (let r = 1; r < aoa.length; r++) {
+      const a = XLSX.utils.encode_cell({ r, c: 2 });
+      ws[a] = { t: 's', v: String(aoa[r][2] || ''), z: '@' };
+    }
+    const help = [
+      ['วิธีกรอกฟอร์ม Supplier'],
+      [''],
+      ['1. กรอกในชีต "Supplier" — 1 แถว = 1 Maker (คอลัมน์ ชื่อบริษัท ต้องมี)'],
+      ['2. รายชื่อที่มีอยู่แล้วในระบบใส่ไว้ให้แล้ว แก้ไขได้เลย ระบบจะจับคู่ด้วย "ชื่อบริษัท"'],
+      ['3. Maker ใหม่ ให้กรอกต่อท้ายในแถวว่าง'],
+      ['4. ช่องที่เว้นว่างของ Maker เดิม ระบบจะคงค่าเดิมไว้ (ไม่ลบข้อมูล)'],
+      ['5. เบอร์โทร กรอกเป็นข้อความ เช่น 081-234-5678 (หลายเบอร์คั่นด้วย , )'],
+      ['6. ลิงก์ Google Maps: เปิด Google Maps → กดแชร์ → คัดลอกลิงก์ มาวาง'],
+      ['7. บันทึกไฟล์ แล้วไปที่หน้า Supplier → กด "นำเข้าจาก Excel" → ตรวจสอบ → กดนำเข้าข้อมูล'],
+      [''],
+      ['หมายเหตุ: ห้ามเปลี่ยนชื่อหัวคอลัมน์ในแถวที่ 1 / ไม่ต้องใส่รูปโลโก้ (ใส่ภายหลังในเว็บ)']
+    ];
+    const wh = XLSX.utils.aoa_to_sheet(help); wh['!cols'] = [{ wch: 90 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Supplier');
+    XLSX.utils.book_append_sheet(wb, wh, 'วิธีกรอก');
+    const d = new Date(), ymd = d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+    XLSX.writeFile(wb, 'ฟอร์ม Supplier ' + ymd + '.xlsx');
+    showToast('ดาวน์โหลดฟอร์มแล้ว (มีรายชื่อเดิม ' + list.length + ' ราย)', 'success');
+  }
+
+  /* ── อ่านไฟล์ที่กรอกแล้ว ── */
+  function readFile(file){
+    const fr = new FileReader();
+    fr.onload = e => {
+      try {
+        const wb = XLSX.read(e.target.result, { type: 'array' });
+        const ws = wb.Sheets['Supplier'] || wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', raw: true });
+        build(rows);
+      } catch (err) { showToast('อ่านไฟล์ไม่ได้: ' + err.message, 'error'); }
+    };
+    fr.readAsArrayBuffer(file);
+  }
+  function headerMap(head){
+    const h = head.map(x => norm(x));
+    const find = (...keys) => h.findIndex(x => keys.some(k => x.includes(k)));
+    return {
+      name: find('ชื่อบริษัท', 'maker', 'supplier', 'บริษัท', 'name'),
+      contact: find('ผู้ติดต่อ', 'contact'),
+      phone: find('เบอร์', 'โทร', 'phone', 'tel'),
+      email: find('email', 'อีเมล', 'e-mail', 'mail'),
+      category: find('หมวด', 'category', 'ประเภท'),
+      leadtime: find('lead', 'ลีด'),
+      maplink: find('map', 'แผนที่', 'ลิงก์'),
+      note: find('หมายเหตุ', 'note', 'remark')
+    };
+  }
+  function cellStr(k, v){
+    if (v === null || v === undefined) return '';
+    if (k === 'phone' && typeof v === 'number') { let s = String(v); if (s.length === 9) s = '0' + s; return s; }
+    if (k === 'leadtime') { const n = parseInt(String(v).replace(/[^\d]/g, ''), 10); return isNaN(n) ? '' : String(n); }
+    return String(v).replace(/\r?\n/g, ' ').trim();
+  }
+  function build(rows){
+    if (!rows.length) { showToast('ไฟล์ว่างเปล่า', 'error'); return; }
+    let hi = rows.findIndex(r => r.some(c => /ชื่อบริษัท|maker|supplier/i.test(String(c))));
+    if (hi < 0) hi = 0;
+    const M = headerMap(rows[hi]);
+    if (M.name < 0) { showToast('ไม่พบคอลัมน์ "ชื่อบริษัท / Maker" ในแถวหัวตาราง', 'error'); return; }
+    const cur = (typeof suppliers !== 'undefined' ? suppliers : []);
+    const byName = new Map(cur.map(s => [norm(s.name), s]));
+    const seen = new Set(); plan = [];
+    rows.slice(hi + 1).forEach((r, i) => {
+      const rec = {}; COLS.forEach(([k]) => { rec[k] = M[k] >= 0 ? cellStr(k, r[M[k]]) : ''; });
+      if (!Object.values(rec).some(Boolean)) return;                 // แถวว่าง
+      const line = hi + i + 2;
+      if (!rec.name) { plan.push({ type: 'err', line, rec, msg: 'ไม่มีชื่อบริษัท' }); return; }
+      const key = norm(rec.name);
+      if (seen.has(key)) { plan.push({ type: 'err', line, rec, msg: 'ชื่อซ้ำในไฟล์' }); return; }
+      seen.add(key);
+      if (rec.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+/.test(rec.email.split(/[,;\s]/)[0])) rec._warn = 'Email อาจไม่ถูกต้อง';
+      const old = byName.get(key);
+      if (!old) { plan.push({ type: 'new', line, rec }); return; }
+      const merged = { ...old }, changed = [];
+      COLS.forEach(([k]) => { if (k === 'name') return; if (rec[k] !== '' && String(old[k] ?? '').trim() !== rec[k]) { merged[k] = rec[k]; changed.push(k); } });
+      plan.push({ type: changed.length ? 'upd' : 'same', line, rec: merged, old, changed });
+    });
+    render();
+  }
+
+  /* ── หน้าตรวจสอบก่อนนำเข้า ── */
+  function render(){
+    const c = t => plan.filter(p => p.type === t).length;
+    const body = document.getElementById('spxBody');
+    const tag = { new: 'เพิ่มใหม่', upd: 'แก้ไข', same: 'ไม่เปลี่ยน', err: 'ข้าม' };
+    const show = plan.filter(p => p.type !== 'same' || document.getElementById('spxShowSame')?.checked);
+    body.innerHTML =
+      '<div class="spx-sum">' +
+        '<div class="spx-k new"><b>' + c('new') + '</b><span>MAKER ใหม่</span></div>' +
+        '<div class="spx-k upd"><b>' + c('upd') + '</b><span>อัปเดตข้อมูลเดิม</span></div>' +
+        '<div class="spx-k same"><b>' + c('same') + '</b><span>ไม่มีการเปลี่ยนแปลง</span></div>' +
+        '<div class="spx-k err"><b>' + c('err') + '</b><span>มีปัญหา (จะข้าม)</span></div>' +
+      '</div>' +
+      '<div class="spx-tbl"><table><thead><tr><th>แถว</th><th>สถานะ</th>' + COLS.map(x => '<th>' + esc(x[1].replace(' *', '')) + '</th>').join('') + '</tr></thead><tbody>' +
+      (show.length ? show.map(p => '<tr data-l="' + p.line + '"><td>' + p.line + '</td><td><span class="spx-tag ' + p.type + '">' + (p.msg ? esc(p.msg) : tag[p.type]) + '</span>' + (p.rec._warn ? '<div style="color:#B45309;font-size:.7rem;margin-top:2px">' + esc(p.rec._warn) + '</div>' : '') + '</td>' +
+        COLS.map(([k]) => { const v = p.rec[k] || ''; const ch = p.changed && p.changed.includes(k); return '<td class="' + (ch ? 'chg' : '') + '" title="' + esc(ch ? 'เดิม: ' + (p.old[k] || '—') + '\nใหม่: ' + v : v) + '">' + (esc(v) || '<span style="color:#CBD5E1">—</span>') + '</td>'; }).join('') + '</tr>').join('')
+        : '<tr><td colspan="' + (COLS.length + 2) + '" style="text-align:center;padding:1.5rem;color:#94A3B8">ไม่มีรายการที่ต้องนำเข้า</td></tr>') +
+      '</tbody></table></div>' +
+      '<div class="spx-f"><label><input type="checkbox" id="spxShowSame"' + (document.getElementById('spxShowSame')?.checked ? ' checked' : '') + '> แสดงรายการที่ไม่เปลี่ยนแปลง</label>' +
+      '<span>ช่องสีฟ้า = ค่าที่จะถูกแก้ไข (ชี้เมาส์เพื่อดูค่าเดิม) · ช่องว่างในไฟล์จะคงค่าเดิมไว้</span></div>' +
+      '<div class="spx-prog"><i></i></div><div class="spx-ptxt"></div>';
+    body.querySelector('#spxShowSame').onchange = render;
+    const n = c('new') + c('upd');
+    const go = document.getElementById('spxGo');
+    go.disabled = !n; go.textContent = n ? 'นำเข้าข้อมูล (' + n + ' รายการ)' : 'นำเข้าข้อมูล';
+    document.getElementById('spxCancel').textContent = 'ยกเลิก';
+    document.getElementById('spxOverlay').classList.add('open');
+  }
+
+  /* ── ส่งข้อมูลเข้า Sheet (ใช้ action เดิม addSupplier / editSupplier) ── */
+  async function send(p){
+    const r = p.rec;
+    const payload = { name: r.name, contact: r.contact || '', phone: r.phone || '', email: r.email || '', category: r.category || '',
+      leadtime: r.leadtime || '', note: r.note || '', image: (p.old && p.old.image) || '', maplink: r.maplink || '' };
+    if (!WEB_APP_URL) {
+      const id = p.type === 'upd' ? p.old.id : String(Date.now()) + Math.random().toString(36).slice(2, 6);
+      const i = suppliers.findIndex(s => String(s.id) === String(id));
+      if (i >= 0) suppliers[i] = { id, ...payload }; else suppliers.push({ id, ...payload });
+      localStorage.setItem('prpo_suppliers', JSON.stringify(suppliers));
+      return;
+    }
+    const params = new URLSearchParams({ action: p.type === 'upd' ? 'editSupplier' : 'addSupplier', ...payload });
+    if (p.type === 'upd') params.set('rowIndex', p.old.id);
+    let last;
+    for (let t = 0; t < 3; t++) {
+      try {
+        const res = await fetch(WEB_APP_URL + '?' + params.toString());
+        const j = await res.json();
+        if (j.success) return;
+        last = new Error(j.error || 'ไม่สำเร็จ');
+      } catch (e) { last = e; }
+      await new Promise(r => setTimeout(r, 800 * (t + 1)));
+    }
+    throw last;
+  }
+  async function run(){
+    if (busy) return;
+    if (document.getElementById('spxGo').dataset.done) { close(); return; }
+    const jobs = plan.filter(p => p.type === 'new' || p.type === 'upd');
+    if (!jobs.length) return;
+    busy = true; stats = { ok: 0, fail: 0 };
+    const ov = document.getElementById('spxOverlay'); ov.classList.add('spx-busy');
+    const go = document.getElementById('spxGo'), cancel = document.getElementById('spxCancel');
+    go.disabled = true; cancel.disabled = true;
+    const bar = ov.querySelector('.spx-prog i'), txt = ov.querySelector('.spx-ptxt');
+    // แก้ไขก่อน (อ้างอิงแถวเดิม) แล้วค่อยเพิ่มใหม่ต่อท้าย — ส่งทีละรายการ กันแถวใน Sheet ชนกัน
+    jobs.sort((a, b) => (a.type === 'upd' ? 0 : 1) - (b.type === 'upd' ? 0 : 1));
+    let done = 0;
+    for (const p of jobs) {
+      txt.textContent = 'กำลังบันทึก ' + (done + 1) + ' / ' + jobs.length + ' — ' + p.rec.name;
+      const row = ov.querySelector('tr[data-l="' + p.line + '"] .spx-tag');
+      try { await send(p); stats.ok++; if (row) { row.className = 'spx-tag ok'; row.textContent = '✓ บันทึกแล้ว'; } }
+      catch (e) { stats.fail++; p.type = 'err'; p.msg = 'บันทึกไม่สำเร็จ'; if (row) { row.className = 'spx-tag err'; row.textContent = 'ไม่สำเร็จ'; row.title = e.message || ''; } }
+      done++; bar.style.width = (done / jobs.length * 100) + '%';
+    }
+    busy = false; cancel.disabled = false;
+    txt.textContent = 'เสร็จแล้ว — สำเร็จ ' + stats.ok + ' รายการ' + (stats.fail ? ' · ไม่สำเร็จ ' + stats.fail + ' รายการ' : '');
+    go.disabled = false; go.textContent = 'ปิด'; go.dataset.done = '1'; cancel.style.display = 'none';
+    try { if (typeof addHistoryLog === 'function') addHistoryLog('add', 'Supplier (Excel)', '-', 'นำเข้า Supplier จาก Excel ' + stats.ok + ' รายการ'); } catch (e) {}
+    if (WEB_APP_URL) { try { await loadSuppliers(true, true); } catch (e) {} } else { renderSuppliers(); }
+    showToast((stats.fail ? '⚠️ ' : '✅ ') + 'นำเข้า Supplier สำเร็จ ' + stats.ok + ' รายการ' + (stats.fail ? ', ไม่สำเร็จ ' + stats.fail : ''), stats.fail ? 'error' : 'success');
+  }
+  function close(){
+    if (busy) { showToast('กำลังนำเข้าข้อมูล กรุณารอสักครู่', 'error'); return; }
+    const ov = document.getElementById('spxOverlay'); ov.classList.remove('open', 'spx-busy');
+    const go = document.getElementById('spxGo'); delete go.dataset.done; document.getElementById('spxCancel').style.display = '';
+  }
+  window.CCIPSupplierXL = { run, close, template: downloadTemplate, _build: build };
+  window.addEventListener('beforeunload', e => { if (busy) { e.preventDefault(); e.returnValue = ''; } });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountButtons); else mountButtons();
+})();
+</script>
 </body>
 </html>
