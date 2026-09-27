@@ -23128,5 +23128,298 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
 
 
 
+<!-- ═══ LOGIN · สไลด์พื้นหลังเปลี่ยนหน้า (wls) ═══ -->
+<style id="wls-css">
+.wl-left.wls-on{background:#0B1220 !important}
+.wls-track{position:absolute;inset:0;z-index:1;overflow:hidden}
+.wls-slide{position:absolute;inset:0;background-size:cover;background-position:center;transform:translateX(100%);will-change:transform;
+  transition:transform 1.15s cubic-bezier(.77,0,.18,1) !important;transition-duration:1.15s !important}
+.wls-slide.cur{transform:translateX(0)}
+.wls-slide.out-l{transform:translateX(-100%)}
+.wls-slide.out-r{transform:translateX(100%)}
+.wls-slide.in-l{transform:translateX(-100%);transition:none !important}
+.wls-slide.in-r{transform:translateX(100%);transition:none !important}
+.wls-slide i{position:absolute;inset:0;background:inherit;background-size:cover;background-position:inherit}
+.wls-slide.cur i{animation:wlsZoom 9s ease-out forwards !important;animation-duration:9s !important}
+@keyframes wlsZoom{from{transform:scale(1.02)}to{transform:scale(1.1)}}
+.wls-nav{position:absolute;left:2.4rem;bottom:2rem;z-index:4;display:flex;align-items:center;gap:.6rem}
+.wls-dot{width:28px;height:4px;border-radius:4px;border:0;padding:0;background:rgba(255,255,255,.28);cursor:pointer;position:relative;overflow:hidden;transition:width .3s,background .3s !important}
+.wls-dot.on{width:48px;background:rgba(255,255,255,.35)}
+.wls-dot.on::after{content:"";position:absolute;inset:0;background:#8FB0FF;transform-origin:left;animation:wlsBar var(--d,6.5s) linear forwards !important;animation-duration:var(--d,6.5s) !important}
+.wls-paused .wls-dot.on::after{animation-play-state:paused !important}
+@keyframes wlsBar{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.wls-arr{width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(10,16,28,.35);color:#fff;display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(4px);transition:background .2s,border-color .2s !important}
+.wls-arr:hover{background:rgba(143,176,255,.25);border-color:rgba(143,176,255,.6)}
+.wls-arr svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.wls-count{font:600 11px/1 ui-monospace,Menlo,Consolas,monospace;color:rgba(255,255,255,.6);letter-spacing:.08em;margin-left:.3rem}
+@media (max-width:900px){.wls-nav{left:1.2rem;bottom:1.2rem}}
+</style>
+<script id="wls-js">
+/* ─────────────────────────────────────────────────────────────
+   รูปพื้นหลังหน้า Login (สไลด์เลื่อนเปลี่ยนหน้า)
+   • รูปแรก = รูปอาคารเดิมที่ฝังในไฟล์
+   • เพิ่มรูป: อัปโหลดไฟล์ไว้ในโฟลเดอร์ login-bg/ ของ repo PRPO บน GitHub
+     ตั้งชื่อ 1.jpg, 2.jpg, 3.jpg … (สูงสุด 10 รูป) — ระบบหาเองอัตโนมัติ
+     รูปไหนไม่มี/โหลดไม่ได้จะถูกข้ามไป
+   ───────────────────────────────────────────────────────────── */
+window.CCIP_LOGIN_SLIDES = window.CCIP_LOGIN_SLIDES || { folder: 'login-bg/', max: 10, ext: ['jpg', 'jpeg', 'png', 'webp'], interval: 6500 };
+(function(){
+  const cfg = window.CCIP_LOGIN_SLIDES;
+  function start(){
+    const left = document.querySelector('.wl-left'); if (!left || left.querySelector('.wls-track')) return;
+    const bg = getComputedStyle(left).backgroundImage;
+    const first = bg && bg !== 'none' ? bg.replace(/^url\(["']?/, '').replace(/["']?\)$/, '') : '';
+    const urls = []; if (first) urls.push(first);
+    (cfg.extra || []).forEach(u => urls.push(u));
+    const probe = (u) => new Promise(res => { const im = new Image(); im.onload = () => res(im.naturalWidth > 10 ? u : null); im.onerror = () => res(null); im.src = u; });
+    const tries = [];
+    for (let i = 1; i <= cfg.max; i++) tries.push((async () => { for (const e of cfg.ext) { const ok = await probe(cfg.folder + i + '.' + e); if (ok) return ok; } return null; })());
+    build(left, urls);                                   // แสดงรูปแรกทันที
+    Promise.all(tries).then(found => { found.filter(Boolean).forEach(u => add(u)); });
+  }
+  let S = null;
+  function build(left, urls){
+    const track = document.createElement('div'); track.className = 'wls-track';
+    left.insertBefore(track, left.firstChild); left.classList.add('wls-on');
+    const nav = document.createElement('div'); nav.className = 'wls-nav'; nav.hidden = true;
+    nav.innerHTML = '<button class="wls-arr" data-d="-1" aria-label="รูปก่อนหน้า"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button><div class="wls-dots" style="display:flex;gap:.45rem"></div><button class="wls-arr" data-d="1" aria-label="รูปถัดไป"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></button><span class="wls-count"></span>';
+    left.appendChild(nav);
+    S = { left, track, nav, slides: [], i: 0, t: null, busy: false };
+    urls.forEach(add);
+    nav.querySelectorAll('.wls-arr').forEach(b => b.onclick = () => go(S.i + (+b.dataset.d), +b.dataset.d));
+    left.addEventListener('mouseenter', () => { S.hover = true; left.classList.add('wls-paused'); stop(); });
+    left.addEventListener('mouseleave', () => { S.hover = false; left.classList.remove('wls-paused'); play(); });
+    let x0 = null;
+    left.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, {passive:true});
+    left.addEventListener('touchend', e => { if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 50) go(S.i + (dx < 0 ? 1 : -1), dx < 0 ? 1 : -1); x0 = null; });
+    document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); else play(); });
+  }
+  function add(url){
+    if (!S || S.slides.some(s => s.url === url)) return;
+    const el = document.createElement('div'); el.className = 'wls-slide' + (S.slides.length ? '' : ' cur');
+    el.style.backgroundImage = 'url("' + url + '")'; el.innerHTML = '<i></i>';
+    S.track.appendChild(el); S.slides.push({ url, el });
+    dots(); play();
+  }
+  function dots(){
+    const n = S.slides.length; S.nav.hidden = n < 2;
+    const box = S.nav.querySelector('.wls-dots');
+    box.innerHTML = S.slides.map((s, k) => `<button class="wls-dot${k === S.i ? ' on' : ''}" data-k="${k}" aria-label="รูปที่ ${k + 1}" style="--d:${cfg.interval}ms"></button>`).join('');
+    box.querySelectorAll('.wls-dot').forEach(d => d.onclick = () => { const k = +d.dataset.k; if (k !== S.i) go(k, k > S.i ? 1 : -1); });
+    S.nav.querySelector('.wls-count').textContent = String(S.i + 1).padStart(2, '0') + ' / ' + String(n).padStart(2, '0');
+  }
+  function go(k, dir){
+    const n = S.slides.length; if (n < 2 || S.busy) return;
+    k = (k + n) % n; if (k === S.i) return;
+    S.busy = true; stop();
+    const a = S.slides[S.i].el, b = S.slides[k].el;
+    b.className = 'wls-slide ' + (dir > 0 ? 'in-r' : 'in-l');   // วางรูปใหม่ไว้นอกจอฝั่งที่จะเลื่อนเข้ามา
+    void b.offsetWidth;
+    b.className = 'wls-slide cur';
+    a.className = 'wls-slide ' + (dir > 0 ? 'out-l' : 'out-r');
+    S.i = k; dots();
+    setTimeout(() => { S.busy = false; play(); }, 1200);
+  }
+  function play(){ stop(); if (!S || S.hover || document.hidden || S.slides.length < 2) return; S.t = setTimeout(() => go(S.i + 1, 1), cfg.interval); }
+  function stop(){ if (S && S.t) { clearTimeout(S.t); S.t = null; } }
+  window.CCIPLoginSlides = { go: (k) => S && go(k, k > S.i ? 1 : -1), add: (u) => add(u), state: () => S && { i: S.i, n: S.slides.length } };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+</script>
+<!-- ═══ LOGIN · Animations (wla) ═══ -->
+<style id="wla-css">
+/* 1) เข้าหน้าแบบเป็นลำดับ */
+@keyframes wlaUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes wlaPop{0%{opacity:0;transform:scale(.6) rotate(-8deg)}60%{opacity:1;transform:scale(1.08) rotate(2deg)}100%{opacity:1;transform:none}}
+@keyframes wlaSlideIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+#welcomeScreen .wl-logo-icon{animation:wlaPop .7s cubic-bezier(.34,1.56,.64,1) both !important;animation-duration:.7s !important}
+#welcomeScreen .wl-right .wl-card{animation:wlaSlideIn .7s cubic-bezier(.22,1,.36,1) .12s both !important;animation-duration:.7s !important}
+#welcomeScreen .wl-card > .wl-eyebrow-chip,#welcomeScreen .wl-card > .wl-welcome,#welcomeScreen .wl-card > .wl-welcome-sub,
+#welcomeScreen .wl-card > .wl-form-group,#welcomeScreen .wl-card > .wl-remember-row,#welcomeScreen .wl-card > .wl-btn,#welcomeScreen .wl-card > .wl-register-link,#welcomeScreen .wl-card > .wl-reg-link{
+  animation:wlaUp .55s cubic-bezier(.22,1,.36,1) both !important;animation-duration:.55s !important}
+#welcomeScreen .wl-card > .wl-eyebrow-chip{animation-delay:.30s !important}
+#welcomeScreen .wl-card > .wl-welcome{animation-delay:.38s !important}
+#welcomeScreen .wl-card > .wl-welcome-sub{animation-delay:.44s !important}
+#welcomeScreen .wl-card > .wl-form-group:nth-of-type(1){animation-delay:.52s !important}
+#welcomeScreen .wl-card > .wl-form-group:nth-of-type(2){animation-delay:.62s !important}
+#welcomeScreen .wl-card > .wl-remember-row{animation-delay:.70s !important}
+#welcomeScreen .wl-card > .wl-btn{animation-delay:.78s !important}
+#welcomeScreen .wl-card > :last-child:not(.wl-btn){animation-delay:.86s !important}
+
+/* 3) พื้นหลังฝั่งฟอร์ม: แสงออโรร่าเคลื่อนช้าๆ */
+#welcomeScreen .wl-right{overflow:hidden}
+.wla-aurora{position:absolute;inset:-20%;z-index:0;pointer-events:none;filter:blur(50px);opacity:.85}
+.wla-aurora i{position:absolute;border-radius:50%;mix-blend-mode:screen}
+.wla-aurora i:nth-child(1){width:60%;height:55%;left:-5%;top:0;background:radial-gradient(circle,rgba(59,108,255,.34),transparent 65%);animation:wlaA1 16s ease-in-out infinite alternate !important;animation-duration:16s !important}
+.wla-aurora i:nth-child(2){width:55%;height:60%;right:-10%;top:30%;background:radial-gradient(circle,rgba(34,211,238,.20),transparent 65%);animation:wlaA2 20s ease-in-out infinite alternate !important;animation-duration:20s !important}
+.wla-aurora i:nth-child(3){width:70%;height:50%;left:15%;bottom:-10%;background:radial-gradient(circle,rgba(129,140,248,.26),transparent 65%);animation:wlaA3 24s ease-in-out infinite alternate !important;animation-duration:24s !important}
+@keyframes wlaA1{to{transform:translate(35%,25%) scale(1.25)}}
+@keyframes wlaA2{to{transform:translate(-40%,-20%) scale(1.15)}}
+@keyframes wlaA3{to{transform:translate(-15%,-35%) scale(1.3)}}
+#welcomeScreen .wl-right > .wl-right-inner{position:relative;z-index:1}
+
+/* 4) เครือข่ายซัพพลายเชน */
+.wla-net{position:absolute;inset:0;z-index:3;pointer-events:none;opacity:0;transition:opacity 1.2s ease !important}
+.wla-net.on{opacity:1}
+
+/* 7) ช่องกรอก: เส้นแสงใต้ช่อง + ไอคอนเปลี่ยนสี */
+#welcomeScreen .wl-input-wrap{position:relative}
+.wla-line{position:absolute;left:12px;right:12px;bottom:-1px;height:2px;border-radius:2px;pointer-events:none;overflow:hidden}
+.wla-line::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,#7FA2FF 30%,#22D3EE 50%,#7FA2FF 70%,transparent);transform:scaleX(0);transition:transform .45s cubic-bezier(.22,1,.36,1) !important}
+.wla-line::after{content:"";position:absolute;top:0;bottom:0;width:40%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.9),transparent);transform:translateX(-120%);opacity:0}
+#welcomeScreen .wl-input-wrap:focus-within .wla-line::before{transform:scaleX(1)}
+#welcomeScreen .wl-input-wrap:focus-within .wla-line::after{opacity:1;animation:wlaSweep 1.8s ease-in-out infinite !important;animation-duration:1.8s !important}
+@keyframes wlaSweep{from{transform:translateX(-120%)}to{transform:translateX(260%)}}
+#welcomeScreen .wl-input-icon{transition:color .25s,transform .25s !important}
+#welcomeScreen .wl-input-wrap:focus-within .wl-input-icon{color:#8FB0FF !important;transform:scale(1.12)}
+
+/* 8) ปุ่มเข้าสู่ระบบ: สำเร็จ → ✓ สีเขียว + หน้ายินดีต้อนรับ */
+#welcomeScreen .wl-btn{position:relative;overflow:hidden}
+#welcomeScreen .wl-btn.wla-ok{background:linear-gradient(135deg,#22C55E,#15803D) !important;opacity:1 !important;box-shadow:0 8px 24px rgba(34,197,94,.35) !important}
+.wla-check{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.wla-check path{stroke-dasharray:24;stroke-dashoffset:24;animation:wlaDraw .45s .05s ease forwards !important;animation-duration:.45s !important}
+@keyframes wlaDraw{to{stroke-dashoffset:0}}
+.wla-done{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;
+  background:radial-gradient(ellipse at center,rgba(15,30,60,.92),rgba(3,7,15,.97));color:#fff;opacity:0;transition:opacity .35s ease,transform .7s cubic-bezier(.7,0,.3,1) !important}
+.wla-done.on{opacity:1}
+.wla-done.out{opacity:0;transform:scale(1.35);transition:opacity .6s ease,transform .8s cubic-bezier(.7,0,.3,1) !important}
+.wla-done .ring{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#22C55E,#15803D);box-shadow:0 0 0 0 rgba(34,197,94,.5);animation:wlaRing 1.2s ease-out .15s !important;animation-duration:1.2s !important;transform:scale(0);animation-fill-mode:forwards !important}
+@keyframes wlaRing{0%{transform:scale(0)}35%{transform:scale(1.1);box-shadow:0 0 0 0 rgba(34,197,94,.5)}55%{transform:scale(1)}100%{transform:scale(1);box-shadow:0 0 0 26px rgba(34,197,94,0)}}
+.wla-done .ring svg{width:42px;height:42px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.wla-done .ring path{stroke-dasharray:40;stroke-dashoffset:40;animation:wlaDraw .5s .45s ease forwards !important;animation-duration:.5s !important}
+.wla-done h2{margin:6px 0 0;font-size:1.45rem;font-weight:700;letter-spacing:.01em;opacity:0;animation:wlaUp .5s .55s ease forwards !important;animation-duration:.5s !important}
+.wla-done p{margin:0;font-size:.85rem;color:rgba(255,255,255,.65);opacity:0;animation:wlaUp .5s .7s ease forwards !important;animation-duration:.5s !important}
+
+/* 9) รหัสผิด: กล่องสั่น + ขอบแดง */
+@keyframes wlaShake{0%,100%{transform:translateX(0)}15%{transform:translateX(-10px)}30%{transform:translateX(9px)}45%{transform:translateX(-7px)}60%{transform:translateX(5px)}75%{transform:translateX(-3px)}90%{transform:translateX(2px)}}
+#welcomeScreen .wl-card.wla-shake{animation:wlaShake .55s cubic-bezier(.36,.07,.19,.97) both !important;animation-duration:.55s !important;box-shadow:0 0 0 1px rgba(248,113,113,.7),0 0 28px rgba(248,113,113,.25) !important}
+#welcomeScreen .wl-input-wrap.wl-input-error .wl-input{animation:wlaFlash .9s ease !important;animation-duration:.9s !important}
+@keyframes wlaFlash{0%{box-shadow:0 0 0 3px rgba(248,113,113,.45)}100%{box-shadow:0 0 0 0 rgba(248,113,113,0)}}
+
+@media (prefers-reduced-motion:reduce){
+  #welcomeScreen *,.wla-done,.wla-done *{animation:none !important;transition:none !important}
+  .wla-net,.wla-aurora{display:none !important}
+  .wla-done h2,.wla-done p,.wla-done .ring,.wla-done .ring path{opacity:1;transform:none;stroke-dashoffset:0}
+}
+</style>
+<script id="wla-js">
+(function(){
+  const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const ws = () => document.getElementById('welcomeScreen');
+  const shown = () => { const w = ws(); return w && w.style.display !== 'none' && !w.classList.contains('hide'); };
+
+  /* 3) ออโรร่า */
+  function aurora(){
+    const r = document.querySelector('#welcomeScreen .wl-right'); if (!r || r.querySelector('.wla-aurora')) return;
+    const a = document.createElement('div'); a.className = 'wla-aurora'; a.innerHTML = '<i></i><i></i><i></i>'; r.insertBefore(a, r.firstChild);
+  }
+
+  /* 7) เส้นแสงใต้ช่องกรอก */
+  function lines(){ document.querySelectorAll('#welcomeScreen .wl-input-wrap').forEach(w => { if (!w.querySelector('.wla-line')) { const l = document.createElement('span'); l.className = 'wla-line'; w.appendChild(l); } }); }
+
+  /* 4) เครือข่ายซัพพลายเชน (จุด + เส้นเชื่อม + แพ็กเก็ตวิ่ง) */
+  const Net = {
+    init(){
+      const left = document.querySelector('#welcomeScreen .wl-left'); if (!left || reduce) return;
+      const c = document.createElement('canvas'); c.className = 'wla-net'; left.insertBefore(c, left.firstChild);
+      this.c = c; this.g = c.getContext('2d'); this.left = left; this.mouse = null;
+      left.addEventListener('mousemove', e => { const b = left.getBoundingClientRect(); this.mouse = {x:e.clientX - b.left, y:e.clientY - b.top}; });
+      left.addEventListener('mouseleave', () => { this.mouse = null; });
+      window.addEventListener('resize', () => this.size());
+      this.size(); this.seed();
+      setTimeout(() => c.classList.add('on'), 300);
+      this.loop = this.loop.bind(this); this.run();
+      new MutationObserver(() => this.run()).observe(ws(), {attributes:true, attributeFilter:['style','class']});
+    },
+    size(){
+      const b = this.left.getBoundingClientRect(), d = Math.min(2, window.devicePixelRatio || 1);
+      this.w = b.width; this.h = b.height; this.c.width = b.width * d; this.c.height = b.height * d;
+      this.c.style.width = b.width + 'px'; this.c.style.height = b.height + 'px'; this.g.setTransform(d, 0, 0, d, 0, 0);
+      if (this.p) this.seed();
+    },
+    seed(){
+      const n = Math.round(Math.min(70, Math.max(28, this.w * this.h / 16000)));
+      this.p = Array.from({length:n}, () => ({ x:Math.random() * this.w, y:Math.random() * this.h, vx:(Math.random() - .5) * .28, vy:(Math.random() - .5) * .28, r:Math.random() * 1.6 + .9, hub:Math.random() < .12 }));
+      this.pk = [];
+    },
+    run(){ if (this.raf || !this.c) return; if (shown()) this.raf = requestAnimationFrame(this.loop); },
+    loop(t){
+      this.raf = null; if (!shown()) return;
+      const g = this.g, P = this.p, W = this.w, H = this.h, D = 150;
+      g.clearRect(0, 0, W, H);
+      for (const a of P) {
+        a.x += a.vx; a.y += a.vy;
+        if (a.x < -20) a.x = W + 20; if (a.x > W + 20) a.x = -20; if (a.y < -20) a.y = H + 20; if (a.y > H + 20) a.y = -20;
+        if (this.mouse) { const dx = this.mouse.x - a.x, dy = this.mouse.y - a.y, d2 = dx * dx + dy * dy; if (d2 < 32000) { a.x += dx * .0025; a.y += dy * .0025; } }
+      }
+      const links = [];
+      for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) {
+        const a = P[i], b = P[j], dx = a.x - b.x, dy = a.y - b.y, d = Math.hypot(dx, dy);
+        if (d < D) { const o = (1 - d / D) * .42; g.strokeStyle = `rgba(143,176,255,${o})`; g.lineWidth = a.hub || b.hub ? 1 : .6; g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); g.stroke(); if (d < D * .8) links.push([a, b]); }
+      }
+      if (this.mouse) for (const a of P) { const d = Math.hypot(this.mouse.x - a.x, this.mouse.y - a.y); if (d < 170) { g.strokeStyle = `rgba(34,211,238,${(1 - d / 170) * .5})`; g.lineWidth = .8; g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(this.mouse.x, this.mouse.y); g.stroke(); } }
+      for (const a of P) {
+        g.beginPath(); g.arc(a.x, a.y, a.hub ? a.r + 1.6 : a.r, 0, Math.PI * 2);
+        g.fillStyle = a.hub ? 'rgba(34,211,238,.9)' : 'rgba(191,208,255,.75)'; g.fill();
+        if (a.hub) { g.beginPath(); g.arc(a.x, a.y, a.r + 6 + Math.sin(t / 500 + a.x) * 2, 0, Math.PI * 2); g.strokeStyle = 'rgba(34,211,238,.25)'; g.lineWidth = 1; g.stroke(); }
+      }
+      // แพ็กเก็ตข้อมูลวิ่งตามเส้น (สื่อการส่งของ/ข้อมูลระหว่าง Maker กับโรงงาน)
+      if (links.length && this.pk.length < 7 && Math.random() < .04) { const [a, b] = links[Math.floor(Math.random() * links.length)]; this.pk.push({a, b, s:0}); }
+      this.pk = this.pk.filter(k => { k.s += .012; if (k.s >= 1) return false;
+        const x = k.a.x + (k.b.x - k.a.x) * k.s, y = k.a.y + (k.b.y - k.a.y) * k.s;
+        const gr = g.createRadialGradient(x, y, 0, x, y, 7); gr.addColorStop(0, 'rgba(255,255,255,.95)'); gr.addColorStop(1, 'rgba(34,211,238,0)');
+        g.fillStyle = gr; g.beginPath(); g.arc(x, y, 7, 0, Math.PI * 2); g.fill(); return true; });
+      this.raf = requestAnimationFrame(this.loop);
+    }
+  };
+
+  /* 9) รหัสผิด → สั่น */
+  function hookError(){
+    if (typeof window.wlShowError !== 'function' || window.wlShowError.__wla) return;
+    const base = window.wlShowError;
+    window.wlShowError = function(){
+      const r = base.apply(this, arguments);
+      const card = document.querySelector('#welcomeScreen .wl-right .wl-card');
+      if (card && !reduce) { card.classList.remove('wla-shake'); void card.offsetWidth; card.classList.add('wla-shake'); setTimeout(() => card.classList.remove('wla-shake'), 650); }
+      return r;
+    };
+    window.wlShowError.__wla = true;
+  }
+
+  /* 8) เข้าสู่ระบบสำเร็จ → ปุ่ม ✓ เขียว + หน้ายินดีต้อนรับซูมเข้าระบบ */
+  function hookSuccess(){
+    const txt = document.getElementById('wlLoginBtnText'), btn = document.getElementById('wlLoginBtn');
+    if (!txt || !btn || txt.__wla) return; txt.__wla = true;
+    new MutationObserver(() => {
+      const t = txt.textContent.trim();
+      if (/สำเร็จ/.test(t) && !btn.classList.contains('wla-ok')) celebrate(btn, txt);
+      if (t === 'เข้าสู่ระบบ') { btn.classList.remove('wla-ok'); const ck = btn.querySelector('.wla-check'); if (ck) ck.remove(); }
+    }).observe(txt, {childList:true, characterData:true, subtree:true});
+  }
+  function celebrate(btn, txt){
+    btn.classList.add('wla-ok');
+    const sp = document.getElementById('wlLoginBtnSpinner'); if (sp) sp.style.display = 'none';
+    if (!btn.querySelector('.wla-check')) btn.insertAdjacentHTML('beforeend', '<svg class="wla-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>');
+    let name = '';
+    try { const u = window.CCIPAuth && CCIPAuth.user(); name = (u && (u.name || u.id)) || ''; } catch (e) {}
+    if (!name) name = (document.getElementById('wlUserId') || {}).value || '';
+    const first = String(name).trim().split(/\s+/)[0];
+    const h = new Date().getHours(), greet = h < 12 ? 'สวัสดีตอนเช้า' : h < 17 ? 'สวัสดีตอนบ่าย' : 'สวัสดีตอนเย็น';
+    const el = document.createElement('div'); el.className = 'wla-done';
+    el.innerHTML = `<div class="ring"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div><h2>${greet}${first ? ' คุณ' + first.replace(/[<>&"]/g, '') : ''}</h2><p>กำลังเข้าสู่ระบบ PURCHASE-EN-CCIP…</p>`;
+    setTimeout(() => {
+      document.body.appendChild(el); requestAnimationFrame(() => el.classList.add('on'));
+      setTimeout(() => el.classList.add('out'), reduce ? 700 : 1500);
+      setTimeout(() => el.remove(), reduce ? 900 : 2400);
+    }, 180);
+  }
+
+  function boot(){
+    if (!ws()) return;
+    aurora(); lines(); hookError(); hookSuccess(); Net.init();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(boot, 0)); else setTimeout(boot, 0);
+})();
+</script>
 </body>
 </html>
