@@ -23419,5 +23419,445 @@ window.CCIP_LOGIN_SLIDES = window.CCIP_LOGIN_SLIDES || { folder: 'login-bg/', ma
 })();
 </script>
 
+<!-- ═══ SUPPLIER · แผนที่ Maker (mkm) ═══ -->
+<style id="mkm-css">
+#page-mkmap{--m-ink:var(--text,#0F172A);--m-sub:var(--muted,#64748B);--m-card:var(--surface,#fff);--m-soft:var(--surface2,#F3F5F9);--m-line:var(--border,#E3E7EE);--m-blu:#2563EB;--m-cy:#0891B2;--m-grn:#059669;--m-amb:#D97706;--m-red:#DC2626}
+body.dark-theme #page-mkmap{--m-blu:#60A5FA;--m-cy:#22D3EE;--m-grn:#34D399;--m-amb:#FBBF24;--m-red:#F87171}
+#page-mkmap *{box-sizing:border-box}
+.mkm-hero{display:flex;justify-content:space-between;align-items:flex-end;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
+.mkm-eyebrow{font-size:.68rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--m-sub)}
+.mkm-hero h1{font-size:1.4rem;font-weight:700;margin:.25rem 0 .15rem;color:var(--m-ink)}
+.mkm-hero p{margin:0;font-size:.8rem;color:var(--m-sub)}
+.mkm-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.7rem;margin-bottom:1rem}
+.mkm-kpi{background:var(--m-card);border:1px solid var(--m-line);border-radius:12px;padding:.75rem .9rem}
+.mkm-kpi small{display:flex;align-items:center;gap:.4rem;font-size:.63rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--m-sub)}
+.mkm-kpi small::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--c)}
+.mkm-kpi b{display:block;font-size:1.55rem;line-height:1.15;margin-top:.2rem;color:var(--m-ink);font-variant-numeric:tabular-nums}
+.mkm-kpi span{font-size:.7rem;color:var(--m-sub)}
+.mkm-wrap{display:grid;grid-template-columns:340px minmax(0,1fr);gap:1rem;height:calc(100vh - 290px);min-height:560px}
+.mkm-side{background:var(--m-card);border:1px solid var(--m-line);border-radius:14px;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.mkm-side-h{padding:.85rem .9rem .7rem;border-bottom:1px solid var(--m-line);display:flex;flex-direction:column;gap:.55rem}
+.mkm-lbl{font-size:.63rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--m-sub)}
+.mkm-plants{display:flex;gap:.35rem;flex-wrap:wrap}
+.mkm-plant{border:1px solid var(--m-line);background:var(--m-card);color:var(--m-ink);border-radius:8px;font:inherit;font-size:.74rem;font-weight:700;padding:.32rem .6rem;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem}
+.mkm-plant.on{background:#1F3A5F;border-color:#1F3A5F;color:#fff}
+.mkm-plant.unset{opacity:.55;border-style:dashed}
+.mkm-plant i{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.6}
+.mkm-search{display:flex;align-items:center;gap:.45rem;border:1px solid var(--m-line);border-radius:9px;padding:0 .6rem;background:var(--m-card)}
+.mkm-search svg{width:15px;height:15px;stroke:var(--m-sub);fill:none;stroke-width:2}
+.mkm-search input{flex:1;min-width:0;border:0;outline:0;background:none;font:inherit;font-size:.8rem;color:var(--m-ink);padding:.5rem 0}
+.mkm-sel{border:1px solid var(--m-line);border-radius:9px;background:var(--m-card);color:var(--m-ink);font:inherit;font-size:.78rem;padding:.42rem .55rem;width:100%}
+.mkm-list{flex:1;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.mkm-grp{padding:.5rem .9rem .3rem;font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--m-sub);background:var(--m-soft);border-bottom:1px solid var(--m-line);position:sticky;top:0;z-index:1}
+.mkm-it{display:flex;gap:.7rem;align-items:center;padding:.62rem .9rem;border-bottom:1px solid color-mix(in srgb,var(--m-line) 70%,transparent);cursor:pointer;transition:background .12s}
+.mkm-it:hover{background:color-mix(in srgb,var(--m-blu) 4%,transparent)}
+.mkm-it.on{background:color-mix(in srgb,var(--m-blu) 9%,transparent);box-shadow:inset 3px 0 0 var(--m-blu)}
+.mkm-av{flex:0 0 32px;height:32px;border-radius:9px;display:grid;place-items:center;font-size:.7rem;font-weight:800;color:#fff;background:var(--c)}
+.mkm-it-m{flex:1;min-width:0}
+.mkm-it-m b{display:block;font-size:.82rem;color:var(--m-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mkm-it-m span{display:block;font-size:.68rem;color:var(--m-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mkm-km{text-align:right;white-space:nowrap}
+.mkm-km b{display:block;font-size:.84rem;color:var(--m-ink);font-variant-numeric:tabular-nums}
+.mkm-km span{font-size:.62rem;color:var(--m-sub)}
+.mkm-pin{border:1px dashed var(--m-line);background:none;color:var(--m-blu);border-radius:7px;font:inherit;font-size:.68rem;font-weight:700;padding:.22rem .5rem;cursor:pointer;white-space:nowrap}
+.mkm-pin:hover{border-color:var(--m-blu)}
+.mkm-mapbox{position:relative;border:1px solid var(--m-line);border-radius:14px;overflow:hidden;background:#E8EEF5}
+#mkmMap{position:absolute;inset:0}
+.mkm-tools{position:absolute;top:12px;right:12px;z-index:500;display:flex;gap:.4rem}
+.mkm-tool{border:1px solid rgba(15,23,42,.14);background:rgba(255,255,255,.95);color:#0F172A;border-radius:9px;font:inherit;font-size:.72rem;font-weight:700;padding:.4rem .65rem;cursor:pointer;box-shadow:0 2px 8px rgba(15,23,42,.12);display:inline-flex;align-items:center;gap:.35rem}
+.mkm-tool.on{background:#1F3A5F;color:#fff;border-color:#1F3A5F}
+.mkm-tool svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.mkm-card{position:absolute;left:12px;bottom:12px;z-index:500;width:min(360px,calc(100% - 24px));background:rgba(255,255,255,.97);color:#0F172A;border-radius:14px;box-shadow:0 12px 32px rgba(15,23,42,.22);overflow:hidden;animation:mkmUp .25s ease !important}
+@keyframes mkmUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.mkm-card-h{display:flex;gap:.7rem;align-items:center;padding:.85rem 1rem .6rem}
+.mkm-card-h h3{margin:0;font-size:1rem;line-height:1.25}
+.mkm-card-h p{margin:.1rem 0 0;font-size:.72rem;color:#64748B}
+.mkm-x{margin-left:auto;border:0;background:none;font-size:1.2rem;line-height:1;color:#64748B;cursor:pointer;padding:.2rem .35rem;border-radius:6px;align-self:flex-start}
+.mkm-x:hover{background:#F1F5F9}
+.mkm-route{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;padding:0 1rem .7rem}
+.mkm-route div{border-radius:10px;background:#F1F5F9;padding:.55rem .7rem}
+.mkm-route small{display:block;font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#64748B}
+.mkm-route b{font-size:1.2rem;font-variant-numeric:tabular-nums}
+.mkm-route .big{grid-column:1 / 3;background:linear-gradient(135deg,#1F3A5F,#2563EB);color:#fff}
+.mkm-route .big small{color:rgba(255,255,255,.75)}
+.mkm-info{padding:0 1rem .6rem;display:grid;grid-template-columns:auto 1fr;gap:.25rem .8rem;font-size:.76rem}
+.mkm-info dt{color:#64748B}
+.mkm-info dd{margin:0;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.mkm-info a{color:#2563EB;text-decoration:none}
+.mkm-acts{display:flex;gap:.4rem;padding:.6rem 1rem .85rem;border-top:1px solid #E2E8F0;flex-wrap:wrap}
+.mkm-act{flex:1;border:1px solid #E2E8F0;background:#fff;color:#0F172A;border-radius:8px;font:inherit;font-size:.72rem;font-weight:700;padding:.45rem .5rem;cursor:pointer;text-align:center;text-decoration:none;white-space:nowrap}
+.mkm-act.pri{background:#2563EB;border-color:#2563EB;color:#fff}
+.mkm-act:hover{filter:brightness(.97)}
+.mkm-banner{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:600;background:#1F3A5F;color:#fff;border-radius:12px;padding:.6rem .8rem;font-size:.78rem;display:flex;gap:.6rem;align-items:center;box-shadow:0 8px 24px rgba(15,23,42,.3);flex-wrap:wrap;max-width:calc(100% - 24px)}
+.mkm-banner input{border:0;border-radius:7px;padding:.35rem .5rem;font:inherit;font-size:.74rem;width:230px;max-width:100%}
+.mkm-banner button{border:0;border-radius:7px;padding:.35rem .6rem;font:inherit;font-size:.72rem;font-weight:700;cursor:pointer}
+.mkm-note{display:flex;gap:.6rem;align-items:flex-start;padding:.7rem .9rem;border-radius:10px;background:color-mix(in srgb,var(--m-amb) 10%,var(--m-card));border:1px solid color-mix(in srgb,var(--m-amb) 35%,var(--m-line));font-size:.76rem;color:var(--m-ink);margin-bottom:1rem}
+.mkm-empty{padding:1.5rem 1rem;text-align:center;font-size:.78rem;color:var(--m-sub)}
+.mkm-load{position:absolute;inset:0;display:grid;place-items:center;color:#475569;font-size:.85rem;z-index:400}
+/* หมุดบนแผนที่ */
+.mkm-mk{width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--c);border:2.5px solid #fff;box-shadow:0 3px 8px rgba(15,23,42,.35);display:grid;place-items:center;transition:transform .15s}
+.mkm-mk span{transform:rotate(45deg);font:800 10px/1 system-ui,sans-serif;color:#fff;letter-spacing:-.02em}
+.mkm-mk.sel{transform:rotate(-45deg) scale(1.3);box-shadow:0 0 0 6px color-mix(in srgb,var(--c) 30%,transparent),0 4px 12px rgba(15,23,42,.4)}
+.mkm-pl{width:44px;height:44px;border-radius:12px;background:#1F3A5F;border:3px solid #fff;box-shadow:0 4px 14px rgba(15,23,42,.45);display:grid;place-items:center;color:#fff;position:relative}
+.mkm-pl svg{width:22px;height:22px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.mkm-pl b{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);background:#1F3A5F;color:#fff;font:800 9.5px/1 system-ui,sans-serif;padding:3px 5px;border-radius:4px;white-space:nowrap}
+.mkm-pl.dim{background:#64748B}.mkm-pl.dim b{background:#64748B}
+.mkm-pl::after{content:"";position:absolute;inset:-8px;border-radius:16px;border:2px solid rgba(37,99,235,.45);animation:mkmPulse 2s ease-out infinite !important;animation-duration:2s !important}
+.mkm-pl.dim::after{display:none}
+@keyframes mkmPulse{from{opacity:1;transform:scale(.9)}to{opacity:0;transform:scale(1.4)}}
+.leaflet-container{font:inherit}
+@media (max-width:1100px){.mkm-wrap{grid-template-columns:1fr;height:auto}.mkm-side{max-height:360px}.mkm-mapbox{height:540px}.mkm-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+<script id="mkm-js">
+(function(){
+  'use strict';
+  const $ = (s, r) => (r || document).querySelector(s);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const url = () => (typeof WEB_APP_URL !== 'undefined' && WEB_APP_URL) || localStorage.getItem('prpo_url') || '';
+  const toast = (m, t) => { try { showToast(m, t || 'info'); } catch (e) {} };
+  const me = () => localStorage.getItem('prpo_username') || '';
+  const LOC_KEY = 'ccip_mkloc_local', ROUTE_KEY = 'ccip_mkroute_cache', PLANT_KEY = 'ccip_mk_plant';
+  const readJ = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || '') || d; } catch (e) { return d; } };
+  const writeJ = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  const key = (kind, n) => (kind === 'plant' ? 'plant:' : 'maker:') + String(n || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  /* ที่ตั้งโรงงานเริ่มต้น (จากเว็บไซต์บริษัท cci.co.th) — ย้าย/แก้ได้ในหน้าแผนที่ */
+  const PLANTS = [
+    {code:'CCI',  label:'CCI · สมุทรปราการ', lat:13.623642, lng:100.525216},
+    {code:'CCIS', label:'CCIS · ฉะเชิงเทรา', lat:13.781806, lng:100.957531},
+    {code:'CCIR', label:'CCIR · ระยอง',      lat:12.989966, lng:101.182278},
+    {code:'CNN',  label:'CNN',               lat:null,      lng:null}
+  ];
+  const PAL = ['#2563EB','#059669','#D97706','#7C3AED','#DB2777','#0891B2','#DC2626','#65A30D','#9333EA','#EA580C'];
+  const catColor = c => { c = String(c || 'อื่นๆ'); let h = 0; for (const ch of c) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return PAL[h % PAL.length]; };
+  const initials = n => { const w = String(n).replace(/บริษัท|บจก\.?|จำกัด|\(.*?\)|co\.?,?|ltd\.?/gi, '').trim().split(/\s+/).filter(Boolean); if (!w.length) return '?'; return /[A-Za-z0-9]/.test(w[0][0]) ? (w[0][0] + (w[1] ? w[1][0] : (w[0][1] || ''))).toUpperCase() : w[0].slice(0, 2); };
+  const hav = (a, b) => { const R = 6371, r = x => x * Math.PI / 180, dLa = r(b.lat - a.lat), dLo = r(b.lng - a.lng); const h = Math.sin(dLa / 2) ** 2 + Math.cos(r(a.lat)) * Math.cos(r(b.lat)) * Math.sin(dLo / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };
+  const parseLL = u => {
+    try { u = decodeURIComponent(String(u || '')); } catch (e) { u = String(u || ''); }
+    const P = [/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/, /@(-?\d+\.\d+),(-?\d+\.\d+)/, /[?&](?:q|query|ll|destination|center)=(-?\d+\.\d+),\s*(-?\d+\.\d+)/, /^\s*(-?\d{1,2}\.\d+)\s*,\s*(-?\d{1,3}\.\d+)\s*$/];
+    for (const p of P) { const m = u.match(p); if (m) { const lat = +m[1], lng = +m[2]; if (Math.abs(lat) <= 90 && Math.abs(lng) <= 180) return {lat, lng}; } }
+    return null;
+  };
+  const fmtKm = k => k >= 100 ? Math.round(k) + '' : k.toFixed(1);
+  const fmtMin = m => m >= 60 ? Math.floor(m / 60) + ' ชม. ' + Math.round(m % 60) + ' นาที' : Math.round(m) + ' นาที';
+
+  const api = {
+    async get(a){ const r = await fetch(url() + '?action=' + a + '&_=' + Date.now()); const j = await r.json(); if (!j.success) throw new Error(j.error || 'โหลดไม่สำเร็จ'); return j; },
+    async post(b){ const r = await fetch(url(), {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(b)}); const j = await r.json();
+      if (j && j.success === undefined && !j.error) throw new Error('unknown action'); if (!j.success) throw new Error(j.error || 'บันทึกไม่สำเร็จ'); return j; }
+  };
+
+  const M = {
+    locs: {}, serverOk: null, plant: localStorage.getItem(PLANT_KEY) || 'CCI', q: '', cat: '', sel: null, pick: null,
+    routes: readJ(ROUTE_KEY, {}), map: null, layer: null, routeLine: null, markers: {},
+
+    /* ── ข้อมูล ── */
+    async loadLocs(){
+      const local = readJ(LOC_KEY, {});
+      this.locs = Object.assign({}, local);
+      if (!url()) { this.serverOk = false; return; }
+      try { const j = await api.get('getMakerLocs'); (j.data || []).forEach(l => { this.locs[l.key] = l; }); this.serverOk = true; }
+      catch (e) { if (/unknown action/i.test(e.message)) this.serverOk = false; }
+    },
+    plants(){ return PLANTS.map(p => { const s = this.locs[key('plant', p.code)]; return Object.assign({}, p, s ? {lat:s.lat, lng:s.lng, saved:true} : {}); }); },
+    origin(){ const p = this.plants().find(x => x.code === this.plant); return p && isFinite(p.lat) && p.lat != null ? p : this.plants().find(x => x.lat != null); },
+    makers(){
+      const map = new Map();
+      (typeof suppliers !== 'undefined' ? suppliers : []).forEach(s => { if (s && s.name) map.set(String(s.name).trim().toLowerCase(), {name:String(s.name).trim(), sup:s}); });
+      (typeof allData !== 'undefined' ? allData : []).forEach(r => { const n = String(r.maker || '').trim(); if (n && !map.has(n.toLowerCase())) map.set(n.toLowerCase(), {name:n, sup:null}); });
+      const o = this.origin();
+      return [...map.values()].map(m => {
+        const s = m.sup || {}, saved = this.locs[key('maker', m.name)], fromLink = parseLL(s.maplink);
+        const pos = saved ? {lat:saved.lat, lng:saved.lng, src:'saved'} : fromLink ? Object.assign(fromLink, {src:'link'}) : null;
+        const active = (typeof allData !== 'undefined' ? allData : []).filter(r => String(r.maker || '').trim().toLowerCase() === m.name.toLowerCase() && !String(r.status || '').includes('เสร็จแล้ว')).length;
+        const r = pos && o ? this.routes[this.rk(o, pos)] : null;
+        return { name:m.name, sup:m.sup, cat:s.category || '', contact:s.contact || '', phone:s.phone || '', email:s.email || '', lead:s.leadtime || '', maplink:s.maplink || '', pos, active,
+          km: pos && o ? hav(o, pos) : null, road: r || null, color:catColor(s.category) };
+      });
+    },
+    rk(o, p){ return [o.lat.toFixed(5), o.lng.toFixed(5), p.lat.toFixed(5), p.lng.toFixed(5)].join(','); },
+
+    /* ── หน้า ── */
+    async open(){
+      const page = $('#page-mkmap'); if (!page) return;
+      if (!page.dataset.ready) { page.dataset.ready = '1'; this.shell(); }
+      await this.loadLocs();
+      await this.resolveShort();
+      await this.ensureMap();
+      this.draw();
+      setTimeout(() => this.map && this.map.invalidateSize(), 200);
+    },
+    shell(){
+      $('#page-mkmap').innerHTML = `
+        <div class="mkm-hero"><div><div class="mkm-eyebrow">Supplier Network · Maker Map</div><h1>แผนที่ Maker</h1>
+          <p>ที่ตั้งโรงงานของเรา และ Maker แต่ละเจ้า — คลิก Maker เพื่อดูข้อมูล เส้นทาง และระยะทางขับรถ</p></div></div>
+        <div id="mkmNote"></div>
+        <div class="mkm-kpis" id="mkmKpi"></div>
+        <div class="mkm-wrap">
+          <aside class="mkm-side">
+            <div class="mkm-side-h">
+              <div class="mkm-lbl">จุดเริ่มต้น (โรงงาน)</div><div class="mkm-plants" id="mkmPlants"></div>
+              <div class="mkm-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="mkmQ" placeholder="ค้นหา Maker, หมวดงาน..."></div>
+              <select class="mkm-sel" id="mkmCat"></select>
+            </div>
+            <div class="mkm-list" id="mkmList"></div>
+          </aside>
+          <div class="mkm-mapbox"><div id="mkmMap"><div class="mkm-load">กำลังโหลดแผนที่...</div></div>
+            <div class="mkm-tools"><button class="mkm-tool" id="mkmRing" title="แสดงรัศมี 50 / 100 กม."><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>รัศมี</button>
+              <button class="mkm-tool" id="mkmFit" title="ดูทั้งหมด"><svg viewBox="0 0 24 24"><path d="M3 9V3h6M21 9V3h-6M3 15v6h6M21 15v6h-6"/></svg>ทั้งหมด</button>
+              <button class="mkm-tool" id="mkmSetPlant" title="ย้ายตำแหน่งโรงงานที่เลือก"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V9l7-5 7 5v12"/></svg>ตั้งตำแหน่งโรงงาน</button></div>
+            <div id="mkmCardBox"></div><div id="mkmBanner"></div>
+          </div>
+        </div>`;
+      $('#mkmQ').oninput = e => { this.q = e.target.value; this.drawList(); };
+      $('#mkmCat').onchange = e => { this.cat = e.target.value; this.draw(); };
+      $('#mkmRing').onclick = () => { this.rings = !this.rings; $('#mkmRing').classList.toggle('on', this.rings); this.drawRings(); };
+      $('#mkmFit').onclick = () => this.fit();
+      $('#mkmSetPlant').onclick = () => this.startPick({kind:'plant', name:this.plant});
+    },
+    lib(){
+      if (window.L) return Promise.resolve();
+      if (this._lib) return this._lib;
+      const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'; document.head.appendChild(css);
+      this._lib = new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'; s.onload = res; s.onerror = () => { this._lib = null; rej(new Error('โหลดแผนที่ไม่ได้')); }; document.head.appendChild(s); });
+      return this._lib;
+    },
+    async ensureMap(){
+      if (this.map) return;
+      try { await this.lib(); } catch (e) { $('#mkmMap').innerHTML = '<div class="mkm-load">โหลดแผนที่ไม่ได้ — ตรวจสอบอินเทอร์เน็ต แล้วเปิดหน้านี้ใหม่</div>'; return; }
+      const box = $('#mkmMap'); box.innerHTML = '';
+      const o = this.origin() || {lat:13.62, lng:100.52};
+      this.map = L.map(box, {zoomControl:true, attributionControl:true}).setView([o.lat, o.lng], 9);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {maxZoom:19, subdomains:'abcd', attribution:'&copy; OpenStreetMap &copy; CARTO'}).addTo(this.map);
+      this.layer = L.layerGroup().addTo(this.map); this.ringLayer = L.layerGroup().addTo(this.map);
+      this.map.on('click', e => this.onMapClick(e));
+    },
+
+    /* ── วาดทั้งหมด ── */
+    draw(){ this.drawPlants(); this.drawCats(); this.drawKpi(); this.drawList(); this.drawMarkers(); this.drawRings(); this.drawCard(); this.drawNote(); },
+    drawNote(){
+      const n = $('#mkmNote'); if (!n) return;
+      n.innerHTML = this.serverOk === false ? `<div class="mkm-note"><b>!</b><div>ตำแหน่งที่ปักหมุดจะ<b>บันทึกไว้ในเครื่องนี้ชั่วคราว</b> — อัปเดต <code>CCIP_Extension.gs</code> ตัวล่าสุดเพื่อเก็บลง Google Sheet ให้ทุกคนเห็นตรงกัน และให้ระบบอ่านลิงก์ Google Maps แบบย่อได้</div></div>` : '';
+    },
+    drawPlants(){
+      $('#mkmPlants').innerHTML = this.plants().map(p => `<button class="mkm-plant${p.code === this.plant ? ' on' : ''}${p.lat == null ? ' unset' : ''}" data-p="${p.code}" title="${esc(p.label)}${p.lat == null ? ' — ยังไม่ได้ตั้งตำแหน่ง' : ''}"><i></i>${p.code}</button>`).join('');
+      $('#mkmPlants').querySelectorAll('[data-p]').forEach(b => b.onclick = () => {
+        const p = this.plants().find(x => x.code === b.dataset.p);
+        this.plant = b.dataset.p; try { localStorage.setItem(PLANT_KEY, this.plant); } catch (e) {}
+        if (p.lat == null) { this.draw(); this.startPick({kind:'plant', name:p.code}); return; }
+        this.clearRoute(); this.draw(); if (this.sel) this.route(); else this.map && this.map.flyTo([p.lat, p.lng], 10, {duration:.8});
+      });
+    },
+    drawCats(){
+      const cats = [...new Set(this.makers().map(m => m.cat).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'th'));
+      $('#mkmCat').innerHTML = '<option value="">หมวดงานทั้งหมด</option>' + cats.map(c => `<option${c === this.cat ? ' selected' : ''}>${esc(c)}</option>`).join('');
+    },
+    filtered(){ const q = this.q.toLowerCase(); return this.makers().filter(m => (!this.cat || m.cat === this.cat) && (!q || (m.name + ' ' + m.cat + ' ' + m.contact).toLowerCase().includes(q))); },
+    drawKpi(){
+      const ms = this.makers(), on = ms.filter(m => m.pos && m.km != null), o = this.origin();
+      const avg = on.length ? on.reduce((a, m) => a + (m.road ? m.road.km : m.km), 0) / on.length : NaN;
+      const k = (c, l, v, s) => `<div class="mkm-kpi" style="--c:${c}"><small>${l}</small><b>${v}</b><span>${s}</span></div>`;
+      $('#mkmKpi').innerHTML = k('#1F3A5F', 'Makers on map', on.length, `จาก ${ms.length} เจ้า`) +
+        k('#2563EB', 'Avg distance', isFinite(avg) ? fmtKm(avg) + ' กม.' : '—', `จาก ${o ? o.code : '—'}`) +
+        k('#059669', 'Within 50 km', on.filter(m => m.km <= 50).length, 'ระยะเส้นตรง') +
+        k('#D97706', 'Within 100 km', on.filter(m => m.km <= 100).length, 'ระยะเส้นตรง') +
+        k('#94A3B8', 'Not pinned', ms.length - on.length, 'ยังไม่มีพิกัด');
+    },
+    drawList(){
+      const list = this.filtered(), on = list.filter(m => m.pos).sort((a, b) => (a.road ? a.road.km : a.km) - (b.road ? b.road.km : b.km)), off = list.filter(m => !m.pos).sort((a, b) => a.name.localeCompare(b.name, 'th'));
+      const row = m => `<div class="mkm-it${this.sel === m.name ? ' on' : ''}" data-n="${esc(m.name)}"><div class="mkm-av" style="--c:${m.pos ? m.color : '#94A3B8'}">${esc(initials(m.name))}</div>
+          <div class="mkm-it-m"><b title="${esc(m.name)}">${esc(m.name)}</b><span>${esc(m.cat || 'ไม่ระบุหมวดงาน')}${m.active ? ` · ${m.active} งานค้าง` : ''}</span></div>
+          ${m.pos ? `<div class="mkm-km"><b>${m.road ? fmtKm(m.road.km) : '≈' + fmtKm(m.km)}</b><span>${m.road ? 'กม. (ถนน)' : 'กม. เส้นตรง'}</span></div>` : `<button class="mkm-pin" data-pin="${esc(m.name)}">ปักหมุด</button>`}</div>`;
+      $('#mkmList').innerHTML = (on.length ? `<div class="mkm-grp">บนแผนที่ · เรียงจากใกล้ไปไกล (${on.length})</div>` + on.map(row).join('') : '') +
+        (off.length ? `<div class="mkm-grp">ยังไม่มีพิกัด (${off.length})</div>` + off.map(row).join('') : '') +
+        (!list.length ? '<div class="mkm-empty">ไม่พบ Maker</div>' : '');
+      $('#mkmList').querySelectorAll('.mkm-it').forEach(el => el.onclick = e => { if (e.target.closest('[data-pin]')) return; this.select(el.dataset.n); });
+      $('#mkmList').querySelectorAll('[data-pin]').forEach(b => b.onclick = e => { e.stopPropagation(); this.startPick({kind:'maker', name:b.dataset.pin}); });
+    },
+    drawMarkers(){
+      if (!this.map) return;
+      this.layer.clearLayers(); this.markers = {};
+      this.plants().filter(p => p.lat != null).forEach(p => {
+        const ic = L.divIcon({className:'', iconSize:[44, 44], iconAnchor:[22, 22], html:`<div class="mkm-pl${p.code === this.plant ? '' : ' dim'}"><svg viewBox="0 0 24 24"><path d="M2 20h20M4 20V10l5 3V10l5 3V7l6 3v10"/></svg><b>${p.code}</b></div>`});
+        L.marker([p.lat, p.lng], {icon:ic, zIndexOffset:p.code === this.plant ? 1000 : 500, title:p.label}).addTo(this.layer).on('click', () => { this.plant = p.code; this.draw(); if (this.sel) this.route(); });
+      });
+      this.filtered().filter(m => m.pos).forEach(m => {
+        const sel = this.sel === m.name;
+        const ic = L.divIcon({className:'', iconSize:[30, 30], iconAnchor:[15, 30], html:`<div class="mkm-mk${sel ? ' sel' : ''}" style="--c:${m.color}"><span>${esc(initials(m.name))}</span></div>`});
+        this.markers[m.name] = L.marker([m.pos.lat, m.pos.lng], {icon:ic, zIndexOffset:sel ? 2000 : 0, title:m.name}).addTo(this.layer).on('click', () => this.select(m.name));
+      });
+      if (!this._fitted) { this._fitted = true; this.fit(); }
+    },
+    drawRings(){
+      if (!this.map) return; this.ringLayer.clearLayers(); const o = this.origin(); if (!this.rings || !o) return;
+      [[50, '#059669'], [100, '#D97706']].forEach(([r, c]) => {
+        L.circle([o.lat, o.lng], {radius:r * 1000, color:c, weight:1.5, dashArray:'6 6', fillColor:c, fillOpacity:.04, interactive:false}).addTo(this.ringLayer);
+      });
+    },
+    fit(){
+      if (!this.map) return;
+      const pts = this.filtered().filter(m => m.pos).map(m => [m.pos.lat, m.pos.lng]).concat(this.plants().filter(p => p.lat != null).map(p => [p.lat, p.lng]));
+      if (pts.length) this.map.fitBounds(pts, {padding:[50, 50], maxZoom:11});
+    },
+
+    /* ── เลือก Maker + คำนวณเส้นทาง ── */
+    select(name){
+      this.sel = this.sel === name && !this.pick ? name : name;
+      const m = this.makers().find(x => x.name === name);
+      this.drawList(); this.drawMarkers(); this.clearRoute(); this.drawCard();
+      if (m && m.pos) { this.map && this.map.flyTo([m.pos.lat, m.pos.lng], Math.max(this.map.getZoom(), 10), {duration:.6}); this.route(); }
+      const it = $(`#mkmList .mkm-it[data-n="${CSS.escape(name)}"]`); if (it) it.scrollIntoView({block:'nearest'});
+    },
+    clearRoute(){ if (this.routeLine && this.map) { this.map.removeLayer(this.routeLine); this.routeLine = null; } },
+    async route(){
+      const m = this.makers().find(x => x.name === this.sel), o = this.origin(); if (!m || !m.pos || !o || !this.map) return;
+      const k = this.rk(o, m.pos), tok = this._rt = Symbol();
+      let r = this.routes[k];
+      if (!r || !r.geo) {
+        this.drawCard(true);
+        try {
+          const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${o.lng},${o.lat};${m.pos.lng},${m.pos.lat}?overview=full&geometries=geojson`);
+          const j = await res.json();
+          if (j.code !== 'Ok' || !j.routes || !j.routes[0]) throw new Error('no route');
+          const rt = j.routes[0];
+          r = {km:rt.distance / 1000, min:rt.duration / 60, geo:rt.geometry.coordinates.map(c => [+c[1].toFixed(5), +c[0].toFixed(5)])};
+          this.routes[k] = r;
+          const small = {}; Object.entries(this.routes).slice(-60).forEach(([kk, v]) => { small[kk] = {km:v.km, min:v.min}; }); small[k] = r; writeJ(ROUTE_KEY, small);
+        } catch (e) { r = null; }
+      }
+      if (tok !== this._rt) return;
+      this.clearRoute();
+      const pts = r && r.geo ? r.geo : [[o.lat, o.lng], [m.pos.lat, m.pos.lng]];
+      this.routeLine = L.layerGroup([
+        L.polyline(pts, {color:'#fff', weight:8, opacity:.9}),
+        L.polyline(pts, {color:r ? '#2563EB' : '#94A3B8', weight:4.5, opacity:.95, dashArray:r ? null : '8 8'})
+      ]).addTo(this.map);
+      this.map.fitBounds(L.latLngBounds(pts), {padding:[70, 70], maxZoom:13});
+      this.routeInfo = r ? {km:r.km, min:r.min, road:true} : {km:hav(o, m.pos), min:null, road:false};
+      this.drawCard(); this.drawList(); this.drawKpi();
+    },
+    drawCard(loading){
+      const box = $('#mkmCardBox'); if (!box) return;
+      const m = this.sel && this.makers().find(x => x.name === this.sel); if (!m) { box.innerHTML = ''; return; }
+      const o = this.origin(), ri = this.routeInfo && m.pos && o && this.routes[this.rk(o, m.pos)] ? {km:this.routes[this.rk(o, m.pos)].km, min:this.routes[this.rk(o, m.pos)].min, road:true} : (m.pos && o ? {km:hav(o, m.pos), min:null, road:false} : null);
+      const nav = m.pos ? `https://www.google.com/maps/dir/?api=1${o ? `&origin=${o.lat},${o.lng}` : ''}&destination=${m.pos.lat},${m.pos.lng}&travelmode=driving` : '';
+      box.innerHTML = `<div class="mkm-card"><div class="mkm-card-h"><div class="mkm-av" style="--c:${m.pos ? m.color : '#94A3B8'};flex-basis:38px;height:38px">${esc(initials(m.name))}</div>
+          <div style="min-width:0"><h3>${esc(m.name)}</h3><p>${esc(m.cat || 'ไม่ระบุหมวดงาน')}${o ? ' · จาก ' + o.code : ''}</p></div><button class="mkm-x" title="ปิด">×</button></div>
+        ${m.pos ? `<div class="mkm-route">
+            <div class="big"><small>${loading ? 'กำลังคำนวณเส้นทาง...' : ri && ri.road ? 'ระยะทางขับรถ' : 'ระยะทางเส้นตรง (โดยประมาณ)'}</small><b>${ri ? fmtKm(ri.km) + ' กม.' : '—'}</b></div>
+            <div><small>เวลาขับรถ</small><b style="font-size:1rem">${ri && ri.min != null ? fmtMin(ri.min) : '—'}</b></div>
+            <div><small>ระยะเส้นตรง</small><b style="font-size:1rem">${o ? fmtKm(hav(o, m.pos)) + ' กม.' : '—'}</b></div></div>`
+          : `<div class="mkm-route"><div class="big" style="background:#64748B"><small>ยังไม่มีพิกัด</small><b style="font-size:.95rem">กด "ปักหมุด" แล้วคลิกตำแหน่งบนแผนที่</b></div></div>`}
+        <dl class="mkm-info">
+          ${m.contact ? `<dt>ผู้ติดต่อ</dt><dd>${esc(m.contact)}</dd>` : ''}
+          ${m.phone ? `<dt>โทร</dt><dd><a href="tel:${esc(m.phone)}">${esc(m.phone)}</a></dd>` : ''}
+          ${m.email ? `<dt>อีเมล</dt><dd><a href="mailto:${esc(m.email)}">${esc(m.email)}</a></dd>` : ''}
+          ${m.lead ? `<dt>Lead time</dt><dd>${esc(m.lead)} วัน</dd>` : ''}
+          <dt>งานค้าง</dt><dd>${m.active ? m.active + ' รายการ' : 'ไม่มี'}</dd>
+          ${!m.sup ? '<dt>ข้อมูล</dt><dd style="color:#94A3B8">ยังไม่อยู่ใน Supplier Database</dd>' : ''}
+        </dl>
+        <div class="mkm-acts">${m.pos ? `<a class="mkm-act pri" href="${nav}" target="_blank" rel="noopener">นำทางด้วย Google Maps</a>` : ''}
+          <button class="mkm-act" data-a="pin">${m.pos ? 'ย้ายหมุด' : 'ปักหมุด'}</button>
+          ${m.pos && m.pos.src === 'saved' ? '<button class="mkm-act" data-a="unpin">ลบหมุด</button>' : ''}</div></div>`;
+      box.querySelector('.mkm-x').onclick = () => { this.sel = null; this.clearRoute(); this.drawCard(); this.drawList(); this.drawMarkers(); };
+      box.querySelector('[data-a="pin"]').onclick = () => this.startPick({kind:'maker', name:m.name});
+      const up = box.querySelector('[data-a="unpin"]'); if (up) up.onclick = () => this.removeLoc('maker', m.name);
+    },
+
+    /* ── ปักหมุด / ตั้งตำแหน่งโรงงาน ── */
+    startPick(t){
+      this.pick = t;
+      const label = t.kind === 'plant' ? `โรงงาน ${t.name}` : t.name;
+      $('#mkmBanner').innerHTML = `<div class="mkm-banner">📍 คลิกตำแหน่งบนแผนที่เพื่อปักหมุด <b>${esc(label)}</b> หรือวางลิงก์ Google Maps
+        <input id="mkmLink" placeholder="วางลิงก์ Google Maps / พิกัด 13.62, 100.52"><button id="mkmLinkOk" style="background:#22C55E;color:#fff">ใช้ลิงก์นี้</button><button id="mkmPickX" style="background:#fff;color:#0F172A">ยกเลิก</button></div>`;
+      $('#mkmPickX').onclick = () => this.endPick();
+      $('#mkmLinkOk').onclick = async () => {
+        const v = $('#mkmLink').value.trim(); if (!v) return;
+        let ll = parseLL(v);
+        if (!ll && /^https?:/i.test(v) && url()) { try { const j = await api.post({action:'resolveMapLinks', urls:[v]}); const d = (j.data || [])[0]; if (d && d.lat != null) ll = {lat:d.lat, lng:d.lng}; } catch (e) {} }
+        if (!ll) { toast('อ่านพิกัดจากลิงก์นี้ไม่ได้ — ลองคลิกตำแหน่งบนแผนที่แทน', 'error'); return; }
+        this.saveLoc(t.kind, t.name, ll.lat, ll.lng, 'link');
+      };
+      if (this.map) this.map.getContainer().style.cursor = 'crosshair';
+    },
+    endPick(){ this.pick = null; $('#mkmBanner').innerHTML = ''; if (this.map) this.map.getContainer().style.cursor = ''; },
+    onMapClick(e){ if (!this.pick) return; const t = this.pick; this.saveLoc(t.kind, t.name, +e.latlng.lat.toFixed(6), +e.latlng.lng.toFixed(6), 'manual'); },
+    async saveLoc(kind, name, lat, lng, source){
+      const k = key(kind, name), rec = {key:k, kind, name, lat, lng, source};
+      this.locs[k] = rec; this.endPick();
+      try {
+        if (this.serverOk === false || !url()) throw new Error('unknown action');
+        await api.post({action:'saveMakerLoc', kind, name, lat, lng, source, by:me()});
+        toast(`ปักหมุด ${kind === 'plant' ? 'โรงงาน ' + name : name} แล้ว`, 'success');
+      } catch (e) {
+        const local = readJ(LOC_KEY, {}); local[k] = rec; writeJ(LOC_KEY, local);
+        toast(/unknown/i.test(e.message) ? 'ปักหมุดแล้ว (บันทึกในเครื่องนี้ — อัปเดต .gs เพื่อเก็บลง Sheet)' : 'บันทึกลง Sheet ไม่สำเร็จ: ' + e.message, /unknown/i.test(e.message) ? 'info' : 'error');
+      }
+      if (kind === 'maker') this.sel = name;
+      this.clearRoute(); this.draw(); if (kind === 'maker' || this.sel) this.route();
+    },
+    async removeLoc(kind, name){
+      if (!confirm(`ลบหมุดของ ${name} ?`)) return;
+      const k = key(kind, name); delete this.locs[k];
+      const local = readJ(LOC_KEY, {}); delete local[k]; writeJ(LOC_KEY, local);
+      try { if (this.serverOk !== false && url()) await api.post({action:'deleteMakerLoc', kind, name}); } catch (e) {}
+      this.clearRoute(); this.draw();
+    },
+    /* ลิงก์ย่อ maps.app.goo.gl ใน Supplier → ให้ Apps Script ขยายแล้วบันทึกพิกัดอัตโนมัติ */
+    async resolveShort(){
+      if (!url() || this.serverOk === false || this._resolved) return; this._resolved = true;
+      const need = this.makers().filter(m => !m.pos && /^https?:\/\/(maps\.app\.goo\.gl|goo\.gl|g\.co)\//i.test(m.maplink));
+      if (!need.length) return;
+      try {
+        const j = await api.post({action:'resolveMapLinks', urls:need.map(m => m.maplink)});
+        for (const d of j.data || []) {
+          if (d.lat == null) continue;
+          const m = need.find(x => x.maplink === d.url); if (!m) continue;
+          this.locs[key('maker', m.name)] = {key:key('maker', m.name), kind:'maker', name:m.name, lat:d.lat, lng:d.lng, source:'maplink'};
+          api.post({action:'saveMakerLoc', kind:'maker', name:m.name, lat:d.lat, lng:d.lng, source:'maplink', by:me()}).catch(() => {});
+        }
+      } catch (e) {}
+    }
+  };
+  window.CCIPMakerMap = M;
+
+  /* ── เมนู: หมวด Supplier → แผนที่ Maker ── */
+  function install(){
+    if (document.getElementById('page-mkmap')) return;
+    const home = document.getElementById('page-home'); if (!home) return;
+    const page = document.createElement('div'); page.className = 'page'; page.id = 'page-mkmap'; home.parentNode.appendChild(page);
+    const sup = document.getElementById('nav-supplier');
+    if (sup) sup.insertAdjacentHTML('afterend', `<button class="nav-item" id="nav-mkmap" onclick="showPage('mkmap',this)"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg></span><span class="nav-text" data-i18n="nav_mkmap">แผนที่ Maker</span></button>`);
+    try { Object.assign(PAGE_TITLES.th, {mkmap:'แผนที่ Maker'}); Object.assign(PAGE_TITLES.en, {mkmap:'Maker Map'}); Object.assign(I18N.th, {nav_mkmap:'แผนที่ Maker'}); Object.assign(I18N.en, {nav_mkmap:'Maker Map'}); } catch (e) {}
+    const prev = window.showPage;
+    window.showPage = function(name, btn){
+      if (name === 'mkmap') { const r = prev.call(this, name, btn || document.getElementById('nav-mkmap')); M.open(); return r; }
+      return prev.apply(this, arguments);
+    };
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install); else install();
+})();
+</script>
+<!-- ═══ NAV · เปิดมาหน้าหลัก + หุบทุกหมวดหมู่ (navinit) ═══ -->
+<script id="navinit-js">
+(function(){
+  const collapseAll = () => {
+    const keys = [];
+    document.querySelectorAll('.nav-group[id^="navGroup-"]').forEach(el => {
+      const k = el.id.replace('navGroup-', '');
+      if (k === 'main') { el.classList.remove('collapsed'); return; }   // เมนูหลักเปิดไว้
+      el.classList.add('collapsed'); keys.push(k);
+    });
+    try { localStorage.setItem('prpo_nav_collapsed', JSON.stringify(keys)); } catch (e) {}
+  };
+  window.resetNavGroupsToDefault = collapseAll;          // ใช้ตอนเข้าสู่ระบบด้วย
+  const goHome = () => {
+    const home = document.getElementById('page-home');
+    if (home && !home.classList.contains('active') && typeof showPage === 'function') showPage('home', document.getElementById('nav-home'));
+  };
+  const boot = () => { collapseAll(); goHome(); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(boot, 0)); else setTimeout(boot, 0);
+  window.addEventListener('load', () => setTimeout(collapseAll, 50));   // หลังเมนูที่เพิ่มทีหลัง (E-FORM, แผนที่ ฯลฯ) ถูกสร้างครบ
+})();
+</script>
 </body>
 </html>
