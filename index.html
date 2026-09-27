@@ -23142,6 +23142,7 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
 .wls-slide i{position:absolute;inset:0;background:inherit;background-size:cover;background-position:inherit}
 .wls-slide.cur i{animation:wlsZoom 9s ease-out forwards !important;animation-duration:9s !important}
 @keyframes wlsZoom{from{transform:scale(1.02)}to{transform:scale(1.1)}}
+.wls-nav[hidden]{display:none !important}
 .wls-nav{position:absolute;left:2.4rem;bottom:2rem;z-index:4;display:flex;align-items:center;gap:.6rem}
 .wls-dot{width:28px;height:4px;border-radius:4px;border:0;padding:0;background:rgba(255,255,255,.28);cursor:pointer;position:relative;overflow:hidden;transition:width .3s,background .3s !important}
 .wls-dot.on{width:48px;background:rgba(255,255,255,.35)}
@@ -23226,6 +23227,7 @@ window.CCIP_LOGIN_SLIDES = window.CCIP_LOGIN_SLIDES || { folder: 'login-bg/', ma
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
 </script>
+
 <!-- ═══ LOGIN · Animations (wla) ═══ -->
 <style id="wla-css">
 /* 1) เข้าหน้าแบบเป็นลำดับ */
@@ -23296,15 +23298,10 @@ window.CCIP_LOGIN_SLIDES = window.CCIP_LOGIN_SLIDES || { folder: 'login-bg/', ma
 #welcomeScreen .wl-input-wrap.wl-input-error .wl-input{animation:wlaFlash .9s ease !important;animation-duration:.9s !important}
 @keyframes wlaFlash{0%{box-shadow:0 0 0 3px rgba(248,113,113,.45)}100%{box-shadow:0 0 0 0 rgba(248,113,113,0)}}
 
-@media (prefers-reduced-motion:reduce){
-  #welcomeScreen *,.wla-done,.wla-done *{animation:none !important;transition:none !important}
-  .wla-net,.wla-aurora{display:none !important}
-  .wla-done h2,.wla-done p,.wla-done .ring,.wla-done .ring path{opacity:1;transform:none;stroke-dashoffset:0}
-}
 </style>
 <script id="wla-js">
 (function(){
-  const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reduce = false;   // เอฟเฟกต์เบาๆ แสดงเสมอ (เครื่องสำนักงานหลายเครื่องปิด animation ของ Windows ไว้)
   const ws = () => document.getElementById('welcomeScreen');
   const shown = () => { const w = ws(); return w && w.style.display !== 'none' && !w.classList.contains('hide'); };
 
@@ -23421,5 +23418,6 @@ window.CCIP_LOGIN_SLIDES = window.CCIP_LOGIN_SLIDES || { folder: 'login-bg/', ma
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(boot, 0)); else setTimeout(boot, 0);
 })();
 </script>
+
 </body>
 </html>
