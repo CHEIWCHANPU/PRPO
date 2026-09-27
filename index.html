@@ -23627,7 +23627,18 @@ body.dark-theme #page-mkmap{--m-blu:#60A5FA;--m-cy:#22D3EE;--m-grn:#34D399;--m-a
       const box = $('#mkmMap'); box.innerHTML = '';
       const o = this.origin() || {lat:13.62, lng:100.52};
       this.map = L.map(box, {zoomControl:true, attributionControl:true}).setView([o.lat, o.lng], 9);
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {maxZoom:19, subdomains:'abcd', attribution:'&copy; OpenStreetMap &copy; CARTO'}).addTo(this.map);
+      /* แผนที่พื้นหลัง: OpenStreetMap (ฟรี ไม่ต้องใช้ API key) — ถ้าโหลดไม่ได้จะสลับไป Esri อัตโนมัติ */
+      const TILES = [
+        ['https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19, attribution:'&copy; OpenStreetMap contributors'}],
+        ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {maxZoom:19, attribution:'Tiles &copy; Esri'}]
+      ];
+      const useTile = (k) => {
+        if (this._tile) this.map.removeLayer(this._tile);
+        let err = 0;
+        this._tile = L.tileLayer(TILES[k][0], TILES[k][1]).addTo(this.map);
+        this._tile.on('tileerror', () => { if (++err === 4 && k + 1 < TILES.length) useTile(k + 1); });
+      };
+      useTile(0);
       this.layer = L.layerGroup().addTo(this.map); this.ringLayer = L.layerGroup().addTo(this.map);
       this.map.on('click', e => this.onMapClick(e));
     },
@@ -23857,6 +23868,41 @@ body.dark-theme #page-mkmap{--m-blu:#60A5FA;--m-cy:#22D3EE;--m-grn:#34D399;--m-a
   const boot = () => { collapseAll(); goHome(); };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(boot, 0)); else setTimeout(boot, 0);
   window.addEventListener('load', () => setTimeout(collapseAll, 50));   // หลังเมนูที่เพิ่มทีหลัง (E-FORM, แผนที่ ฯลฯ) ถูกสร้างครบ
+})();
+</script>
+<!-- ═══ ESC · กด Esc ปิด popup ทุกหน้า (esckey) ═══ -->
+<script id="esckey-js">
+(function(){
+  const vis = el => { if (!el) return false; const cs = getComputedStyle(el); return cs.display !== 'none' && cs.visibility !== 'hidden' && el.getClientRects().length > 0; };
+  const zOf = el => { let z = 0; for (let n = el; n && n !== document.body; n = n.parentElement) { const v = parseInt(getComputedStyle(n).zIndex, 10); if (!isNaN(v)) z = Math.max(z, v); } return z; };
+  function closeOverlay(ov){
+    const btn = ov.querySelector('.modal-close, .wp-modal-close, .detail-close, [data-close], [aria-label="ปิด"], [aria-label="Close"]');
+    if (btn) { btn.click(); return; }
+    if (ov.id === 'detailOverlay') { ov.classList.remove('open'); return; }
+    ov.classList.remove('open');
+  }
+  window.addEventListener('keydown', e => {
+    if (e.key !== 'Escape' && e.key !== 'Esc') return;
+    if (e.isComposing || e.keyCode === 229) return;
+    // ระบบที่มีตัวจัดการ Esc ของตัวเองอยู่แล้ว → ปล่อยให้ทำงานตามเดิม
+    if (document.getElementById('gxOverlay') || document.getElementById('gxLightbox')) return;
+    if (document.getElementById('adminPinModal')?.style.display === 'flex') return;
+    const rm = document.getElementById('resultModalOverlay'); if (rm && (rm.classList.contains('open') || rm.classList.contains('show'))) return;
+    const ck = document.getElementById('cmdkOverlay'); if (ck && (ck.classList.contains('open') || ck.classList.contains('show'))) return;
+    if (document.querySelector('.pc-dl.on, .pc-dl.show')) return;            // กำลังสร้าง PDF อยู่
+
+    const list = [...document.querySelectorAll('.modal-overlay.open, .wp-modal-overlay.open, .detail-overlay.open')].filter(vis);
+    if (list.length) {
+      list.sort((a, b) => (zOf(a) - zOf(b)) || (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
+      const top = list[list.length - 1];
+      e.preventDefault(); e.stopImmediatePropagation();
+      if (document.activeElement && top.contains(document.activeElement)) document.activeElement.blur();
+      closeOverlay(top);
+      return;
+    }
+    const ap = document.getElementById('accountPopover');
+    if (ap && ap.classList.contains('show') && typeof closeAccountPopover === 'function') { e.preventDefault(); e.stopImmediatePropagation(); closeAccountPopover(); return; }
+  }, true);
 })();
 </script>
 </body>
