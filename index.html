@@ -23606,6 +23606,7 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
     for (const p of P) { const m = u.match(p); if (m) { const lat = +m[1], lng = +m[2]; if (Math.abs(lat) <= 90 && Math.abs(lng) <= 180) return {lat, lng}; } }
     return null;
   };
+  const inTH = p => !!p && isFinite(p.lat) && isFinite(p.lng) && p.lat >= 5 && p.lat <= 21 && p.lng >= 97 && p.lng <= 106.5;   // พิกัดต้องอยู่ในไทย
   const fmtKm = k => k >= 100 ? Math.round(k) + '' : k.toFixed(1);
   const fmtMin = m => m >= 60 ? Math.floor(m / 60) + ' ชม. ' + Math.round(m % 60) + ' นาที' : Math.round(m) + ' นาที';
 
@@ -23626,6 +23627,9 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
       if (!url()) { this.serverOk = false; return; }
       try { const j = await api.get('getMakerLocs'); (j.data || []).forEach(l => { this.locs[l.key] = l; }); this.serverOk = true; }
       catch (e) { if (/unknown action/i.test(e.message)) this.serverOk = false; }
+      // ล้างพิกัดผิดที่เคยได้จากลิงก์ (เช่นไปตกที่อเมริกา) → ลบออกจากชีต แล้วหาใหม่
+      const bad = Object.values(this.locs).filter(l => l && l.kind === 'maker' && !inTH(l));
+      bad.forEach(l => { delete this.locs[l.key]; if (this.serverOk) api.post({action:'deleteMakerLoc', kind:'maker', name:l.name}).catch(() => {}); });
     },
     plants(){ return PLANTS.map(p => { const s = this.locs[key('plant', p.code)]; return Object.assign({}, p, s ? {lat:s.lat, lng:s.lng, saved:true} : {}); }); },
     origin(){ const p = this.plants().find(x => x.code === this.plant); return p && isFinite(p.lat) && p.lat != null ? p : this.plants().find(x => x.lat != null); },
@@ -23634,7 +23638,7 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
       (typeof suppliers !== 'undefined' ? suppliers : []).forEach(s => { if (s && s.name) map.set(String(s.name).trim().toLowerCase(), {name:String(s.name).trim(), sup:s}); });
       const o = this.origin();
       return [...map.values()].map(m => {
-        const s = m.sup || {}, saved = this.locs[key('maker', m.name)], fromLink = parseLL(s.maplink);
+        const s = m.sup || {}, saved0 = this.locs[key('maker', m.name)], saved = inTH(saved0) ? saved0 : null, fl = parseLL(s.maplink), fromLink = inTH(fl) ? fl : null;
         const manual = saved && saved.source !== 'maplink';
         const pos = manual ? {lat:saved.lat, lng:saved.lng, src:'saved'} : fromLink ? Object.assign(fromLink, {src:'link'}) : saved ? {lat:saved.lat, lng:saved.lng, src:'saved'} : null;
         const active = (typeof allData !== 'undefined' ? allData : []).filter(r => String(r.maker || '').trim().toLowerCase() === m.name.toLowerCase() && !String(r.status || '').includes('เสร็จแล้ว')).length;
@@ -23908,7 +23912,7 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
       try {
         const j = await api.post({action:'resolveMapLinks', urls:need.map(m => m.maplink)});
         for (const d of j.data || []) {
-          if (d.lat == null) continue;
+          if (d.lat == null || !inTH(d)) continue;
           const m = need.find(x => x.maplink === d.url); if (!m) continue;
           this.locs[key('maker', m.name)] = {key:key('maker', m.name), kind:'maker', name:m.name, lat:d.lat, lng:d.lng, source:'maplink'};
           api.post({action:'saveMakerLoc', kind:'maker', name:m.name, lat:d.lat, lng:d.lng, source:'maplink', by:me()}).catch(() => {});
