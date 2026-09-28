@@ -22818,7 +22818,8 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
     newStart:'', newFinish:'', remake:'', docNo:'', signPrep:'', signChk:'', signApp:'', images:{}
   });
   const load = () => { try { const d = JSON.parse(localStorage.getItem(DKEY) || ''); if (d && typeof d === 'object') return d; } catch (e) {} return blank(); };
-  const norm = d => { const b = blank(); d = Object.assign(b, d || {}); d.base = Object.assign(blank().base, d.base || {}); d.images = d.images || {};
+  const fixYU = o => { const m = String(o.years || '').trim().match(/^([\d.,]*)\s*([ymYM])[a-zA-Z]*$/); if (m) { o.yUnit = m[2].toUpperCase(); o.years = m[1]; } };
+  const norm = d => { const b = blank(); d = Object.assign(b, d || {}); d.base = Object.assign(blank().base, d.base || {}); fixYU(d); fixYU(d.base); d.images = d.images || {};
     while (d.trial.length < 3) d.trial.push({date:'', pcs:''}); d.makers = (d.makers || []).filter((m, i) => i === 0 || m.name || m.price); if (!d.makers.length) d.makers.push({name:'', price:''}); d.remark = d.remark || ''; try { if (d.signPrep && d.signPrep === localStorage.getItem('prpo_username')) d.signPrep = ''; } catch (e) {} return d; };
 
   const PC = {
@@ -22879,6 +22880,11 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
           const pos = inp.selectionStart, before = inp.value.slice(0, pos).replace(/[^\d.]/g, '').length;
           const f = commas(inp.value);
           if (f !== inp.value) { inp.value = f; let n = 0, i = 0; while (i < f.length && n < before) { if (/[\d.]/.test(f[i])) n++; i++; } inp.setSelectionRange(i, i); }
+        }
+        if (/(^|\.)years$/.test(inp.dataset.k) && /[^\d.,]/.test(inp.value)) {
+          const u = (inp.value.match(/[ymYM]/) || [])[0];
+          if (u) { const uk = inp.dataset.k.replace(/years$/, 'yUnit'); this.set(uk, u.toUpperCase()); const b = page.querySelector('.pcs-unit[data-u="' + uk + '"]'); if (b) b.textContent = u.toUpperCase(); }
+          inp.value = inp.value.replace(/[^\d.,]/g, '');
         }
         this.set(inp.dataset.k, inp.value); this.save();
         this.calc();
@@ -24244,3 +24250,4 @@ body.dark-theme #page-mkmap{--m-blu:#60A5FA;--m-cy:#22D3EE;--m-grn:#34D399;--m-a
 </script>
 </body>
 </html>
+  
