@@ -23632,11 +23632,11 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
     makers(){
       const map = new Map();
       (typeof suppliers !== 'undefined' ? suppliers : []).forEach(s => { if (s && s.name) map.set(String(s.name).trim().toLowerCase(), {name:String(s.name).trim(), sup:s}); });
-      (typeof allData !== 'undefined' ? allData : []).forEach(r => { const n = String(r.maker || '').trim(); if (n && !map.has(n.toLowerCase())) map.set(n.toLowerCase(), {name:n, sup:null}); });
       const o = this.origin();
       return [...map.values()].map(m => {
         const s = m.sup || {}, saved = this.locs[key('maker', m.name)], fromLink = parseLL(s.maplink);
-        const pos = saved ? {lat:saved.lat, lng:saved.lng, src:'saved'} : fromLink ? Object.assign(fromLink, {src:'link'}) : null;
+        const manual = saved && saved.source !== 'maplink';
+        const pos = manual ? {lat:saved.lat, lng:saved.lng, src:'saved'} : fromLink ? Object.assign(fromLink, {src:'link'}) : saved ? {lat:saved.lat, lng:saved.lng, src:'saved'} : null;
         const active = (typeof allData !== 'undefined' ? allData : []).filter(r => String(r.maker || '').trim().toLowerCase() === m.name.toLowerCase() && !String(r.status || '').includes('เสร็จแล้ว')).length;
         const r = pos && o ? this.routes[this.rk(o, pos)] : null;
         return { name:m.name, sup:m.sup, cat:s.category || '', contact:s.contact || '', phone:s.phone || '', email:s.email || '', lead:s.leadtime || '', maplink:s.maplink || '', pos, active,
@@ -23848,7 +23848,7 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
           ${m.email ? `<dt>อีเมล</dt><dd><a href="mailto:${esc(m.email)}">${esc(m.email)}</a></dd>` : ''}
           ${m.lead ? `<dt>Lead time</dt><dd>${esc(m.lead)} วัน</dd>` : ''}
           <dt>งานค้าง</dt><dd>${m.active ? m.active + ' รายการ' : 'ไม่มี'}</dd>
-          ${!m.sup ? '<dt>ข้อมูล</dt><dd style="color:#94A3B8">ยังไม่อยู่ใน Supplier Database</dd>' : ''}
+
         </dl>
         <div class="mkm-acts">${m.pos ? `<a class="mkm-act pri" href="${nav}" target="_blank" rel="noopener">นำทางด้วย Google Maps</a>` : ''}
           <button class="mkm-act" data-a="pin">${m.pos ? 'ย้ายหมุด' : 'ปักหมุด'}</button>
@@ -23899,9 +23899,12 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
     },
     /* ลิงก์ย่อ maps.app.goo.gl ใน Supplier → ให้ Apps Script ขยายแล้วบันทึกพิกัดอัตโนมัติ */
     async resolveShort(){
-      if (!url() || this.serverOk === false || this._resolved) return; this._resolved = true;
-      const need = this.makers().filter(m => !m.pos && /^https?:\/\/(maps\.app\.goo\.gl|goo\.gl|g\.co)\//i.test(m.maplink));
+      if (!url() || this.serverOk === false || this._resolving) return;
+      this._tried = this._tried || new Set();
+      const need = this.makers().filter(m => !m.pos && /^https?:\/\//i.test(m.maplink) && !this._tried.has(m.maplink));
+      need.forEach(m => this._tried.add(m.maplink));
       if (!need.length) return;
+      this._resolving = true;
       try {
         const j = await api.post({action:'resolveMapLinks', urls:need.map(m => m.maplink)});
         for (const d of j.data || []) {
@@ -23910,10 +23913,24 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
           this.locs[key('maker', m.name)] = {key:key('maker', m.name), kind:'maker', name:m.name, lat:d.lat, lng:d.lng, source:'maplink'};
           api.post({action:'saveMakerLoc', kind:'maker', name:m.name, lat:d.lat, lng:d.lng, source:'maplink', by:me()}).catch(() => {});
         }
-      } catch (e) {}
+      } catch (e) { need.forEach(m => this._tried.delete(m.maplink)); if (/unknown action/i.test(e.message)) this.serverOk = false; }
+      this._resolving = false;
     }
   };
   window.CCIPMakerMap = M;
+  M.sync = function(){
+    const page = document.getElementById('page-mkmap'); if (!page || !page.dataset.ready) return;
+    clearTimeout(M._sy); M._sy = setTimeout(async () => {
+      if (!page.classList.contains('active')) { M._dirty = true; return; }
+      M._dirty = false; try { M.draw(); await M.resolveShort(); M.draw(); } catch (e) {}
+    }, 250);
+  };
+  function hookSuppliers(){
+    if (typeof window.renderSuppliers !== 'function' || window.renderSuppliers.__mkm) return;
+    const base = window.renderSuppliers;
+    window.renderSuppliers = function(){ const r = base.apply(this, arguments); M.sync(); return r; };
+    window.renderSuppliers.__mkm = true;
+  }
 
   /* ── เมนู: หมวด Supplier → แผนที่ Maker ── */
   function install(){
@@ -23925,13 +23942,13 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
     try { Object.assign(PAGE_TITLES.th, {mkmap:'แผนที่ Maker'}); Object.assign(PAGE_TITLES.en, {mkmap:'Maker Map'}); Object.assign(I18N.th, {nav_mkmap:'แผนที่ Maker'}); Object.assign(I18N.en, {nav_mkmap:'Maker Map'}); } catch (e) {}
     const prev = window.showPage;
     window.showPage = function(name, btn){
-      if (name === 'mkmap') { const r = prev.call(this, name, btn || document.getElementById('nav-mkmap')); M.open(); return r; }
+      if (name === 'mkmap') { hookSuppliers(); const r = prev.call(this, name, btn || document.getElementById('nav-mkmap')); M.open(); return r; }
       document.documentElement.classList.remove('mkm-lock');
       return prev.apply(this, arguments);
     };
   }
   window.addEventListener('resize', () => { clearTimeout(M._fz); M._fz = setTimeout(() => M.fitH(), 120); });
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install); else install();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => { install(); hookSuppliers(); }); else { install(); hookSuppliers(); }
 })();
 </script>
 <!-- ═══ NAV · เปิดมาหน้าหลัก + หุบทุกหมวดหมู่ (navinit) ═══ -->
