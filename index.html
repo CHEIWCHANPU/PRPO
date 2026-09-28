@@ -23931,6 +23931,19 @@ body.dark-theme #page-mkmap{--m-blu:#60A5FA;--m-cy:#22D3EE;--m-grn:#34D399;--m-a
   window.addEventListener('load', () => setTimeout(collapseAll, 50));   // หลังเมนูที่เพิ่มทีหลัง (E-FORM, แผนที่ ฯลฯ) ถูกสร้างครบ
 })();
 </script>
+<!-- ═══ KEY · กันคีย์ลัดทำงานขณะพิมพ์ในช่องข้อความแบบ contenteditable (typeguard) ═══ -->
+<script id="typeguard-js">
+(function(){
+  /* คีย์ลัดของระบบ (/, N, S, ?, ตัวเลข ฯลฯ) เช็กเฉพาะ input/textarea
+     ช่องพิมพ์แบบ contenteditable (เช่น REMARK ใน E-FORM) จึงโดนคีย์ลัดพาไปหน้าอื่น → ตัดตรงนี้ก่อนถึงตัวจัดการคีย์ลัด */
+  const editable = el => !!(el && (el.isContentEditable || (el.closest && el.closest('[contenteditable=""],[contenteditable="true"]'))));
+  window.addEventListener('keydown', e => {
+    if (e.key === 'Escape') return;                     // Esc ยังใช้ปิด popup ได้
+    if (!editable(e.target)) return;
+    e.stopPropagation();                                // พิมพ์/ลบ/Ctrl+C,V ทำงานตามปกติ แต่ไม่ส่งต่อไปคีย์ลัด
+  }, true);
+})();
+</script>
 <!-- ═══ ESC · กด Esc ปิด popup ทุกหน้า (esckey) ═══ -->
 <script id="esckey-js">
 (function(){
