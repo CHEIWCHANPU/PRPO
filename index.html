@@ -23573,6 +23573,8 @@ body.dark-theme #page-mkmap{--m-blu:#60A5FA;--m-cy:#22D3EE;--m-grn:#34D399;--m-a
 .mkm-pl.dim::after{display:none}
 @keyframes mkmPulse{from{opacity:1;transform:scale(.9)}to{opacity:0;transform:scale(1.4)}}
 .leaflet-container{font:inherit}
+#page-mkmap .mkm-hero,#page-mkmap .mkm-kpis{display:none !important}
+html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
 @media (max-width:1100px){.mkm-wrap{grid-template-columns:1fr;height:auto}.mkm-side{max-height:360px}.mkm-mapbox{height:540px}.mkm-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 <script id="mkm-js">
@@ -23647,11 +23649,26 @@ body.dark-theme #page-mkmap{--m-blu:#60A5FA;--m-cy:#22D3EE;--m-grn:#34D399;--m-a
     async open(){
       const page = $('#page-mkmap'); if (!page) return;
       if (!page.dataset.ready) { page.dataset.ready = '1'; this.shell(); }
+      this.fitH();
       await this.loadLocs();
       await this.resolveShort();
       await this.ensureMap();
       this.draw();
-      setTimeout(() => this.map && this.map.invalidateSize(), 200);
+      this.fitH();
+      setTimeout(() => { this.fitH(); this.map && this.map.invalidateSize(); }, 200);
+    },
+    /* ให้แผนที่พอดีจอ ไม่ต้องเลื่อนหน้า */
+    fitH(){
+      const page = $('#page-mkmap'), wrap = page && page.querySelector('.mkm-wrap');
+      const on = !!(page && page.classList.contains('active') && wrap && window.innerWidth > 1100);
+      document.documentElement.classList.toggle('mkm-lock', on);
+      if (!wrap) return;
+      if (!on) { wrap.style.height = ''; return; }
+      window.scrollTo(0, 0);
+      const main = page.closest('main'), padB = main ? parseFloat(getComputedStyle(main).paddingBottom) || 0 : 0;
+      const h = Math.max(380, Math.floor(window.innerHeight - wrap.getBoundingClientRect().top - padB - 2));
+      wrap.style.height = h + 'px'; wrap.style.minHeight = '0';
+      if (this.map) this.map.invalidateSize();
     },
     shell(){
       $('#page-mkmap').innerHTML = `
@@ -23909,9 +23926,11 @@ body.dark-theme #page-mkmap{--m-blu:#60A5FA;--m-cy:#22D3EE;--m-grn:#34D399;--m-a
     const prev = window.showPage;
     window.showPage = function(name, btn){
       if (name === 'mkmap') { const r = prev.call(this, name, btn || document.getElementById('nav-mkmap')); M.open(); return r; }
+      document.documentElement.classList.remove('mkm-lock');
       return prev.apply(this, arguments);
     };
   }
+  window.addEventListener('resize', () => { clearTimeout(M._fz); M._fz = setTimeout(() => M.fitH(), 120); });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install); else install();
 })();
 </script>
@@ -24250,4 +24269,3 @@ body.dark-theme #page-mkmap{--m-blu:#60A5FA;--m-cy:#22D3EE;--m-grn:#34D399;--m-a
 </script>
 </body>
 </html>
-  
