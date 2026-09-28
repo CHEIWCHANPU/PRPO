@@ -22683,7 +22683,20 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
 #pcSheet .pcs-vol > .yr{flex:0 0 72px}
 #pcSheet .pcs-vol .un{font-size:12px !important;font-weight:400 !important;color:#111827 !important}
 #pcSheet .u span{font-size:10.5px;color:#4B5563;font-weight:600}
+#pcSheet .pcs-seg{flex:0 0 auto;display:inline-flex;border:1px solid #CBD5E1;border-radius:4px;overflow:hidden;background:#fff;margin-left:2px}
+#pcSheet .pcs-seg button{border:0;margin:0;background:transparent;padding:1px 6px;font-family:inherit;font-size:10.5px;font-weight:700;color:#64748B;cursor:pointer;line-height:1.35}
+#pcSheet .pcs-seg button + button{border-left:1px solid #CBD5E1}
+#pcSheet .pcs-seg button:hover:not(.on){background:#EEF2FF;color:#1D4ED8}
+#pcSheet .pcs-seg button.on{background:var(--hd);color:#fff}
+#pcSheet.pdf .pcs-seg{border:0;background:none}
+#pcSheet.pdf .pcs-seg button{display:none}
+#pcSheet.pdf .pcs-seg button.on{display:inline-block;background:none;color:#111827;padding:0 2px;font-size:12px;font-weight:400}
 #pcSheet .cu{background:var(--cu) !important}
+/* ตารางราคาลูกค้า / MAKER: กรอบหนารอบแต่ละแถว ไม่มีเส้นคั่นภายในช่องราคา (แบบ Excel ต้นฉบับ) */
+#pcSheet table.pcs-pt{border-collapse:separate;border-spacing:0 4px;margin-top:-4px}
+#pcSheet table.pcs-pt td{border:0;border-top:2px solid #111827;border-bottom:2px solid #111827}
+#pcSheet table.pcs-pt td:first-child{border-left:2px solid #111827;border-right:2px solid #111827;font-weight:700}
+#pcSheet table.pcs-pt td:last-child{border-right:2px solid #111827}
 #pcSheet .mk{background:var(--mk) !important}
 #pcSheet .mv{background:var(--mv) !important}
 #pcSheet .bs{background:var(--bs) !important}
@@ -22791,10 +22804,10 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
   };
   const blank = () => ({
     typeOfWork:'', spec:'', plating:'', plant:'',
-    partName:'', partNo:'', rev:'', model:'', volume:'', years:'',
+    partName:'', partNo:'', rev:'', model:'', volume:'', years:'', yUnit:'Y',
     trial:[{date:'',pcs:''},{date:'',pcs:''},{date:'',pcs:''}],
     custCode:'TYM', custPrice:'', makers:[{name:'', price:''}], remark:'',
-    base:{partName:'', volume:'', years:'', maker:'', customer:'', plant:'CCIS', model:'', price:'', makerPrice:'', custPrice:''},
+    base:{partName:'', volume:'', years:'', yUnit:'Y', maker:'', customer:'', plant:'CCIS', model:'', price:'', makerPrice:'', custPrice:''},
     newStart:'', newFinish:'', remake:'', docNo:'', signPrep:'', signChk:'', signApp:'', images:{}
   });
   const load = () => { try { const d = JSON.parse(localStorage.getItem(DKEY) || ''); if (d && typeof d === 'object') return d; } catch (e) {} return blank(); };
@@ -22810,6 +22823,8 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
 
     render(){
       const page = $('#page-pcmp'), d = this.d;
+      const UB = k => { const v = this.get(k) === 'M' ? 'M' : 'Y';
+        return `<span class="pcs-seg" data-u="${k}"><button type="button" data-v="Y" class="${v === 'Y' ? 'on' : ''}" title="ต่อปี (YEAR)">Y</button><button type="button" data-v="M" class="${v === 'M' ? 'on' : ''}" title="ต่อเดือน (MONTH)">M</button></span>`; };
       const F = (k, cls, st) => `<input data-k="${k}" value="${esc(isQty(k) ? commas(this.get(k)) : this.get(k))}"${isQty(k) ? ' inputmode="numeric"' : ''}${cls ? ` class="${cls}"` : ''}${st ? ` style="${st}"` : ''} autocomplete="off">`;
       const U = (k, unit, st) => `<div style="display:flex;align-items:center">${F(k, '', 'text-align:right' + (st || ''))}<span style="white-space:nowrap">&nbsp;${unit}</span></div>`;
       page.innerHTML = `
@@ -22828,10 +22843,10 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
               <table style="flex:1"><colgroup><col style="width:96px"><col><col style="width:44px"><col style="width:52px"><col style="width:92px"><col style="width:84px"></colgroup>
                 <tr><td class="lb">PART NAME</td><td>${F('partName')}</td><th colspan="4" class="sec">แผนการเรียกชิ้นงานสำหรับ TRIAL</th></tr>
                 ${['partNo','rev','model'].map((k, i) => `<tr><td class="lb">${['PART NO.','REV.','MODEL'][i]}</td><td>${F(k)}</td><td class="lb c">PP ${i + 1}</td><td class="lb c">DATE</td><td>${F('trial.' + i + '.date', 'c')}</td><td class="r"><div class="u">${F('trial.' + i + '.pcs')}<span>PCS</span></div></td></tr>`).join('')}
-                <tr><td class="lb">VOLUME</td><td style="padding:0"><div class="pcs-vol"><div class="u">${F('volume', '', 'text-align:right')}<span class="un">PCS</span></div><div class="sl">/</div><div class="u yr">${F('years', '', 'text-align:right')}<span class="un">Y</span></div></div></td><td colspan="4" style="background:#FAFAFA"></td></tr>
+                <tr><td class="lb">VOLUME</td><td style="padding:0"><div class="pcs-vol"><div class="u">${F('volume', '', 'text-align:right')}<span class="un">PCS</span></div><div class="sl">/</div><div class="u yr">${F('years', '', 'text-align:right')}${UB('yUnit')}</div></div></td><td colspan="4" style="background:#FAFAFA"></td></tr>
               </table></div>
             <div style="display:flex;gap:24px;justify-content:space-between;margin-top:10px;align-items:stretch">
-            <div style="flex:0 0 330px"><table><colgroup><col style="width:118px"><col><col style="width:22px"><col style="width:96px"></colgroup>
+            <div style="flex:0 0 330px"><table class="pcs-pt"><colgroup><col style="width:118px"><col><col style="width:22px"><col style="width:96px"></colgroup>
               <tr><td class="lb cu">ราคาที่เสนอลูกค้า</td><td class="cu">${F('custCode','c')}</td><td class="c cu">=</td><td class="pc r cu"><div class="u">${F('custPrice')}<span>THB</span></div></td></tr>
               ${d.makers.map((m, i) => `<tr class="pcs-mk" data-mi="${i}"><td class="lb mk">${i ? '' : 'ราคาของ MAKER'}</td><td class="mv" style="position:relative">${F('makers.' + i + '.name', 'c')}${i ? `<button class="pcs-rm" data-rm="${i}" title="ลบแถวนี้">×</button>` : ''}</td><td class="c mv">=</td><td class="pc r mv"><div class="u">${F('makers.' + i + '.price')}<span>THB</span></div></td></tr>`).join('')}
             </table>${d.makers.length < MROWS ? '<button class="pcs-add" id="pcsAddMk">+ เพิ่ม MAKER</button>' : ''}</div>
@@ -22841,7 +22856,7 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
             <div class="pcs-row"><div class="pcs-bbox"><div>รายละเอียดของ</div><div>ชิ้นงานที่ใกล้เคียง</div><div>(BASE)</div></div>
               <table style="flex:1"><colgroup><col style="width:112px"><col><col style="width:64px"><col style="width:96px"><col style="width:96px"><col style="width:112px"></colgroup>
                 <tr><td class="lb bs">PART NAME / NO.</td><td colspan="5">${F('base.partName')}</td></tr>
-                <tr><td class="lb bs">VOLUME</td><td class="r"><div class="u">${F('base.volume')}<span>PCS</span></div></td><td class="r"><div class="u">${F('base.years')}<span>YEAR</span></div></td><th class="bs">MAKER</th><th class="bs">CUSTOMER</th><th class="bs" style="font-size:10.5px">MASS PROD. PLANT</th></tr>
+                <tr><td class="lb bs">VOLUME</td><td class="r"><div class="u">${F('base.volume')}<span>PCS</span></div></td><td class="r"><div class="u">${F('base.years')}${UB('base.yUnit')}</div></td><th class="bs">MAKER</th><th class="bs">CUSTOMER</th><th class="bs" style="font-size:10.5px">MASS PROD. PLANT</th></tr>
                 <tr><td class="lb bs">MODEL</td><td colspan="2">${F('base.model','c')}</td><td>${F('base.maker','c')}</td><td>${F('base.customer','c')}</td><td>${F('base.plant','c','font-weight:700')}</td></tr>
                 <tr><td class="lb bs">PRICE</td><td class="pc r" colspan="2"><div class="u">${F('base.price')}<span>THB</span></div></td><td>${F('base.makerPrice','c')}</td><td class="pc r"><div class="u">${F('base.custPrice')}<span>THB</span></div></td><td style="background:#FAFAFA"></td></tr>
               </table></div>
@@ -22861,6 +22876,10 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
         this.set(inp.dataset.k, inp.value); this.save();
         this.calc();
       }));
+      page.querySelectorAll('.pcs-seg button').forEach(b => b.onclick = () => {
+        const seg = b.parentNode; this.set(seg.dataset.u, b.dataset.v); this.save();
+        seg.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); this.calc();
+      });
       page.querySelectorAll('.pcs-chk').forEach(c => c.onclick = () => { this.d.plant = this.d.plant === c.dataset.p ? '' : c.dataset.p; this.save();
         page.querySelectorAll('.pcs-chk i').forEach(x => { x.textContent = x.parentNode.dataset.p === this.d.plant ? '✓' : ''; }); });
       this.bindImgs();
@@ -22881,11 +22900,12 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
     calc(){
       const d = this.d, t = $('#pcsCap'); if (!t) return;
       const keep = document.activeElement && t.contains(document.activeElement) ? document.activeElement.dataset.k2 : null;
-      const cap = (q, y) => { q = num(q); y = num(y); const m = q / (y * 12), dd = m / 26; return [q, y, m, dd, dd / 8]; };
+      const cap = (q, y, u) => { q = num(q); y = num(y);                 // u = 'M' → ช่องระยะเวลาเป็น "เดือน" (ว่าง = ต่อ 1 เดือน)
+        const mo = u === 'M' ? (isFinite(y) && y > 0 ? y : 1) : y * 12, yr = +(mo / 12).toFixed(2), m = q / mo, dd = m / 26; return [q, yr, m, dd, dd / 8]; };
       const cells = a => a.map((v, i) => `<td class="fx">${i === 1 ? (isFinite(v) ? v : '') : f0(v)}</td>`).join('');
       const vol = num(d.volume), bvol = num(d.base.volume);
-      const nw = cap(d.volume, d.years), nw15 = cap(vol + vol * 150 / 100, d.years);
-      const od = cap(d.base.volume, d.base.years), od15 = cap(bvol + bvol * 150 / 100, d.base.years);
+      const nw = cap(d.volume, d.years, d.yUnit), nw15 = cap(vol + vol * 150 / 100, d.years, d.yUnit);
+      const od = cap(d.base.volume, d.base.years, d.base.yUnit), od15 = cap(bvol + bvol * 150 / 100, d.base.years, d.base.yUnit);
       const prices = d.makers.map(m => num(m.price)).filter(v => v > 0);
       const autoStart = prices.length ? Math.min(...prices) : NaN, bp = num(d.base.price);
       t.innerHTML = `<colgroup><col style="width:52px"><col style="width:130px"><col span="10"><col style="width:84px"><col style="width:84px"></colgroup>
