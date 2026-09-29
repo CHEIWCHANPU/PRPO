@@ -46,8 +46,18 @@
     return nativeFetch(url, opts).finally(function () { clearTimeout(timer); });
   }
 
+  net.log = [];
+  function logReq(url, init, t0, ok, err) {
+    try {
+      var a = actionOf(url), m = /[?&]only=([^&#]+)/.exec(url);
+      if (!a && init && init.body) { try { a = JSON.parse(init.body).action || ''; } catch (e) {} }
+      net.log.unshift({ a: a + (m ? '(' + decodeURIComponent(m[1]).replace(/get/g, '') + ')' : ''), ms: Date.now() - t0, ok: ok, err: err || '', at: Date.now() });
+      if (net.log.length > 12) net.log.length = 12;
+    } catch (e) {}
+  }
   async function tracked(url, init, isRead) {
     net.pending++; emit();
+    var t0 = Date.now();
     try {
       var res;
       try {
@@ -59,10 +69,12 @@
         res = await once(bust(url), init, isRead);
       }
       net.lastOk = Date.now(); net.lastError = '';
+      logReq(url, init, t0, true);
       return res;
     } catch (err) {
       net.lastFail = Date.now();
       net.lastError = err && err.name === 'AbortError' ? 'หมดเวลารอเซิร์ฟเวอร์' : String(err && err.message || err);
+      logReq(url, init, t0, false, net.lastError);
       throw err;
     } finally {
       net.pending = Math.max(0, net.pending - 1); emit();
@@ -70,17 +82,20 @@
   }
 
   /* ── รวมคำขออ่านหลายชุดเป็น getAll ครั้งเดียว ── */
-  var queue = null;
+  /* แบ่งเป็นกลุ่ม แต่ละกลุ่มยิงพร้อมกันคนละคำขอ → หน้าไหนข้อมูลมาก่อนก็แสดงก่อน ไม่ต้องรอชุดที่ช้าที่สุด */
+  var GROUP = { getData: 'core', getTodos: 'core', getSuppliers: 'ref', getCer: 'ref', getWorkplan: 'plan', getGoWork: 'pages', getMeetings: 'pages', getCerFiles: 'pages' };
+  var queues = {};
   function queueRead(base, action) {
     return new Promise(function (resolve, reject) {
-      if (!queue || queue.base !== base) {
-        if (queue) flush();
-        queue = { base: base, waiters: new Map() };
-        setTimeout(flush, 30);
+      var key = base + '|' + (GROUP[action] || action);
+      var q = queues[key];
+      if (!q) {
+        q = queues[key] = { base: base, waiters: new Map() };
+        setTimeout(function () { if (queues[key] === q) delete queues[key]; flush(q); }, 30);
       }
-      var list = queue.waiters.get(action) || [];
+      var list = q.waiters.get(action) || [];
       list.push({ resolve: resolve, reject: reject });
-      queue.waiters.set(action, list);
+      q.waiters.set(action, list);
     });
   }
   function settleSingly(base, waiters) {
@@ -89,10 +104,9 @@
       list.forEach(function (w) { p.then(function (r) { w.resolve(r.clone()); }, w.reject); });
     });
   }
-  async function flush() {
-    var q = queue; queue = null;
+  async function flush(q) {
     if (!q || !q.waiters.size) return;
-    if (q.waiters.size === 1 || !batchAllowed()) { settleSingly(q.base, q.waiters); return; }
+    if (!batchAllowed()) { settleSingly(q.base, q.waiters); return; }   // ส่งผ่าน getAll แม้มีชุดเดียว → ได้ใช้แคชฝั่งเซิร์ฟเวอร์
     var actions = Array.from(q.waiters.keys());
     try {
       var res = await tracked(q.base + '?action=getAll&only=' + encodeURIComponent(actions.join(',')), null, true);
@@ -19185,9 +19199,10 @@ function endTour() {
     document.body.dataset.sync = state;
     document.body.style.setProperty('--fresh', fresh.toFixed(3));
     if (ageEl && ageEl.textContent !== label) ageEl.textContent = label;
-    if (pill) pill.title = state === 'error'
+    const times = (net.log || []).slice(0, 8).map(l => (l.ok ? '✓ ' : '✗ ') + l.a + '  ' + (l.ms / 1000).toFixed(1) + ' วิ').join('\n');
+    if (pill) pill.title = (state === 'error'
       ? 'เชื่อมต่อ Sheet ไม่ได้: ' + (net.lastError || 'ไม่ทราบสาเหตุ') + ' — กดเพื่อลองใหม่'
-      : 'กดเพื่อดึงข้อมูลล่าสุดจาก Google Sheet';
+      : 'กดเพื่อดึงข้อมูลล่าสุดจาก Google Sheet') + (times ? '\n\nเวลาที่ใช้ล่าสุด:\n' + times : '');
   }
   document.addEventListener('net:state', tick);
   setInterval(tick, 1000);
