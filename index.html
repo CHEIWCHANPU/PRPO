@@ -25,6 +25,8 @@
   var BATCHABLE = ['getData', 'getCer', 'getSuppliers', 'getWorkplan', 'getTodos', 'getGoWork', 'getMeetings', 'getCerFiles'];
   var BATCH_FLAG = 'ccip_batch_unsupported_until';
   var net = window.__net = { pending: 0, lastOk: 0, lastFail: 0, lastError: '', batched: 0 };
+  // ล้างสถานะ "ปิดการรวมคำขอ 6 ชม." ที่อาจค้างจากตอน Apps Script ไม่ว่าง (ทำครั้งเดียวต่อเครื่อง)
+  try { if (!localStorage.getItem('ccip_batch_reset_v2')) { localStorage.removeItem(BATCH_FLAG); localStorage.setItem('ccip_batch_reset_v2', '1'); } } catch (e) {}
 
   function emit() { try { document.dispatchEvent(new CustomEvent('net:state', { detail: net })); } catch (e) {} }
   function isGAS(url) { return /script\.google(usercontent)?\.com/.test(url); }
@@ -95,7 +97,10 @@
     try {
       var res = await tracked(q.base + '?action=getAll&only=' + encodeURIComponent(actions.join(',')), null, true);
       var json = await res.json();
-      if (!json || !json.success || !json.results) throw new Error('batch-unsupported');
+      if (!json || !json.success || !json.results) {
+        var em = String(json && (json.error || json.message) || '');
+        throw new Error(/unknown|ไม่รู้จัก|not supported|invalid action/i.test(em) || (json && json.success === undefined && !json.error) ? 'batch-unsupported' : 'batch-error');
+      }
       net.batched++;
       q.waiters.forEach(function (list, action) {
         var part = json.results[action] || { success: false, error: 'ไม่มีข้อมูล ' + action + ' ในผลรวม' };
@@ -103,8 +108,11 @@
       });
     } catch (err) {
       // เซิร์ฟเวอร์เวอร์ชันเก่า (ยังไม่มี getAll) → จำไว้ 6 ชม. แล้วยิงทีละตัวแทน
-      if (String(err && err.message) === 'batch-unsupported' || err instanceof SyntaxError) {
-        try { localStorage.setItem(BATCH_FLAG, String(Date.now() + 6 * 3600 * 1000)); } catch (e) {}
+      // แต่ถ้าแค่ Apps Script ตอบผิดพลาดชั่วคราว (หน้า error / ไม่ว่าง) → พักแค่ 2 นาที แล้วกลับมารวมคำขอเหมือนเดิม
+      var msg = String(err && err.message);
+      if (msg === 'batch-unsupported' || msg === 'batch-error' || err instanceof SyntaxError) {
+        var hold = msg === 'batch-unsupported' ? 6 * 3600 * 1000 : 2 * 60 * 1000;
+        try { localStorage.setItem(BATCH_FLAG, String(Date.now() + hold)); } catch (e) {}
         settleSingly(q.base, q.waiters);
       } else {
         q.waiters.forEach(function (list) { list.forEach(function (w) { w.reject(err); }); });
@@ -23616,6 +23624,21 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
       if (j && j.success === undefined && !j.error) throw new Error('unknown action'); if (!j.success) throw new Error(j.error || 'บันทึกไม่สำเร็จ'); return j; }
   };
 
+  /* บันทึก/ลบพิกัดหลายรายการในคำขอเดียว (Apps Script เก่ายังไม่รองรับ → ส่งทีละรายการแบบรอคิว ไม่ยิงพร้อมกัน) */
+  const FAIL_KEY = 'ccip_mk_linkfail', FAIL_TTL = 3 * 86400000;
+  async function saveMany(items){
+    if (!items.length || !url()) return;
+    try { await api.post({action:'saveMakerLocs', items, by:me()}); return; }
+    catch (e) { if (!/unknown action/i.test(e.message)) return; }
+    for (const it of items) { try { await api.post(Object.assign({action:'saveMakerLoc', by:me()}, it)); } catch (e) {} }
+  }
+  async function delMany(items){
+    if (!items.length || !url()) return;
+    try { await api.post({action:'deleteMakerLocs', items}); return; }
+    catch (e) { if (!/unknown action/i.test(e.message)) return; }
+    for (const it of items) { try { await api.post({action:'deleteMakerLoc', kind:it.kind, name:it.name}); } catch (e) {} }
+  }
+
   const M = {
     locs: {}, serverOk: null, plant: localStorage.getItem(PLANT_KEY) || 'CCI', q: '', cat: '', sel: null, pick: null,
     routes: readJ(ROUTE_KEY, {}), map: null, layer: null, routeLine: null, markers: {},
@@ -23629,7 +23652,8 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
       catch (e) { if (/unknown action/i.test(e.message)) this.serverOk = false; }
       // ล้างพิกัดผิดที่เคยได้จากลิงก์ (เช่นไปตกที่อเมริกา) → ลบออกจากชีต แล้วหาใหม่
       const bad = Object.values(this.locs).filter(l => l && l.kind === 'maker' && !inTH(l));
-      bad.forEach(l => { delete this.locs[l.key]; if (this.serverOk) api.post({action:'deleteMakerLoc', kind:'maker', name:l.name}).catch(() => {}); });
+      bad.forEach(l => { delete this.locs[l.key]; });
+      if (bad.length && this.serverOk) delMany(bad.map(l => ({kind:'maker', name:l.name})));
     },
     plants(){ return PLANTS.map(p => { const s = this.locs[key('plant', p.code)]; return Object.assign({}, p, s ? {lat:s.lat, lng:s.lng, saved:true} : {}); }); },
     origin(){ const p = this.plants().find(x => x.code === this.plant); return p && isFinite(p.lat) && p.lat != null ? p : this.plants().find(x => x.lat != null); },
@@ -23655,9 +23679,9 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
       if (!page.dataset.ready) { page.dataset.ready = '1'; this.shell(); }
       this.fitH();
       await this.loadLocs();
-      await this.resolveShort();
       await this.ensureMap();
       this.draw();
+      this.resolveShort().then(() => this.draw()).catch(() => {});   // หาพิกัดเบื้องหลัง ไม่ต้องรอ
       this.fitH();
       setTimeout(() => { this.fitH(); this.map && this.map.invalidateSize(); }, 200);
     },
@@ -23905,20 +23929,30 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
     async resolveShort(){
       if (!url() || this.serverOk === false || this._resolving) return;
       this._tried = this._tried || new Set();
-      const need = this.makers().filter(m => !m.pos && /^https?:\/\//i.test(m.maplink) && !this._tried.has(m.maplink));
-      need.forEach(m => this._tried.add(m.maplink));
+      const fail = readJ(FAIL_KEY, {}), now = Date.now();
+      const need = this.makers().filter(m => !m.pos && /^https?:\/\//i.test(m.maplink) && !this._tried.has(m.maplink) && !(fail[m.maplink] && now - fail[m.maplink] < FAIL_TTL));
       if (!need.length) return;
       this._resolving = true;
+      const page = $('#page-mkmap');
       try {
-        const j = await api.post({action:'resolveMapLinks', urls:need.map(m => m.maplink)});
-        for (const d of j.data || []) {
-          if (d.lat == null || !inTH(d)) continue;
-          const m = need.find(x => x.maplink === d.url); if (!m) continue;
-          this.locs[key('maker', m.name)] = {key:key('maker', m.name), kind:'maker', name:m.name, lat:d.lat, lng:d.lng, source:'maplink'};
-          api.post({action:'saveMakerLoc', kind:'maker', name:m.name, lat:d.lat, lng:d.lng, source:'maplink', by:me()}).catch(() => {});
+        for (let i = 0; i < need.length; i += 10) {
+          if (!page || !page.classList.contains('active') || document.hidden) break;      // ออกจากหน้าแผนที่ → หยุด ไม่ให้แย่งคิว Apps Script
+          const chunk = need.slice(i, i + 10); chunk.forEach(m => this._tried.add(m.maplink));
+          let j;
+          try { j = await api.post({action:'resolveMapLinks', urls:chunk.map(m => m.maplink)}); }
+          catch (e) { chunk.forEach(m => this._tried.delete(m.maplink)); if (/unknown action/i.test(e.message)) this.serverOk = false; break; }
+          const save = [];
+          for (const d of j.data || []) {
+            const m = chunk.find(x => x.maplink === d.url); if (!m) continue;
+            if (d.pending) { this._tried.delete(m.maplink); continue; }
+            if (d.lat == null || !inTH(d)) { fail[m.maplink] = Date.now(); continue; }
+            this.locs[key('maker', m.name)] = {key:key('maker', m.name), kind:'maker', name:m.name, lat:d.lat, lng:d.lng, source:'maplink'};
+            save.push({kind:'maker', name:m.name, lat:d.lat, lng:d.lng, source:'maplink'});
+          }
+          writeJ(FAIL_KEY, fail);
+          if (save.length) { await saveMany(save); this.draw(); }
         }
-      } catch (e) { need.forEach(m => this._tried.delete(m.maplink)); if (/unknown action/i.test(e.message)) this.serverOk = false; }
-      this._resolving = false;
+      } finally { this._resolving = false; }
     }
   };
   window.CCIPMakerMap = M;
