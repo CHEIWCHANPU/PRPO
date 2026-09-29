@@ -23220,11 +23220,39 @@ window.CCIP_LOGIN_SLIDES = window.CCIP_LOGIN_SLIDES || { folder: 'login-bg/', ma
     const first = bg && bg !== 'none' ? bg.replace(/^url\(["']?/, '').replace(/["']?\)$/, '') : '';
     const urls = []; if (first) urls.push(first);
     (cfg.extra || []).forEach(u => urls.push(u));
-    const probe = (u) => new Promise(res => { const im = new Image(); im.onload = () => res(im.naturalWidth > 10 ? u : null); im.onerror = () => res(null); im.src = u; });
-    const tries = [];
-    for (let i = 1; i <= cfg.max; i++) tries.push((async () => { for (const e of cfg.ext) { const ok = await probe(cfg.folder + i + '.' + e); if (ok) return ok; } return null; })());
     build(left, urls);                                   // แสดงรูปแรกทันที
-    Promise.all(tries).then(found => { found.filter(Boolean).forEach(u => add(u)); });
+    discover().then(list => list.forEach(u => add(u)));
+  }
+  /* หารายชื่อรูปในโฟลเดอร์ login-bg/
+     1) ถามรายชื่อไฟล์จาก GitHub ครั้งเดียว (จำไว้ 6 ชม.) → ไม่ต้องเดาชื่อไฟล์ ไม่มี error 404 เต็ม Console
+     2) ถ้าถามไม่ได้ → ลองทีละเลข หยุดทันทีที่เลขนั้นไม่มีรูป */
+  const LKEY = 'ccip_loginbg_list';
+  const probe = (u) => new Promise(res => { const im = new Image(); im.onload = () => res(im.naturalWidth > 10 ? u : null); im.onerror = () => res(null); im.src = u; });
+  async function discover(){
+    try { const c = JSON.parse(localStorage.getItem(LKEY) || 'null'); if (c && Date.now() - c.t < 6 * 3600e3 && Array.isArray(c.list)) return c.list; } catch (e) {}
+    let list = null;
+    try {
+      const h = location.hostname.match(/^([^.]+)\.github\.io$/i), repo = location.pathname.split('/').filter(Boolean)[0];
+      if (h && repo) {
+        const r = await fetch(`https://api.github.com/repos/${h[1]}/${repo}/contents/${cfg.folder.replace(/\/+$/, '')}`, {cache:'no-store'});
+        if (r.ok) {
+          const re = new RegExp('^(\\d+)\\.(' + cfg.ext.join('|') + ')$', 'i');
+          list = (await r.json()).filter(f => f.type === 'file' && re.test(f.name))
+            .sort((a, b) => parseInt(a.name, 10) - parseInt(b.name, 10)).slice(0, cfg.max).map(f => cfg.folder + f.name);
+        } else if (r.status === 404) list = [];
+      }
+    } catch (e) {}
+    if (!list) {
+      list = []; let ext = cfg.ext.slice();
+      for (let i = 1; i <= cfg.max; i++) {
+        let hit = null;
+        for (const e of ext) { hit = await probe(cfg.folder + i + '.' + e); if (hit) { ext = [e].concat(ext.filter(x => x !== e)); break; } }
+        if (!hit) break;
+        list.push(hit);
+      }
+    }
+    try { localStorage.setItem(LKEY, JSON.stringify({t: Date.now(), list})); } catch (e) {}
+    return list;
   }
   let S = null;
   function build(left, urls){
@@ -23272,7 +23300,15 @@ window.CCIP_LOGIN_SLIDES = window.CCIP_LOGIN_SLIDES || { folder: 'login-bg/', ma
   function play(){ stop(); if (!S || S.hover || document.hidden || S.slides.length < 2) return; S.t = setTimeout(() => go(S.i + 1, 1), cfg.interval); }
   function stop(){ if (S && S.t) { clearTimeout(S.t); S.t = null; } }
   window.CCIPLoginSlides = { go: (k) => S && go(k, k > S.i ? 1 : -1), add: (u) => add(u), state: () => S && { i: S.i, n: S.slides.length } };
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+  function whenShown(){
+    const w = document.getElementById('welcomeScreen');
+    const vis = () => w && w.style.display !== 'none' && !w.classList.contains('hide') && getComputedStyle(w).display !== 'none';
+    if (!w) return;
+    if (vis()) { start(); return; }
+    const mo = new MutationObserver(() => { if (vis()) { mo.disconnect(); start(); } });
+    mo.observe(w, {attributes:true, attributeFilter:['style', 'class']});
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', whenShown); else whenShown();
 })();
 </script>
 
