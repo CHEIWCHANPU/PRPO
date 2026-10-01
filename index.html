@@ -165,7 +165,6 @@
     var base = (seen === DEFAULT_URL && localStorage.getItem('prpo_url')) || DEFAULT_URL;
     if (base && isGAS(base)) {
       BATCHABLE.forEach(function (a) {
-        if (a === 'getCerFiles') return;
         var u = base + '?action=' + a;
         var p = window.fetch(u);
         p.catch(function () {});
@@ -6197,20 +6196,6 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
 .cerf-act:hover { border-color: var(--accent); color: var(--accent); }
 .cerf-act.danger:hover { border-color: var(--danger); color: var(--danger); }
 </style>
-<style>
-#isoViewer{position:fixed;inset:0;z-index:9999;background:rgba(20,20,22,.72);display:none;align-items:center;justify-content:center}
-#isoViewer.open{display:flex}
-.iso-v-panel{width:min(1000px,96vw);height:92vh;background:#faf8f3;border-radius:10px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5);color:#222}
-.iso-v-head{display:flex;align-items:center;gap:.6rem;padding:.7rem 1rem;border-bottom:1px solid #ddd8cc;flex-wrap:wrap}
-.iso-v-title{font-size:.9rem;font-weight:500;margin-right:auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.iso-v-badge{font-size:.62rem;letter-spacing:.06em;color:#b36b00;border:1px dashed #d9922b;background:#fff7e8;padding:.3rem .6rem;border-radius:3px;text-transform:uppercase}
-.iso-v-btn{width:32px;height:32px;border:1px solid #d9d4c7;background:#efece4;border-radius:5px;cursor:pointer;font-size:1rem;color:#333}
-.iso-v-btn:hover{background:#e4e0d5}
-.iso-v-body{flex:1;overflow:auto;background:#efede8;padding:1rem;-webkit-user-select:none;user-select:none}
-.iso-v-body canvas{display:block;margin:0 auto 1rem;box-shadow:0 2px 14px rgba(0,0,0,.22);background:#fff;max-width:none}
-.iso-v-msg{text-align:center;color:#777;padding:3rem 1rem;font-size:.9rem}
-@media print{#isoViewer{display:none!important}}
-</style>
 </head>
 <body class="light-theme">
 
@@ -6462,17 +6447,6 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
  </div>
 
  
-
-<div class="nav-group" id="navGroup-iso">
- <div class="nav-label" onclick="toggleNavGroup('iso')">
- <span class="nav-label-text"><span class="nav-label-icon"><svg viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5-3.4 9.3-8 11-4.6-1.7-8-6-8-11V5z"/><polyline points="9 12 11 14 15 10"/></svg></span><span data-i18n="group_iso">เอกสาร ISO</span></span><span class="nav-label-chevron">▾</span>
- </div>
- <div class="nav-group-items">
- <button class="nav-item" id="nav-iso" onclick="showPage('iso',this)">
- <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 11 17 15 13"/></svg></span><span class="nav-text" data-i18n="nav_iso">เอกสาร ISO</span>
- </button>
- </div>
- </div>
 
 <div class="nav-group" id="navGroup-cer">
  <div class="nav-label" onclick="toggleNavGroup('cer')">
@@ -7300,10 +7274,9 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
  <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
  <input type="text" id="supplierSearch" placeholder="ค้นหาชื่อ, เบอร์, หมวดหมู่..." oninput="renderSuppliers()">
  </div>
- <span class="sp2-count" id="supplierCount"></span>
  <button class="btn btn-primary" onclick="openSupplierModal()" style="margin-left:auto">+ เพิ่ม Supplier</button>
  </div>
- <div id="supplierGrid" class="sp2-grid"></div>
+ <div id="supplierGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem"></div>
  </div>
 
  <!-- ORGANIZE TEAM: Team Purchase Component -->
@@ -8297,24 +8270,6 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
  </div>
  <!-- /WORK MANUAL PAGE -->
 
- <!-- ISO DOCUMENTS PAGE -->
- <div class="page" id="page-iso">
- <div style="display:flex;align-items:center;gap:0.7rem;flex-wrap:wrap;margin-bottom:1rem">
- <div>
- <div style="font-size:1.1rem;font-weight:600" data-i18n="iso_title">เอกสาร ISO</div>
- <div style="font-size:0.8rem;color:var(--muted)" data-i18n="iso_placeholder">เอกสารควบคุมสำหรับการตรวจประเมิน (ดูได้อย่างเดียว)</div>
- </div>
- <input class="form-input" id="isoSearch" data-i18n-ph="iso_search" placeholder="ค้นหาเอกสาร..." oninput="isoRender()" style="margin-left:auto;max-width:240px">
- <button class="btn btn-primary" onclick="isoUpload()" data-i18n="iso_upload">+ อัพโหลดเอกสาร</button>
- <button class="btn btn-ghost" onclick="document.getElementById('isoLocalFile').click()" data-i18n="iso_open_local">เปิดไฟล์ PDF ทดลองดู</button>
- <input type="file" id="isoLocalFile" accept="application/pdf" style="display:none" onchange="isoOpenLocal(this)">
- </div>
- <div id="isoGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:0.8rem"></div>
- </div>
- <!-- /ISO DOCUMENTS PAGE -->
-
- 
-
  <!-- ═══════════════════════════════════════════════════
  PAYROLL / ATTENDANCE PAGE
  ═══════════════════════════════════════════════════ -->
@@ -8769,7 +8724,7 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
  <option value="ส่งยังไม่ครบ ">ส่งยังไม่ครบ </option>
  </select>
  </div>
- <div class="form-group"><label class="form-label">MAKER</label><input type="text" class="form-input" id="f-maker" list="makerSuggest" autocomplete="off" placeholder="พิมพ์ชื่อย่อ เช่น TAS" oninput="updateMakerHint()" onchange="updateMakerHint()"><datalist id="makerSuggest"></datalist><div id="f-maker-hint" class="maker-hint"></div></div>
+ <div class="form-group"><label class="form-label">MAKER</label><input type="text" class="form-input" id="f-maker"></div>
  <div class="form-group"><label class="form-label">PO / ORDER NO.</label><input type="text" class="form-input" id="f-poNo"></div>
  <div class="form-group"><label class="form-label">หมายเหตุ</label><input type="text" class="form-input" id="f-note"></div>
  <div class="form-group full">
@@ -9096,7 +9051,7 @@ window.addEventListener('DOMContentLoaded', () => {
 /* ── NAV GROUPS (collapsible) ── */
 // ทุกครั้งที่ล็อกอินใหม่ หมวดหมู่ในเมนูด้านซ้ายจะถูกรีเซ็ตกลับไปที่ค่าเริ่มต้นนี้เสมอ
 // (เมนูหลักเปิดอยู่ ส่วนหมวดอื่นๆ พับเก็บไว้ทั้งหมด) ไม่ใช้ค่าที่จำไว้จากครั้งก่อน
-const DEFAULT_COLLAPSED_NAV_GROUPS = ['track', 'cer', 'modeltracker', 'workplan', 'manual', 'iso', 'costcalc', 'costsaving', 'other', 'team', 'manage'];
+const DEFAULT_COLLAPSED_NAV_GROUPS = ['track', 'cer', 'modeltracker', 'workplan', 'manual', 'costcalc', 'costsaving', 'other', 'team', 'manage'];
 function resetNavGroupsToDefault() {
  localStorage.setItem('prpo_nav_collapsed', JSON.stringify(DEFAULT_COLLAPSED_NAV_GROUPS));
  document.querySelectorAll('.nav-group[id^="navGroup-"]').forEach(el => {
@@ -9166,7 +9121,7 @@ const I18N = {
  nav_workplan: 'แผนงานข้างนอก', nav_manual: 'คู่มือการทำงาน', nav_setup: 'ตั้งค่า', nav_collapse: 'ย่อเมนู', nav_team: 'ทีมงาน Purchase Component',
  group_main: 'เมนูหลัก', group_track: 'ติดตาม PART PR', group_cer: 'ติดตามใบ CER',
  group_modeltracker: 'แผนการผลิต MODEL', group_workplan: 'ตารางแผนงานข้างนอก',
- group_manual: 'คู่มือการทำงาน &amp; พื้นฐานการทำงาน', group_iso: 'เอกสาร ISO', nav_iso: 'เอกสาร ISO', iso_title: 'เอกสาร ISO', iso_placeholder: 'เอกสารควบคุมสำหรับการตรวจประเมิน (ดูได้อย่างเดียว)', iso_open_local: 'เปิดไฟล์ PDF ทดลองดู', iso_upload: '+ อัพโหลดเอกสาร', iso_empty: 'ยังไม่มีเอกสาร ISO — อัพโหลดที่หน้า คู่มือการทำงาน โดยเลือกหมวด "เอกสาร ISO"', iso_search: 'ค้นหาเอกสาร...', iso_view: 'เปิดดู', iso_badge: 'ดูอย่างเดียว — ปิดการบันทึกและพิมพ์', group_maker: 'ข้อมูล MAKER', group_settings: 'จัดการ', group_team: 'จัดทีมงาน',
+ group_manual: 'คู่มือการทำงาน &amp; พื้นฐานการทำงาน', group_maker: 'ข้อมูล MAKER', group_settings: 'จัดการ', group_team: 'จัดทีมงาน',
  },
  en: {
  nav_home: 'Home', nav_exec: 'KPI Overview', nav_payroll: 'Time Attendance', nav_todo: 'To-Do List',
@@ -9174,12 +9129,12 @@ const I18N = {
  nav_workplan: 'Field Workplan', nav_manual: 'Work Manual', nav_setup: 'Settings', nav_collapse: 'Collapse', nav_team: 'Purchase Component Team',
  group_main: 'Main Menu', group_track: 'Track Part PR', group_cer: 'CER Tracking',
  group_modeltracker: 'Model Production Plan', group_workplan: 'Field Workplan Schedule',
- group_manual: 'Work Manual &amp; Basics', group_iso: 'ISO Documents', nav_iso: 'ISO Documents', iso_title: 'ISO Documents', iso_placeholder: 'Controlled documents for audit (view only)', iso_open_local: 'Open a test PDF', iso_upload: '+ Upload document', iso_empty: 'No ISO documents yet — upload them on the Work Manual page using the "ISO Documents" category', iso_search: 'Search documents...', iso_view: 'View', iso_badge: 'VIEW ONLY — SAVE & PRINT DISABLED', group_maker: 'Maker Data', group_settings: 'Management', group_team: 'Organize Team',
+ group_manual: 'Work Manual &amp; Basics', group_maker: 'Maker Data', group_settings: 'Management', group_team: 'Organize Team',
  }
 };
 const PAGE_TITLES = {
- th: { home:'หน้าหลัก', exec:'ภาพรวม KPI', dashboard:'Dashboard', list:'รายการทั้งหมด', partmodel:'PART MODEL', summary:'สรุปภาพรวม', gantt:'Timeline / Gantt', setup:'ตั้งค่าระบบ', supplier:'Supplier Database', history:'History Log', leadtime:'Lead Time Analysis', leaderboard:'Maker Leaderboard', cer:'ติดตามใบ CER', modeltracker:'Model Tracker', workplan:'ตารางแผนงานข้างนอก', payroll:'ลงเวลา & ค่าแรง', manual:'คู่มือการทำงาน', iso:'เอกสาร ISO', todo:'To-Do List', costcalc:'Cost Up/Down', costsaving:'Cost Saving Report', team:'ทีมงาน Purchase Component' },
- en: { home:'Home', exec:'KPI Overview', dashboard:'Dashboard', list:'All Items', partmodel:'PART MODEL', summary:'Summary', gantt:'Timeline / Gantt', setup:'System Settings', supplier:'Supplier Database', history:'History Log', leadtime:'Lead Time Analysis', leaderboard:'Maker Leaderboard', cer:'CER Tracking', modeltracker:'Model Tracker', workplan:'Field Workplan Schedule', payroll:'Time & Wages', manual:'Work Manual', iso:'ISO Documents', todo:'To-Do List', costcalc:'Cost Up/Down', costsaving:'Cost Saving Report', team:'Purchase Component Team' }
+ th: { home:'หน้าหลัก', exec:'ภาพรวม KPI', dashboard:'Dashboard', list:'รายการทั้งหมด', partmodel:'PART MODEL', summary:'สรุปภาพรวม', gantt:'Timeline / Gantt', setup:'ตั้งค่าระบบ', supplier:'Supplier Database', history:'History Log', leadtime:'Lead Time Analysis', leaderboard:'Maker Leaderboard', cer:'ติดตามใบ CER', modeltracker:'Model Tracker', workplan:'ตารางแผนงานข้างนอก', payroll:'ลงเวลา & ค่าแรง', manual:'คู่มือการทำงาน', todo:'To-Do List', costcalc:'Cost Up/Down', costsaving:'Cost Saving Report', team:'ทีมงาน Purchase Component' },
+ en: { home:'Home', exec:'KPI Overview', dashboard:'Dashboard', list:'All Items', partmodel:'PART MODEL', summary:'Summary', gantt:'Timeline / Gantt', setup:'System Settings', supplier:'Supplier Database', history:'History Log', leadtime:'Lead Time Analysis', leaderboard:'Maker Leaderboard', cer:'CER Tracking', modeltracker:'Model Tracker', workplan:'Field Workplan Schedule', payroll:'Time & Wages', manual:'Work Manual', todo:'To-Do List', costcalc:'Cost Up/Down', costsaving:'Cost Saving Report', team:'Purchase Component Team' }
 };
 function getCurrentLang() { return localStorage.getItem('prpo_lang') || 'th'; }
 function applyLanguage(lang) {
@@ -10081,7 +10036,7 @@ function renderDailyBriefing() {
  });
 
  const groupsHtml = groupEntries.map(([maker, items]) => {
- const sup = supplierMap[String(maker).trim()] || findSupplierByMaker(maker);
+ const sup = supplierMap[String(maker).trim()];
  const groupTag = briefingTag(Math.min(...items.map(r => Number(r.daysLeft))));
  const contactBits = [];
  if (sup && sup.contact) contactBits.push(`${sup.contact}`);
@@ -10763,8 +10718,7 @@ function getFiltered() {
  const status = document.getElementById('filterStatus').value;
  const location = document.getElementById('filterLocation').value;
  return allData.filter(r => {
- const matchQ = !q || [r.partNo,r.partName,r.maker,r.model,r.poNo,r.note].some(v => (v||'').toLowerCase().includes(q)) ||
-   (() => { const sp = findSupplierByMaker(r.maker); return !!sp && [sp.abbr, sp.name, sp.nameEn].some(v => (v||'').toLowerCase().includes(q)); })();
+ const matchQ = !q || [r.partNo,r.partName,r.maker,r.model,r.poNo,r.note].some(v => (v||'').toLowerCase().includes(q));
  const matchS = !status || (r.status||'').includes(status);
  const matchM = selectedMakers.length === 0 || selectedMakers.includes(r.maker);
  const matchL = !location || r.location === location;
@@ -10815,7 +10769,7 @@ function renderTable() {
  <td class="date-cell">${r.actualDate||'—'}</td>
  <td><span class="location-chip">${r.location}</span></td>
  <td>${statusBadge(r.status)}</td>
- <td class="maker-cell"${(() => { const sp = findSupplierByMaker(r.maker); return sp && sp.name !== r.maker ? ' title="' + String(sp.name).replace(/"/g,'&quot;') + '"' : ''; })()}>${r.maker}</td>
+ <td class="maker-cell">${r.maker}</td>
  <td>${daysTag(r.daysLeft, r.status)}</td>
  <td style="font-family:var(--mono);font-size: 0.724rem;color:var(--muted)">${r.poNo||'—'}</td>
  <td><div class="row-actions" onclick="event.stopPropagation()">
@@ -12589,7 +12543,6 @@ function openAddModal() {
  document.getElementById('f-location').value = 'CCIS';
  document.getElementById('f-maker').value = '';
  resetPrFileField();
- refreshMakerSuggest(); updateMakerHint();
  document.getElementById('modalOverlay').classList.add('open');
  clearFormErrors();
  setTimeout(() => document.getElementById('f-partNo').focus(), 150);
@@ -12600,7 +12553,6 @@ function openEditModal(item) {
  document.getElementById('editRowIndex').value = item.rowIndex;
  ['partNo','partName','model','volume','receivedQty','prDate','dueDate','actualDate','location','status','maker','poNo','note','prLink','prFileName'].forEach(f => { document.getElementById('f-' + f).value = item[f] || ''; });
  resetPrFileField(item.prLink, item.prFileName);
- refreshMakerSuggest(); updateMakerHint();
  document.getElementById('modalOverlay').classList.add('open');
  clearFormErrors();
 }
@@ -13385,7 +13337,6 @@ async function clearHistory() {
  Row1=Title | Row2=Header | Row3+ = Data
  A=NO | B=ชื่อบริษัท | C=ชื่อผู้ติดต่อ | D=เบอร์โทร
  E=EMAIL | F=หมวดหมู่สินค้า | G=LEADTIME | H=หมายเหตุ
- I=โลโก้ | J=ลิงก์ Google Map | K=ชื่อย่อ | L=ชื่อภาษาอังกฤษ
 ══════════════════════════════════════════════════════ */
 
 /* ── โหลด Supplier จาก Sheet ── */
@@ -13428,116 +13379,35 @@ async function loadSuppliers(forceRefresh = false, silent = false) {
  }
 }
 
-/* ── โลโก้ Supplier: เลือกไฟล์ หรือกด Ctrl+V วางรูป → ย่อรูป → อัปโหลดขึ้น Drive → เก็บเป็นลิงก์ใน Sheet ── */
-let supplierImgUploading = false;
-
-function setSupplierPreview(url) {
-  const preview = document.getElementById('s-image-preview');
-  if (!preview) return;
-  if (url) {
-    preview.style.background = 'none';
-    preview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover" referrerpolicy="no-referrer">`;
-  } else {
-    preview.style.background = 'linear-gradient(135deg,var(--accent),var(--accent2))';
-    preview.innerHTML = '';
-  }
-}
-
-function resizeImageToDataUrl(file, maxSide) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error('อ่านไฟล์รูปไม่ได้'));
-    reader.onload = e => {
-      const img = new Image();
-      img.onerror = () => reject(new Error('ไฟล์รูปไม่ถูกต้อง'));
-      img.onload = () => {
-        const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
-        const w = Math.max(1, Math.round(img.width * scale));
-        const h = Math.max(1, Math.round(img.height * scale));
-        const c = document.createElement('canvas');
-        c.width = w; c.height = h;
-        c.getContext('2d').drawImage(img, 0, 0, w, h);
-        // PNG คงพื้นหลังโปร่งใสของโลโก้ไว้ / อย่างอื่นใช้ JPEG ให้ไฟล์เล็ก
-        resolve(file.type === 'image/png' ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.88));
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-async function uploadSupplierImageDataUrl(dataUrl, nameHint) {
-  const m = /^data:(image\/[a-zA-Z+.-]+);base64,(.+)$/.exec(dataUrl);
-  if (!m) throw new Error('รูปแบบรูปภาพไม่ถูกต้อง');
-  const ext = m[1].indexOf('png') >= 0 ? 'png' : 'jpg';
-  const res = await fetch(WEB_APP_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action: 'uploadSupplierLogo', fileName: (nameHint || 'supplier') + '.' + ext, mimeType: m[1], base64: m[2] })
-  });
-  const json = await res.json();
-  if (!json.success) throw new Error(json.error || 'อัปโหลดโลโก้ไม่สำเร็จ');
-  return json.url;
-}
-
-async function processSupplierImageFile(file) {
-  if (!file) return;
-  if (!file.type || !file.type.startsWith('image/')) { showToast('กรุณาเลือกไฟล์รูปภาพ', 'error'); return; }
-  if (supplierImgUploading) return;
-  try {
-    const dataUrl = await resizeImageToDataUrl(file, 512);
-    if (!WEB_APP_URL) {            // ยังไม่ตั้ง Web App URL → เก็บในเครื่อง (ย่อแล้ว)
-      document.getElementById('s-image').value = dataUrl;
-      setSupplierPreview(dataUrl);
-      return;
-    }
-    setSupplierPreview(dataUrl);   // โชว์ตัวอย่างทันที
-    supplierImgUploading = true;
-    const saveBtn = document.getElementById('s-save-btn');
-    if (saveBtn) { saveBtn.disabled = true; saveBtn.dataset.label = saveBtn.textContent; saveBtn.textContent = 'กำลังอัปโหลดรูป...'; }
-    const hint = document.getElementById('s-image-hint');
-    if (hint) hint.textContent = 'กำลังอัปโหลดรูปขึ้น Google Drive...';
-    const nm = (document.getElementById('s-abbr').value || document.getElementById('s-name').value || 'supplier').trim().replace(/[^\w\u0E00-\u0E7F-]+/g, '_');
-    const url = await uploadSupplierImageDataUrl(dataUrl, nm);
-    document.getElementById('s-image').value = url;
-    setSupplierPreview(url);
-    if (hint) hint.textContent = 'อัปโหลดสำเร็จ — ลิงก์โลโก้จะถูกบันทึกลงฐานข้อมูลเมื่อกดบันทึก';
-  } catch (err) {
-    showToast('❌ ' + err.message, 'error');
-    clearSupplierImage();
-  } finally {
-    supplierImgUploading = false;
-    const saveBtn = document.getElementById('s-save-btn');
-    if (saveBtn) { saveBtn.disabled = false; if (saveBtn.dataset.label) saveBtn.textContent = saveBtn.dataset.label; }
-  }
-}
-
 function handleSupplierImageUpload(event) {
-  const file = event.target.files && event.target.files[0];
-  processSupplierImageFile(file);
+ const file = event.target.files && event.target.files[0];
+ if (!file) return;
+ if (!file.type.startsWith('image/')) {
+ showToast('กรุณาเลือกไฟล์รูปภาพ', 'error');
+ return;
+ }
+ if (file.size > 2 * 1024 * 1024) {
+ showToast('ไฟล์รูปใหญ่เกินไป (จำกัด 2MB)', 'error');
+ return;
+ }
+ const reader = new FileReader();
+ reader.onload = function(e) {
+ const dataUrl = e.target.result;
+ document.getElementById('s-image').value = dataUrl;
+ const preview = document.getElementById('s-image-preview');
+ preview.style.background = 'none';
+ preview.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover">`;
+ };
+ reader.readAsDataURL(file);
 }
 
 function clearSupplierImage() {
-  document.getElementById('s-image').value = '';
-  document.getElementById('s-image-file').value = '';
-  setSupplierPreview('');
-  const hint = document.getElementById('s-image-hint');
-  if (hint) hint.textContent = 'ยังไม่มีรูป — คัดลอกรูปแล้วกด Ctrl+V';
+ document.getElementById('s-image').value = '';
+ document.getElementById('s-image-file').value = '';
+ const preview = document.getElementById('s-image-preview');
+ preview.style.background = 'linear-gradient(135deg,var(--accent),var(--accent2))';
+ preview.innerHTML = '';
 }
-
-/* กด Ctrl+V ตอนเปิดหน้าต่าง Supplier อยู่ → วางรูปจากคลิปบอร์ดเป็นโลโก้ได้เลย (ไม่รบกวนการวางข้อความในช่องอื่น) */
-document.addEventListener('paste', function(e) {
-  const ov = document.getElementById('supplierModalOverlay');
-  if (!ov || !ov.classList.contains('open')) return;
-  const items = (e.clipboardData && e.clipboardData.items) || [];
-  for (const it of items) {
-    if (it.kind === 'file' && it.type.startsWith('image/')) {
-      e.preventDefault();
-      processSupplierImageFile(it.getAsFile());
-      return;
-    }
-  }
-});
 
 function openSupplierModal(id) {
  document.getElementById('s-id').value = id || '';
@@ -13555,20 +13425,23 @@ function openSupplierModal(id) {
  document.getElementById('s-leadtime').value = s.leadtime || '';
  document.getElementById('s-note').value = s.note || '';
  document.getElementById('s-image').value = s.image || '';
-    document.getElementById('s-maplink').value = s.maplink || '';
-    document.getElementById('s-abbr').value = s.abbr || '';
-    document.getElementById('s-nameEn').value = s.nameEn || '';
-    setSupplierPreview(s.image || '');
+ document.getElementById('s-maplink').value = s.maplink || '';
+ if (s.image) {
+ preview.style.background = 'none';
+ preview.innerHTML = `<img src="${s.image}" style="width:100%;height:100%;object-fit:cover">`;
+ } else {
+ preview.style.background = 'linear-gradient(135deg,var(--accent),var(--accent2))';
+ preview.innerHTML = '';
+ }
  } else {
  document.getElementById('supplierModalTitle').textContent = 'เพิ่ม Supplier';
-['name','abbr','nameEn','contact','phone','email','category','leadtime','note','image','maplink'].forEach(f => {
+ ['name','contact','phone','email','category','leadtime','note','image','maplink'].forEach(f => {
  document.getElementById('s-'+f).value = '';
  });
-    setSupplierPreview('');
-  }
-  const _h = document.getElementById('s-image-hint');
-  if (_h) _h.textContent = 'ยังไม่มีรูป — คัดลอกรูปแล้วกด Ctrl+V';
-  document.getElementById('supplierModalOverlay').classList.add('open');
+ preview.style.background = 'linear-gradient(135deg,var(--accent),var(--accent2))';
+ preview.innerHTML = '';
+ }
+ document.getElementById('supplierModalOverlay').classList.add('open');
 }
 
 function closeSupplierModal() {
@@ -13580,26 +13453,16 @@ async function saveSupplier() {
  if (!name) { showToast('กรุณากรอกชื่อ Supplier', 'error'); return; }
  const rowIndex = document.getElementById('s-id').value;
  const isEditSupplier = !!rowIndex;
- if (String(rowIndex).indexOf('pending-') === 0) { showToast('กำลังซิงค์รายการนี้กับ Sheet รอสักครู่แล้วลองแก้ไขใหม่', 'error'); return; }
-  if (supplierImgUploading) { showToast('รอรูปอัปโหลดเสร็จก่อนครับ', 'error'); return; }
-  // รูปเก่าที่ค้างเป็น base64 (บันทึกลง Sheet ไม่ได้) → อัปโหลดขึ้น Drive ให้ก่อน
-  let imgVal = document.getElementById('s-image').value;
-  if (WEB_APP_URL && imgVal.startsWith('data:image/')) {
-    try { imgVal = await uploadSupplierImageDataUrl(imgVal, 'supplier'); document.getElementById('s-image').value = imgVal; }
-    catch (err) { showToast('❌ อัปโหลดรูปไม่สำเร็จ: ' + err.message, 'error'); return; }
-  }
-  const payload = {
-    name,
-    abbr: document.getElementById('s-abbr').value.trim(),
-    nameEn: document.getElementById('s-nameEn').value.trim(),
-    contact: document.getElementById('s-contact').value.trim(),
+ const payload = {
+ name,
+ contact: document.getElementById('s-contact').value.trim(),
  phone: document.getElementById('s-phone').value.trim(),
  email: document.getElementById('s-email').value.trim(),
  category: document.getElementById('s-category').value.trim(),
  leadtime: document.getElementById('s-leadtime').value,
  note: document.getElementById('s-note').value.trim(),
-    image: imgVal,
-    maplink: document.getElementById('s-maplink').value.trim()
+ image: document.getElementById('s-image').value,
+ maplink: document.getElementById('s-maplink').value.trim()
  };
 
  if (!WEB_APP_URL) {
@@ -13631,20 +13494,13 @@ async function saveSupplier() {
  const json = await res.json();
  if (!json.success) { showResultModal('บันทึกใน Sheet ไม่สำเร็จ', 'error', json.error || ''); return; }
  // เพิ่มใหม่ → รีเฟรชเบื้องหลังเงียบๆ เพื่อให้ได้ id จริงจาก Sheet
- if (!rowIndex) {
- if (json.rowIndex) {
- const it = suppliers.find(s => String(s.id) === String(optId));
- if (it) { it.id = json.rowIndex; it.rowIndex = json.rowIndex; renderSuppliers(); }
- } else { loadSuppliers(true, true); return; }
- }
- try { localStorage.setItem('prpo_suppliers', JSON.stringify(suppliers)); } catch (e) {}
+ if (!rowIndex) loadSuppliers();
  } catch(e) {
  showResultModal('ซิงค์ Sheet ไม่สำเร็จ', 'error', e.message);
  }
 }
 
 async function deleteSupplier(rowIndex) {
- if (String(rowIndex).indexOf('pending-') === 0) { showToast('กำลังซิงค์รายการนี้กับ Sheet รอสักครู่แล้วลองลบใหม่', 'error'); return; }
  if (!confirm('ต้องการลบ Supplier นี้?')) return;
  const delSupplierItem = suppliers.find(s => String(s.id) === String(rowIndex));
  if (!WEB_APP_URL) {
@@ -13657,7 +13513,6 @@ async function deleteSupplier(rowIndex) {
  }
  const removedIdx = suppliers.findIndex(s => String(s.id) === String(rowIndex));
  suppliers = suppliers.filter(s => String(s.id) !== String(rowIndex));
- { const r0 = Number(rowIndex); if (Number.isFinite(r0)) suppliers.forEach(s => { const n = Number(s.id); if (Number.isFinite(n) && n > r0) { s.id = n - 1; s.rowIndex = n - 1; } }); }
  addHistoryLog('del', delSupplierItem?.name || '-', delSupplierItem?.category || '', 'ลบ Supplier');
  renderSuppliers();
  showResultModal('ลบ Supplier สำเร็จ', 'success');
@@ -13668,9 +13523,6 @@ async function deleteSupplier(rowIndex) {
  if (delSupplierItem && removedIdx >= 0) suppliers.splice(removedIdx, 0, delSupplierItem);
  renderSuppliers();
  showResultModal('ลบใน Sheet ไม่สำเร็จ', 'error', json.error || '');
- loadSuppliers(true, false); // ซิงค์ใหม่ให้ตรงกับ Sheet
- } else {
- try { localStorage.setItem('prpo_suppliers', JSON.stringify(suppliers)); } catch (e) {}
  }
  } catch(e) {
  showResultModal('ซิงค์ Sheet ไม่สำเร็จ', 'error', e.message);
@@ -13916,7 +13768,7 @@ function renderManuals() {
  if (!grid) return;
  const q = (document.getElementById('manualSearch')?.value || '').toLowerCase();
  const list = manuals.filter(m =>
- m.category !== 'เอกสาร ISO' && (!manualCategoryFilter || m.category === manualCategoryFilter) &&
+ (!manualCategoryFilter || m.category === manualCategoryFilter) &&
  ((m.title || '').toLowerCase().includes(q) || (m.note || '').toLowerCase().includes(q))
  );
  if (!list.length) {
@@ -15384,138 +15236,62 @@ async function deleteCsItem(id) {
  }
 }
 
-/* ── จับคู่ MAKER ในรายการ PR/PO กับ Supplier: ชื่อเต็ม / ชื่อย่อ / ชื่อภาษาอังกฤษ ── */
-let _spIdx = null;
-function spNorm(x) {
-  return String(x || '').toLowerCase()
-    .replace(/\(.*?\)/g, '')
-    .replace(/บริษัท|จำกัด|มหาชน|หจก\.?|ห้างหุ้นส่วน/g, '')
-    .replace(/\b(co|ltd|limited|company|corp|corporation|inc|pcl)\b/g, '')
-    .replace(/[^a-z0-9\u0E00-\u0E7F]/g, '');
-}
-function findSupplierByMaker(m) {
-  const k = spNorm(m); if (!k) return null;
-  if (!_spIdx) {
-    _spIdx = new Map();
-    const add = (key, s) => { if (key && !_spIdx.has(key)) _spIdx.set(key, s); };
-    (suppliers || []).forEach(s => add(spNorm(s.name), s));
-    (suppliers || []).forEach(s => add(spNorm(s.abbr), s));
-    (suppliers || []).forEach(s => add(spNorm(s.nameEn), s));
-  }
-  return _spIdx.get(k) || null;
-}
-function refreshMakerSuggest() {
-  const dl = document.getElementById('makerSuggest'); if (!dl) return;
-  const e = x => String(x ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  let h = (suppliers || []).map(s => `<option value="${e(s.abbr || s.name)}" label="${e(s.abbr ? s.name : (s.nameEn || ''))}"></option>`).join('');
-  const seen = new Set();
-  (allData || []).forEach(r => {
-    const m = String(r.maker || '').trim();
-    if (!m || seen.has(m) || findSupplierByMaker(m)) return;
-    seen.add(m); h += `<option value="${e(m)}"></option>`;
-  });
-  dl.innerHTML = h;
-}
-function updateMakerHint() {
-  const inp = document.getElementById('f-maker'), box = document.getElementById('f-maker-hint');
-  if (!inp || !box) return;
-  const e = x => String(x ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const v = inp.value.trim();
-  if (!v) { box.className = 'maker-hint'; box.innerHTML = ''; return; }
-  const s = findSupplierByMaker(v);
-  if (s) {
-    box.className = 'maker-hint ok';
-    box.innerHTML = '✓ ' + e(s.name) + (s.abbr ? ' <b>(' + e(s.abbr) + ')</b>' : '') +
-      (s.contact ? ' · ' + e(s.contact) : '') + (s.phone ? ' · ' + e(s.phone) : '');
-  } else {
-    box.className = 'maker-hint warn';
-    box.textContent = 'ไม่พบใน Supplier Database — พิมพ์ชื่อย่อ/ชื่อบริษัทให้ตรง หรือเพิ่มที่หน้า Supplier';
-  }
-}
-function spShowItems(id) {
-  const s = (suppliers || []).find(x => String(x.id) === String(id)); if (!s) return;
-  showPage('list', document.getElementById('nav-list'));
-  const inp = document.getElementById('searchInput');
-  if (inp) inp.value = s.abbr || s.name;
-  currentPage = 1; renderTable();
-}
-const SP2_ICO = {
-  user:'<svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
-  phone:'<svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8.1 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>',
-  mail:'<svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>',
-  pin:'<svg viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>'
-};
 function renderSuppliers() {
- _spIdx = null;
  const q = (document.getElementById('supplierSearch')?.value || '').toLowerCase();
  const grid = document.getElementById('supplierGrid');
  const list = suppliers.filter(s => !q ||
-    (s.name ||'').toLowerCase().includes(q) ||
-    (s.abbr ||'').toLowerCase().includes(q) ||
-    (s.nameEn||'').toLowerCase().includes(q) ||
-    (s.contact||'').toLowerCase().includes(q) ||
-    (s.category||'').toLowerCase().includes(q) ||
+ (s.name ||'').toLowerCase().includes(q) ||
+ (s.category||'').toLowerCase().includes(q) ||
  (s.phone ||'').includes(q) ||
  (s.email ||'').toLowerCase().includes(q)
  );
- const _c = document.getElementById('supplierCount'); if (_c) _c.textContent = q ? ('พบ ' + list.length + ' จาก ' + suppliers.length + ' ราย') : ('ทั้งหมด ' + suppliers.length + ' ราย');
-  if (!list.length) {
+ if (!list.length) {
  grid.innerHTML = '<div style="color:var(--muted);font-size: 0.892rem;padding:2rem 0;text-align:center;grid-column:1/-1">' +
  (suppliers.length ? 'ไม่พบ Supplier ที่ค้นหา' : 'ยังไม่มี Supplier — กด + เพิ่ม Supplier') + '</div>';
  return;
  }
- const makerCount = new Map();
- allData.forEach(r => { const sp = findSupplierByMaker(r.maker); if (sp) makerCount.set(sp, (makerCount.get(sp)||0)+1); });
+ const makerCount = {};
+ allData.forEach(r => { if(r.maker) makerCount[r.maker] = (makerCount[r.maker]||0)+1; });
  grid.innerHTML = list.map(s => {
-    const e = x => String(x ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    const ini = s.abbr ? String(s.abbr).trim().slice(0,3).toUpperCase() : (s.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-    const prCount = makerCount.get(s) || 0;
-    const embedSrc = getMapEmbedUrl(s.maplink);
-    const avatar = s.image
-      ? `<div class="sp2-av"><img src="${e(s.image)}" alt="" referrerpolicy="no-referrer" data-ini="${e(ini)}" onerror="this.parentNode.classList.add('ph');this.parentNode.textContent=this.dataset.ini"></div>`
-      : `<div class="sp2-av ph">${e(ini)}</div>`;
-    const row = (ico, html) => `<div class="sp2-row"><span class="sp2-ico">${SP2_ICO[ico]}</span><span class="sp2-val">${html}</span></div>`;
-    const phones = String(s.phone||'').split(/[,;]+/).map(x=>x.trim()).filter(Boolean)
-      .map(p => `<a href="tel:${e(p.replace(/[^\d+]/g,''))}">${e(p)}</a>`).join(', ');
-    const mails = String(s.email||'').split(/[,;\s]+/).map(x=>x.trim()).filter(Boolean)
-      .map(m => `<a href="mailto:${e(m)}">${e(m)}</a>`).join(', ');
-    const info = [
-      s.contact ? row('user', e(s.contact)) : '',
-      phones ? row('phone', phones) : '',
-      mails ? row('mail', mails) : ''
-    ].join('');
-    const dist = (window.CCIPMakerMap && window.CCIPMakerMap.infoFor) ? window.CCIPMakerMap.infoFor(s) : null;
-    const distStat = dist ? `<div class="sp2-stat"><span>ระยะทางจาก ${e(dist.plant)}</span><b>${dist.road ? '' : '≈'}${dist.km >= 100 ? Math.round(dist.km) : dist.km.toFixed(1)} <small>กม.${dist.min != null ? ' · ' + (dist.min >= 60 ? Math.floor(dist.min/60) + ' ชม. ' + Math.round(dist.min%60) + ' น.' : Math.round(dist.min) + ' น.') : ''}</small></b></div>` : '';
-    const stats = distStat + (s.leadtime ? `<div class="sp2-stat"><span>LEAD TIME</span><b>${e(s.leadtime)} <small>วัน</small></b></div>` : '') +
-      `<div class="sp2-stat${prCount ? ' link' : ''}"${prCount ? ` onclick="spShowItems('${e(s.id)}')" title="คลิกเพื่อดูรายการทั้งหมดของ Maker นี้"` : ''}><span>รายการใน PR/PO${prCount ? ' ›' : ''}</span><b class="${prCount ? '' : 'zero'}">${prCount} <small>รายการ</small></b></div>`;
-    const foot = s.maplink ? `<div class="sp2-foot">
-        <a class="sp2-map" href="${e(s.maplink)}" target="_blank" rel="noopener">${SP2_ICO.pin} ดูที่ตั้งบน Google Maps</a>
-        ${embedSrc ? `<div class="sp2-embed"><iframe src="${e(embedSrc)}" width="100%" height="130" style="border:0;display:block" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>` : ''}
-      </div>` : '';
-    return `<div class="sp2-card">
-      <div class="sp2-head">
-        ${avatar}
-        <div class="sp2-id">
-          <div class="sp2-name">${e(s.name)}</div>
-          ${s.nameEn ? `<div class="sp2-en">${e(s.nameEn)}</div>` : ''}
-          <div class="sp2-tags">
-            ${s.abbr ? `<span class="sp2-abbr">${e(s.abbr)}</span>` : ''}
-            <span class="sp2-cat">${e(s.category || 'ไม่ระบุหมวดหมู่')}</span>
-          </div>
-        </div>
-        <div class="sp2-act">
-          <button class="icon-btn" onclick="openSupplierModal('${e(s.id)}')" title="แก้ไข"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
-          <button class="icon-btn del" onclick="deleteSupplier('${e(s.id)}')" title="ลบ"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
-        </div>
-      </div>
-      ${info ? `<div class="sp2-info">${info}</div>` : ''}
-      <div class="sp2-stats">${stats}</div>
-      ${s.note ? `<div class="sp2-note">${e(s.note)}</div>` : ''}
-      ${foot}
-    </div>`;
-  }).join('');
-  // render inline supplier comments
-  list.forEach(s => setTimeout(() => scRender(s.id), 0));
+ const initials = (s.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+ const prCount = makerCount[s.name] || 0;
+ const avatarInner = s.image
+ ? `<img src="${s.image}" alt="${s.name}" style="width:100%;height:100%;object-fit:cover;border-radius:4px">`
+ : initials;
+ const embedSrc = getMapEmbedUrl(s.maplink);
+ return `<div class="supplier-card">
+ <div class="supplier-header">
+ <div style="display:flex;align-items:center;gap:0.7rem">
+ <div class="supplier-avatar" style="${s.image ? 'background:var(--card2,#1a1a2e);padding:0;overflow:hidden' : ''}">${avatarInner}</div>
+ <div>
+ <div class="supplier-name">${s.name}</div>
+ <div class="supplier-category">${s.category || 'ไม่ระบุหมวดหมู่'}</div>
+ </div>
+ </div>
+ <div style="display:flex;gap:0.3rem">
+ <button class="icon-btn" onclick="openSupplierModal('${s.id}')" title="แก้ไข"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
+ <button class="icon-btn del" onclick="deleteSupplier('${s.id}')" title="ลบ"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+ </div>
+ </div>
+ ${s.contact ? `<div class="supplier-field"><span class="supplier-field-val">${s.contact}</span></div>` : ''}
+ ${s.phone ? `<div class="supplier-field"><span class="supplier-field-val">${s.phone}</span></div>` : ''}
+ ${s.email ? `<div class="supplier-field"> <span class="supplier-field-val">${s.email}</span></div>` : ''}
+ ${s.leadtime ? `<div class="supplier-field">Lead Time: <span class="supplier-field-val" style="color:var(--accent)">${s.leadtime} วัน</span></div>` : ''}
+ <div class="supplier-field">รายการใน PR/PO: <span class="supplier-field-val" style="color:var(--accent2)">${prCount} รายการ</span></div>
+ ${s.note ? `<div class="supplier-field"><span style="color:var(--muted);font-size: 0.777rem">${s.note}</span></div>` : ''}
+ ${s.maplink ? `
+ <div class="supplier-field" style="border-bottom:none;padding-top:0.4rem">
+ <a href="${s.maplink}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:0.4rem;color:var(--accent);text-decoration:none;font-size: 0.819rem">
+  ดูที่ตั้งบน Google Maps ↗
+ </a>
+ </div>
+ ${embedSrc ? `<div style="margin-top:0.42rem;border-radius:4px;overflow:hidden;border:1px solid var(--border)">
+ <iframe src="${embedSrc}" width="100%" height="140" style="border:0;display:block" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+ </div>` : ''}` : ''}
+ </div>`;
+ }).join('');
+ // render inline supplier comments
+ list.forEach(s => setTimeout(() => scRender(s.id), 0));
 }
 
 
@@ -16032,20 +15808,17 @@ function renderLeaderboard() {
  </div>
  <div class="modal-body">
  <input type="hidden" id="s-id">
-      <input type="hidden" id="s-image">
+ <input type="hidden" id="s-image">
  <div class="form-grid">
  <div class="form-group full">
  <label class="form-label">โลโก้ / รูปภาพ Supplier</label>
  <div style="display:flex;align-items:center;gap:0.9rem">
-<div id="s-image-preview" tabindex="0" title="โลโก้ Supplier" style="width:56px;height:56px;border-radius:4px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;font-weight:700;color:#fff;outline-offset:2px"></div>
- <input type="file" accept="image/*" id="s-image-file" style="display:none" onchange="handleSupplierImageUpload(event)"><div id="s-paste-zone" tabindex="0" style="flex:1;border:1.5px dashed var(--border);border-radius:6px;padding:0.85rem 0.7rem;text-align:center;font-size:0.84rem;color:var(--muted);line-height:1.5">📋 คัดลอกรูป (Copy) แล้วกด <b style="color:var(--accent)">Ctrl+V</b> ที่นี่ได้เลย</div>
- <button type="button" class="btn btn-ghost" style="padding:0.4rem 0.8rem;font-size: 0.819rem"onclick="clearSupplierImage()">ลบรูป</button>
-          </div>
-          <div id="s-image-hint" style="font-size:0.75rem;color:var(--muted);margin-top:0.4rem">ยังไม่มีรูป — คัดลอกรูปแล้วกด Ctrl+V</div>
+ <div id="s-image-preview" style="width:56px;height:56px;border-radius:4px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;font-weight:700;color:#fff"></div>
+ <input type="file" accept="image/*" id="s-image-file" class="form-input" style="padding:0.5rem" onchange="handleSupplierImageUpload(event)">
+ <button type="button" class="btn btn-ghost" style="padding:0.4rem 0.8rem;font-size: 0.819rem" onclick="clearSupplierImage()">ลบรูป</button>
  </div>
-<div class="form-group full"><label class="form-label">ชื่อบริษัท / Maker *</label><input type="text" class="form-input" id="s-name"></div>
-          <div class="form-group"><label class="form-label">ชื่อย่อบริษัท</label><input type="text" class="form-input" id="s-abbr" placeholder="เช่น TAS"></div>
-          <div class="form-group"><label class="form-label">ชื่อภาษาอังกฤษ</label><input type="text" class="form-input" id="s-nameEn" placeholder="เช่น Thai Asakawa Co., Ltd."></div>
+ </div>
+ <div class="form-group full"><label class="form-label">ชื่อบริษัท / Maker *</label><input type="text" class="form-input" id="s-name"></div>
  <div class="form-group"><label class="form-label">ชื่อผู้ติดต่อ</label><input type="text" class="form-input" id="s-contact"></div>
  <div class="form-group"><label class="form-label">เบอร์โทร</label><input type="text" class="form-input" id="s-phone"></div>
  <div class="form-group"><label class="form-label">Email</label><input type="text" class="form-input" id="s-email"></div>
@@ -16057,7 +15830,7 @@ function renderLeaderboard() {
  </div>
  <div class="modal-footer">
  <button class="btn btn-ghost" onclick="closeSupplierModal()">ยกเลิก</button>
-<button class="btn btn-primary" id="s-save-btn" onclick="saveSupplier()">บันทึก</button>
+ <button class="btn btn-primary" onclick="saveSupplier()">บันทึก</button>
  </div>
  </div>
 </div>
@@ -16080,7 +15853,6 @@ function renderLeaderboard() {
  <select class="form-input" id="m-category">
  <option value="คู่มือการทำงาน">คู่มือการทำงาน</option>
  <option value="พื้นฐานการทำงาน">พื้นฐานการทำงาน</option>
- <option value="เอกสาร ISO">เอกสาร ISO</option>
  <option value="อื่นๆ">อื่นๆ</option>
  </select>
  </div>
@@ -16129,21 +15901,6 @@ function renderLeaderboard() {
  <button class="btn btn-ghost" onclick="closeCsEditModal()">ยกเลิก</button>
  <button class="btn btn-primary" onclick="saveCsEdit()">บันทึก</button>
  </div>
- </div>
-</div>
-
-<!-- ISO: VIEW-ONLY PDF VIEWER -->
-<div id="isoViewer" oncontextmenu="return false">
- <div class="iso-v-panel">
- <div class="iso-v-head">
- <div class="iso-v-title" id="isoVTitle"></div>
- <div class="iso-v-badge" id="isoVBadge" data-i18n="iso_badge">VIEW ONLY — SAVE &amp; PRINT DISABLED</div>
- <button class="iso-v-btn" onclick="isoZoom(-0.15)">&minus;</button>
- <span id="isoVZoom" style="font-size:.8rem;min-width:42px;text-align:center">100%</span>
- <button class="iso-v-btn" onclick="isoZoom(0.15)">+</button>
- <button class="iso-v-btn" onclick="isoCloseViewer()">&times;</button>
- </div>
- <div class="iso-v-body" id="isoVBody"></div>
  </div>
 </div>
 
@@ -21665,7 +21422,7 @@ function endTour() {
       const origOpen = window.openCerModal;
       window.openCerModal = function () { const r = origOpen.apply(this, arguments); CerFiles.drawSlots(); return r; };
     }
-    try { const c = JSON.parse(localStorage.getItem(CerFiles.KEY) || 'null'); if (Array.isArray(c)) CerFiles.list = c; } catch (e) {}
+    CerFiles.load();
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', cerBoot); else cerBoot();
 
@@ -21732,22 +21489,14 @@ function endTour() {
     if (name === 'gwdash') GWDash.open();
     if (name === 'meeting') Meeting.open();
     if (name === 'rfq') RFQ.open();
-    if (name === 'cer') { try { CCIPCerFiles.load(); } catch (e) {} }
     document.querySelector('main') && document.querySelector('main').scrollTo && document.querySelector('main').scrollTo(0, 0);
   };
   // ซิงค์ GO WORK / Meeting ไปพร้อมกับข้อมูลชุดอื่นในคำขอเดียวกัน (ถูกรวมเป็น getAll)
   const origSync = window.syncData;
-  const pageOn = (n) => { const el = document.getElementById('page-' + n); return !!(el && el.classList.contains('active')); };
-  window.syncData = function () {
-    const p = origSync.apply(this, arguments);
-    if (pageOn('gowork') || pageOn('gwdash')) GoWork.load();
-    if (pageOn('meeting')) Meeting.load();
-    if (pageOn('cer')) { try { CCIPCerFiles.load(); } catch (e) {} }
-    return p;
-  };
+  window.syncData = function () { const p = origSync.apply(this, arguments); GoWork.load(); Meeting.load(); try { CCIPCerFiles.load(); } catch (e) {} return p; };
   const origTick = window.autoSyncTick;
   if (typeof origTick === 'function') {
-    window.autoSyncTick = function () { const p = origTick.apply(this, arguments); if (!document.hidden && url()) { if (pageOn('gowork') || pageOn('gwdash')) GoWork.refresh(); if (pageOn('meeting')) Meeting.refresh(); } return p; };
+    window.autoSyncTick = function () { const p = origTick.apply(this, arguments); if (!document.hidden && url()) { GoWork.refresh(); Meeting.refresh(); } return p; };
   }
   // แถบตัวเลขบน Dashboard: ความยาวแถบตาม % และสีสถานะของ On-Time
   (function heroStats() {
@@ -23830,10 +23579,6 @@ body.dark-theme #page-mkmap{--m-blu:#60A5FA;--m-cy:#22D3EE;--m-grn:#34D399;--m-a
 .mkm-it:hover{background:color-mix(in srgb,var(--m-blu) 4%,transparent)}
 .mkm-it.on{background:color-mix(in srgb,var(--m-blu) 9%,transparent);box-shadow:inset 3px 0 0 var(--m-blu)}
 .mkm-av{flex:0 0 32px;height:32px;border-radius:9px;display:grid;place-items:center;font-size:.7rem;font-weight:800;color:#fff;background:var(--c)}
-.mkm-av.has-img{background:#fff;border:1px solid var(--m-line);overflow:hidden}
-.mkm-av img{width:100%;height:100%;object-fit:contain;padding:2px;box-sizing:border-box;display:block}
-.mkm-ab{display:inline-block;font:700 .62rem/1.5 ui-monospace,monospace;border:1px solid var(--m-blu);color:var(--m-ink);border-radius:4px;padding:0 5px;margin-left:5px;vertical-align:middle}
-.mkm-en{display:block;font-size:.68rem;color:var(--m-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mkm-it-m{flex:1;min-width:0}
 .mkm-it-m b{display:block;font-size:.82rem;color:var(--m-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mkm-it-m span{display:block;font-size:.68rem;color:var(--m-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -23921,9 +23666,6 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
     return null;
   };
   const inTH = p => !!p && isFinite(p.lat) && isFinite(p.lng) && p.lat >= 5 && p.lat <= 21 && p.lng >= 97 && p.lng <= 106.5;   // พิกัดต้องอยู่ในไทย
-  const ini = m => (m.sup && m.sup.abbr) ? String(m.sup.abbr).trim().slice(0, 3).toUpperCase() : initials(m.name);
-  const avHtml = (m, extra) => { const img = m.sup && m.sup.image;
-    return `<div class="mkm-av${img ? ' has-img' : ''}" style="--c:${m.pos ? m.color : '#94A3B8'}${extra || ''}">${img ? `<img src="${esc(img)}" alt="" referrerpolicy="no-referrer" onerror="this.parentNode.classList.remove('has-img');this.parentNode.textContent=this.dataset.i" data-i="${esc(ini(m))}">` : esc(ini(m))}</div>`; };
   const fmtKm = k => k >= 100 ? Math.round(k) + '' : k.toFixed(1);
   const fmtMin = m => m >= 60 ? Math.floor(m / 60) + ' ชม. ' + Math.round(m % 60) + ' นาที' : Math.round(m) + ' นาที';
 
@@ -23972,10 +23714,11 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
       const o = this.origin();
       return [...map.values()].map(m => {
         const s = m.sup || {}, saved0 = this.locs[key('maker', m.name)], saved = inTH(saved0) ? saved0 : null, fl = parseLL(s.maplink), fromLink = inTH(fl) ? fl : null;
-        const pos = fromLink ? Object.assign(fromLink, {src:'link'}) : saved ? {lat:saved.lat, lng:saved.lng, src:'saved'} : null;   // ลิงก์ Google Map ใน Supplier DB เป็นหลัก
-        const active = (typeof allData !== 'undefined' ? allData : []).filter(r => (typeof findSupplierByMaker === 'function' ? findSupplierByMaker(r.maker) === m.sup : String(r.maker || '').trim().toLowerCase() === m.name.toLowerCase()) && !String(r.status || '').includes('เสร็จแล้ว')).length;
+        const manual = saved && saved.source !== 'maplink';
+        const pos = manual ? {lat:saved.lat, lng:saved.lng, src:'saved'} : fromLink ? Object.assign(fromLink, {src:'link'}) : saved ? {lat:saved.lat, lng:saved.lng, src:'saved'} : null;
+        const active = (typeof allData !== 'undefined' ? allData : []).filter(r => String(r.maker || '').trim().toLowerCase() === m.name.toLowerCase() && !String(r.status || '').includes('เสร็จแล้ว')).length;
         const r = pos && o ? this.routes[this.rk(o, pos)] : null;
-        return { name:m.name, sup:m.sup, cat:s.category || '', contact:s.contact || '', phone:s.phone || '', email:s.email || '', lead:s.leadtime || '', maplink:s.maplink || '', note:s.note || '', pos, active,
+        return { name:m.name, sup:m.sup, cat:s.category || '', contact:s.contact || '', phone:s.phone || '', email:s.email || '', lead:s.leadtime || '', maplink:s.maplink || '', pos, active,
           km: pos && o ? hav(o, pos) : null, road: r || null, color:catColor(s.category) };
       });
     },
@@ -24082,7 +23825,7 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
       const cats = [...new Set(this.makers().map(m => m.cat).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'th'));
       $('#mkmCat').innerHTML = '<option value="">หมวดงานทั้งหมด</option>' + cats.map(c => `<option${c === this.cat ? ' selected' : ''}>${esc(c)}</option>`).join('');
     },
-    filtered(){ const q = this.q.toLowerCase(); return this.makers().filter(m => (!this.cat || m.cat === this.cat) && (!q || (m.name + ' ' + m.cat + ' ' + m.contact + ' ' + ((m.sup && m.sup.abbr) || '') + ' ' + ((m.sup && m.sup.nameEn) || '')).toLowerCase().includes(q))); },
+    filtered(){ const q = this.q.toLowerCase(); return this.makers().filter(m => (!this.cat || m.cat === this.cat) && (!q || (m.name + ' ' + m.cat + ' ' + m.contact).toLowerCase().includes(q))); },
     drawKpi(){
       const ms = this.makers(), on = ms.filter(m => m.pos && m.km != null), o = this.origin();
       const avg = on.length ? on.reduce((a, m) => a + (m.road ? m.road.km : m.km), 0) / on.length : NaN;
@@ -24095,8 +23838,8 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
     },
     drawList(){
       const list = this.filtered(), on = list.filter(m => m.pos).sort((a, b) => (a.road ? a.road.km : a.km) - (b.road ? b.road.km : b.km)), off = list.filter(m => !m.pos).sort((a, b) => a.name.localeCompare(b.name, 'th'));
-      const row = m => `<div class="mkm-it${this.sel === m.name ? ' on' : ''}" data-n="${esc(m.name)}">${avHtml(m)}
-          <div class="mkm-it-m"><b title="${esc(m.name)}">${esc(m.name)}${m.sup && m.sup.abbr ? `<i class="mkm-ab" style="font-style:normal">${esc(m.sup.abbr)}</i>` : ''}</b>${m.sup && m.sup.nameEn ? `<em class="mkm-en" style="font-style:normal">${esc(m.sup.nameEn)}</em>` : ''}<span>${esc(m.cat || 'ไม่ระบุหมวดงาน')}${m.active ? ` · ${m.active} งานค้าง` : ''}</span></div>
+      const row = m => `<div class="mkm-it${this.sel === m.name ? ' on' : ''}" data-n="${esc(m.name)}"><div class="mkm-av" style="--c:${m.pos ? m.color : '#94A3B8'}">${esc(initials(m.name))}</div>
+          <div class="mkm-it-m"><b title="${esc(m.name)}">${esc(m.name)}</b><span>${esc(m.cat || 'ไม่ระบุหมวดงาน')}${m.active ? ` · ${m.active} งานค้าง` : ''}</span></div>
           ${m.pos ? `<div class="mkm-km"><b>${m.road ? fmtKm(m.road.km) : '≈' + fmtKm(m.km)}</b><span>${m.road ? 'กม. (ถนน)' : 'กม. เส้นตรง'}</span></div>` : `<button class="mkm-pin" data-pin="${esc(m.name)}">ปักหมุด</button>`}</div>`;
       $('#mkmList').innerHTML = (on.length ? `<div class="mkm-grp">บนแผนที่ · เรียงจากใกล้ไปไกล (${on.length})</div>` + on.map(row).join('') : '') +
         (off.length ? `<div class="mkm-grp">ยังไม่มีพิกัด (${off.length})</div>` + off.map(row).join('') : '') +
@@ -24113,7 +23856,7 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
       });
       this.filtered().filter(m => m.pos).forEach(m => {
         const sel = this.sel === m.name;
-        const ic = L.divIcon({className:'', iconSize:[30, 30], iconAnchor:[15, 30], html:`<div class="mkm-mk${sel ? ' sel' : ''}" style="--c:${m.color}"><span>${esc(ini(m))}</span></div>`});
+        const ic = L.divIcon({className:'', iconSize:[30, 30], iconAnchor:[15, 30], html:`<div class="mkm-mk${sel ? ' sel' : ''}" style="--c:${m.color}"><span>${esc(initials(m.name))}</span></div>`});
         this.markers[m.name] = L.marker([m.pos.lat, m.pos.lng], {icon:ic, zIndexOffset:sel ? 2000 : 0, title:m.name}).addTo(this.layer).on('click', () => this.select(m.name));
       });
       if (!this._fitted) { this._fitted = true; this.fit(); }
@@ -24171,8 +23914,8 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
       const m = this.sel && this.makers().find(x => x.name === this.sel); if (!m) { box.innerHTML = ''; return; }
       const o = this.origin(), ri = this.routeInfo && m.pos && o && this.routes[this.rk(o, m.pos)] ? {km:this.routes[this.rk(o, m.pos)].km, min:this.routes[this.rk(o, m.pos)].min, road:true} : (m.pos && o ? {km:hav(o, m.pos), min:null, road:false} : null);
       const nav = m.pos ? `https://www.google.com/maps/dir/?api=1${o ? `&origin=${o.lat},${o.lng}` : ''}&destination=${m.pos.lat},${m.pos.lng}&travelmode=driving` : '';
-      box.innerHTML = `<div class="mkm-card"><div class="mkm-card-h">${avHtml(m, ';flex-basis:38px;height:38px')}
-          <div style="min-width:0"><h3>${esc(m.name)}${m.sup && m.sup.abbr ? `<i class="mkm-ab" style="font-style:normal">${esc(m.sup.abbr)}</i>` : ''}</h3><p>${m.sup && m.sup.nameEn ? esc(m.sup.nameEn) + '<br>' : ''}${esc(m.cat || 'ไม่ระบุหมวดงาน')}${o ? ' · จาก ' + o.code : ''}</p></div><button class="mkm-x" title="ปิด">×</button></div>
+      box.innerHTML = `<div class="mkm-card"><div class="mkm-card-h"><div class="mkm-av" style="--c:${m.pos ? m.color : '#94A3B8'};flex-basis:38px;height:38px">${esc(initials(m.name))}</div>
+          <div style="min-width:0"><h3>${esc(m.name)}</h3><p>${esc(m.cat || 'ไม่ระบุหมวดงาน')}${o ? ' · จาก ' + o.code : ''}</p></div><button class="mkm-x" title="ปิด">×</button></div>
         ${m.pos ? `<div class="mkm-route">
             <div class="big"><small>${loading ? 'กำลังคำนวณเส้นทาง...' : ri && ri.road ? 'ระยะทางขับรถ' : 'ระยะทางเส้นตรง (โดยประมาณ)'}</small><b>${ri ? fmtKm(ri.km) + ' กม.' : '—'}</b></div>
             <div><small>เวลาขับรถ</small><b style="font-size:1rem">${ri && ri.min != null ? fmtMin(ri.min) : '—'}</b></div>
@@ -24184,17 +23927,13 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
           ${m.email ? `<dt>อีเมล</dt><dd><a href="mailto:${esc(m.email)}">${esc(m.email)}</a></dd>` : ''}
           ${m.lead ? `<dt>Lead time</dt><dd>${esc(m.lead)} วัน</dd>` : ''}
           <dt>งานค้าง</dt><dd>${m.active ? m.active + ' รายการ' : 'ไม่มี'}</dd>
-          ${m.note ? `<dt>หมายเหตุ</dt><dd>${esc(m.note)}</dd>` : ''}
 
         </dl>
         <div class="mkm-acts">${m.pos ? `<a class="mkm-act pri" href="${nav}" target="_blank" rel="noopener">นำทางด้วย Google Maps</a>` : ''}
           <button class="mkm-act" data-a="pin">${m.pos ? 'ย้ายหมุด' : 'ปักหมุด'}</button>
-          ${m.sup ? `<button class="mkm-act" data-a="edit">แก้ข้อมูล Supplier</button>` : ''}${m.sup && m.active ? `<button class="mkm-act" data-a="jobs">ดูงานค้าง</button>` : ''}
           ${m.pos && m.pos.src === 'saved' ? '<button class="mkm-act" data-a="unpin">ลบหมุด</button>' : ''}</div></div>`;
       box.querySelector('.mkm-x').onclick = () => { this.sel = null; this.clearRoute(); this.drawCard(); this.drawList(); this.drawMarkers(); };
       box.querySelector('[data-a="pin"]').onclick = () => this.startPick({kind:'maker', name:m.name});
-      const ed = box.querySelector('[data-a="edit"]'); if (ed) ed.onclick = () => { try { openSupplierModal(m.sup.id); } catch (e) {} };
-      const jb = box.querySelector('[data-a="jobs"]'); if (jb) jb.onclick = () => { try { spShowItems(m.sup.id); } catch (e) {} };
       const up = box.querySelector('[data-a="unpin"]'); if (up) up.onclick = () => this.removeLoc('maker', m.name);
     },
 
@@ -24227,24 +23966,8 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
         const local = readJ(LOC_KEY, {}); local[k] = rec; writeJ(LOC_KEY, local);
         toast(/unknown/i.test(e.message) ? 'ปักหมุดแล้ว (บันทึกในเครื่องนี้ — อัปเดต .gs เพื่อเก็บลง Sheet)' : 'บันทึกลง Sheet ไม่สำเร็จ: ' + e.message, /unknown/i.test(e.message) ? 'info' : 'error');
       }
-      if (kind === 'maker') { this.sel = name; this.linkToSupplier(name, lat, lng); }
+      if (kind === 'maker') this.sel = name;
       this.clearRoute(); this.draw(); if (kind === 'maker' || this.sel) this.route();
-    },
-    /* เขียนพิกัดที่ปักหมุดกลับเป็น "ลิงก์ Google Map" ใน Supplier DB → หน้า Supplier กับแผนที่ใช้ข้อมูลชุดเดียวกัน */
-    async linkToSupplier(name, lat, lng){
-      try {
-        const s = (typeof suppliers !== 'undefined' ? suppliers : []).find(x => x && String(x.name).trim().toLowerCase() === String(name).trim().toLowerCase());
-        if (!s) return;
-        const link = `https://www.google.com/maps?q=${(+lat).toFixed(6)},${(+lng).toFixed(6)}`;
-        if (s.maplink === link) return;
-        s.maplink = link;
-        try { localStorage.setItem('prpo_suppliers', JSON.stringify(suppliers)); } catch (e) {}
-        if (typeof renderSuppliers === 'function') renderSuppliers();
-        if (url() && /^\d+$/.test(String(s.id))) {
-          const r = await fetch(url() + '?' + new URLSearchParams({action:'editSupplier', rowIndex:s.id, maplink:link}).toString());
-          const j = await r.json(); if (!j.success) throw new Error(j.error || 'บันทึกไม่สำเร็จ');
-        }
-      } catch (e) { toast('ปักหมุดแล้ว แต่บันทึกลิงก์ลง Supplier DB ไม่สำเร็จ: ' + e.message, 'error'); }
     },
     async removeLoc(kind, name){
       if (!confirm(`ลบหมุดของ ${name} ?`)) return;
@@ -24284,16 +24007,6 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
     }
   };
   window.CCIPMakerMap = M;
-  /* ระยะทางจากโรงงานที่เลือก → Supplier (ใช้แสดงในการ์ดหน้า Supplier) */
-  M.infoFor = function(sup){
-    try {
-      const o = this.origin(); if (!o || !sup) return null;
-      const s0 = this.locs[key('maker', String(sup.name).trim())], sv = inTH(s0) ? s0 : null, fl = parseLL(sup.maplink);
-      const pos = inTH(fl) ? fl : (sv ? {lat:sv.lat, lng:sv.lng} : null); if (!pos) return null;
-      const r = this.routes[this.rk(o, pos)];
-      return {plant:o.code, km: r ? r.km : hav(o, pos), min: r ? r.min : null, road: !!r};
-    } catch (e) { return null; }
-  };
   M.sync = function(){
     const page = document.getElementById('page-mkmap'); if (!page || !page.dataset.ready) return;
     clearTimeout(M._sy); M._sy = setTimeout(async () => {
@@ -24398,49 +24111,6 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
 })();
 </script>
 <!-- ═══ SUPPLIER · นำเข้าจาก Excel (spx) ═══ -->
-<style id="sp2-css">
-/* ── SUPPLIER CARD v2 ── */
-.sp2-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:1rem;align-items:stretch}
-.sp2-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.05rem;display:flex;flex-direction:column;gap:.75rem;transition:border-color .15s,box-shadow .15s}
-.sp2-card:hover{border-color:var(--accent);box-shadow:0 6px 22px rgba(0,0,0,.14)}
-.sp2-head{display:flex;gap:.8rem;align-items:flex-start}
-.sp2-av{width:54px;height:54px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#fff;border:1px solid var(--border)}
-.sp2-av img{width:100%;height:100%;object-fit:contain;padding:5px;box-sizing:border-box;display:block}
-.sp2-av.ph{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:0;font-weight:700;font-size:.92rem;letter-spacing:.02em;font-family:var(--mono)}
-.sp2-id{flex:1;min-width:0}
-.sp2-name{font-weight:700;font-size:.97rem;line-height:1.3;color:var(--text);letter-spacing:-.01em;overflow-wrap:anywhere}
-.sp2-en{font-size:.74rem;color:var(--muted);margin-top:2px;line-height:1.35;overflow-wrap:anywhere}
-.sp2-tags{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem}
-.sp2-abbr{font-family:var(--mono);font-size:.68rem;font-weight:700;color:var(--text);border:1px solid var(--accent);border-radius:4px;padding:1px 6px;line-height:1.5}
-.sp2-cat{font-size:.7rem;color:var(--muted);background:var(--surface2);border-radius:4px;padding:1px 7px;line-height:1.5}
-.sp2-act{display:flex;gap:.3rem;flex-shrink:0}
-.sp2-info{display:flex;flex-direction:column;border-top:1px solid var(--border);padding-top:.4rem}
-.sp2-row{display:flex;gap:.6rem;align-items:flex-start;padding:.28rem 0;font-size:.83rem;color:var(--text);line-height:1.45}
-.sp2-ico{width:15px;height:15px;flex-shrink:0;margin-top:3px;color:var(--muted)}
-.sp2-ico svg{width:15px;height:15px;display:block;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.sp2-val{min-width:0;overflow-wrap:anywhere}
-.sp2-val a{color:var(--text);text-decoration:none;border-bottom:1px dotted var(--border)}
-.sp2-val a:hover{color:var(--accent);border-bottom-color:var(--accent)}
-.sp2-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.5rem}
-.sp2-stat{background:var(--surface2);border-radius:8px;padding:.5rem .7rem}
-.sp2-stat span{display:block;font-size:.66rem;color:var(--muted);font-weight:600;letter-spacing:.03em}
-.sp2-stat b{font-size:1.02rem;color:var(--text);font-weight:700}
-.sp2-stat b small{font-size:.7rem;font-weight:500;color:var(--muted)}
-.sp2-stat b.zero{color:var(--muted)}
-.sp2-note{font-size:.78rem;color:var(--muted);background:var(--surface2);border-left:3px solid var(--border);border-radius:4px;padding:.45rem .65rem;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
-.sp2-foot{margin-top:auto;display:flex;flex-direction:column;gap:.5rem}
-.sp2-map{display:flex;align-items:center;justify-content:center;gap:.45rem;font-size:.8rem;font-weight:600;color:var(--text);text-decoration:none;border:1px solid var(--border);border-radius:6px;padding:.42rem .7rem;transition:border-color .15s,color .15s}
-.sp2-map:hover{border-color:var(--accent);color:var(--accent)}
-.sp2-map svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.sp2-embed{border-radius:8px;overflow:hidden;border:1px solid var(--border)}
-.sp2-count{font-size:.78rem;color:var(--muted);white-space:nowrap;align-self:center}
-.sp2-stat.link{cursor:pointer;transition:outline-color .15s;outline:1px solid transparent}
-.sp2-stat.link:hover{outline-color:var(--accent)}
-.maker-hint{font-size:.74rem;margin-top:.3rem;color:var(--muted);line-height:1.4;min-height:1em}
-.maker-hint.ok{color:var(--success)}
-.maker-hint.warn{color:var(--warn,#b7791f)}
-@media (max-width:480px){.sp2-card{padding:.9rem}.sp2-av{width:46px;height:46px}}
-</style>
 <style id="spx-css">
 .spx-bar{display:flex;gap:.5rem;margin-left:auto;align-items:center}
 .spx-bar .btn{display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap}
@@ -24483,8 +24153,6 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
 (function(){
   const COLS = [
     ['name',     'ชื่อบริษัท / Maker *', 28],
-    ['abbr',     'ชื่อย่อบริษัท',          14],
-    ['nameEn',   'ชื่อภาษาอังกฤษ',         30],
     ['contact',  'ชื่อผู้ติดต่อ',          20],
     ['phone',    'เบอร์โทร',             22],
     ['email',    'Email',                28],
@@ -24528,9 +24196,8 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
     ws['!autofilter'] = { ref: 'A1:' + XLSX.utils.encode_col(COLS.length - 1) + '1' };
     // คอลัมน์เบอร์โทร = ข้อความ (กันเลข 0 นำหน้าหาย)
     for (let r = 1; r < aoa.length; r++) {
-      const PHI = COLS.findIndex(c => c[0] === 'phone');
-      const a = XLSX.utils.encode_cell({ r, c: PHI });
-      ws[a] = { t: 's', v: String(aoa[r][PHI] || ''), z: '@' };
+      const a = XLSX.utils.encode_cell({ r, c: 2 });
+      ws[a] = { t: 's', v: String(aoa[r][2] || ''), z: '@' };
     }
     const help = [
       ['วิธีกรอกฟอร์ม Supplier'],
@@ -24539,8 +24206,7 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
       ['2. รายชื่อที่มีอยู่แล้วในระบบใส่ไว้ให้แล้ว แก้ไขได้เลย ระบบจะจับคู่ด้วย "ชื่อบริษัท"'],
       ['3. Maker ใหม่ ให้กรอกต่อท้ายในแถวว่าง'],
       ['4. ช่องที่เว้นว่างของ Maker เดิม ระบบจะคงค่าเดิมไว้ (ไม่ลบข้อมูล)'],
-      ['5. ชื่อย่อ / ชื่อภาษาอังกฤษ ใช้แสดงในหน้า Supplier (เว้นว่างได้ ระบบคงค่าเดิมไว้)'],
-      ['5.1 เบอร์โทร กรอกเป็นข้อความ เช่น 081-234-5678 (หลายเบอร์คั่นด้วย , )'],
+      ['5. เบอร์โทร กรอกเป็นข้อความ เช่น 081-234-5678 (หลายเบอร์คั่นด้วย , )'],
       ['6. ลิงก์ Google Maps: เปิด Google Maps → กดแชร์ → คัดลอกลิงก์ มาวาง'],
       ['7. บันทึกไฟล์ แล้วไปที่หน้า Supplier → กด "นำเข้าจาก Excel" → ตรวจสอบ → กดนำเข้าข้อมูล'],
       [''],
@@ -24572,9 +24238,7 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
     const h = head.map(x => norm(x));
     const find = (...keys) => h.findIndex(x => keys.some(k => x.includes(k)));
     return {
-      name: h.findIndex(x => ['ชื่อบริษัท','maker','supplier','บริษัท','name'].some(k => x.includes(k)) && !/ย่อ|อังกฤษ|english|abbr/.test(x)),
-      abbr: find('ชื่อย่อ', 'abbr'),
-      nameEn: find('อังกฤษ', 'english'),
+      name: find('ชื่อบริษัท', 'maker', 'supplier', 'บริษัท', 'name'),
       contact: find('ผู้ติดต่อ', 'contact'),
       phone: find('เบอร์', 'โทร', 'phone', 'tel'),
       email: find('email', 'อีเมล', 'e-mail', 'mail'),
@@ -24649,7 +24313,7 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
   /* ── ส่งข้อมูลเข้า Sheet (ใช้ action เดิม addSupplier / editSupplier) ── */
   async function send(p){
     const r = p.rec;
-    const payload = { name: r.name, abbr: r.abbr || '', nameEn: r.nameEn || '', contact: r.contact || '', phone: r.phone || '', email: r.email || '', category: r.category || '',
+    const payload = { name: r.name, contact: r.contact || '', phone: r.phone || '', email: r.email || '', category: r.category || '',
       leadtime: r.leadtime || '', note: r.note || '', image: (p.old && p.old.image) || '', maplink: r.maplink || '' };
     if (!WEB_APP_URL) {
       const id = p.type === 'upd' ? p.old.id : String(Date.now()) + Math.random().toString(36).slice(2, 6);
@@ -24707,74 +24371,6 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
   window.CCIPSupplierXL = { run, close, template: downloadTemplate, _build: build };
   window.addEventListener('beforeunload', e => { if (busy) { e.preventDefault(); e.returnValue = ''; } });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountButtons); else mountButtons();
-})();
-</script>
-<script>
-(function(){
- const PDFJS='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
- const WORKER='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
- const TXT={th:{load:'กำลังโหลดเอกสาร...',fail:'เปิดไฟล์ไม่สำเร็จ',wm:'CONTROLLED COPY'},en:{load:'Loading document...',fail:'Could not open the file',wm:'CONTROLLED COPY'}};
- const T=k=>(TXT[getCurrentLang()]||TXT.th)[k];
- let pdf=null,zoom=1,tok=0,timer=null,curTitle='';
- function loadLib(){return window.pdfjsLib?Promise.resolve():new Promise((res,rej)=>{const e=document.createElement('script');e.src=PDFJS;e.onload=()=>{pdfjsLib.GlobalWorkerOptions.workerSrc=WORKER;res()};e.onerror=()=>rej(new Error('pdf.js'));document.head.appendChild(e)})}
- async function render(){
-  if(!pdf)return;const my=++tok,body=document.getElementById('isoVBody');body.innerHTML='';
-  const w=Math.min(body.clientWidth-32,900)*zoom,dpr=window.devicePixelRatio||1;
-  for(let i=1;i<=pdf.numPages;i++){
-   const pg=await pdf.getPage(i);if(my!==tok)return;
-   const v1=pg.getViewport({scale:1}),sc=w/v1.width,vp=pg.getViewport({scale:sc*dpr});
-   const c=document.createElement('canvas');c.width=vp.width;c.height=vp.height;c.style.width=(vp.width/dpr)+'px';c.style.height=(vp.height/dpr)+'px';c.draggable=false;body.appendChild(c);
-   const ctx=c.getContext('2d');await pg.render({canvasContext:ctx,viewport:vp}).promise;if(my!==tok)return;
-   // watermark ฝังลงบน canvas ลบด้วย CSS ไม่ได้
-   ctx.save();ctx.globalAlpha=.09;ctx.fillStyle='#000';ctx.font='bold '+(vp.width/16)+'px sans-serif';ctx.textAlign='center';ctx.translate(vp.width/2,vp.height/2);ctx.rotate(-Math.PI/5);
-   ctx.fillText(T('wm'),0,0);ctx.font=(vp.width/36)+'px sans-serif';ctx.fillText(new Date().toLocaleDateString('en-GB'),0,vp.width/16);ctx.restore();
-  }
- }
- async function open(title,getData){
-  curTitle=title;document.getElementById('isoVTitle').textContent=title;zoom=1;document.getElementById('isoVZoom').textContent='100%';
-  document.getElementById('isoViewer').classList.add('open');
-  const body=document.getElementById('isoVBody');body.innerHTML='<div class="iso-v-msg">'+T('load')+'</div>';
-  try{await loadLib();const data=await getData();pdf=await pdfjsLib.getDocument({data}).promise;await render();}
-  catch(e){body.innerHTML='<div class="iso-v-msg">'+T('fail')+'<br><small>'+(e.message||'')+'</small></div>';}
- }
- window.isoZoom=function(d){zoom=Math.min(3,Math.max(.4,zoom+d));document.getElementById('isoVZoom').textContent=Math.round(zoom*100)+'%';clearTimeout(timer);timer=setTimeout(render,200)};
- window.isoCloseViewer=function(){document.getElementById('isoViewer').classList.remove('open');document.getElementById('isoVBody').innerHTML='';pdf=null;tok++};
- window.isoOpenLocal=function(inp){const f=inp.files[0];if(!f)return;open(f.name.replace(/\.pdf$/i,''),()=>f.arrayBuffer().then(b=>new Uint8Array(b)));inp.value=''};
- window.isoOpenManual=function(id){
-  const m=manuals.find(x=>String(x.id)===String(id));if(!m)return;
-  const fid=((m.url||'').match(/\/d\/([\w-]+)/)||(m.url||'').match(/[?&]id=([\w-]+)/)||[])[1];
-  open(m.title,async()=>{
-   const r=await fetch(WEB_APP_URL+'?action=getFileBase64&fileId='+encodeURIComponent(fid));const j=await r.json();
-   if(!j.success)throw new Error(j.error||'getFileBase64');
-   const bin=atob(j.base64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u;
-  });
-  if(WEB_APP_URL&&m.id)fetch(WEB_APP_URL+'?action=viewManual&id='+encodeURIComponent(m.id)).catch(()=>{});
- };
- window.isoUpload=function(){
-  openManualModal();const c=document.getElementById('m-category');c.value='เอกสาร ISO';c.disabled=true;
- };
- const _cm=window.closeManualModal;
- window.closeManualModal=function(){const c=document.getElementById('m-category');if(c)c.disabled=false;return _cm.apply(this,arguments)};
- const _rm=window.renderManuals;
- window.renderManuals=function(){const r=_rm.apply(this,arguments);if(document.getElementById('page-iso'))isoRender();return r};
- window.isoRender=function(){
-  const g=document.getElementById('isoGrid');if(!g)return;const q=(document.getElementById('isoSearch').value||'').toLowerCase();
-  const L=getCurrentLang(),lab=(PAGE_I18N_VIEW[L]||PAGE_I18N_VIEW.th);document.getElementById('isoSearch').placeholder=(L==='en'?'Search documents...':'ค้นหาเอกสาร...');
-  const list=(typeof manuals!=='undefined'?manuals:[]).filter(m=>m.category==='เอกสาร ISO'&&((m.title||'')+(m.note||'')).toLowerCase().includes(q));
-  if(!list.length){g.innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:2.5rem 0;font-size:.88rem">'+lab.empty+'</div>';return}
-  g.innerHTML=list.map(m=>'<div style="border:1px solid var(--border);border-radius:10px;padding:.9rem;display:flex;flex-direction:column;gap:.4rem"><div style="font-size:1.4rem">🛡️</div><div style="font-weight:600;font-size:.9rem">'+esc(m.title)+'</div><div style="font-size:.78rem;color:var(--muted);flex:1">'+esc(m.note||'')+'</div><button class="btn btn-primary" onclick="isoOpenManual(\''+String(m.id).replace(/'/g,'')+'\')">'+lab.view+'</button></div>').join('');
- };
- const PAGE_I18N_VIEW={th:{view:'เปิดดู',empty:'ยังไม่มีเอกสาร ISO — กด "+ อัพโหลดเอกสาร" เพื่อเริ่มต้น'},en:{view:'View',empty:'No ISO documents yet — click "+ Upload document" to start'}};
- function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
- // กันบันทึก/พิมพ์/คลิกขวา ตอนเปิดดูเอกสาร
- document.addEventListener('keydown',e=>{
-  const v=document.getElementById('isoViewer');if(!v||!v.classList.contains('open'))return;
-  if(e.key==='Escape'){isoCloseViewer();return}
-  if((e.ctrlKey||e.metaKey)&&['s','p','S','P'].includes(e.key)){e.preventDefault();e.stopPropagation()}
- },true);
- // โหลดรายการเมื่อเข้าหน้า ISO
- const _sp=window.showPage;
- window.showPage=function(n){const r=_sp.apply(this,arguments);if(n==='iso'){Promise.resolve(typeof loadManualsFromServer==='function'?loadManualsFromServer():0).then(isoRender).catch(isoRender);isoRender();}return r};
 })();
 </script>
 </body>
