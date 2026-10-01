@@ -13516,7 +13516,7 @@ function clearSupplierImage() {
   document.getElementById('s-image-file').value = '';
   setSupplierPreview('');
   const hint = document.getElementById('s-image-hint');
-  if (hint) hint.textContent = 'คลิกในกรอบนี้แล้วกด Ctrl+V เพื่อวางรูป หรือเลือกไฟล์';
+  if (hint) hint.textContent = 'ยังไม่มีรูป — คัดลอกรูปแล้วกด Ctrl+V';
 }
 
 /* กด Ctrl+V ตอนเปิดหน้าต่าง Supplier อยู่ → วางรูปจากคลิปบอร์ดเป็นโลโก้ได้เลย (ไม่รบกวนการวางข้อความในช่องอื่น) */
@@ -13561,7 +13561,7 @@ function openSupplierModal(id) {
     setSupplierPreview('');
   }
   const _h = document.getElementById('s-image-hint');
-  if (_h) _h.textContent = 'คลิกในกรอบนี้แล้วกด Ctrl+V เพื่อวางรูป หรือเลือกไฟล์';
+  if (_h) _h.textContent = 'ยังไม่มีรูป — คัดลอกรูปแล้วกด Ctrl+V';
   document.getElementById('supplierModalOverlay').classList.add('open');
 }
 
@@ -15946,11 +15946,11 @@ function renderLeaderboard() {
  <div class="form-group full">
  <label class="form-label">โลโก้ / รูปภาพ Supplier</label>
  <div style="display:flex;align-items:center;gap:0.9rem">
-<div id="s-image-preview" tabindex="0" title="คลิกแล้วกด Ctrl+V เพื่อวางรูป" style="width:56px;height:56px;border-radius:4px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;font-weight:700;color:#fff;cursor:pointer;outline-offset:2px"></div>
- <input type="file" accept="image/*" id="s-image-file" class="form-input" style="padding:0.5rem" onchange="handleSupplierImageUpload(event)">
+<div id="s-image-preview" tabindex="0" title="โลโก้ Supplier" style="width:56px;height:56px;border-radius:4px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;font-weight:700;color:#fff;outline-offset:2px"></div>
+ <input type="file" accept="image/*" id="s-image-file" style="display:none" onchange="handleSupplierImageUpload(event)"><div id="s-paste-zone" tabindex="0" style="flex:1;border:1.5px dashed var(--border);border-radius:6px;padding:0.85rem 0.7rem;text-align:center;font-size:0.84rem;color:var(--muted);line-height:1.5">📋 คัดลอกรูป (Copy) แล้วกด <b style="color:var(--accent)">Ctrl+V</b> ที่นี่ได้เลย</div>
  <button type="button" class="btn btn-ghost" style="padding:0.4rem 0.8rem;font-size: 0.819rem"onclick="clearSupplierImage()">ลบรูป</button>
           </div>
-          <div id="s-image-hint" style="font-size:0.75rem;color:var(--muted);margin-top:0.4rem">คลิกในกรอบนี้แล้วกด Ctrl+V เพื่อวางรูป หรือเลือกไฟล์</div>
+          <div id="s-image-hint" style="font-size:0.75rem;color:var(--muted);margin-top:0.4rem">ยังไม่มีรูป — คัดลอกรูปแล้วกด Ctrl+V</div>
  </div>
 <div class="form-group full"><label class="form-label">ชื่อบริษัท / Maker *</label><input type="text" class="form-input" id="s-name"></div>
           <div class="form-group"><label class="form-label">ชื่อย่อบริษัท</label><input type="text" class="form-input" id="s-abbr" placeholder="เช่น TAS"></div>
