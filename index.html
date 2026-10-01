@@ -6448,6 +6448,17 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
 
  
 
+<div class="nav-group" id="navGroup-iso">
+ <div class="nav-label" onclick="toggleNavGroup('iso')">
+ <span class="nav-label-text"><span class="nav-label-icon"><svg viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5-3.4 9.3-8 11-4.6-1.7-8-6-8-11V5z"/><polyline points="9 12 11 14 15 10"/></svg></span><span data-i18n="group_iso">เอกสาร ISO</span></span><span class="nav-label-chevron">▾</span>
+ </div>
+ <div class="nav-group-items">
+ <button class="nav-item" id="nav-iso" onclick="showPage('iso',this)">
+ <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 11 17 15 13"/></svg></span><span class="nav-text" data-i18n="nav_iso">เอกสาร ISO</span>
+ </button>
+ </div>
+ </div>
+
 <div class="nav-group" id="navGroup-cer">
  <div class="nav-label" onclick="toggleNavGroup('cer')">
  <span class="nav-label-text"><span class="nav-label-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg></span><span data-i18n="group_cer">ติดตามใบ CER</span><span class="nav-label-badge" id="navGroupBadge-cer" style="display:none">0</span></span><span class="nav-label-chevron">▾</span>
@@ -8270,6 +8281,18 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
  </div>
  <!-- /WORK MANUAL PAGE -->
 
+ <!-- ISO DOCUMENTS PAGE (placeholder - รอ brief) -->
+ <div class="page" id="page-iso">
+ <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.7rem;padding:4rem 1rem;text-align:center;opacity:0.85">
+ <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 3v6c0 5-3.4 9.3-8 11-4.6-1.7-8-6-8-11V5z"/><polyline points="9 12 11 14 15 10"/></svg>
+ <div style="font-size:1.1rem;font-weight:600" data-i18n="iso_title">เอกสาร ISO</div>
+ <div style="font-size:0.85rem;opacity:0.7" data-i18n="iso_placeholder">หมวดนี้เตรียมไว้แล้ว รอรายละเอียดเพิ่มเติม</div>
+ </div>
+ </div>
+ <!-- /ISO DOCUMENTS PAGE -->
+
+ 
+
  <!-- ═══════════════════════════════════════════════════
  PAYROLL / ATTENDANCE PAGE
  ═══════════════════════════════════════════════════ -->
@@ -9051,7 +9074,7 @@ window.addEventListener('DOMContentLoaded', () => {
 /* ── NAV GROUPS (collapsible) ── */
 // ทุกครั้งที่ล็อกอินใหม่ หมวดหมู่ในเมนูด้านซ้ายจะถูกรีเซ็ตกลับไปที่ค่าเริ่มต้นนี้เสมอ
 // (เมนูหลักเปิดอยู่ ส่วนหมวดอื่นๆ พับเก็บไว้ทั้งหมด) ไม่ใช้ค่าที่จำไว้จากครั้งก่อน
-const DEFAULT_COLLAPSED_NAV_GROUPS = ['track', 'cer', 'modeltracker', 'workplan', 'manual', 'costcalc', 'costsaving', 'other', 'team', 'manage'];
+const DEFAULT_COLLAPSED_NAV_GROUPS = ['track', 'cer', 'modeltracker', 'workplan', 'manual', 'iso', 'costcalc', 'costsaving', 'other', 'team', 'manage'];
 function resetNavGroupsToDefault() {
  localStorage.setItem('prpo_nav_collapsed', JSON.stringify(DEFAULT_COLLAPSED_NAV_GROUPS));
  document.querySelectorAll('.nav-group[id^="navGroup-"]').forEach(el => {
@@ -9121,7 +9144,7 @@ const I18N = {
  nav_workplan: 'แผนงานข้างนอก', nav_manual: 'คู่มือการทำงาน', nav_setup: 'ตั้งค่า', nav_collapse: 'ย่อเมนู', nav_team: 'ทีมงาน Purchase Component',
  group_main: 'เมนูหลัก', group_track: 'ติดตาม PART PR', group_cer: 'ติดตามใบ CER',
  group_modeltracker: 'แผนการผลิต MODEL', group_workplan: 'ตารางแผนงานข้างนอก',
- group_manual: 'คู่มือการทำงาน &amp; พื้นฐานการทำงาน', group_maker: 'ข้อมูล MAKER', group_settings: 'จัดการ', group_team: 'จัดทีมงาน',
+ group_manual: 'คู่มือการทำงาน &amp; พื้นฐานการทำงาน', group_iso: 'เอกสาร ISO', nav_iso: 'เอกสาร ISO', iso_title: 'เอกสาร ISO', iso_placeholder: 'หมวดนี้เตรียมไว้แล้ว รอรายละเอียดเพิ่มเติม', group_maker: 'ข้อมูล MAKER', group_settings: 'จัดการ', group_team: 'จัดทีมงาน',
  },
  en: {
  nav_home: 'Home', nav_exec: 'KPI Overview', nav_payroll: 'Time Attendance', nav_todo: 'To-Do List',
@@ -9129,12 +9152,12 @@ const I18N = {
  nav_workplan: 'Field Workplan', nav_manual: 'Work Manual', nav_setup: 'Settings', nav_collapse: 'Collapse', nav_team: 'Purchase Component Team',
  group_main: 'Main Menu', group_track: 'Track Part PR', group_cer: 'CER Tracking',
  group_modeltracker: 'Model Production Plan', group_workplan: 'Field Workplan Schedule',
- group_manual: 'Work Manual &amp; Basics', group_maker: 'Maker Data', group_settings: 'Management', group_team: 'Organize Team',
+ group_manual: 'Work Manual &amp; Basics', group_iso: 'ISO Documents', nav_iso: 'ISO Documents', iso_title: 'ISO Documents', iso_placeholder: 'This category is ready. Details to be added.', group_maker: 'Maker Data', group_settings: 'Management', group_team: 'Organize Team',
  }
 };
 const PAGE_TITLES = {
- th: { home:'หน้าหลัก', exec:'ภาพรวม KPI', dashboard:'Dashboard', list:'รายการทั้งหมด', partmodel:'PART MODEL', summary:'สรุปภาพรวม', gantt:'Timeline / Gantt', setup:'ตั้งค่าระบบ', supplier:'Supplier Database', history:'History Log', leadtime:'Lead Time Analysis', leaderboard:'Maker Leaderboard', cer:'ติดตามใบ CER', modeltracker:'Model Tracker', workplan:'ตารางแผนงานข้างนอก', payroll:'ลงเวลา & ค่าแรง', manual:'คู่มือการทำงาน', todo:'To-Do List', costcalc:'Cost Up/Down', costsaving:'Cost Saving Report', team:'ทีมงาน Purchase Component' },
- en: { home:'Home', exec:'KPI Overview', dashboard:'Dashboard', list:'All Items', partmodel:'PART MODEL', summary:'Summary', gantt:'Timeline / Gantt', setup:'System Settings', supplier:'Supplier Database', history:'History Log', leadtime:'Lead Time Analysis', leaderboard:'Maker Leaderboard', cer:'CER Tracking', modeltracker:'Model Tracker', workplan:'Field Workplan Schedule', payroll:'Time & Wages', manual:'Work Manual', todo:'To-Do List', costcalc:'Cost Up/Down', costsaving:'Cost Saving Report', team:'Purchase Component Team' }
+ th: { home:'หน้าหลัก', exec:'ภาพรวม KPI', dashboard:'Dashboard', list:'รายการทั้งหมด', partmodel:'PART MODEL', summary:'สรุปภาพรวม', gantt:'Timeline / Gantt', setup:'ตั้งค่าระบบ', supplier:'Supplier Database', history:'History Log', leadtime:'Lead Time Analysis', leaderboard:'Maker Leaderboard', cer:'ติดตามใบ CER', modeltracker:'Model Tracker', workplan:'ตารางแผนงานข้างนอก', payroll:'ลงเวลา & ค่าแรง', manual:'คู่มือการทำงาน', iso:'เอกสาร ISO', todo:'To-Do List', costcalc:'Cost Up/Down', costsaving:'Cost Saving Report', team:'ทีมงาน Purchase Component' },
+ en: { home:'Home', exec:'KPI Overview', dashboard:'Dashboard', list:'All Items', partmodel:'PART MODEL', summary:'Summary', gantt:'Timeline / Gantt', setup:'System Settings', supplier:'Supplier Database', history:'History Log', leadtime:'Lead Time Analysis', leaderboard:'Maker Leaderboard', cer:'CER Tracking', modeltracker:'Model Tracker', workplan:'Field Workplan Schedule', payroll:'Time & Wages', manual:'Work Manual', iso:'ISO Documents', todo:'To-Do List', costcalc:'Cost Up/Down', costsaving:'Cost Saving Report', team:'Purchase Component Team' }
 };
 function getCurrentLang() { return localStorage.getItem('prpo_lang') || 'th'; }
 function applyLanguage(lang) {
