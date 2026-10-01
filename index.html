@@ -7299,9 +7299,10 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
  <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
  <input type="text" id="supplierSearch" placeholder="ค้นหาชื่อ, เบอร์, หมวดหมู่..." oninput="renderSuppliers()">
  </div>
+ <span class="sp2-count" id="supplierCount"></span>
  <button class="btn btn-primary" onclick="openSupplierModal()" style="margin-left:auto">+ เพิ่ม Supplier</button>
  </div>
- <div id="supplierGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem"></div>
+ <div id="supplierGrid" class="sp2-grid"></div>
  </div>
 
  <!-- ORGANIZE TEAM: Team Purchase Component -->
@@ -15371,6 +15372,12 @@ async function deleteCsItem(id) {
  }
 }
 
+const SP2_ICO = {
+  user:'<svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+  phone:'<svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8.1 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>',
+  mail:'<svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>',
+  pin:'<svg viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>'
+};
 function renderSuppliers() {
  const q = (document.getElementById('supplierSearch')?.value || '').toLowerCase();
  const grid = document.getElementById('supplierGrid');
@@ -15378,11 +15385,13 @@ function renderSuppliers() {
     (s.name ||'').toLowerCase().includes(q) ||
     (s.abbr ||'').toLowerCase().includes(q) ||
     (s.nameEn||'').toLowerCase().includes(q) ||
+    (s.contact||'').toLowerCase().includes(q) ||
     (s.category||'').toLowerCase().includes(q) ||
  (s.phone ||'').includes(q) ||
  (s.email ||'').toLowerCase().includes(q)
  );
- if (!list.length) {
+ const _c = document.getElementById('supplierCount'); if (_c) _c.textContent = q ? ('พบ ' + list.length + ' จาก ' + suppliers.length + ' ราย') : ('ทั้งหมด ' + suppliers.length + ' ราย');
+  if (!list.length) {
  grid.innerHTML = '<div style="color:var(--muted);font-size: 0.892rem;padding:2rem 0;text-align:center;grid-column:1/-1">' +
  (suppliers.length ? 'ไม่พบ Supplier ที่ค้นหา' : 'ยังไม่มี Supplier — กด + เพิ่ม Supplier') + '</div>';
  return;
@@ -15391,46 +15400,53 @@ function renderSuppliers() {
  const _mk = x => String(x||'').trim().toLowerCase();
  allData.forEach(r => { if(r.maker) { const k=_mk(r.maker); makerCount[k] = (makerCount[k]||0)+1; } });
  grid.innerHTML = list.map(s => {
-const initials = s.abbr ? String(s.abbr).trim().slice(0,3).toUpperCase() : (s.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
- const prCount = makerCount[_mk(s.name)] || 0;
- const avatarInner = s.image
- ? `<img src="${s.image}" alt="${s.name}" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;border-radius:4px">`
- : initials;
- const embedSrc = getMapEmbedUrl(s.maplink);
- return `<div class="supplier-card">
- <div class="supplier-header">
- <div style="display:flex;align-items:center;gap:0.7rem">
- <div class="supplier-avatar" style="${s.image ? 'background:var(--card2,#1a1a2e);padding:0;overflow:hidden' : ''}">${avatarInner}</div>
- <div>
-            <div class="supplier-name">${s.name}${s.abbr ? ` <span style="font-family:var(--mono);font-size:0.68rem;font-weight:600;color:var(--accent);border:1px solid var(--border);border-radius:3px;padding:1px 5px;margin-left:4px;vertical-align:middle">${s.abbr}</span>` : ''}</div>
-            ${s.nameEn ? `<div style="font-size:0.75rem;color:var(--muted);margin-top:1px">${s.nameEn}</div>` : ''}
-            <div class="supplier-category">${s.category || 'ไม่ระบุหมวดหมู่'}</div>
- </div>
- </div>
- <div style="display:flex;gap:0.3rem">
- <button class="icon-btn" onclick="openSupplierModal('${s.id}')" title="แก้ไข"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
- <button class="icon-btn del" onclick="deleteSupplier('${s.id}')" title="ลบ"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
- </div>
- </div>
- ${s.contact ? `<div class="supplier-field"><span class="supplier-field-val">${s.contact}</span></div>` : ''}
- ${s.phone ? `<div class="supplier-field"><span class="supplier-field-val">${s.phone}</span></div>` : ''}
- ${s.email ? `<div class="supplier-field"> <span class="supplier-field-val">${s.email}</span></div>` : ''}
- ${s.leadtime ? `<div class="supplier-field">Lead Time: <span class="supplier-field-val" style="color:var(--accent)">${s.leadtime} วัน</span></div>` : ''}
- <div class="supplier-field">รายการใน PR/PO: <span class="supplier-field-val" style="color:var(--accent2)">${prCount} รายการ</span></div>
- ${s.note ? `<div class="supplier-field"><span style="color:var(--muted);font-size: 0.777rem">${s.note}</span></div>` : ''}
- ${s.maplink ? `
- <div class="supplier-field" style="border-bottom:none;padding-top:0.4rem">
- <a href="${s.maplink}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:0.4rem;color:var(--accent);text-decoration:none;font-size: 0.819rem">
-  ดูที่ตั้งบน Google Maps ↗
- </a>
- </div>
- ${embedSrc ? `<div style="margin-top:0.42rem;border-radius:4px;overflow:hidden;border:1px solid var(--border)">
- <iframe src="${embedSrc}" width="100%" height="140" style="border:0;display:block" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
- </div>` : ''}` : ''}
- </div>`;
- }).join('');
- // render inline supplier comments
- list.forEach(s => setTimeout(() => scRender(s.id), 0));
+    const e = x => String(x ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const ini = s.abbr ? String(s.abbr).trim().slice(0,3).toUpperCase() : (s.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const prCount = makerCount[_mk(s.name)] || 0;
+    const embedSrc = getMapEmbedUrl(s.maplink);
+    const avatar = s.image
+      ? `<div class="sp2-av"><img src="${e(s.image)}" alt="" referrerpolicy="no-referrer" data-ini="${e(ini)}" onerror="this.parentNode.classList.add('ph');this.parentNode.textContent=this.dataset.ini"></div>`
+      : `<div class="sp2-av ph">${e(ini)}</div>`;
+    const row = (ico, html) => `<div class="sp2-row"><span class="sp2-ico">${SP2_ICO[ico]}</span><span class="sp2-val">${html}</span></div>`;
+    const phones = String(s.phone||'').split(/[,;]+/).map(x=>x.trim()).filter(Boolean)
+      .map(p => `<a href="tel:${e(p.replace(/[^\d+]/g,''))}">${e(p)}</a>`).join(', ');
+    const mails = String(s.email||'').split(/[,;\s]+/).map(x=>x.trim()).filter(Boolean)
+      .map(m => `<a href="mailto:${e(m)}">${e(m)}</a>`).join(', ');
+    const info = [
+      s.contact ? row('user', e(s.contact)) : '',
+      phones ? row('phone', phones) : '',
+      mails ? row('mail', mails) : ''
+    ].join('');
+    const stats = (s.leadtime ? `<div class="sp2-stat"><span>LEAD TIME</span><b>${e(s.leadtime)} <small>วัน</small></b></div>` : '') +
+      `<div class="sp2-stat"><span>รายการใน PR/PO</span><b class="${prCount ? '' : 'zero'}">${prCount} <small>รายการ</small></b></div>`;
+    const foot = s.maplink ? `<div class="sp2-foot">
+        <a class="sp2-map" href="${e(s.maplink)}" target="_blank" rel="noopener">${SP2_ICO.pin} ดูที่ตั้งบน Google Maps</a>
+        ${embedSrc ? `<div class="sp2-embed"><iframe src="${e(embedSrc)}" width="100%" height="130" style="border:0;display:block" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>` : ''}
+      </div>` : '';
+    return `<div class="sp2-card">
+      <div class="sp2-head">
+        ${avatar}
+        <div class="sp2-id">
+          <div class="sp2-name">${e(s.name)}</div>
+          ${s.nameEn ? `<div class="sp2-en">${e(s.nameEn)}</div>` : ''}
+          <div class="sp2-tags">
+            ${s.abbr ? `<span class="sp2-abbr">${e(s.abbr)}</span>` : ''}
+            <span class="sp2-cat">${e(s.category || 'ไม่ระบุหมวดหมู่')}</span>
+          </div>
+        </div>
+        <div class="sp2-act">
+          <button class="icon-btn" onclick="openSupplierModal('${e(s.id)}')" title="แก้ไข"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
+          <button class="icon-btn del" onclick="deleteSupplier('${e(s.id)}')" title="ลบ"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+        </div>
+      </div>
+      ${info ? `<div class="sp2-info">${info}</div>` : ''}
+      <div class="sp2-stats">${stats}</div>
+      ${s.note ? `<div class="sp2-note">${e(s.note)}</div>` : ''}
+      ${foot}
+    </div>`;
+  }).join('');
+  // render inline supplier comments
+  list.forEach(s => setTimeout(() => scRender(s.id), 0));
 }
 
 
@@ -24269,6 +24285,44 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
 })();
 </script>
 <!-- ═══ SUPPLIER · นำเข้าจาก Excel (spx) ═══ -->
+<style id="sp2-css">
+/* ── SUPPLIER CARD v2 ── */
+.sp2-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:1rem;align-items:stretch}
+.sp2-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.05rem;display:flex;flex-direction:column;gap:.75rem;transition:border-color .15s,box-shadow .15s}
+.sp2-card:hover{border-color:var(--accent);box-shadow:0 6px 22px rgba(0,0,0,.14)}
+.sp2-head{display:flex;gap:.8rem;align-items:flex-start}
+.sp2-av{width:54px;height:54px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#fff;border:1px solid var(--border)}
+.sp2-av img{width:100%;height:100%;object-fit:contain;padding:5px;box-sizing:border-box;display:block}
+.sp2-av.ph{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:0;font-weight:700;font-size:.92rem;letter-spacing:.02em;font-family:var(--mono)}
+.sp2-id{flex:1;min-width:0}
+.sp2-name{font-weight:700;font-size:.97rem;line-height:1.3;color:var(--text);letter-spacing:-.01em;overflow-wrap:anywhere}
+.sp2-en{font-size:.74rem;color:var(--muted);margin-top:2px;line-height:1.35;overflow-wrap:anywhere}
+.sp2-tags{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem}
+.sp2-abbr{font-family:var(--mono);font-size:.68rem;font-weight:700;color:var(--text);border:1px solid var(--accent);border-radius:4px;padding:1px 6px;line-height:1.5}
+.sp2-cat{font-size:.7rem;color:var(--muted);background:var(--surface2);border-radius:4px;padding:1px 7px;line-height:1.5}
+.sp2-act{display:flex;gap:.3rem;flex-shrink:0}
+.sp2-info{display:flex;flex-direction:column;border-top:1px solid var(--border);padding-top:.4rem}
+.sp2-row{display:flex;gap:.6rem;align-items:flex-start;padding:.28rem 0;font-size:.83rem;color:var(--text);line-height:1.45}
+.sp2-ico{width:15px;height:15px;flex-shrink:0;margin-top:3px;color:var(--muted)}
+.sp2-ico svg{width:15px;height:15px;display:block;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.sp2-val{min-width:0;overflow-wrap:anywhere}
+.sp2-val a{color:var(--text);text-decoration:none;border-bottom:1px dotted var(--border)}
+.sp2-val a:hover{color:var(--accent);border-bottom-color:var(--accent)}
+.sp2-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.5rem}
+.sp2-stat{background:var(--surface2);border-radius:8px;padding:.5rem .7rem}
+.sp2-stat span{display:block;font-size:.66rem;color:var(--muted);font-weight:600;letter-spacing:.03em}
+.sp2-stat b{font-size:1.02rem;color:var(--text);font-weight:700}
+.sp2-stat b small{font-size:.7rem;font-weight:500;color:var(--muted)}
+.sp2-stat b.zero{color:var(--muted)}
+.sp2-note{font-size:.78rem;color:var(--muted);background:var(--surface2);border-left:3px solid var(--border);border-radius:4px;padding:.45rem .65rem;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.sp2-foot{margin-top:auto;display:flex;flex-direction:column;gap:.5rem}
+.sp2-map{display:flex;align-items:center;justify-content:center;gap:.45rem;font-size:.8rem;font-weight:600;color:var(--text);text-decoration:none;border:1px solid var(--border);border-radius:6px;padding:.42rem .7rem;transition:border-color .15s,color .15s}
+.sp2-map:hover{border-color:var(--accent);color:var(--accent)}
+.sp2-map svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.sp2-embed{border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+.sp2-count{font-size:.78rem;color:var(--muted);white-space:nowrap;align-self:center}
+@media (max-width:480px){.sp2-card{padding:.9rem}.sp2-av{width:46px;height:46px}}
+</style>
 <style id="spx-css">
 .spx-bar{display:flex;gap:.5rem;margin-left:auto;align-items:center}
 .spx-bar .btn{display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap}
