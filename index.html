@@ -6196,6 +6196,20 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
 .cerf-act:hover { border-color: var(--accent); color: var(--accent); }
 .cerf-act.danger:hover { border-color: var(--danger); color: var(--danger); }
 </style>
+<style>
+#isoViewer{position:fixed;inset:0;z-index:9999;background:rgba(20,20,22,.72);display:none;align-items:center;justify-content:center}
+#isoViewer.open{display:flex}
+.iso-v-panel{width:min(1000px,96vw);height:92vh;background:#faf8f3;border-radius:10px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5);color:#222}
+.iso-v-head{display:flex;align-items:center;gap:.6rem;padding:.7rem 1rem;border-bottom:1px solid #ddd8cc;flex-wrap:wrap}
+.iso-v-title{font-size:.9rem;font-weight:500;margin-right:auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.iso-v-badge{font-size:.62rem;letter-spacing:.06em;color:#b36b00;border:1px dashed #d9922b;background:#fff7e8;padding:.3rem .6rem;border-radius:3px;text-transform:uppercase}
+.iso-v-btn{width:32px;height:32px;border:1px solid #d9d4c7;background:#efece4;border-radius:5px;cursor:pointer;font-size:1rem;color:#333}
+.iso-v-btn:hover{background:#e4e0d5}
+.iso-v-body{flex:1;overflow:auto;background:#efede8;padding:1rem;-webkit-user-select:none;user-select:none}
+.iso-v-body canvas{display:block;margin:0 auto 1rem;box-shadow:0 2px 14px rgba(0,0,0,.22);background:#fff;max-width:none}
+.iso-v-msg{text-align:center;color:#777;padding:3rem 1rem;font-size:.9rem}
+@media print{#isoViewer{display:none!important}}
+</style>
 </head>
 <body class="light-theme">
 
@@ -8281,13 +8295,18 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
  </div>
  <!-- /WORK MANUAL PAGE -->
 
- <!-- ISO DOCUMENTS PAGE (placeholder - รอ brief) -->
+ <!-- ISO DOCUMENTS PAGE -->
  <div class="page" id="page-iso">
- <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.7rem;padding:4rem 1rem;text-align:center;opacity:0.85">
- <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 3v6c0 5-3.4 9.3-8 11-4.6-1.7-8-6-8-11V5z"/><polyline points="9 12 11 14 15 10"/></svg>
+ <div style="display:flex;align-items:center;gap:0.7rem;flex-wrap:wrap;margin-bottom:1rem">
+ <div>
  <div style="font-size:1.1rem;font-weight:600" data-i18n="iso_title">เอกสาร ISO</div>
- <div style="font-size:0.85rem;opacity:0.7" data-i18n="iso_placeholder">หมวดนี้เตรียมไว้แล้ว รอรายละเอียดเพิ่มเติม</div>
+ <div style="font-size:0.8rem;color:var(--muted)" data-i18n="iso_placeholder">เอกสารควบคุมสำหรับการตรวจประเมิน (ดูได้อย่างเดียว)</div>
  </div>
+ <input class="form-input" id="isoSearch" data-i18n-ph="iso_search" placeholder="ค้นหาเอกสาร..." oninput="isoRender()" style="margin-left:auto;max-width:240px">
+ <button class="btn btn-ghost" onclick="document.getElementById('isoLocalFile').click()" data-i18n="iso_open_local">เปิดไฟล์ PDF ทดลองดู</button>
+ <input type="file" id="isoLocalFile" accept="application/pdf" style="display:none" onchange="isoOpenLocal(this)">
+ </div>
+ <div id="isoGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:0.8rem"></div>
  </div>
  <!-- /ISO DOCUMENTS PAGE -->
 
@@ -9144,7 +9163,7 @@ const I18N = {
  nav_workplan: 'แผนงานข้างนอก', nav_manual: 'คู่มือการทำงาน', nav_setup: 'ตั้งค่า', nav_collapse: 'ย่อเมนู', nav_team: 'ทีมงาน Purchase Component',
  group_main: 'เมนูหลัก', group_track: 'ติดตาม PART PR', group_cer: 'ติดตามใบ CER',
  group_modeltracker: 'แผนการผลิต MODEL', group_workplan: 'ตารางแผนงานข้างนอก',
- group_manual: 'คู่มือการทำงาน &amp; พื้นฐานการทำงาน', group_iso: 'เอกสาร ISO', nav_iso: 'เอกสาร ISO', iso_title: 'เอกสาร ISO', iso_placeholder: 'หมวดนี้เตรียมไว้แล้ว รอรายละเอียดเพิ่มเติม', group_maker: 'ข้อมูล MAKER', group_settings: 'จัดการ', group_team: 'จัดทีมงาน',
+ group_manual: 'คู่มือการทำงาน &amp; พื้นฐานการทำงาน', group_iso: 'เอกสาร ISO', nav_iso: 'เอกสาร ISO', iso_title: 'เอกสาร ISO', iso_placeholder: 'เอกสารควบคุมสำหรับการตรวจประเมิน (ดูได้อย่างเดียว)', iso_open_local: 'เปิดไฟล์ PDF ทดลองดู', iso_empty: 'ยังไม่มีเอกสาร ISO — อัพโหลดที่หน้า คู่มือการทำงาน โดยเลือกหมวด "เอกสาร ISO"', iso_search: 'ค้นหาเอกสาร...', iso_view: 'เปิดดู', iso_badge: 'ดูอย่างเดียว — ปิดการบันทึกและพิมพ์', group_maker: 'ข้อมูล MAKER', group_settings: 'จัดการ', group_team: 'จัดทีมงาน',
  },
  en: {
  nav_home: 'Home', nav_exec: 'KPI Overview', nav_payroll: 'Time Attendance', nav_todo: 'To-Do List',
@@ -9152,7 +9171,7 @@ const I18N = {
  nav_workplan: 'Field Workplan', nav_manual: 'Work Manual', nav_setup: 'Settings', nav_collapse: 'Collapse', nav_team: 'Purchase Component Team',
  group_main: 'Main Menu', group_track: 'Track Part PR', group_cer: 'CER Tracking',
  group_modeltracker: 'Model Production Plan', group_workplan: 'Field Workplan Schedule',
- group_manual: 'Work Manual &amp; Basics', group_iso: 'ISO Documents', nav_iso: 'ISO Documents', iso_title: 'ISO Documents', iso_placeholder: 'This category is ready. Details to be added.', group_maker: 'Maker Data', group_settings: 'Management', group_team: 'Organize Team',
+ group_manual: 'Work Manual &amp; Basics', group_iso: 'ISO Documents', nav_iso: 'ISO Documents', iso_title: 'ISO Documents', iso_placeholder: 'Controlled documents for audit (view only)', iso_open_local: 'Open a test PDF', iso_empty: 'No ISO documents yet — upload them on the Work Manual page using the "ISO Documents" category', iso_search: 'Search documents...', iso_view: 'View', iso_badge: 'VIEW ONLY — SAVE & PRINT DISABLED', group_maker: 'Maker Data', group_settings: 'Management', group_team: 'Organize Team',
  }
 };
 const PAGE_TITLES = {
@@ -15876,6 +15895,7 @@ function renderLeaderboard() {
  <select class="form-input" id="m-category">
  <option value="คู่มือการทำงาน">คู่มือการทำงาน</option>
  <option value="พื้นฐานการทำงาน">พื้นฐานการทำงาน</option>
+ <option value="เอกสาร ISO">เอกสาร ISO</option>
  <option value="อื่นๆ">อื่นๆ</option>
  </select>
  </div>
@@ -15924,6 +15944,21 @@ function renderLeaderboard() {
  <button class="btn btn-ghost" onclick="closeCsEditModal()">ยกเลิก</button>
  <button class="btn btn-primary" onclick="saveCsEdit()">บันทึก</button>
  </div>
+ </div>
+</div>
+
+<!-- ISO: VIEW-ONLY PDF VIEWER -->
+<div id="isoViewer" oncontextmenu="return false">
+ <div class="iso-v-panel">
+ <div class="iso-v-head">
+ <div class="iso-v-title" id="isoVTitle"></div>
+ <div class="iso-v-badge" id="isoVBadge" data-i18n="iso_badge">VIEW ONLY — SAVE &amp; PRINT DISABLED</div>
+ <button class="iso-v-btn" onclick="isoZoom(-0.15)">&minus;</button>
+ <span id="isoVZoom" style="font-size:.8rem;min-width:42px;text-align:center">100%</span>
+ <button class="iso-v-btn" onclick="isoZoom(0.15)">+</button>
+ <button class="iso-v-btn" onclick="isoCloseViewer()">&times;</button>
+ </div>
+ <div class="iso-v-body" id="isoVBody"></div>
  </div>
 </div>
 
@@ -24396,5 +24431,67 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountButtons); else mountButtons();
 })();
 </script>
+<script>
+(function(){
+ const PDFJS='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+ const WORKER='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+ const TXT={th:{load:'กำลังโหลดเอกสาร...',fail:'เปิดไฟล์ไม่สำเร็จ',wm:'CONTROLLED COPY'},en:{load:'Loading document...',fail:'Could not open the file',wm:'CONTROLLED COPY'}};
+ const T=k=>(TXT[getCurrentLang()]||TXT.th)[k];
+ let pdf=null,zoom=1,tok=0,timer=null,curTitle='';
+ function loadLib(){return window.pdfjsLib?Promise.resolve():new Promise((res,rej)=>{const e=document.createElement('script');e.src=PDFJS;e.onload=()=>{pdfjsLib.GlobalWorkerOptions.workerSrc=WORKER;res()};e.onerror=()=>rej(new Error('pdf.js'));document.head.appendChild(e)})}
+ async function render(){
+  if(!pdf)return;const my=++tok,body=document.getElementById('isoVBody');body.innerHTML='';
+  const w=Math.min(body.clientWidth-32,900)*zoom,dpr=window.devicePixelRatio||1;
+  for(let i=1;i<=pdf.numPages;i++){
+   const pg=await pdf.getPage(i);if(my!==tok)return;
+   const v1=pg.getViewport({scale:1}),sc=w/v1.width,vp=pg.getViewport({scale:sc*dpr});
+   const c=document.createElement('canvas');c.width=vp.width;c.height=vp.height;c.style.width=(vp.width/dpr)+'px';c.style.height=(vp.height/dpr)+'px';c.draggable=false;body.appendChild(c);
+   const ctx=c.getContext('2d');await pg.render({canvasContext:ctx,viewport:vp}).promise;if(my!==tok)return;
+   // watermark ฝังลงบน canvas ลบด้วย CSS ไม่ได้
+   ctx.save();ctx.globalAlpha=.09;ctx.fillStyle='#000';ctx.font='bold '+(vp.width/16)+'px sans-serif';ctx.textAlign='center';ctx.translate(vp.width/2,vp.height/2);ctx.rotate(-Math.PI/5);
+   ctx.fillText(T('wm'),0,0);ctx.font=(vp.width/36)+'px sans-serif';ctx.fillText(new Date().toLocaleDateString('en-GB'),0,vp.width/16);ctx.restore();
+  }
+ }
+ async function open(title,getData){
+  curTitle=title;document.getElementById('isoVTitle').textContent=title;zoom=1;document.getElementById('isoVZoom').textContent='100%';
+  document.getElementById('isoViewer').classList.add('open');
+  const body=document.getElementById('isoVBody');body.innerHTML='<div class="iso-v-msg">'+T('load')+'</div>';
+  try{await loadLib();const data=await getData();pdf=await pdfjsLib.getDocument({data}).promise;await render();}
+  catch(e){body.innerHTML='<div class="iso-v-msg">'+T('fail')+'<br><small>'+(e.message||'')+'</small></div>';}
+ }
+ window.isoZoom=function(d){zoom=Math.min(3,Math.max(.4,zoom+d));document.getElementById('isoVZoom').textContent=Math.round(zoom*100)+'%';clearTimeout(timer);timer=setTimeout(render,200)};
+ window.isoCloseViewer=function(){document.getElementById('isoViewer').classList.remove('open');document.getElementById('isoVBody').innerHTML='';pdf=null;tok++};
+ window.isoOpenLocal=function(inp){const f=inp.files[0];if(!f)return;open(f.name.replace(/\.pdf$/i,''),()=>f.arrayBuffer().then(b=>new Uint8Array(b)));inp.value=''};
+ window.isoOpenManual=function(id){
+  const m=manuals.find(x=>String(x.id)===String(id));if(!m)return;
+  const fid=((m.url||'').match(/\/d\/([\w-]+)/)||(m.url||'').match(/[?&]id=([\w-]+)/)||[])[1];
+  open(m.title,async()=>{
+   const r=await fetch(WEB_APP_URL+'?action=getFileBase64&fileId='+encodeURIComponent(fid));const j=await r.json();
+   if(!j.success)throw new Error(j.error||'getFileBase64');
+   const bin=atob(j.base64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u;
+  });
+  if(WEB_APP_URL&&m.id)fetch(WEB_APP_URL+'?action=viewManual&id='+encodeURIComponent(m.id)).catch(()=>{});
+ };
+ window.isoRender=function(){
+  const g=document.getElementById('isoGrid');if(!g)return;const q=(document.getElementById('isoSearch').value||'').toLowerCase();
+  const L=getCurrentLang(),lab=(PAGE_I18N_VIEW[L]||PAGE_I18N_VIEW.th);document.getElementById('isoSearch').placeholder=(L==='en'?'Search documents...':'ค้นหาเอกสาร...');
+  const list=(typeof manuals!=='undefined'?manuals:[]).filter(m=>m.category==='เอกสาร ISO'&&((m.title||'')+(m.note||'')).toLowerCase().includes(q));
+  if(!list.length){g.innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:2.5rem 0;font-size:.88rem">'+lab.empty+'</div>';return}
+  g.innerHTML=list.map(m=>'<div style="border:1px solid var(--border);border-radius:10px;padding:.9rem;display:flex;flex-direction:column;gap:.4rem"><div style="font-size:1.4rem">🛡️</div><div style="font-weight:600;font-size:.9rem">'+esc(m.title)+'</div><div style="font-size:.78rem;color:var(--muted);flex:1">'+esc(m.note||'')+'</div><button class="btn btn-primary" onclick="isoOpenManual(\''+String(m.id).replace(/'/g,'')+'\')">'+lab.view+'</button></div>').join('');
+ };
+ const PAGE_I18N_VIEW={th:{view:'เปิดดู',empty:'ยังไม่มีเอกสาร ISO — อัพโหลดที่หน้า คู่มือการทำงาน โดยเลือกหมวด "เอกสาร ISO"'},en:{view:'View',empty:'No ISO documents yet — upload them on the Work Manual page using the "ISO Documents" category'}};
+ function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+ // กันบันทึก/พิมพ์/คลิกขวา ตอนเปิดดูเอกสาร
+ document.addEventListener('keydown',e=>{
+  const v=document.getElementById('isoViewer');if(!v||!v.classList.contains('open'))return;
+  if(e.key==='Escape'){isoCloseViewer();return}
+  if((e.ctrlKey||e.metaKey)&&['s','p','S','P'].includes(e.key)){e.preventDefault();e.stopPropagation()}
+ },true);
+ // โหลดรายการเมื่อเข้าหน้า ISO
+ const _sp=window.showPage;
+ window.showPage=function(n){const r=_sp.apply(this,arguments);if(n==='iso'){Promise.resolve(typeof loadManualsFromServer==='function'?loadManualsFromServer():0).then(isoRender).catch(isoRender);isoRender();}return r};
+})();
+</script>
 </body>
 </html>
+  
