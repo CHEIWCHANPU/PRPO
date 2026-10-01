@@ -13630,7 +13630,13 @@ async function saveSupplier() {
  const json = await res.json();
  if (!json.success) { showResultModal('บันทึกใน Sheet ไม่สำเร็จ', 'error', json.error || ''); return; }
  // เพิ่มใหม่ → รีเฟรชเบื้องหลังเงียบๆ เพื่อให้ได้ id จริงจาก Sheet
- if (!rowIndex) loadSuppliers(true, true);
+ if (!rowIndex) {
+ if (json.rowIndex) {
+ const it = suppliers.find(s => String(s.id) === String(optId));
+ if (it) { it.id = json.rowIndex; it.rowIndex = json.rowIndex; renderSuppliers(); }
+ } else { loadSuppliers(true, true); return; }
+ }
+ try { localStorage.setItem('prpo_suppliers', JSON.stringify(suppliers)); } catch (e) {}
  } catch(e) {
  showResultModal('ซิงค์ Sheet ไม่สำเร็จ', 'error', e.message);
  }
@@ -13650,6 +13656,7 @@ async function deleteSupplier(rowIndex) {
  }
  const removedIdx = suppliers.findIndex(s => String(s.id) === String(rowIndex));
  suppliers = suppliers.filter(s => String(s.id) !== String(rowIndex));
+ { const r0 = Number(rowIndex); if (Number.isFinite(r0)) suppliers.forEach(s => { const n = Number(s.id); if (Number.isFinite(n) && n > r0) { s.id = n - 1; s.rowIndex = n - 1; } }); }
  addHistoryLog('del', delSupplierItem?.name || '-', delSupplierItem?.category || '', 'ลบ Supplier');
  renderSuppliers();
  showResultModal('ลบ Supplier สำเร็จ', 'success');
@@ -13660,8 +13667,9 @@ async function deleteSupplier(rowIndex) {
  if (delSupplierItem && removedIdx >= 0) suppliers.splice(removedIdx, 0, delSupplierItem);
  renderSuppliers();
  showResultModal('ลบใน Sheet ไม่สำเร็จ', 'error', json.error || '');
+ loadSuppliers(true, false); // ซิงค์ใหม่ให้ตรงกับ Sheet
  } else {
- await loadSuppliers(true, true); // แถวใน Sheet เลื่อนขึ้นหลังลบ → โหลดใหม่ให้ rowIndex ตรง
+ try { localStorage.setItem('prpo_suppliers', JSON.stringify(suppliers)); } catch (e) {}
  }
  } catch(e) {
  showResultModal('ซิงค์ Sheet ไม่สำเร็จ', 'error', e.message);
@@ -15475,7 +15483,9 @@ function renderSuppliers() {
       phones ? row('phone', phones) : '',
       mails ? row('mail', mails) : ''
     ].join('');
-    const stats = (s.leadtime ? `<div class="sp2-stat"><span>LEAD TIME</span><b>${e(s.leadtime)} <small>วัน</small></b></div>` : '') +
+    const dist = (window.CCIPMakerMap && window.CCIPMakerMap.infoFor) ? window.CCIPMakerMap.infoFor(s) : null;
+    const distStat = dist ? `<div class="sp2-stat"><span>ระยะทางจาก ${e(dist.plant)}</span><b>${dist.road ? '' : '≈'}${dist.km >= 100 ? Math.round(dist.km) : dist.km.toFixed(1)} <small>กม.${dist.min != null ? ' · ' + (dist.min >= 60 ? Math.floor(dist.min/60) + ' ชม. ' + Math.round(dist.min%60) + ' น.' : Math.round(dist.min) + ' น.') : ''}</small></b></div>` : '';
+    const stats = distStat + (s.leadtime ? `<div class="sp2-stat"><span>LEAD TIME</span><b>${e(s.leadtime)} <small>วัน</small></b></div>` : '') +
       `<div class="sp2-stat${prCount ? ' link' : ''}"${prCount ? ` onclick="spShowItems('${e(s.id)}')" title="คลิกเพื่อดูรายการทั้งหมดของ Maker นี้"` : ''}><span>รายการใน PR/PO${prCount ? ' ›' : ''}</span><b class="${prCount ? '' : 'zero'}">${prCount} <small>รายการ</small></b></div>`;
     const foot = s.maplink ? `<div class="sp2-foot">
         <a class="sp2-map" href="${e(s.maplink)}" target="_blank" rel="noopener">${SP2_ICO.pin} ดูที่ตั้งบน Google Maps</a>
@@ -23811,6 +23821,10 @@ body.dark-theme #page-mkmap{--m-blu:#60A5FA;--m-cy:#22D3EE;--m-grn:#34D399;--m-a
 .mkm-it:hover{background:color-mix(in srgb,var(--m-blu) 4%,transparent)}
 .mkm-it.on{background:color-mix(in srgb,var(--m-blu) 9%,transparent);box-shadow:inset 3px 0 0 var(--m-blu)}
 .mkm-av{flex:0 0 32px;height:32px;border-radius:9px;display:grid;place-items:center;font-size:.7rem;font-weight:800;color:#fff;background:var(--c)}
+.mkm-av.has-img{background:#fff;border:1px solid var(--m-line);overflow:hidden}
+.mkm-av img{width:100%;height:100%;object-fit:contain;padding:2px;box-sizing:border-box;display:block}
+.mkm-ab{display:inline-block;font:700 .62rem/1.5 ui-monospace,monospace;border:1px solid var(--m-blu);color:var(--m-ink);border-radius:4px;padding:0 5px;margin-left:5px;vertical-align:middle}
+.mkm-en{display:block;font-size:.68rem;color:var(--m-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mkm-it-m{flex:1;min-width:0}
 .mkm-it-m b{display:block;font-size:.82rem;color:var(--m-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mkm-it-m span{display:block;font-size:.68rem;color:var(--m-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -23898,6 +23912,9 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
     return null;
   };
   const inTH = p => !!p && isFinite(p.lat) && isFinite(p.lng) && p.lat >= 5 && p.lat <= 21 && p.lng >= 97 && p.lng <= 106.5;   // พิกัดต้องอยู่ในไทย
+  const ini = m => (m.sup && m.sup.abbr) ? String(m.sup.abbr).trim().slice(0, 3).toUpperCase() : initials(m.name);
+  const avHtml = (m, extra) => { const img = m.sup && m.sup.image;
+    return `<div class="mkm-av${img ? ' has-img' : ''}" style="--c:${m.pos ? m.color : '#94A3B8'}${extra || ''}">${img ? `<img src="${esc(img)}" alt="" referrerpolicy="no-referrer" onerror="this.parentNode.classList.remove('has-img');this.parentNode.textContent=this.dataset.i" data-i="${esc(ini(m))}">` : esc(ini(m))}</div>`; };
   const fmtKm = k => k >= 100 ? Math.round(k) + '' : k.toFixed(1);
   const fmtMin = m => m >= 60 ? Math.floor(m / 60) + ' ชม. ' + Math.round(m % 60) + ' นาที' : Math.round(m) + ' นาที';
 
@@ -23946,11 +23963,10 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
       const o = this.origin();
       return [...map.values()].map(m => {
         const s = m.sup || {}, saved0 = this.locs[key('maker', m.name)], saved = inTH(saved0) ? saved0 : null, fl = parseLL(s.maplink), fromLink = inTH(fl) ? fl : null;
-        const manual = saved && saved.source !== 'maplink';
-        const pos = manual ? {lat:saved.lat, lng:saved.lng, src:'saved'} : fromLink ? Object.assign(fromLink, {src:'link'}) : saved ? {lat:saved.lat, lng:saved.lng, src:'saved'} : null;
-        const active = (typeof allData !== 'undefined' ? allData : []).filter(r => String(r.maker || '').trim().toLowerCase() === m.name.toLowerCase() && !String(r.status || '').includes('เสร็จแล้ว')).length;
+        const pos = fromLink ? Object.assign(fromLink, {src:'link'}) : saved ? {lat:saved.lat, lng:saved.lng, src:'saved'} : null;   // ลิงก์ Google Map ใน Supplier DB เป็นหลัก
+        const active = (typeof allData !== 'undefined' ? allData : []).filter(r => (typeof findSupplierByMaker === 'function' ? findSupplierByMaker(r.maker) === m.sup : String(r.maker || '').trim().toLowerCase() === m.name.toLowerCase()) && !String(r.status || '').includes('เสร็จแล้ว')).length;
         const r = pos && o ? this.routes[this.rk(o, pos)] : null;
-        return { name:m.name, sup:m.sup, cat:s.category || '', contact:s.contact || '', phone:s.phone || '', email:s.email || '', lead:s.leadtime || '', maplink:s.maplink || '', pos, active,
+        return { name:m.name, sup:m.sup, cat:s.category || '', contact:s.contact || '', phone:s.phone || '', email:s.email || '', lead:s.leadtime || '', maplink:s.maplink || '', note:s.note || '', pos, active,
           km: pos && o ? hav(o, pos) : null, road: r || null, color:catColor(s.category) };
       });
     },
@@ -24057,7 +24073,7 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
       const cats = [...new Set(this.makers().map(m => m.cat).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'th'));
       $('#mkmCat').innerHTML = '<option value="">หมวดงานทั้งหมด</option>' + cats.map(c => `<option${c === this.cat ? ' selected' : ''}>${esc(c)}</option>`).join('');
     },
-    filtered(){ const q = this.q.toLowerCase(); return this.makers().filter(m => (!this.cat || m.cat === this.cat) && (!q || (m.name + ' ' + m.cat + ' ' + m.contact).toLowerCase().includes(q))); },
+    filtered(){ const q = this.q.toLowerCase(); return this.makers().filter(m => (!this.cat || m.cat === this.cat) && (!q || (m.name + ' ' + m.cat + ' ' + m.contact + ' ' + ((m.sup && m.sup.abbr) || '') + ' ' + ((m.sup && m.sup.nameEn) || '')).toLowerCase().includes(q))); },
     drawKpi(){
       const ms = this.makers(), on = ms.filter(m => m.pos && m.km != null), o = this.origin();
       const avg = on.length ? on.reduce((a, m) => a + (m.road ? m.road.km : m.km), 0) / on.length : NaN;
@@ -24070,8 +24086,8 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
     },
     drawList(){
       const list = this.filtered(), on = list.filter(m => m.pos).sort((a, b) => (a.road ? a.road.km : a.km) - (b.road ? b.road.km : b.km)), off = list.filter(m => !m.pos).sort((a, b) => a.name.localeCompare(b.name, 'th'));
-      const row = m => `<div class="mkm-it${this.sel === m.name ? ' on' : ''}" data-n="${esc(m.name)}"><div class="mkm-av" style="--c:${m.pos ? m.color : '#94A3B8'}">${esc(initials(m.name))}</div>
-          <div class="mkm-it-m"><b title="${esc(m.name)}">${esc(m.name)}</b><span>${esc(m.cat || 'ไม่ระบุหมวดงาน')}${m.active ? ` · ${m.active} งานค้าง` : ''}</span></div>
+      const row = m => `<div class="mkm-it${this.sel === m.name ? ' on' : ''}" data-n="${esc(m.name)}">${avHtml(m)}
+          <div class="mkm-it-m"><b title="${esc(m.name)}">${esc(m.name)}${m.sup && m.sup.abbr ? `<i class="mkm-ab" style="font-style:normal">${esc(m.sup.abbr)}</i>` : ''}</b>${m.sup && m.sup.nameEn ? `<em class="mkm-en" style="font-style:normal">${esc(m.sup.nameEn)}</em>` : ''}<span>${esc(m.cat || 'ไม่ระบุหมวดงาน')}${m.active ? ` · ${m.active} งานค้าง` : ''}</span></div>
           ${m.pos ? `<div class="mkm-km"><b>${m.road ? fmtKm(m.road.km) : '≈' + fmtKm(m.km)}</b><span>${m.road ? 'กม. (ถนน)' : 'กม. เส้นตรง'}</span></div>` : `<button class="mkm-pin" data-pin="${esc(m.name)}">ปักหมุด</button>`}</div>`;
       $('#mkmList').innerHTML = (on.length ? `<div class="mkm-grp">บนแผนที่ · เรียงจากใกล้ไปไกล (${on.length})</div>` + on.map(row).join('') : '') +
         (off.length ? `<div class="mkm-grp">ยังไม่มีพิกัด (${off.length})</div>` + off.map(row).join('') : '') +
@@ -24088,7 +24104,7 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
       });
       this.filtered().filter(m => m.pos).forEach(m => {
         const sel = this.sel === m.name;
-        const ic = L.divIcon({className:'', iconSize:[30, 30], iconAnchor:[15, 30], html:`<div class="mkm-mk${sel ? ' sel' : ''}" style="--c:${m.color}"><span>${esc(initials(m.name))}</span></div>`});
+        const ic = L.divIcon({className:'', iconSize:[30, 30], iconAnchor:[15, 30], html:`<div class="mkm-mk${sel ? ' sel' : ''}" style="--c:${m.color}"><span>${esc(ini(m))}</span></div>`});
         this.markers[m.name] = L.marker([m.pos.lat, m.pos.lng], {icon:ic, zIndexOffset:sel ? 2000 : 0, title:m.name}).addTo(this.layer).on('click', () => this.select(m.name));
       });
       if (!this._fitted) { this._fitted = true; this.fit(); }
@@ -24146,8 +24162,8 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
       const m = this.sel && this.makers().find(x => x.name === this.sel); if (!m) { box.innerHTML = ''; return; }
       const o = this.origin(), ri = this.routeInfo && m.pos && o && this.routes[this.rk(o, m.pos)] ? {km:this.routes[this.rk(o, m.pos)].km, min:this.routes[this.rk(o, m.pos)].min, road:true} : (m.pos && o ? {km:hav(o, m.pos), min:null, road:false} : null);
       const nav = m.pos ? `https://www.google.com/maps/dir/?api=1${o ? `&origin=${o.lat},${o.lng}` : ''}&destination=${m.pos.lat},${m.pos.lng}&travelmode=driving` : '';
-      box.innerHTML = `<div class="mkm-card"><div class="mkm-card-h"><div class="mkm-av" style="--c:${m.pos ? m.color : '#94A3B8'};flex-basis:38px;height:38px">${esc(initials(m.name))}</div>
-          <div style="min-width:0"><h3>${esc(m.name)}</h3><p>${esc(m.cat || 'ไม่ระบุหมวดงาน')}${o ? ' · จาก ' + o.code : ''}</p></div><button class="mkm-x" title="ปิด">×</button></div>
+      box.innerHTML = `<div class="mkm-card"><div class="mkm-card-h">${avHtml(m, ';flex-basis:38px;height:38px')}
+          <div style="min-width:0"><h3>${esc(m.name)}${m.sup && m.sup.abbr ? `<i class="mkm-ab" style="font-style:normal">${esc(m.sup.abbr)}</i>` : ''}</h3><p>${m.sup && m.sup.nameEn ? esc(m.sup.nameEn) + '<br>' : ''}${esc(m.cat || 'ไม่ระบุหมวดงาน')}${o ? ' · จาก ' + o.code : ''}</p></div><button class="mkm-x" title="ปิด">×</button></div>
         ${m.pos ? `<div class="mkm-route">
             <div class="big"><small>${loading ? 'กำลังคำนวณเส้นทาง...' : ri && ri.road ? 'ระยะทางขับรถ' : 'ระยะทางเส้นตรง (โดยประมาณ)'}</small><b>${ri ? fmtKm(ri.km) + ' กม.' : '—'}</b></div>
             <div><small>เวลาขับรถ</small><b style="font-size:1rem">${ri && ri.min != null ? fmtMin(ri.min) : '—'}</b></div>
@@ -24159,13 +24175,17 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
           ${m.email ? `<dt>อีเมล</dt><dd><a href="mailto:${esc(m.email)}">${esc(m.email)}</a></dd>` : ''}
           ${m.lead ? `<dt>Lead time</dt><dd>${esc(m.lead)} วัน</dd>` : ''}
           <dt>งานค้าง</dt><dd>${m.active ? m.active + ' รายการ' : 'ไม่มี'}</dd>
+          ${m.note ? `<dt>หมายเหตุ</dt><dd>${esc(m.note)}</dd>` : ''}
 
         </dl>
         <div class="mkm-acts">${m.pos ? `<a class="mkm-act pri" href="${nav}" target="_blank" rel="noopener">นำทางด้วย Google Maps</a>` : ''}
           <button class="mkm-act" data-a="pin">${m.pos ? 'ย้ายหมุด' : 'ปักหมุด'}</button>
+          ${m.sup ? `<button class="mkm-act" data-a="edit">แก้ข้อมูล Supplier</button>` : ''}${m.sup && m.active ? `<button class="mkm-act" data-a="jobs">ดูงานค้าง</button>` : ''}
           ${m.pos && m.pos.src === 'saved' ? '<button class="mkm-act" data-a="unpin">ลบหมุด</button>' : ''}</div></div>`;
       box.querySelector('.mkm-x').onclick = () => { this.sel = null; this.clearRoute(); this.drawCard(); this.drawList(); this.drawMarkers(); };
       box.querySelector('[data-a="pin"]').onclick = () => this.startPick({kind:'maker', name:m.name});
+      const ed = box.querySelector('[data-a="edit"]'); if (ed) ed.onclick = () => { try { openSupplierModal(m.sup.id); } catch (e) {} };
+      const jb = box.querySelector('[data-a="jobs"]'); if (jb) jb.onclick = () => { try { spShowItems(m.sup.id); } catch (e) {} };
       const up = box.querySelector('[data-a="unpin"]'); if (up) up.onclick = () => this.removeLoc('maker', m.name);
     },
 
@@ -24198,8 +24218,24 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
         const local = readJ(LOC_KEY, {}); local[k] = rec; writeJ(LOC_KEY, local);
         toast(/unknown/i.test(e.message) ? 'ปักหมุดแล้ว (บันทึกในเครื่องนี้ — อัปเดต .gs เพื่อเก็บลง Sheet)' : 'บันทึกลง Sheet ไม่สำเร็จ: ' + e.message, /unknown/i.test(e.message) ? 'info' : 'error');
       }
-      if (kind === 'maker') this.sel = name;
+      if (kind === 'maker') { this.sel = name; this.linkToSupplier(name, lat, lng); }
       this.clearRoute(); this.draw(); if (kind === 'maker' || this.sel) this.route();
+    },
+    /* เขียนพิกัดที่ปักหมุดกลับเป็น "ลิงก์ Google Map" ใน Supplier DB → หน้า Supplier กับแผนที่ใช้ข้อมูลชุดเดียวกัน */
+    async linkToSupplier(name, lat, lng){
+      try {
+        const s = (typeof suppliers !== 'undefined' ? suppliers : []).find(x => x && String(x.name).trim().toLowerCase() === String(name).trim().toLowerCase());
+        if (!s) return;
+        const link = `https://www.google.com/maps?q=${(+lat).toFixed(6)},${(+lng).toFixed(6)}`;
+        if (s.maplink === link) return;
+        s.maplink = link;
+        try { localStorage.setItem('prpo_suppliers', JSON.stringify(suppliers)); } catch (e) {}
+        if (typeof renderSuppliers === 'function') renderSuppliers();
+        if (url() && /^\d+$/.test(String(s.id))) {
+          const r = await fetch(url() + '?' + new URLSearchParams({action:'editSupplier', rowIndex:s.id, maplink:link}).toString());
+          const j = await r.json(); if (!j.success) throw new Error(j.error || 'บันทึกไม่สำเร็จ');
+        }
+      } catch (e) { toast('ปักหมุดแล้ว แต่บันทึกลิงก์ลง Supplier DB ไม่สำเร็จ: ' + e.message, 'error'); }
     },
     async removeLoc(kind, name){
       if (!confirm(`ลบหมุดของ ${name} ?`)) return;
@@ -24239,6 +24275,16 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
     }
   };
   window.CCIPMakerMap = M;
+  /* ระยะทางจากโรงงานที่เลือก → Supplier (ใช้แสดงในการ์ดหน้า Supplier) */
+  M.infoFor = function(sup){
+    try {
+      const o = this.origin(); if (!o || !sup) return null;
+      const s0 = this.locs[key('maker', String(sup.name).trim())], sv = inTH(s0) ? s0 : null, fl = parseLL(sup.maplink);
+      const pos = inTH(fl) ? fl : (sv ? {lat:sv.lat, lng:sv.lng} : null); if (!pos) return null;
+      const r = this.routes[this.rk(o, pos)];
+      return {plant:o.code, km: r ? r.km : hav(o, pos), min: r ? r.min : null, road: !!r};
+    } catch (e) { return null; }
+  };
   M.sync = function(){
     const page = document.getElementById('page-mkmap'); if (!page || !page.dataset.ready) return;
     clearTimeout(M._sy); M._sy = setTimeout(async () => {
