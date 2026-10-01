@@ -13380,6 +13380,7 @@ async function clearHistory() {
  Row1=Title | Row2=Header | Row3+ = Data
  A=NO | B=ชื่อบริษัท | C=ชื่อผู้ติดต่อ | D=เบอร์โทร
  E=EMAIL | F=หมวดหมู่สินค้า | G=LEADTIME | H=หมายเหตุ
+ I=โลโก้ | J=ลิงก์ Google Map | K=ชื่อย่อ | L=ชื่อภาษาอังกฤษ
 ══════════════════════════════════════════════════════ */
 
 /* ── โหลด Supplier จาก Sheet ── */
@@ -13574,6 +13575,7 @@ async function saveSupplier() {
  if (!name) { showToast('กรุณากรอกชื่อ Supplier', 'error'); return; }
  const rowIndex = document.getElementById('s-id').value;
  const isEditSupplier = !!rowIndex;
+ if (String(rowIndex).indexOf('pending-') === 0) { showToast('กำลังซิงค์รายการนี้กับ Sheet รอสักครู่แล้วลองแก้ไขใหม่', 'error'); return; }
   if (supplierImgUploading) { showToast('รอรูปอัปโหลดเสร็จก่อนครับ', 'error'); return; }
   // รูปเก่าที่ค้างเป็น base64 (บันทึกลง Sheet ไม่ได้) → อัปโหลดขึ้น Drive ให้ก่อน
   let imgVal = document.getElementById('s-image').value;
@@ -13624,13 +13626,14 @@ async function saveSupplier() {
  const json = await res.json();
  if (!json.success) { showResultModal('บันทึกใน Sheet ไม่สำเร็จ', 'error', json.error || ''); return; }
  // เพิ่มใหม่ → รีเฟรชเบื้องหลังเงียบๆ เพื่อให้ได้ id จริงจาก Sheet
- if (!rowIndex) loadSuppliers();
+ if (!rowIndex) loadSuppliers(true, true);
  } catch(e) {
  showResultModal('ซิงค์ Sheet ไม่สำเร็จ', 'error', e.message);
  }
 }
 
 async function deleteSupplier(rowIndex) {
+ if (String(rowIndex).indexOf('pending-') === 0) { showToast('กำลังซิงค์รายการนี้กับ Sheet รอสักครู่แล้วลองลบใหม่', 'error'); return; }
  if (!confirm('ต้องการลบ Supplier นี้?')) return;
  const delSupplierItem = suppliers.find(s => String(s.id) === String(rowIndex));
  if (!WEB_APP_URL) {
@@ -13653,6 +13656,8 @@ async function deleteSupplier(rowIndex) {
  if (delSupplierItem && removedIdx >= 0) suppliers.splice(removedIdx, 0, delSupplierItem);
  renderSuppliers();
  showResultModal('ลบใน Sheet ไม่สำเร็จ', 'error', json.error || '');
+ } else {
+ await loadSuppliers(true, true); // แถวใน Sheet เลื่อนขึ้นหลังลบ → โหลดใหม่ให้ rowIndex ตรง
  }
  } catch(e) {
  showResultModal('ซิงค์ Sheet ไม่สำเร็จ', 'error', e.message);
@@ -15383,10 +15388,11 @@ function renderSuppliers() {
  return;
  }
  const makerCount = {};
- allData.forEach(r => { if(r.maker) makerCount[r.maker] = (makerCount[r.maker]||0)+1; });
+ const _mk = x => String(x||'').trim().toLowerCase();
+ allData.forEach(r => { if(r.maker) { const k=_mk(r.maker); makerCount[k] = (makerCount[k]||0)+1; } });
  grid.innerHTML = list.map(s => {
 const initials = s.abbr ? String(s.abbr).trim().slice(0,3).toUpperCase() : (s.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
- const prCount = makerCount[s.name] || 0;
+ const prCount = makerCount[_mk(s.name)] || 0;
  const avatarInner = s.image
  ? `<img src="${s.image}" alt="${s.name}" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;border-radius:4px">`
  : initials;
@@ -24305,6 +24311,8 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
 (function(){
   const COLS = [
     ['name',     'ชื่อบริษัท / Maker *', 28],
+    ['abbr',     'ชื่อย่อบริษัท',          14],
+    ['nameEn',   'ชื่อภาษาอังกฤษ',         30],
     ['contact',  'ชื่อผู้ติดต่อ',          20],
     ['phone',    'เบอร์โทร',             22],
     ['email',    'Email',                28],
@@ -24348,8 +24356,9 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
     ws['!autofilter'] = { ref: 'A1:' + XLSX.utils.encode_col(COLS.length - 1) + '1' };
     // คอลัมน์เบอร์โทร = ข้อความ (กันเลข 0 นำหน้าหาย)
     for (let r = 1; r < aoa.length; r++) {
-      const a = XLSX.utils.encode_cell({ r, c: 2 });
-      ws[a] = { t: 's', v: String(aoa[r][2] || ''), z: '@' };
+      const PHI = COLS.findIndex(c => c[0] === 'phone');
+      const a = XLSX.utils.encode_cell({ r, c: PHI });
+      ws[a] = { t: 's', v: String(aoa[r][PHI] || ''), z: '@' };
     }
     const help = [
       ['วิธีกรอกฟอร์ม Supplier'],
@@ -24358,7 +24367,8 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
       ['2. รายชื่อที่มีอยู่แล้วในระบบใส่ไว้ให้แล้ว แก้ไขได้เลย ระบบจะจับคู่ด้วย "ชื่อบริษัท"'],
       ['3. Maker ใหม่ ให้กรอกต่อท้ายในแถวว่าง'],
       ['4. ช่องที่เว้นว่างของ Maker เดิม ระบบจะคงค่าเดิมไว้ (ไม่ลบข้อมูล)'],
-      ['5. เบอร์โทร กรอกเป็นข้อความ เช่น 081-234-5678 (หลายเบอร์คั่นด้วย , )'],
+      ['5. ชื่อย่อ / ชื่อภาษาอังกฤษ ใช้แสดงในหน้า Supplier (เว้นว่างได้ ระบบคงค่าเดิมไว้)'],
+      ['5.1 เบอร์โทร กรอกเป็นข้อความ เช่น 081-234-5678 (หลายเบอร์คั่นด้วย , )'],
       ['6. ลิงก์ Google Maps: เปิด Google Maps → กดแชร์ → คัดลอกลิงก์ มาวาง'],
       ['7. บันทึกไฟล์ แล้วไปที่หน้า Supplier → กด "นำเข้าจาก Excel" → ตรวจสอบ → กดนำเข้าข้อมูล'],
       [''],
@@ -24390,7 +24400,9 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
     const h = head.map(x => norm(x));
     const find = (...keys) => h.findIndex(x => keys.some(k => x.includes(k)));
     return {
-      name: find('ชื่อบริษัท', 'maker', 'supplier', 'บริษัท', 'name'),
+      name: h.findIndex(x => ['ชื่อบริษัท','maker','supplier','บริษัท','name'].some(k => x.includes(k)) && !/ย่อ|อังกฤษ|english|abbr/.test(x)),
+      abbr: find('ชื่อย่อ', 'abbr'),
+      nameEn: find('อังกฤษ', 'english'),
       contact: find('ผู้ติดต่อ', 'contact'),
       phone: find('เบอร์', 'โทร', 'phone', 'tel'),
       email: find('email', 'อีเมล', 'e-mail', 'mail'),
@@ -24465,7 +24477,7 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
   /* ── ส่งข้อมูลเข้า Sheet (ใช้ action เดิม addSupplier / editSupplier) ── */
   async function send(p){
     const r = p.rec;
-    const payload = { name: r.name, contact: r.contact || '', phone: r.phone || '', email: r.email || '', category: r.category || '',
+    const payload = { name: r.name, abbr: r.abbr || '', nameEn: r.nameEn || '', contact: r.contact || '', phone: r.phone || '', email: r.email || '', category: r.category || '',
       leadtime: r.leadtime || '', note: r.note || '', image: (p.old && p.old.image) || '', maplink: r.maplink || '' };
     if (!WEB_APP_URL) {
       const id = p.type === 'upd' ? p.old.id : String(Date.now()) + Math.random().toString(36).slice(2, 6);
