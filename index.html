@@ -13422,35 +13422,116 @@ async function loadSuppliers(forceRefresh = false, silent = false) {
  }
 }
 
+/* ── โลโก้ Supplier: เลือกไฟล์ หรือกด Ctrl+V วางรูป → ย่อรูป → อัปโหลดขึ้น Drive → เก็บเป็นลิงก์ใน Sheet ── */
+let supplierImgUploading = false;
+
+function setSupplierPreview(url) {
+  const preview = document.getElementById('s-image-preview');
+  if (!preview) return;
+  if (url) {
+    preview.style.background = 'none';
+    preview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover" referrerpolicy="no-referrer">`;
+  } else {
+    preview.style.background = 'linear-gradient(135deg,var(--accent),var(--accent2))';
+    preview.innerHTML = '';
+  }
+}
+
+function resizeImageToDataUrl(file, maxSide) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('อ่านไฟล์รูปไม่ได้'));
+    reader.onload = e => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('ไฟล์รูปไม่ถูกต้อง'));
+      img.onload = () => {
+        const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+        const w = Math.max(1, Math.round(img.width * scale));
+        const h = Math.max(1, Math.round(img.height * scale));
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        // PNG คงพื้นหลังโปร่งใสของโลโก้ไว้ / อย่างอื่นใช้ JPEG ให้ไฟล์เล็ก
+        resolve(file.type === 'image/png' ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.88));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadSupplierImageDataUrl(dataUrl, nameHint) {
+  const m = /^data:(image\/[a-zA-Z+.-]+);base64,(.+)$/.exec(dataUrl);
+  if (!m) throw new Error('รูปแบบรูปภาพไม่ถูกต้อง');
+  const ext = m[1].indexOf('png') >= 0 ? 'png' : 'jpg';
+  const res = await fetch(WEB_APP_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: 'uploadSupplierLogo', fileName: (nameHint || 'supplier') + '.' + ext, mimeType: m[1], base64: m[2] })
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error || 'อัปโหลดโลโก้ไม่สำเร็จ');
+  return json.url;
+}
+
+async function processSupplierImageFile(file) {
+  if (!file) return;
+  if (!file.type || !file.type.startsWith('image/')) { showToast('กรุณาเลือกไฟล์รูปภาพ', 'error'); return; }
+  if (supplierImgUploading) return;
+  try {
+    const dataUrl = await resizeImageToDataUrl(file, 512);
+    if (!WEB_APP_URL) {            // ยังไม่ตั้ง Web App URL → เก็บในเครื่อง (ย่อแล้ว)
+      document.getElementById('s-image').value = dataUrl;
+      setSupplierPreview(dataUrl);
+      return;
+    }
+    setSupplierPreview(dataUrl);   // โชว์ตัวอย่างทันที
+    supplierImgUploading = true;
+    const saveBtn = document.getElementById('s-save-btn');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.dataset.label = saveBtn.textContent; saveBtn.textContent = 'กำลังอัปโหลดรูป...'; }
+    const hint = document.getElementById('s-image-hint');
+    if (hint) hint.textContent = 'กำลังอัปโหลดรูปขึ้น Google Drive...';
+    const nm = (document.getElementById('s-abbr').value || document.getElementById('s-name').value || 'supplier').trim().replace(/[^\w\u0E00-\u0E7F-]+/g, '_');
+    const url = await uploadSupplierImageDataUrl(dataUrl, nm);
+    document.getElementById('s-image').value = url;
+    setSupplierPreview(url);
+    if (hint) hint.textContent = 'อัปโหลดสำเร็จ — ลิงก์โลโก้จะถูกบันทึกลงฐานข้อมูลเมื่อกดบันทึก';
+  } catch (err) {
+    showToast('❌ ' + err.message, 'error');
+    clearSupplierImage();
+  } finally {
+    supplierImgUploading = false;
+    const saveBtn = document.getElementById('s-save-btn');
+    if (saveBtn) { saveBtn.disabled = false; if (saveBtn.dataset.label) saveBtn.textContent = saveBtn.dataset.label; }
+  }
+}
+
 function handleSupplierImageUpload(event) {
- const file = event.target.files && event.target.files[0];
- if (!file) return;
- if (!file.type.startsWith('image/')) {
- showToast('กรุณาเลือกไฟล์รูปภาพ', 'error');
- return;
- }
- if (file.size > 2 * 1024 * 1024) {
- showToast('ไฟล์รูปใหญ่เกินไป (จำกัด 2MB)', 'error');
- return;
- }
- const reader = new FileReader();
- reader.onload = function(e) {
- const dataUrl = e.target.result;
- document.getElementById('s-image').value = dataUrl;
- const preview = document.getElementById('s-image-preview');
- preview.style.background = 'none';
- preview.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover">`;
- };
- reader.readAsDataURL(file);
+  const file = event.target.files && event.target.files[0];
+  processSupplierImageFile(file);
 }
 
 function clearSupplierImage() {
- document.getElementById('s-image').value = '';
- document.getElementById('s-image-file').value = '';
- const preview = document.getElementById('s-image-preview');
- preview.style.background = 'linear-gradient(135deg,var(--accent),var(--accent2))';
- preview.innerHTML = '';
+  document.getElementById('s-image').value = '';
+  document.getElementById('s-image-file').value = '';
+  setSupplierPreview('');
+  const hint = document.getElementById('s-image-hint');
+  if (hint) hint.textContent = 'คลิกในกรอบนี้แล้วกด Ctrl+V เพื่อวางรูป หรือเลือกไฟล์';
 }
+
+/* กด Ctrl+V ตอนเปิดหน้าต่าง Supplier อยู่ → วางรูปจากคลิปบอร์ดเป็นโลโก้ได้เลย (ไม่รบกวนการวางข้อความในช่องอื่น) */
+document.addEventListener('paste', function(e) {
+  const ov = document.getElementById('supplierModalOverlay');
+  if (!ov || !ov.classList.contains('open')) return;
+  const items = (e.clipboardData && e.clipboardData.items) || [];
+  for (const it of items) {
+    if (it.kind === 'file' && it.type.startsWith('image/')) {
+      e.preventDefault();
+      processSupplierImageFile(it.getAsFile());
+      return;
+    }
+  }
+});
 
 function openSupplierModal(id) {
  document.getElementById('s-id').value = id || '';
@@ -13468,23 +13549,20 @@ function openSupplierModal(id) {
  document.getElementById('s-leadtime').value = s.leadtime || '';
  document.getElementById('s-note').value = s.note || '';
  document.getElementById('s-image').value = s.image || '';
- document.getElementById('s-maplink').value = s.maplink || '';
- if (s.image) {
- preview.style.background = 'none';
- preview.innerHTML = `<img src="${s.image}" style="width:100%;height:100%;object-fit:cover">`;
- } else {
- preview.style.background = 'linear-gradient(135deg,var(--accent),var(--accent2))';
- preview.innerHTML = '';
- }
+    document.getElementById('s-maplink').value = s.maplink || '';
+    document.getElementById('s-abbr').value = s.abbr || '';
+    document.getElementById('s-nameEn').value = s.nameEn || '';
+    setSupplierPreview(s.image || '');
  } else {
  document.getElementById('supplierModalTitle').textContent = 'เพิ่ม Supplier';
- ['name','contact','phone','email','category','leadtime','note','image','maplink'].forEach(f => {
+['name','abbr','nameEn','contact','phone','email','category','leadtime','note','image','maplink'].forEach(f => {
  document.getElementById('s-'+f).value = '';
  });
- preview.style.background = 'linear-gradient(135deg,var(--accent),var(--accent2))';
- preview.innerHTML = '';
- }
- document.getElementById('supplierModalOverlay').classList.add('open');
+    setSupplierPreview('');
+  }
+  const _h = document.getElementById('s-image-hint');
+  if (_h) _h.textContent = 'คลิกในกรอบนี้แล้วกด Ctrl+V เพื่อวางรูป หรือเลือกไฟล์';
+  document.getElementById('supplierModalOverlay').classList.add('open');
 }
 
 function closeSupplierModal() {
@@ -13496,16 +13574,25 @@ async function saveSupplier() {
  if (!name) { showToast('กรุณากรอกชื่อ Supplier', 'error'); return; }
  const rowIndex = document.getElementById('s-id').value;
  const isEditSupplier = !!rowIndex;
- const payload = {
- name,
- contact: document.getElementById('s-contact').value.trim(),
+  if (supplierImgUploading) { showToast('รอรูปอัปโหลดเสร็จก่อนครับ', 'error'); return; }
+  // รูปเก่าที่ค้างเป็น base64 (บันทึกลง Sheet ไม่ได้) → อัปโหลดขึ้น Drive ให้ก่อน
+  let imgVal = document.getElementById('s-image').value;
+  if (WEB_APP_URL && imgVal.startsWith('data:image/')) {
+    try { imgVal = await uploadSupplierImageDataUrl(imgVal, 'supplier'); document.getElementById('s-image').value = imgVal; }
+    catch (err) { showToast('❌ อัปโหลดรูปไม่สำเร็จ: ' + err.message, 'error'); return; }
+  }
+  const payload = {
+    name,
+    abbr: document.getElementById('s-abbr').value.trim(),
+    nameEn: document.getElementById('s-nameEn').value.trim(),
+    contact: document.getElementById('s-contact').value.trim(),
  phone: document.getElementById('s-phone').value.trim(),
  email: document.getElementById('s-email').value.trim(),
  category: document.getElementById('s-category').value.trim(),
  leadtime: document.getElementById('s-leadtime').value,
  note: document.getElementById('s-note').value.trim(),
- image: document.getElementById('s-image').value,
- maplink: document.getElementById('s-maplink').value.trim()
+    image: imgVal,
+    maplink: document.getElementById('s-maplink').value.trim()
  };
 
  if (!WEB_APP_URL) {
@@ -15283,8 +15370,10 @@ function renderSuppliers() {
  const q = (document.getElementById('supplierSearch')?.value || '').toLowerCase();
  const grid = document.getElementById('supplierGrid');
  const list = suppliers.filter(s => !q ||
- (s.name ||'').toLowerCase().includes(q) ||
- (s.category||'').toLowerCase().includes(q) ||
+    (s.name ||'').toLowerCase().includes(q) ||
+    (s.abbr ||'').toLowerCase().includes(q) ||
+    (s.nameEn||'').toLowerCase().includes(q) ||
+    (s.category||'').toLowerCase().includes(q) ||
  (s.phone ||'').includes(q) ||
  (s.email ||'').toLowerCase().includes(q)
  );
@@ -15296,10 +15385,10 @@ function renderSuppliers() {
  const makerCount = {};
  allData.forEach(r => { if(r.maker) makerCount[r.maker] = (makerCount[r.maker]||0)+1; });
  grid.innerHTML = list.map(s => {
- const initials = (s.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+const initials = s.abbr ? String(s.abbr).trim().slice(0,3).toUpperCase() : (s.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
  const prCount = makerCount[s.name] || 0;
  const avatarInner = s.image
- ? `<img src="${s.image}" alt="${s.name}" style="width:100%;height:100%;object-fit:cover;border-radius:4px">`
+ ? `<img src="${s.image}" alt="${s.name}" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;border-radius:4px">`
  : initials;
  const embedSrc = getMapEmbedUrl(s.maplink);
  return `<div class="supplier-card">
@@ -15307,8 +15396,9 @@ function renderSuppliers() {
  <div style="display:flex;align-items:center;gap:0.7rem">
  <div class="supplier-avatar" style="${s.image ? 'background:var(--card2,#1a1a2e);padding:0;overflow:hidden' : ''}">${avatarInner}</div>
  <div>
- <div class="supplier-name">${s.name}</div>
- <div class="supplier-category">${s.category || 'ไม่ระบุหมวดหมู่'}</div>
+            <div class="supplier-name">${s.name}${s.abbr ? ` <span style="font-family:var(--mono);font-size:0.68rem;font-weight:600;color:var(--accent);border:1px solid var(--border);border-radius:3px;padding:1px 5px;margin-left:4px;vertical-align:middle">${s.abbr}</span>` : ''}</div>
+            ${s.nameEn ? `<div style="font-size:0.75rem;color:var(--muted);margin-top:1px">${s.nameEn}</div>` : ''}
+            <div class="supplier-category">${s.category || 'ไม่ระบุหมวดหมู่'}</div>
  </div>
  </div>
  <div style="display:flex;gap:0.3rem">
@@ -15851,17 +15941,20 @@ function renderLeaderboard() {
  </div>
  <div class="modal-body">
  <input type="hidden" id="s-id">
- <input type="hidden" id="s-image">
+      <input type="hidden" id="s-image">
  <div class="form-grid">
  <div class="form-group full">
  <label class="form-label">โลโก้ / รูปภาพ Supplier</label>
  <div style="display:flex;align-items:center;gap:0.9rem">
- <div id="s-image-preview" style="width:56px;height:56px;border-radius:4px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;font-weight:700;color:#fff"></div>
+<div id="s-image-preview" tabindex="0" title="คลิกแล้วกด Ctrl+V เพื่อวางรูป" style="width:56px;height:56px;border-radius:4px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;font-weight:700;color:#fff;cursor:pointer;outline-offset:2px"></div>
  <input type="file" accept="image/*" id="s-image-file" class="form-input" style="padding:0.5rem" onchange="handleSupplierImageUpload(event)">
- <button type="button" class="btn btn-ghost" style="padding:0.4rem 0.8rem;font-size: 0.819rem" onclick="clearSupplierImage()">ลบรูป</button>
+ <button type="button" class="btn btn-ghost" style="padding:0.4rem 0.8rem;font-size: 0.819rem"onclick="clearSupplierImage()">ลบรูป</button>
+          </div>
+          <div id="s-image-hint" style="font-size:0.75rem;color:var(--muted);margin-top:0.4rem">คลิกในกรอบนี้แล้วกด Ctrl+V เพื่อวางรูป หรือเลือกไฟล์</div>
  </div>
- </div>
- <div class="form-group full"><label class="form-label">ชื่อบริษัท / Maker *</label><input type="text" class="form-input" id="s-name"></div>
+<div class="form-group full"><label class="form-label">ชื่อบริษัท / Maker *</label><input type="text" class="form-input" id="s-name"></div>
+          <div class="form-group"><label class="form-label">ชื่อย่อบริษัท</label><input type="text" class="form-input" id="s-abbr" placeholder="เช่น TAS"></div>
+          <div class="form-group"><label class="form-label">ชื่อภาษาอังกฤษ</label><input type="text" class="form-input" id="s-nameEn" placeholder="เช่น Thai Asakawa Co., Ltd."></div>
  <div class="form-group"><label class="form-label">ชื่อผู้ติดต่อ</label><input type="text" class="form-input" id="s-contact"></div>
  <div class="form-group"><label class="form-label">เบอร์โทร</label><input type="text" class="form-input" id="s-phone"></div>
  <div class="form-group"><label class="form-label">Email</label><input type="text" class="form-input" id="s-email"></div>
@@ -15873,7 +15966,7 @@ function renderLeaderboard() {
  </div>
  <div class="modal-footer">
  <button class="btn btn-ghost" onclick="closeSupplierModal()">ยกเลิก</button>
- <button class="btn btn-primary" onclick="saveSupplier()">บันทึก</button>
+<button class="btn btn-primary" id="s-save-btn" onclick="saveSupplier()">บันทึก</button>
  </div>
  </div>
 </div>
@@ -24502,4 +24595,3 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
 </script>
 </body>
 </html>
-  
