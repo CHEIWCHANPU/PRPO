@@ -8768,7 +8768,7 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
  <option value="ส่งยังไม่ครบ ">ส่งยังไม่ครบ </option>
  </select>
  </div>
- <div class="form-group"><label class="form-label">MAKER</label><input type="text" class="form-input" id="f-maker"></div>
+ <div class="form-group"><label class="form-label">MAKER</label><input type="text" class="form-input" id="f-maker" list="makerSuggest" autocomplete="off" placeholder="พิมพ์ชื่อย่อ เช่น TAS" oninput="updateMakerHint()" onchange="updateMakerHint()"><datalist id="makerSuggest"></datalist><div id="f-maker-hint" class="maker-hint"></div></div>
  <div class="form-group"><label class="form-label">PO / ORDER NO.</label><input type="text" class="form-input" id="f-poNo"></div>
  <div class="form-group"><label class="form-label">หมายเหตุ</label><input type="text" class="form-input" id="f-note"></div>
  <div class="form-group full">
@@ -10080,7 +10080,7 @@ function renderDailyBriefing() {
  });
 
  const groupsHtml = groupEntries.map(([maker, items]) => {
- const sup = supplierMap[String(maker).trim()];
+ const sup = supplierMap[String(maker).trim()] || findSupplierByMaker(maker);
  const groupTag = briefingTag(Math.min(...items.map(r => Number(r.daysLeft))));
  const contactBits = [];
  if (sup && sup.contact) contactBits.push(`${sup.contact}`);
@@ -10762,7 +10762,8 @@ function getFiltered() {
  const status = document.getElementById('filterStatus').value;
  const location = document.getElementById('filterLocation').value;
  return allData.filter(r => {
- const matchQ = !q || [r.partNo,r.partName,r.maker,r.model,r.poNo,r.note].some(v => (v||'').toLowerCase().includes(q));
+ const matchQ = !q || [r.partNo,r.partName,r.maker,r.model,r.poNo,r.note].some(v => (v||'').toLowerCase().includes(q)) ||
+   (() => { const sp = findSupplierByMaker(r.maker); return !!sp && [sp.abbr, sp.name, sp.nameEn].some(v => (v||'').toLowerCase().includes(q)); })();
  const matchS = !status || (r.status||'').includes(status);
  const matchM = selectedMakers.length === 0 || selectedMakers.includes(r.maker);
  const matchL = !location || r.location === location;
@@ -10813,7 +10814,7 @@ function renderTable() {
  <td class="date-cell">${r.actualDate||'—'}</td>
  <td><span class="location-chip">${r.location}</span></td>
  <td>${statusBadge(r.status)}</td>
- <td class="maker-cell">${r.maker}</td>
+ <td class="maker-cell"${(() => { const sp = findSupplierByMaker(r.maker); return sp && sp.name !== r.maker ? ' title="' + String(sp.name).replace(/"/g,'&quot;') + '"' : ''; })()}>${r.maker}</td>
  <td>${daysTag(r.daysLeft, r.status)}</td>
  <td style="font-family:var(--mono);font-size: 0.724rem;color:var(--muted)">${r.poNo||'—'}</td>
  <td><div class="row-actions" onclick="event.stopPropagation()">
@@ -12587,6 +12588,7 @@ function openAddModal() {
  document.getElementById('f-location').value = 'CCIS';
  document.getElementById('f-maker').value = '';
  resetPrFileField();
+ refreshMakerSuggest(); updateMakerHint();
  document.getElementById('modalOverlay').classList.add('open');
  clearFormErrors();
  setTimeout(() => document.getElementById('f-partNo').focus(), 150);
@@ -12597,6 +12599,7 @@ function openEditModal(item) {
  document.getElementById('editRowIndex').value = item.rowIndex;
  ['partNo','partName','model','volume','receivedQty','prDate','dueDate','actualDate','location','status','maker','poNo','note','prLink','prFileName'].forEach(f => { document.getElementById('f-' + f).value = item[f] || ''; });
  resetPrFileField(item.prLink, item.prFileName);
+ refreshMakerSuggest(); updateMakerHint();
  document.getElementById('modalOverlay').classList.add('open');
  clearFormErrors();
 }
@@ -15372,6 +15375,61 @@ async function deleteCsItem(id) {
  }
 }
 
+/* ── จับคู่ MAKER ในรายการ PR/PO กับ Supplier: ชื่อเต็ม / ชื่อย่อ / ชื่อภาษาอังกฤษ ── */
+let _spIdx = null;
+function spNorm(x) {
+  return String(x || '').toLowerCase()
+    .replace(/\(.*?\)/g, '')
+    .replace(/บริษัท|จำกัด|มหาชน|หจก\.?|ห้างหุ้นส่วน/g, '')
+    .replace(/\b(co|ltd|limited|company|corp|corporation|inc|pcl)\b/g, '')
+    .replace(/[^a-z0-9\u0E00-\u0E7F]/g, '');
+}
+function findSupplierByMaker(m) {
+  const k = spNorm(m); if (!k) return null;
+  if (!_spIdx) {
+    _spIdx = new Map();
+    const add = (key, s) => { if (key && !_spIdx.has(key)) _spIdx.set(key, s); };
+    (suppliers || []).forEach(s => add(spNorm(s.name), s));
+    (suppliers || []).forEach(s => add(spNorm(s.abbr), s));
+    (suppliers || []).forEach(s => add(spNorm(s.nameEn), s));
+  }
+  return _spIdx.get(k) || null;
+}
+function refreshMakerSuggest() {
+  const dl = document.getElementById('makerSuggest'); if (!dl) return;
+  const e = x => String(x ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  let h = (suppliers || []).map(s => `<option value="${e(s.abbr || s.name)}" label="${e(s.abbr ? s.name : (s.nameEn || ''))}"></option>`).join('');
+  const seen = new Set();
+  (allData || []).forEach(r => {
+    const m = String(r.maker || '').trim();
+    if (!m || seen.has(m) || findSupplierByMaker(m)) return;
+    seen.add(m); h += `<option value="${e(m)}"></option>`;
+  });
+  dl.innerHTML = h;
+}
+function updateMakerHint() {
+  const inp = document.getElementById('f-maker'), box = document.getElementById('f-maker-hint');
+  if (!inp || !box) return;
+  const e = x => String(x ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const v = inp.value.trim();
+  if (!v) { box.className = 'maker-hint'; box.innerHTML = ''; return; }
+  const s = findSupplierByMaker(v);
+  if (s) {
+    box.className = 'maker-hint ok';
+    box.innerHTML = '✓ ' + e(s.name) + (s.abbr ? ' <b>(' + e(s.abbr) + ')</b>' : '') +
+      (s.contact ? ' · ' + e(s.contact) : '') + (s.phone ? ' · ' + e(s.phone) : '');
+  } else {
+    box.className = 'maker-hint warn';
+    box.textContent = 'ไม่พบใน Supplier Database — พิมพ์ชื่อย่อ/ชื่อบริษัทให้ตรง หรือเพิ่มที่หน้า Supplier';
+  }
+}
+function spShowItems(id) {
+  const s = (suppliers || []).find(x => String(x.id) === String(id)); if (!s) return;
+  showPage('list', document.getElementById('nav-list'));
+  const inp = document.getElementById('searchInput');
+  if (inp) inp.value = s.abbr || s.name;
+  currentPage = 1; renderTable();
+}
 const SP2_ICO = {
   user:'<svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
   phone:'<svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8.1 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>',
@@ -15379,6 +15437,7 @@ const SP2_ICO = {
   pin:'<svg viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>'
 };
 function renderSuppliers() {
+ _spIdx = null;
  const q = (document.getElementById('supplierSearch')?.value || '').toLowerCase();
  const grid = document.getElementById('supplierGrid');
  const list = suppliers.filter(s => !q ||
@@ -15396,13 +15455,12 @@ function renderSuppliers() {
  (suppliers.length ? 'ไม่พบ Supplier ที่ค้นหา' : 'ยังไม่มี Supplier — กด + เพิ่ม Supplier') + '</div>';
  return;
  }
- const makerCount = {};
- const _mk = x => String(x||'').trim().toLowerCase();
- allData.forEach(r => { if(r.maker) { const k=_mk(r.maker); makerCount[k] = (makerCount[k]||0)+1; } });
+ const makerCount = new Map();
+ allData.forEach(r => { const sp = findSupplierByMaker(r.maker); if (sp) makerCount.set(sp, (makerCount.get(sp)||0)+1); });
  grid.innerHTML = list.map(s => {
     const e = x => String(x ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const ini = s.abbr ? String(s.abbr).trim().slice(0,3).toUpperCase() : (s.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-    const prCount = makerCount[_mk(s.name)] || 0;
+    const prCount = makerCount.get(s) || 0;
     const embedSrc = getMapEmbedUrl(s.maplink);
     const avatar = s.image
       ? `<div class="sp2-av"><img src="${e(s.image)}" alt="" referrerpolicy="no-referrer" data-ini="${e(ini)}" onerror="this.parentNode.classList.add('ph');this.parentNode.textContent=this.dataset.ini"></div>`
@@ -15418,7 +15476,7 @@ function renderSuppliers() {
       mails ? row('mail', mails) : ''
     ].join('');
     const stats = (s.leadtime ? `<div class="sp2-stat"><span>LEAD TIME</span><b>${e(s.leadtime)} <small>วัน</small></b></div>` : '') +
-      `<div class="sp2-stat"><span>รายการใน PR/PO</span><b class="${prCount ? '' : 'zero'}">${prCount} <small>รายการ</small></b></div>`;
+      `<div class="sp2-stat${prCount ? ' link' : ''}"${prCount ? ` onclick="spShowItems('${e(s.id)}')" title="คลิกเพื่อดูรายการทั้งหมดของ Maker นี้"` : ''}><span>รายการใน PR/PO${prCount ? ' ›' : ''}</span><b class="${prCount ? '' : 'zero'}">${prCount} <small>รายการ</small></b></div>`;
     const foot = s.maplink ? `<div class="sp2-foot">
         <a class="sp2-map" href="${e(s.maplink)}" target="_blank" rel="noopener">${SP2_ICO.pin} ดูที่ตั้งบน Google Maps</a>
         ${embedSrc ? `<div class="sp2-embed"><iframe src="${e(embedSrc)}" width="100%" height="130" style="border:0;display:block" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>` : ''}
@@ -24321,6 +24379,11 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
 .sp2-map svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .sp2-embed{border-radius:8px;overflow:hidden;border:1px solid var(--border)}
 .sp2-count{font-size:.78rem;color:var(--muted);white-space:nowrap;align-self:center}
+.sp2-stat.link{cursor:pointer;transition:outline-color .15s;outline:1px solid transparent}
+.sp2-stat.link:hover{outline-color:var(--accent)}
+.maker-hint{font-size:.74rem;margin-top:.3rem;color:var(--muted);line-height:1.4;min-height:1em}
+.maker-hint.ok{color:var(--success)}
+.maker-hint.warn{color:var(--warn,#b7791f)}
 @media (max-width:480px){.sp2-card{padding:.9rem}.sp2-av{width:46px;height:46px}}
 </style>
 <style id="spx-css">
