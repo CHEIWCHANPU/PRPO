@@ -8303,6 +8303,7 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
  <div style="font-size:0.8rem;color:var(--muted)" data-i18n="iso_placeholder">เอกสารควบคุมสำหรับการตรวจประเมิน (ดูได้อย่างเดียว)</div>
  </div>
  <input class="form-input" id="isoSearch" data-i18n-ph="iso_search" placeholder="ค้นหาเอกสาร..." oninput="isoRender()" style="margin-left:auto;max-width:240px">
+ <button class="btn btn-primary" onclick="isoUpload()" data-i18n="iso_upload">+ อัพโหลดเอกสาร</button>
  <button class="btn btn-ghost" onclick="document.getElementById('isoLocalFile').click()" data-i18n="iso_open_local">เปิดไฟล์ PDF ทดลองดู</button>
  <input type="file" id="isoLocalFile" accept="application/pdf" style="display:none" onchange="isoOpenLocal(this)">
  </div>
@@ -9163,7 +9164,7 @@ const I18N = {
  nav_workplan: 'แผนงานข้างนอก', nav_manual: 'คู่มือการทำงาน', nav_setup: 'ตั้งค่า', nav_collapse: 'ย่อเมนู', nav_team: 'ทีมงาน Purchase Component',
  group_main: 'เมนูหลัก', group_track: 'ติดตาม PART PR', group_cer: 'ติดตามใบ CER',
  group_modeltracker: 'แผนการผลิต MODEL', group_workplan: 'ตารางแผนงานข้างนอก',
- group_manual: 'คู่มือการทำงาน &amp; พื้นฐานการทำงาน', group_iso: 'เอกสาร ISO', nav_iso: 'เอกสาร ISO', iso_title: 'เอกสาร ISO', iso_placeholder: 'เอกสารควบคุมสำหรับการตรวจประเมิน (ดูได้อย่างเดียว)', iso_open_local: 'เปิดไฟล์ PDF ทดลองดู', iso_empty: 'ยังไม่มีเอกสาร ISO — อัพโหลดที่หน้า คู่มือการทำงาน โดยเลือกหมวด "เอกสาร ISO"', iso_search: 'ค้นหาเอกสาร...', iso_view: 'เปิดดู', iso_badge: 'ดูอย่างเดียว — ปิดการบันทึกและพิมพ์', group_maker: 'ข้อมูล MAKER', group_settings: 'จัดการ', group_team: 'จัดทีมงาน',
+ group_manual: 'คู่มือการทำงาน &amp; พื้นฐานการทำงาน', group_iso: 'เอกสาร ISO', nav_iso: 'เอกสาร ISO', iso_title: 'เอกสาร ISO', iso_placeholder: 'เอกสารควบคุมสำหรับการตรวจประเมิน (ดูได้อย่างเดียว)', iso_open_local: 'เปิดไฟล์ PDF ทดลองดู', iso_upload: '+ อัพโหลดเอกสาร', iso_empty: 'ยังไม่มีเอกสาร ISO — อัพโหลดที่หน้า คู่มือการทำงาน โดยเลือกหมวด "เอกสาร ISO"', iso_search: 'ค้นหาเอกสาร...', iso_view: 'เปิดดู', iso_badge: 'ดูอย่างเดียว — ปิดการบันทึกและพิมพ์', group_maker: 'ข้อมูล MAKER', group_settings: 'จัดการ', group_team: 'จัดทีมงาน',
  },
  en: {
  nav_home: 'Home', nav_exec: 'KPI Overview', nav_payroll: 'Time Attendance', nav_todo: 'To-Do List',
@@ -9171,7 +9172,7 @@ const I18N = {
  nav_workplan: 'Field Workplan', nav_manual: 'Work Manual', nav_setup: 'Settings', nav_collapse: 'Collapse', nav_team: 'Purchase Component Team',
  group_main: 'Main Menu', group_track: 'Track Part PR', group_cer: 'CER Tracking',
  group_modeltracker: 'Model Production Plan', group_workplan: 'Field Workplan Schedule',
- group_manual: 'Work Manual &amp; Basics', group_iso: 'ISO Documents', nav_iso: 'ISO Documents', iso_title: 'ISO Documents', iso_placeholder: 'Controlled documents for audit (view only)', iso_open_local: 'Open a test PDF', iso_empty: 'No ISO documents yet — upload them on the Work Manual page using the "ISO Documents" category', iso_search: 'Search documents...', iso_view: 'View', iso_badge: 'VIEW ONLY — SAVE & PRINT DISABLED', group_maker: 'Maker Data', group_settings: 'Management', group_team: 'Organize Team',
+ group_manual: 'Work Manual &amp; Basics', group_iso: 'ISO Documents', nav_iso: 'ISO Documents', iso_title: 'ISO Documents', iso_placeholder: 'Controlled documents for audit (view only)', iso_open_local: 'Open a test PDF', iso_upload: '+ Upload document', iso_empty: 'No ISO documents yet — upload them on the Work Manual page using the "ISO Documents" category', iso_search: 'Search documents...', iso_view: 'View', iso_badge: 'VIEW ONLY — SAVE & PRINT DISABLED', group_maker: 'Maker Data', group_settings: 'Management', group_team: 'Organize Team',
  }
 };
 const PAGE_TITLES = {
@@ -13810,7 +13811,7 @@ function renderManuals() {
  if (!grid) return;
  const q = (document.getElementById('manualSearch')?.value || '').toLowerCase();
  const list = manuals.filter(m =>
- (!manualCategoryFilter || m.category === manualCategoryFilter) &&
+ m.category !== 'เอกสาร ISO' && (!manualCategoryFilter || m.category === manualCategoryFilter) &&
  ((m.title || '').toLowerCase().includes(q) || (m.note || '').toLowerCase().includes(q))
  );
  if (!list.length) {
@@ -24472,6 +24473,13 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
   });
   if(WEB_APP_URL&&m.id)fetch(WEB_APP_URL+'?action=viewManual&id='+encodeURIComponent(m.id)).catch(()=>{});
  };
+ window.isoUpload=function(){
+  openManualModal();const c=document.getElementById('m-category');c.value='เอกสาร ISO';c.disabled=true;
+ };
+ const _cm=window.closeManualModal;
+ window.closeManualModal=function(){const c=document.getElementById('m-category');if(c)c.disabled=false;return _cm.apply(this,arguments)};
+ const _rm=window.renderManuals;
+ window.renderManuals=function(){const r=_rm.apply(this,arguments);if(document.getElementById('page-iso'))isoRender();return r};
  window.isoRender=function(){
   const g=document.getElementById('isoGrid');if(!g)return;const q=(document.getElementById('isoSearch').value||'').toLowerCase();
   const L=getCurrentLang(),lab=(PAGE_I18N_VIEW[L]||PAGE_I18N_VIEW.th);document.getElementById('isoSearch').placeholder=(L==='en'?'Search documents...':'ค้นหาเอกสาร...');
@@ -24479,7 +24487,7 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
   if(!list.length){g.innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:2.5rem 0;font-size:.88rem">'+lab.empty+'</div>';return}
   g.innerHTML=list.map(m=>'<div style="border:1px solid var(--border);border-radius:10px;padding:.9rem;display:flex;flex-direction:column;gap:.4rem"><div style="font-size:1.4rem">🛡️</div><div style="font-weight:600;font-size:.9rem">'+esc(m.title)+'</div><div style="font-size:.78rem;color:var(--muted);flex:1">'+esc(m.note||'')+'</div><button class="btn btn-primary" onclick="isoOpenManual(\''+String(m.id).replace(/'/g,'')+'\')">'+lab.view+'</button></div>').join('');
  };
- const PAGE_I18N_VIEW={th:{view:'เปิดดู',empty:'ยังไม่มีเอกสาร ISO — อัพโหลดที่หน้า คู่มือการทำงาน โดยเลือกหมวด "เอกสาร ISO"'},en:{view:'View',empty:'No ISO documents yet — upload them on the Work Manual page using the "ISO Documents" category'}};
+ const PAGE_I18N_VIEW={th:{view:'เปิดดู',empty:'ยังไม่มีเอกสาร ISO — กด "+ อัพโหลดเอกสาร" เพื่อเริ่มต้น'},en:{view:'View',empty:'No ISO documents yet — click "+ Upload document" to start'}};
  function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
  // กันบันทึก/พิมพ์/คลิกขวา ตอนเปิดดูเอกสาร
  document.addEventListener('keydown',e=>{
