@@ -165,6 +165,7 @@
     var base = (seen === DEFAULT_URL && localStorage.getItem('prpo_url')) || DEFAULT_URL;
     if (base && isGAS(base)) {
       BATCHABLE.forEach(function (a) {
+        if (a === 'getCerFiles') return;
         var u = base + '?action=' + a;
         var p = window.fetch(u);
         p.catch(function () {});
@@ -21664,7 +21665,7 @@ function endTour() {
       const origOpen = window.openCerModal;
       window.openCerModal = function () { const r = origOpen.apply(this, arguments); CerFiles.drawSlots(); return r; };
     }
-    CerFiles.load();
+    try { const c = JSON.parse(localStorage.getItem(CerFiles.KEY) || 'null'); if (Array.isArray(c)) CerFiles.list = c; } catch (e) {}
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', cerBoot); else cerBoot();
 
@@ -21731,14 +21732,22 @@ function endTour() {
     if (name === 'gwdash') GWDash.open();
     if (name === 'meeting') Meeting.open();
     if (name === 'rfq') RFQ.open();
+    if (name === 'cer') { try { CCIPCerFiles.load(); } catch (e) {} }
     document.querySelector('main') && document.querySelector('main').scrollTo && document.querySelector('main').scrollTo(0, 0);
   };
   // ซิงค์ GO WORK / Meeting ไปพร้อมกับข้อมูลชุดอื่นในคำขอเดียวกัน (ถูกรวมเป็น getAll)
   const origSync = window.syncData;
-  window.syncData = function () { const p = origSync.apply(this, arguments); GoWork.load(); Meeting.load(); try { CCIPCerFiles.load(); } catch (e) {} return p; };
+  const pageOn = (n) => { const el = document.getElementById('page-' + n); return !!(el && el.classList.contains('active')); };
+  window.syncData = function () {
+    const p = origSync.apply(this, arguments);
+    if (pageOn('gowork') || pageOn('gwdash')) GoWork.load();
+    if (pageOn('meeting')) Meeting.load();
+    if (pageOn('cer')) { try { CCIPCerFiles.load(); } catch (e) {} }
+    return p;
+  };
   const origTick = window.autoSyncTick;
   if (typeof origTick === 'function') {
-    window.autoSyncTick = function () { const p = origTick.apply(this, arguments); if (!document.hidden && url()) { GoWork.refresh(); Meeting.refresh(); } return p; };
+    window.autoSyncTick = function () { const p = origTick.apply(this, arguments); if (!document.hidden && url()) { if (pageOn('gowork') || pageOn('gwdash')) GoWork.refresh(); if (pageOn('meeting')) Meeting.refresh(); } return p; };
   }
   // แถบตัวเลขบน Dashboard: ความยาวแถบตาม % และสีสถานะของ On-Time
   (function heroStats() {
