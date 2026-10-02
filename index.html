@@ -56,7 +56,8 @@
     } catch (e) {}
   }
   async function tracked(url, init, isRead) {
-    net.pending++; emit();
+    var core = isRead && /[?&](action=getData\b|only=[^&#]*getData)/.test(url);   // ข้อมูลหลัก (PR/PO) — ใช้บอกสถานะซิงค์บนแถบบน
+    net.pending++; if (core) net.pendingCore = (net.pendingCore || 0) + 1; emit();
     var t0 = Date.now();
     try {
       var res;
@@ -77,7 +78,9 @@
       logReq(url, init, t0, false, net.lastError);
       throw err;
     } finally {
-      net.pending = Math.max(0, net.pending - 1); emit();
+      net.pending = Math.max(0, net.pending - 1);
+      if (core) net.pendingCore = Math.max(0, (net.pendingCore || 0) - 1);
+      emit();
     }
   }
 
@@ -19364,7 +19367,8 @@ function endTour() {
     const lastOk = window.__lastDataSync || 0;
     const cacheTime = parseInt(localStorage.getItem('prpo_data_cache_time') || '0', 10);
     let state, label;
-    if (net.pending > 0) {
+    // ขึ้น "กำลังซิงค์" เฉพาะตอนรอข้อมูลหลัก — ข้อมูลหน้าอื่นที่โหลดเบื้องหลังไม่ต้องทำให้ดูเหมือนค้าง
+    if (net.pendingCore > 0 || (net.pending > 0 && !lastOk)) {
       state = 'syncing'; label = 'กำลังซิงค์';
     } else if (net.lastFail && net.lastFail > net.lastOk) {
       state = 'error'; label = 'ออฟไลน์';
@@ -24563,6 +24567,116 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
   window.CCIPSupplierXL = { run, close, template: downloadTemplate, _build: build };
   window.addEventListener('beforeunload', e => { if (busy) { e.preventDefault(); e.returnValue = ''; } });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountButtons); else mountButtons();
+})();
+</script>
+<!-- ═══ LOGIN · ป๊อปอัปสถานะระหว่างตรวจสอบบัญชี (wlp) ═══ -->
+<style id="wlp-css">
+.wlp{position:fixed;inset:0;z-index:2147482000;display:flex;align-items:center;justify-content:center;padding:16px;
+  background:rgba(4,8,18,.55);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .22s ease !important;transition-duration:.22s !important}
+.wlp.on{opacity:1;pointer-events:auto}
+.wlp-box{width:min(400px,100%);border-radius:16px;padding:22px 22px 18px;color:#E6ECF7;
+  background:linear-gradient(180deg,#121B2E,#0C1322);border:1px solid rgba(143,176,255,.18);box-shadow:0 30px 80px rgba(0,0,0,.55);
+  transform:translateY(8px) scale(.98);transition:transform .25s cubic-bezier(.22,1,.36,1) !important;transition-duration:.25s !important}
+.wlp.on .wlp-box{transform:none}
+.wlp-top{display:flex;align-items:center;gap:14px}
+.wlp-ring{position:relative;width:46px;height:46px;flex:0 0 46px}
+.wlp-ring svg{width:46px;height:46px;animation:wlpSpin 1.1s linear infinite !important;animation-duration:1.1s !important}
+.wlp-ring circle{fill:none;stroke-width:4;stroke-linecap:round}
+.wlp-ring .bg{stroke:rgba(143,176,255,.15)}
+.wlp-ring .fg{stroke:#5B8CFF;stroke-dasharray:70 200}
+.wlp.done .wlp-ring svg{animation:none !important}
+.wlp.done .wlp-ring .fg{stroke:#22C55E;stroke-dasharray:200 0}
+.wlp-ring b{position:absolute;inset:0;display:grid;place-items:center;font:700 11px/1 ui-monospace,Menlo,Consolas,monospace;color:#9FB7FF}
+.wlp.done .wlp-ring b{color:#4ADE80;font-size:18px}
+@keyframes wlpSpin{to{transform:rotate(360deg)}}
+.wlp-t h3{margin:0;font-size:1.02rem;font-weight:700;color:#fff}
+.wlp-t p{margin:3px 0 0;font-size:.8rem;color:#9AA8C2;min-height:1.2em;transition:opacity .2s !important}
+.wlp-steps{list-style:none;margin:16px 0 0;padding:0;display:flex;flex-direction:column;gap:9px}
+.wlp-steps li{display:flex;align-items:center;gap:10px;font-size:.84rem;color:#6B7A96}
+.wlp-steps i{width:18px;height:18px;flex:0 0 18px;border-radius:50%;border:2px solid #334363;display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:800;color:transparent}
+.wlp-steps li.act{color:#DCE6FA}
+.wlp-steps li.act i{border-color:#5B8CFF;border-top-color:transparent;animation:wlpSpin .8s linear infinite !important;animation-duration:.8s !important}
+.wlp-steps li.ok{color:#B9C6DE}
+.wlp-steps li.ok i{border-color:#22C55E;background:#22C55E;color:#06210F;animation:none !important}
+.wlp-bar{height:4px;border-radius:4px;background:rgba(143,176,255,.12);margin-top:16px;overflow:hidden}
+.wlp-bar span{display:block;height:100%;width:0;border-radius:4px;background:linear-gradient(90deg,#3B6CFF,#22D3EE);transition:width .5s ease !important;transition-duration:.5s !important}
+.wlp-foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:.72rem;color:#7D8BA6}
+.wlp-foot b{font:600 .74rem ui-monospace,Menlo,Consolas,monospace;color:#AFC0E2}
+.wlp-tip{margin-top:12px;padding:9px 11px;border-radius:10px;background:rgba(59,108,255,.08);border:1px solid rgba(91,140,255,.18);font-size:.76rem;line-height:1.5;color:#AFC0E2;display:none}
+.wlp-tip.show{display:block}
+</style>
+<script id="wlp-js">
+(function(){
+  /* ระหว่างกดเข้าสู่ระบบ: บอกว่ากำลังทำอะไร + จับเวลา + อธิบายถ้าช้า (Apps Script ของ Google ตื่นช้าในครั้งแรก) */
+  const STEPS = ['เชื่อมต่อเซิร์ฟเวอร์ Google', 'ตรวจสอบรหัสผู้ใช้และรหัสผ่าน', 'เตรียมข้อมูลเข้าสู่ระบบ'];
+  const MSGS = [
+    [0,  'กรุณารอสักครู่…'],
+    [3,  'กำลังตรวจสอบบัญชีกับฐานข้อมูล (Google Sheet)'],
+    [8,  'เซิร์ฟเวอร์ Google กำลังประมวลผล — ใกล้เสร็จแล้ว'],
+    [15, 'ครั้งแรกของวันอาจช้ากว่าปกติ เพราะระบบต้องเปิดฐานข้อมูลใหม่'],
+    [30, 'ยังทำงานอยู่ ไม่ต้องกดปุ่มซ้ำ — ถ้าเกิน 1 นาที ระบบจะแจ้งให้ลองใหม่']
+  ];
+  let el, t0 = 0, timer = null, state = '';
+  function build(){
+    if (el) return el;
+    el = document.createElement('div'); el.className = 'wlp'; el.setAttribute('role', 'status'); el.setAttribute('aria-live', 'polite');
+    el.innerHTML = `<div class="wlp-box">
+      <div class="wlp-top"><div class="wlp-ring"><svg viewBox="0 0 46 46"><circle class="bg" cx="23" cy="23" r="19"/><circle class="fg" cx="23" cy="23" r="19"/></svg><b>0s</b></div>
+        <div class="wlp-t"><h3>กำลังตรวจสอบข้อมูลบัญชี</h3><p></p></div></div>
+      <ul class="wlp-steps">${STEPS.map(s => `<li><i>✓</i>${s}</li>`).join('')}</ul>
+      <div class="wlp-bar"><span></span></div>
+      <div class="wlp-foot"><span>PURCHASE-EN-CCIP · Secure sign-in</span><b class="wlp-sec">0.0 วินาที</b></div>
+      <div class="wlp-tip">💡 ระบบเก็บข้อมูลไว้บน Google Sheet ซึ่ง Google จะ "ปลุก" เซิร์ฟเวอร์ขึ้นมาใหม่เมื่อไม่มีคนใช้สักพัก ครั้งแรกจึงอาจใช้เวลา 10–30 วินาที ครั้งถัดไปจะเร็วขึ้น</div>
+    </div>`;
+    document.body.appendChild(el);
+    return el;
+  }
+  function setStep(n, okAll){
+    el.querySelectorAll('.wlp-steps li').forEach((li, i) => { li.className = okAll || i < n ? 'ok' : i === n ? 'act' : ''; });
+  }
+  function tick(){
+    const s = (Date.now() - t0) / 1000;
+    el.querySelector('.wlp-ring b').textContent = Math.floor(s) + 's';
+    el.querySelector('.wlp-sec').textContent = s.toFixed(1) + ' วินาที';
+    const msg = MSGS.filter(m => s >= m[0]).pop()[1], p = el.querySelector('.wlp-t p');
+    if (p.textContent !== msg) p.textContent = msg;
+    if (s >= 1.2) setStep(1);
+    el.querySelector('.wlp-tip').classList.toggle('show', s >= 10);
+    el.querySelector('.wlp-bar span').style.width = Math.min(92, 20 + (1 - Math.exp(-s / 6)) * 72) + '%';   // ค่อยๆ ขยับ แต่ไม่เต็มจนกว่าจะเสร็จจริง
+  }
+  function show(){
+    build(); if (state === 'busy') return;
+    state = 'busy'; t0 = Date.now(); el.classList.remove('done');
+    el.querySelector('.wlp-t h3').textContent = 'กำลังตรวจสอบข้อมูลบัญชี';
+    setStep(0); tick();
+    requestAnimationFrame(() => el.classList.add('on'));
+    clearInterval(timer); timer = setInterval(tick, 100);
+  }
+  function done(){
+    if (!el || state !== 'busy') return;
+    state = 'done'; clearInterval(timer);
+    el.classList.add('done'); setStep(3, true);
+    el.querySelector('.wlp-ring b').textContent = '✓';
+    el.querySelector('.wlp-t h3').textContent = 'ยืนยันตัวตนสำเร็จ';
+    el.querySelector('.wlp-t p').textContent = 'ใช้เวลา ' + ((Date.now() - t0) / 1000).toFixed(1) + ' วินาที · กำลังเข้าสู่ระบบ';
+    el.querySelector('.wlp-bar span').style.width = '100%';
+    el.querySelector('.wlp-tip').classList.remove('show');
+    setTimeout(hide, 450);
+  }
+  function hide(){
+    if (!el) return; clearInterval(timer); state = '';
+    el.classList.remove('on');
+  }
+  function hook(){
+    const txt = document.getElementById('wlLoginBtnText'); if (!txt || txt.__wlp) return; txt.__wlp = true;
+    new MutationObserver(() => {
+      const t = txt.textContent.trim();
+      if (/กำลังตรวจสอบ/.test(t)) show();
+      else if (/สำเร็จ/.test(t)) done();
+      else hide();                                  // รหัสผิด / เชื่อมต่อไม่ได้ → ปิดป๊อปอัป ให้เห็นข้อความแจ้งเตือนเดิม
+    }).observe(txt, {childList:true, characterData:true, subtree:true});
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hook); else hook();
 })();
 </script>
 </body>
