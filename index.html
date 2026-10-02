@@ -13581,7 +13581,9 @@ async function saveSupplier() {
 
  try {
  const action = rowIndex ? 'editSupplier' : 'addSupplier';
- const params = new URLSearchParams({ action, ...payload });
+ const sendP = { ...payload };
+ if (/^data:/.test(sendP.image || '') && sendP.image.length > 1500) delete sendP.image;   // โลโก้เก่าแบบ base64 ยาวเกิน URL → ไม่ส่ง (คงค่าเดิมในชีต)
+ const params = new URLSearchParams({ action, ...sendP });
  if (rowIndex) params.set('rowIndex', rowIndex);
  const res = await fetch(WEB_APP_URL + '?' + params.toString());
  const json = await res.json();
@@ -24332,6 +24334,8 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
 (function(){
   const COLS = [
     ['name',     'ชื่อบริษัท / Maker *', 28],
+    ['nameEn',   'ชื่อภาษาอังกฤษ',        26],
+    ['abbr',     'อักษรย่อ',              10],
     ['contact',  'ชื่อผู้ติดต่อ',          20],
     ['phone',    'เบอร์โทร',             22],
     ['email',    'Email',                28],
@@ -24374,15 +24378,16 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
     ws['!cols'] = COLS.map(c => ({ wch: c[2] }));
     ws['!autofilter'] = { ref: 'A1:' + XLSX.utils.encode_col(COLS.length - 1) + '1' };
     // คอลัมน์เบอร์โทร = ข้อความ (กันเลข 0 นำหน้าหาย)
+    const PC = COLS.findIndex(c => c[0] === 'phone');
     for (let r = 1; r < aoa.length; r++) {
-      const a = XLSX.utils.encode_cell({ r, c: 2 });
-      ws[a] = { t: 's', v: String(aoa[r][2] || ''), z: '@' };
+      const a = XLSX.utils.encode_cell({ r, c: PC });
+      ws[a] = { t: 's', v: String(aoa[r][PC] || ''), z: '@' };
     }
     const help = [
       ['วิธีกรอกฟอร์ม Supplier'],
       [''],
       ['1. กรอกในชีต "Supplier" — 1 แถว = 1 Maker (คอลัมน์ ชื่อบริษัท ต้องมี)'],
-      ['2. รายชื่อที่มีอยู่แล้วในระบบใส่ไว้ให้แล้ว แก้ไขได้เลย ระบบจะจับคู่ด้วย "ชื่อบริษัท"'],
+      ['2. รายชื่อที่มีอยู่แล้วในระบบใส่ไว้ให้แล้ว แก้ไขได้เลย ระบบจะจับคู่ด้วย "ชื่อบริษัท" (ชื่อไทย)'],
       ['3. Maker ใหม่ ให้กรอกต่อท้ายในแถวว่าง'],
       ['4. ช่องที่เว้นว่างของ Maker เดิม ระบบจะคงค่าเดิมไว้ (ไม่ลบข้อมูล)'],
       ['5. เบอร์โทร กรอกเป็นข้อความ เช่น 081-234-5678 (หลายเบอร์คั่นด้วย , )'],
@@ -24417,7 +24422,9 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
     const h = head.map(x => norm(x));
     const find = (...keys) => h.findIndex(x => keys.some(k => x.includes(k)));
     return {
-      name: find('ชื่อบริษัท', 'maker', 'supplier', 'บริษัท', 'name'),
+      name: h.findIndex(x => /ชื่อบริษัท|^maker|^supplier|^ชื่อ maker/.test(x) && !/อังกฤษ|english|ย่อ/.test(x)),
+      nameEn: find('อังกฤษ', 'english', 'name en'),
+      abbr: find('อักษรย่อ', 'ชื่อย่อ', 'abbr'),
       contact: find('ผู้ติดต่อ', 'contact'),
       phone: find('เบอร์', 'โทร', 'phone', 'tel'),
       email: find('email', 'อีเมล', 'e-mail', 'mail'),
@@ -24492,12 +24499,15 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
   /* ── ส่งข้อมูลเข้า Sheet (ใช้ action เดิม addSupplier / editSupplier) ── */
   async function send(p){
     const r = p.rec;
-    const payload = { name: r.name, contact: r.contact || '', phone: r.phone || '', email: r.email || '', category: r.category || '',
-      leadtime: r.leadtime || '', note: r.note || '', image: (p.old && p.old.image) || '', maplink: r.maplink || '' };
+    const payload = { name: r.name, nameEn: r.nameEn || '', abbr: r.abbr || '', contact: r.contact || '', phone: r.phone || '', email: r.email || '', category: r.category || '',
+      leadtime: r.leadtime || '', note: r.note || '', maplink: r.maplink || '' };
+    const img = (p.old && p.old.image) || '';
+    if (img && !(/^data:/.test(img) && img.length > 1500)) payload.image = img;   // โลโก้เดิม (ลิงก์ Drive) ส่งกลับไป · base64 ยาว → ไม่ส่ง คงค่าเดิมในชีต
     if (!WEB_APP_URL) {
       const id = p.type === 'upd' ? p.old.id : String(Date.now()) + Math.random().toString(36).slice(2, 6);
       const i = suppliers.findIndex(s => String(s.id) === String(id));
-      if (i >= 0) suppliers[i] = { id, ...payload }; else suppliers.push({ id, ...payload });
+      const rec = Object.assign({}, p.old || {}, payload, { id });
+      if (i >= 0) suppliers[i] = rec; else suppliers.push(rec);
       localStorage.setItem('prpo_suppliers', JSON.stringify(suppliers));
       return;
     }
