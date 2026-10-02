@@ -20916,7 +20916,7 @@ function endTour() {
           const btn = $('#pfSave'); setBusy(btn, true); el._busy = true;
           try {
             const j = await CCIPAuth.api('authUpdateProfile', prof);
-            if (newPw) await CCIPAuth.api('authChangePassword', { oldPassword: oldPw, newPassword: newPw });
+            if (newPw) { await CCIPAuth.api('authChangePassword', { oldPassword: oldPw, newPassword: newPw }); try { const u = CCIPAuth.user(); if (u && window.CCIPFastLogin) CCIPFastLogin.forget(u.id); } catch (e) {} }
             CCIPAuth.update(j.user); this.fromAccount(j.user);
             el._busy = false; closeModal();
             toast(newPw ? 'บันทึกโปรไฟล์และเปลี่ยนรหัสผ่านแล้ว' : 'บันทึกโปรไฟล์แล้ว', 'success');
@@ -20994,12 +20994,58 @@ function endTour() {
       try { if (!dueAlertsShown) { dueAlertsShown = true; setTimeout(showDueAlerts, 800); } } catch (e) {}
     }, 520);
   }
+  /* ── เข้าสู่ระบบเร็ว: เครื่องที่เคยล็อกอินสำเร็จแล้ว ตรวจรหัสในเครื่องได้ทันที (PBKDF2 150,000 รอบ ไม่เก็บรหัสจริง)
+        แล้วค่อยยืนยันกับเซิร์ฟเวอร์เบื้องหลัง — ถ้าเซิร์ฟเวอร์ไม่ผ่าน (เปลี่ยนรหัส/ปิดบัญชี) จะออกจากระบบทันที ── */
+  const FAST_KEY = 'ccip_fastlogin';
+  const fastAll = () => { try { return JSON.parse(localStorage.getItem(FAST_KEY) || '{}') || {}; } catch (e) { return {}; } };
+  async function fastVerifier(id, pw, salt) {
+    const enc = new TextEncoder();
+    const key = await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveBits']);
+    const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: enc.encode(salt + '|' + id.toLowerCase()), iterations: 150000 }, key, 256);
+    return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+  async function fastSave(id, pw, res) {
+    try {
+      if (!crypto.subtle || !res || !res.token || !res.user) return;
+      const salt = Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b => b.toString(16).padStart(2, '0')).join('');
+      const all = fastAll(); all[id.toLowerCase()] = { salt, v: await fastVerifier(id, pw, salt), token: res.token, user: res.user, at: Date.now() };
+      localStorage.setItem(FAST_KEY, JSON.stringify(all));
+    } catch (e) {}
+  }
+  function fastForget(id) { try { const all = fastAll(); if (id) delete all[String(id).toLowerCase()]; else Object.keys(all).forEach(k => delete all[k]); localStorage.setItem(FAST_KEY, JSON.stringify(all)); } catch (e) {} }
+  window.CCIPFastLogin = { forget: fastForget };
+  async function fastCheck(id, pw) {
+    try {
+      const r = fastAll()[id.toLowerCase()];
+      if (!r || !crypto.subtle || Date.now() - r.at > 30 * 864e5) return null;   // จำได้ไม่เกิน 30 วัน
+      return (await fastVerifier(id, pw, r.salt)) === r.v ? r : null;
+    } catch (e) { return null; }
+  }
+
   window.wlLogin = async function () {
     const id = ($('#wlUserId').value || '').trim(), pw = $('#wlPassword').value || '';
     const remember = !!($('#wlRemember') && $('#wlRemember').checked);
     if (!id || !pw) { wlError('กรอกรหัสผู้ใช้และรหัสผ่าน'); return; }
     if (typeof wlClearError === 'function') wlClearError();
     wlBusy(true);
+    // ── ทางลัด: เคยล็อกอินบนเครื่องนี้แล้ว และรหัสตรง → เข้าระบบทันที ──
+    const fast = url() ? await fastCheck(id, pw) : null;
+    if (fast) {
+      $('#wlPassword').value = '';
+      if (remember) localStorage.setItem(REMEMBER_KEY, JSON.stringify({ id, password: '' })); else localStorage.removeItem(REMEMBER_KEY);
+      Auth.save({ token: fast.token, user: fast.user }, remember); Profile.fromAccount(fast.user);
+      wlBusy(true, 'เข้าสู่ระบบสำเร็จ');
+      setTimeout(() => { enterApp(); if (fast.user && fast.user.name) setTimeout(() => toast(`ยินดีต้อนรับ คุณ${fast.user.name.split(/\s+/)[0]}`, 'success'), 700); }, 150);
+      Auth.call({ action: 'authLogin', id, password: pw, remember }).then(res => {         // ยืนยันกับเซิร์ฟเวอร์เบื้องหลัง
+        if (res && res.success && res.token) {
+          Auth.save({ token: res.token, user: Object.assign({}, res.user, { pendingCount: res.pendingCount || 0 }) }, remember); Profile.fromAccount(res.user); fastSave(id, pw, res);
+          if (res.pendingCount) toast(`มีคำขอสร้างบัญชีรออนุมัติ ${res.pendingCount} รายการ`, 'info');
+        } else if (res && !res.success && !/unknown action/i.test(res.error || '')) {
+          fastForget(id); doLogout(); setTimeout(() => wlError(res.error || 'กรุณาเข้าสู่ระบบใหม่'), 600);
+        }
+      }).catch(() => {});                                                                   // ออฟไลน์ → ใช้ต่อได้ เดี๋ยวตรวจซ้ำตอนเปิดเว็บครั้งหน้า
+      return;
+    }
     let res;
     if (url()) {
       try { res = await Auth.call({ action: 'authLogin', id, password: pw, remember }); }
@@ -21017,7 +21063,7 @@ function endTour() {
     }
     if (remember) localStorage.setItem(REMEMBER_KEY, JSON.stringify({ id, password: '' })); else localStorage.removeItem(REMEMBER_KEY);
     $('#wlPassword').value = '';
-    if (res.token) { Auth.save({ token: res.token, user: Object.assign({}, res.user, { pendingCount: res.pendingCount || 0 }) }, remember); Profile.fromAccount(res.user); }
+    if (res.token) { Auth.save({ token: res.token, user: Object.assign({}, res.user, { pendingCount: res.pendingCount || 0 }) }, remember); Profile.fromAccount(res.user); fastSave(id, pw, res); }
     else { Auth.clear(); }
     wlBusy(true, 'เข้าสู่ระบบสำเร็จ');
     setTimeout(() => {
