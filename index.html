@@ -23713,11 +23713,12 @@ html.wla-off .wls-slide.cur i{animation:none !important;transform:none !importan
     const h = new Date().getHours(), greet = h < 12 ? 'สวัสดีตอนเช้า' : h < 17 ? 'สวัสดีตอนบ่าย' : 'สวัสดีตอนเย็น';
     const el = document.createElement('div'); el.className = 'wla-done';
     el.innerHTML = `<div class="ring"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div><h2>${greet}${first ? ' คุณ' + first.replace(/[<>&"]/g, '') : ''}</h2><p>กำลังเข้าสู่ระบบ PURCHASE-EN-CCIP…</p>`;
+    if (!fxOn()) return;                                   // ปิดเอฟเฟกต์ → เข้าระบบทันที ไม่มีหน้ายินดีต้อนรับคั่น
     setTimeout(() => {
       document.body.appendChild(el); requestAnimationFrame(() => el.classList.add('on'));
-      setTimeout(() => el.classList.add('out'), reduce ? 700 : 1500);
-      setTimeout(() => el.remove(), reduce ? 900 : 2400);
-    }, 180);
+      setTimeout(() => el.classList.add('out'), 650);       // เดิม 1.5 วิ → สั้นลง ไม่ให้รู้สึกว่าเข้าระบบช้า
+      setTimeout(() => el.remove(), 1150);
+    }, 120);
   }
 
   function boot(){
