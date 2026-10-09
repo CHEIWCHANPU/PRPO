@@ -23132,7 +23132,7 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
         <div class="pc-desk"><p class="pc-tip">คลิกช่องเพื่อพิมพ์ · รูปชิ้นงาน: ตัดจาก DWG ด้วย Snipping Tool (Win+Shift+S) → คลิกที่กรอบรูป → กด Ctrl+V · ตัวเลขในตารางด้านล่างคำนวณให้อัตโนมัติ · ข้อมูลที่กรอกจะค้างไว้ในเครื่องนี้จนกว่าจะกดล้างฟอร์ม</p>
         <div id="pcSheet">
           <div class="pcs-hd"><div class="pcs-hd-l"><small>PURCHASING DEPARTMENT · PU-EN · E-FORM</small><b>MAKER PRICE SUMMARY<span>สรุปราคา MAKER ก่อน GO WORK</span></b></div>
-            <table><tr><td class="lb" style="width:84px">DOC NO.</td><td>${F('docNo','c')}</td></tr><tr><td class="lb">DATE</td><td><input data-k="docDate" class="c" value="${esc(d.docDate || today())}" title="ใส่วันที่วันนี้ให้อัตโนมัติ — แก้ไขได้"></td></tr></table></div>
+            <table><tr><td class="lb" style="width:110px">CUSTOMER NO.</td><td>${F('docNo','c')}</td></tr><tr><td class="lb">DATE</td><td><input data-k="docDate" class="c" value="${esc(d.docDate || today())}" title="ใส่วันที่วันนี้ให้อัตโนมัติ — แก้ไขได้"></td></tr></table></div>
           <table><colgroup><col style="width:124px"><col><col style="width:70px"><col><col style="width:82px"><col></colgroup>
             <tr><td class="lb">TYPE OF WORK</td><td>${F('typeOfWork')}</td><td class="lb">SPEC</td><td>${F('spec')}</td><td class="lb">PLATING</td><td>${F('plating')}</td></tr>
             <tr><td class="lb">PLANT MASS PRO.</td><td colspan="5">${['CCI','CCIS','CCIR','CNN'].map(p => `<span class="pcs-chk" data-p="${p}"><i>${d.plant === p ? '✓' : ''}</i>${p}</span>`).join('')}</td></tr></table>
