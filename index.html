@@ -17989,8 +17989,8 @@ function prMergeFromSheet(employees, attendanceRows){
  if(!byUser[uid][dk]){
  byUser[uid][dk] = { work, ot, note };
  } else {
- byUser[uid][dk].work = Math.max(byUser[uid][dk].work, work);
- byUser[uid][dk].ot = Math.max(byUser[uid][dk].ot, ot);
+ /* FIX v2: แถวซ้ำ (เกิดจากส่งพร้อมกัน) — backend อัปเดตเฉพาะแถวแรกเสมอ จึงให้แถวแรกชนะ ไม่ใช้ max
+ (max ทำให้ค่าเก่าที่ถูกยกเลิกแล้วในแถวซ้ำกลับมาแสดง) */
  if(!byUser[uid][dk].note && note) byUser[uid][dk].note = note;
  }
  });
@@ -18010,6 +18010,46 @@ function prMergeFromSheet(employees, attendanceRows){
  }));
 }
 
+/* ── รายการที่แก้ในเครื่องนี้แต่ยังส่งขึ้น Sheet ไม่สำเร็จ (เก็บไว้ส่งซ้ำ ไม่ให้หาย) ── */
+const PR_DIRTY_KEY = 'prpo_payroll_dirty';
+function prDirtyLoad(){ try { return JSON.parse(localStorage.getItem(PR_DIRTY_KEY) || '{}') || {}; } catch (e) { return {}; } }
+function prDirtySave(d){ try { localStorage.setItem(PR_DIRTY_KEY, JSON.stringify(d)); } catch (e) {} }
+function prDirtySet(userId, dk, rec){ const d = prDirtyLoad(); d[userId + '|' + dk] = { work: rec.work||0, ot: rec.ot||0, note: rec.note||'' }; prDirtySave(d); }
+function prDirtyClearIfSame(userId, dk, rec){
+ const d = prDirtyLoad(), k = userId + '|' + dk, cur = d[k];
+ if (cur && cur.work === (rec.work||0) && cur.ot === (rec.ot||0) && (cur.note||'') === (rec.note||'')) { delete d[k]; prDirtySave(d); }
+}
+let _prLastSaveErrToast = 0;
+function prPostAttendance(userId, dk, rec){
+ return prApiPost('saveAttendanceRecord', { userId, dateKey: dk, record: rec })
+ .then(r => { prDirtyClearIfSame(userId, dk, rec); return r; })
+ .catch(err => {
+ console.warn('[payroll] saveAttendanceRecord ไม่สำเร็จ:', err.message||err);
+ if (Date.now() - _prLastSaveErrToast > 8000) { _prLastSaveErrToast = Date.now(); showToast('❌ บันทึกขึ้น Sheet ไม่สำเร็จ — เก็บไว้ในเครื่องและจะส่งซ้ำอัตโนมัติ (เครื่องอื่นจะยังไม่เห็นจนกว่าจะส่งสำเร็จ)', 'error'); }
+ });
+}
+/* สำรอง cache เก่าครั้งเดียวก่อนเลิกใช้วิธีเดิม (เผื่ออยากกู้ข้อมูล) */
+function prBackupCacheOnce(){
+ try {
+ if (localStorage.getItem('prpo_payroll_migrated_v2')) return;
+ const old = localStorage.getItem('prpo_payroll_users');
+ if (old) localStorage.setItem('prpo_payroll_users_backup_v1', old);
+ localStorage.setItem('prpo_payroll_migrated_v2', '1');
+ } catch (e) {}
+}
+/* รีเฟรชจาก Sheet เมื่อกลับมาที่แท็บ / ทุก 60 วินาที (เฉพาะตอนอยู่หน้าลงเวลา และไม่ได้กำลังพิมพ์/รอส่งข้อมูล) */
+function prAutoRefresh(){
+ const pg = document.getElementById('page-payroll');
+ if (!pg || !pg.classList.contains('active') || document.hidden) return;
+ const ae = document.activeElement;
+ if (ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return;
+ if (Object.keys(_prSyncTimers).length || Object.values(_prSyncRunning).some(Boolean)) return;
+ if (prSyncStatus === 'loading') return;
+ prSyncFromSheet();
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) prAutoRefresh(); });
+setInterval(prAutoRefresh, 60000);
+
 /* โหลดข้อมูลจาก Google Sheet → sync เข้า prUsers + localStorage (cache)
  ถ้าโหลดไม่สำเร็จ (ออฟไลน์/deploy ปิด) จะใช้ค่าใน localStorage เดิมต่อไปเฉยๆ
  FIX: merge Sheet กับ localStorage แทนการทับ — ป้องกันข้อมูลหายเมื่อ Sheet ยังไม่ได้รับ
@@ -18021,25 +18061,23 @@ async function prSyncFromSheet(){
  const all = await prApiGet('getAll');
  const fromSheet = prMergeFromSheet(all.employees, all.attendance);
 
- // merge: สำหรับแต่ละ user+dateKey เอาค่า max ระหว่าง Sheet กับ localStorage cache
- // ป้องกัน Sheet "เก่ากว่า" cache (เกิดเมื่อ request ยังไม่ถึง Sheet ตอน refresh)
+ // FIX v2: Sheet คือข้อมูลจริง (ใช้ได้ตรงกันทุกเครื่อง) — ไม่เอา cache มา max แล้ว
+ // เพราะ cache เก่าในเครื่องอื่นจะดึงค่าที่ถูกยกเลิก/ลดแล้วกลับมาแสดง (ข้อมูลไม่ตรงกันข้ามเครื่อง)
+ // เก็บเฉพาะรายการที่ "แก้ในเครื่องนี้แล้วแต่ส่งขึ้น Sheet ไม่สำเร็จ" มาทับ แล้วส่งซ้ำ
+ prBackupCacheOnce();
+ const dirty = prDirtyLoad();
+ const dirtyKeys = Object.keys(dirty);
+ dirtyKeys.forEach(k => {
+ const [uid, dk] = k.split('|');
+ const u = fromSheet.find(x => String(x.id) === uid);
+ if (u) u.records[dk] = Object.assign({}, dirty[k]);
+ });
+ // รูปพนักงานที่ Sheet ตัดออก (ใหญ่เกิน) ให้ใช้ของเดิมใน cache
+ try {
  const cacheUsers = JSON.parse(localStorage.getItem('prpo_payroll_users') || '[]');
- const cacheByUid = {};
- cacheUsers.forEach(u => { cacheByUid[String(u.id)] = u.records || {}; });
-
- fromSheet.forEach(u => {
- const cacheRecs = cacheByUid[String(u.id)] || {};
- // เอา dateKey ที่มีใน cache แต่ยังไม่อยู่ใน Sheet (หรือน้อยกว่า) มา merge ด้วย
- Object.entries(cacheRecs).forEach(([dk, cr]) => {
- if (!u.records[dk]) {
- u.records[dk] = cr;
- } else {
- u.records[dk].work = Math.max(u.records[dk].work || 0, cr.work || 0);
- u.records[dk].ot = Math.max(u.records[dk].ot || 0, cr.ot || 0);
- if (!u.records[dk].note && cr.note) u.records[dk].note = cr.note;
- }
- });
- });
+ fromSheet.forEach(u => { if (!u.photo) { const c = cacheUsers.find(x => String(x.id) === String(u.id)); if (c && c.photo) u.photo = c.photo; } });
+ } catch (e) {}
+ setTimeout(() => dirtyKeys.forEach(k => { const [uid, dk] = k.split('|'); const u = prUsers.find(x => String(x.id) === uid); if (u && u.records[dk]) prSyncAttendanceToSheet(u.id, dk, u.records[dk]); }), 500);
 
  prUsers = fromSheet;
  prNextId = prUsers.length ? Math.max(...prUsers.map(u=>u.id))+1 : 1;
@@ -18549,6 +18587,7 @@ const _prSyncRunning = {};
 const _prSyncPending = {};
 function prSyncAttendanceToSheet(userId, dk, record){
  const key = String(userId) + '|' + dk;
+ prDirtySet(userId, dk, record || {});
  if(_prSyncTimers[key]) clearTimeout(_prSyncTimers[key]);
  _prSyncTimers[key] = setTimeout(() => { // 300ms debounce — ป้องกันข้อมูลหายตอนปิด/รีเฟรชหน้าเร็วๆ หลังกด
  delete _prSyncTimers[key];
@@ -18561,15 +18600,15 @@ function prSyncAttendanceToSheet(userId, dk, record){
  return;
  }
  _prSyncRunning[key] = true;
- prApiPost('saveAttendanceRecord', { userId, dateKey: dk, record: latest })
- .catch(err => console.warn('[payroll] saveAttendanceRecord ไม่สำเร็จ:', err.message||err))
+ prDirtySet(userId, dk, latest);
+ prPostAttendance(userId, dk, latest)
  .finally(() => {
  _prSyncRunning[key] = false;
  if(_prSyncPending[key]){
  const next = _prSyncPending[key];
  delete _prSyncPending[key];
- prApiPost('saveAttendanceRecord', { userId, dateKey: dk, record: next })
- .catch(err => console.warn('[payroll] saveAttendanceRecord (pending) ไม่สำเร็จ:', err.message||err));
+ prDirtySet(userId, dk, next);
+ prPostAttendance(userId, dk, next);
  }
  });
  }, 300);
