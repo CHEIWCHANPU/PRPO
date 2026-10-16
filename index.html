@@ -17956,7 +17956,7 @@ async function prFetchWithTimeout(url, options){
 }
 async function prApiGet(action, params){
  params = params || {};
- const qs = new URLSearchParams(Object.assign({action}, params)).toString();
+ const qs = new URLSearchParams(Object.assign({action, _t: Date.now()}, params)).toString();
  const res = await prFetchWithTimeout(`${prPayrollUrl()}?${qs}`);
  const json = await prReadJson(res);
  if(!json.success) throw new Error(json.error || 'API error');
@@ -18029,10 +18029,11 @@ function prDirtyClearIfSame(userId, dk, rec){
  const d = prDirtyLoad(), k = userId + '|' + dk, cur = d[k];
  if (cur && cur.work === (rec.work||0) && cur.ot === (rec.ot||0) && (cur.note||'') === (rec.note||'')) { delete d[k]; prDirtySave(d); }
 }
+let _prSaveEpoch = 0; // นับจำนวนครั้งที่บันทึกขึ้น Sheet สำเร็จ ใช้ตรวจว่าผล GET เก่ากว่าหรือไม่
 let _prLastSaveErrToast = 0;
 function prPostAttendance(userId, dk, rec){
  return prApiPost('saveAttendanceRecord', { userId, dateKey: dk, record: rec })
- .then(r => { prDirtyClearIfSame(userId, dk, rec); return r; })
+ .then(r => { prDirtyClearIfSame(userId, dk, rec); _prSaveEpoch++; return r; })
  .catch(err => {
  console.warn('[payroll] saveAttendanceRecord ไม่สำเร็จ:', err.message||err);
  if (Date.now() - _prLastSaveErrToast > 8000) { _prLastSaveErrToast = Date.now(); showToast('❌ บันทึกขึ้น Sheet ไม่สำเร็จ — เก็บไว้ในเครื่องและจะส่งซ้ำอัตโนมัติ (เครื่องอื่นจะยังไม่เห็นจนกว่าจะส่งสำเร็จ)', 'error'); }
@@ -18066,6 +18067,7 @@ setInterval(prAutoRefresh, 60000);
  request ล่าสุด (เช่น กด Work แล้ว refresh ก่อน sync เสร็จ) */
 async function prSyncFromSheet(){
  prSyncStatus = 'loading';
+ const _epoch0 = _prSaveEpoch;
  prRenderGrid(); // โชว์สถานะกำลังโหลดทันที (เผื่อยังไม่มี cache)
  try{
  /* ชื่อ action 'getAll' ชนกับ getAll ของ CCIP Extension ใน doGet (CCIP_route_ ทำงานก่อน) จึงใช้ชื่อเฉพาะ payrollGetAll
@@ -18076,8 +18078,27 @@ async function prSyncFromSheet(){
  if (/Unknown action/i.test(String(e1 && e1.message))) all = await prApiGet('getAll');
  else throw e1;
  }
+ if (_prSaveEpoch !== _epoch0 || Object.values(_prSyncRunning).some(Boolean)) {
+  /* มีการบันทึกเสร็จ/กำลังบันทึกระหว่างดึงข้อมูล → ผลที่ได้อาจเก่ากว่า ทิ้งแล้วดึงใหม่ */
+  prSyncStatus = prUsers.length ? 'online' : 'idle';
+  prRenderGrid();
+  setTimeout(prSyncFromSheet, 1500);
+  return;
+ }
  if (!all || !Array.isArray(all.employees)) throw new Error('ข้อมูลจาก Sheet ไม่ตรงรูปแบบ (ไม่มีรายชื่อพนักงาน) — อาจถูก action อื่นตอบแทน');
  const fromSheet = prMergeFromSheet(all.employees, all.attendance);
+ /* วันตัดรอบเก็บที่ Sheet ให้ตรงกันทุกเครื่อง */
+ if (all.settings) {
+  const sc = String(all.settings.cutoffDay || '');
+  if (sc) {
+   prCutoffDayGlobal = sc;
+   try { localStorage.setItem('prpo_payroll_cutoffday', sc); } catch (e) {}
+   const cEl = document.getElementById('pr-cutoff-day');
+   if (cEl && document.activeElement !== cEl) cEl.value = sc;
+  } else if (prCutoffDayGlobal) {
+   prApiPost('saveSetting', { key: 'cutoffDay', value: prCutoffDayGlobal }).catch(() => {});
+  }
+ }
 
  // FIX v2: Sheet คือข้อมูลจริง (ใช้ได้ตรงกันทุกเครื่อง) — ไม่เอา cache มา max แล้ว
  // เพราะ cache เก่าในเครื่องอื่นจะดึงค่าที่ถูกยกเลิก/ลดแล้วกลับมาแสดง (ข้อมูลไม่ตรงกันข้ามเครื่อง)
@@ -18393,6 +18414,8 @@ function prUpdateCutoffDay(){
  const v = document.getElementById('pr-cutoff-day').value || '';
  prCutoffDayGlobal = v;
  localStorage.setItem('prpo_payroll_cutoffday', v);
+ prApiPost('saveSetting', { key: 'cutoffDay', value: v })
+  .catch(err => showToast('❌ บันทึกวันตัดรอบขึ้น Sheet ไม่สำเร็จ — เครื่องอื่นจะยังไม่เห็นค่านี้ (' + String((err && err.message) || err).slice(0,80) + ')', 'error'));
  prRefreshDetail();
 }
 
