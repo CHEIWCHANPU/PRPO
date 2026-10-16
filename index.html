@@ -18036,7 +18036,7 @@ function prPostAttendance(userId, dk, rec){
  .then(r => { prDirtyClearIfSame(userId, dk, rec); _prSaveEpoch++; return r; })
  .catch(err => {
  console.warn('[payroll] saveAttendanceRecord ไม่สำเร็จ:', err.message||err);
- if (Date.now() - _prLastSaveErrToast > 8000) { _prLastSaveErrToast = Date.now(); showToast('❌ บันทึกขึ้น Sheet ไม่สำเร็จ — เก็บไว้ในเครื่องและจะส่งซ้ำอัตโนมัติ (เครื่องอื่นจะยังไม่เห็นจนกว่าจะส่งสำเร็จ)', 'error'); }
+ if (Date.now() - _prLastSaveErrToast > 8000) { _prLastSaveErrToast = Date.now(); showToast('❌ บันทึกขึ้น Sheet ไม่สำเร็จ (' + String((err && err.message) || err).slice(0,160) + ') — เก็บไว้ในเครื่องและจะส่งซ้ำอัตโนมัติ', 'error'); }
  });
 }
 /* สำรอง cache เก่าครั้งเดียวก่อนเลิกใช้วิธีเดิม (เผื่ออยากกู้ข้อมูล) */
