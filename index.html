@@ -23158,6 +23158,24 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
 .pcd-it .t small{color:#6B7280;font-size:11.5px}.pcd-emp{text-align:center;color:#6B7280;font-size:13px;padding:14px 0}
 .pc-btn.on{background:#FEF3C7;border-color:#D97706;color:#92400E}
 .pcs-meta{margin-top:6px;display:flex;justify-content:space-between;font-size:9px;color:#9CA3AF;}
+/* ── กล่องข้อความ (REMARK / โน้ต) แบบเดียวกับ RFQ: ลากย้าย ปรับขนาด เปลี่ยนรูปแบบได้ ── */
+.pcs-nl{position:absolute;left:0;top:0;width:0;height:0;z-index:20}
+.pcs-nt{position:absolute;z-index:20;box-sizing:border-box;min-width:120px;min-height:24px;overflow:visible;font-family:'Sarabun','Tahoma',sans-serif}
+.pcs-nt-rs{position:absolute;right:-1px;bottom:-1px;width:13px;height:13px;cursor:nwse-resize;display:none;background:linear-gradient(135deg,transparent 50%,#1E56F0 50%);touch-action:none;z-index:3}
+.pcs-nt:hover .pcs-nt-rs,.pcs-nt:focus-within .pcs-nt-rs,.pcs-nt.dragging .pcs-nt-rs{display:block}
+.pcs-nt-text{box-sizing:border-box;width:100%;height:100%;overflow:hidden;padding:3px 5px;font-size:14px;line-height:1.35;white-space:pre-wrap;word-break:break-word;outline:none;display:flex;flex-direction:column;justify-content:center;justify-content:safe center;text-align:center;color:#000;border:1px solid #c9a400;background:#fff6b0}
+.pcs-nt-text:empty::before{content:attr(data-ph);color:#9A8F4A;font-size:12px;font-weight:400}
+.pcs-nt-text:focus,.pcs-nt-text:focus-visible{box-shadow:none !important;outline:none !important}
+.pcs-nt.s1 .pcs-nt-text{border:1px solid #000;background:transparent}
+.pcs-nt.s2 .pcs-nt-text{border:1px dashed transparent;background:transparent}
+.pcs-nt.s2:hover .pcs-nt-text,.pcs-nt.s2:focus-within .pcs-nt-text{border-color:#9aa}
+.pcs-nt-bar{position:absolute;left:-1px;right:-1px;top:-19px;height:18px;display:none;align-items:center;gap:2px;background:#1E56F0;border-radius:4px 4px 0 0;color:#fff;font-size:11px;user-select:none}
+.pcs-nt:hover .pcs-nt-bar,.pcs-nt:focus-within .pcs-nt-bar,.pcs-nt.dragging .pcs-nt-bar{display:flex}
+.pcs-nt-grip{flex:1;min-width:0;white-space:nowrap;overflow:hidden;height:100%;cursor:move;touch-action:none;padding-left:6px;line-height:18px;letter-spacing:1px}
+.pcs-nt-bar button{all:unset;cursor:pointer;padding:0 6px;height:18px;line-height:18px;font-size:11px;color:#fff}
+.pcs-nt-bar button:hover{background:rgba(255,255,255,.25)}
+#pcSheet.pdf .pcs-nt-bar,#pcSheet.pdf .pcs-nt-rs{display:none !important}
+#pcSheet.pdf .pcs-nt-text:empty::before{content:''}
 /* โหมดสร้าง PDF: ซ่อนส่วนช่วยกรอก */
 #pcSheet.pdf .pcs-hint,#pcSheet.pdf .tools{display:none !important}
 #pcSheet.pdf .pcs-img{box-shadow:none !important;border-color:var(--ln) !important}
@@ -23170,6 +23188,8 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
   #pcSheet,#pcSheet *{visibility:visible !important}
   #pcSheet{position:fixed;left:0;top:0;box-shadow:none;margin:0}
   #pcSheet .pcs-hint,#pcSheet .tools{display:none !important}
+  #pcSheet .pcs-nt-bar,#pcSheet .pcs-nt-rs{display:none !important}
+  #pcSheet .pcs-nt-text:empty::before{content:''}
   @page{size:A4 landscape;margin:6mm}
 }
 </style>
@@ -23192,20 +23212,21 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
     pdf:'<svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>',
     clr:'<svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>',
     dft:'<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
-    img:'<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>'
+    img:'<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>',
+    note:'<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 7v6M9 10h6"/></svg>'
   };
   const blank = () => ({
     typeOfWork:'', spec:'', plating:'', plant:'',
     partName:'', partNo:'', rev:'', model:'', volume:'', years:'', yUnit:'Y',
     trial:[{date:'',pcs:''},{date:'',pcs:''},{date:'',pcs:''}],
-    custCode:'TYM', custPrice:'', makers:[{name:'', price:''}], remark:'',
+    custCode:'TYM', custPrice:'', makers:[{name:'', price:''}], remark:'', notes:null,
     base:{partName:'', volume:'', years:'', yUnit:'Y', maker:'', customer:'', plant:'CCIS', model:'', price:'', makerPrice:'', custPrice:''},
     draft:false, draftNote:'', newStart:'', newFinish:'', remake:'', docNo:'', signPrep:'', signChk:'', signApp:'', images:{}
   });
   const load = () => { try { const d = JSON.parse(localStorage.getItem(DKEY) || ''); if (d && typeof d === 'object') return d; } catch (e) {} return blank(); };
   const fixYU = o => { const m = String(o.years || '').trim().match(/^([\d.,]*)\s*([ymYM])[a-zA-Z]*$/); if (m) { o.yUnit = m[2].toUpperCase(); o.years = m[1]; } };
   const norm = d => { const b = blank(); d = Object.assign(b, d || {}); d.base = Object.assign(blank().base, d.base || {}); fixYU(d); fixYU(d.base); d.images = d.images || {};
-    while (d.trial.length < 3) d.trial.push({date:'', pcs:''}); d.makers = (d.makers || []).filter((m, i) => i === 0 || m.name || m.price); if (!d.makers.length) d.makers.push({name:'', price:''}); d.remark = d.remark || ''; try { if (d.signPrep && d.signPrep === localStorage.getItem('prpo_username')) d.signPrep = ''; } catch (e) {} return d; };
+    while (d.trial.length < 3) d.trial.push({date:'', pcs:''}); d.makers = (d.makers || []).filter((m, i) => i === 0 || m.name || m.price); if (!d.makers.length) d.makers.push({name:'', price:''}); d.remark = d.remark || ''; d.notes = Array.isArray(d.notes) ? d.notes : null; try { if (d.signPrep && d.signPrep === localStorage.getItem('prpo_username')) d.signPrep = ''; } catch (e) {} return d; };
 
   const PC = {
     d: norm(load()),
@@ -23215,7 +23236,7 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
     open(){ if (!$('#pcSheet')) this.render(); },
     drafts(){ try { const a = JSON.parse(localStorage.getItem(DRKEY) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } },
     putDrafts(a){ try { localStorage.setItem(DRKEY, JSON.stringify(a)); return true; } catch (e) { toast('พื้นที่เก็บในเครื่องเต็ม (อาจเพราะรูปใหญ่) — บันทึกแบบร่างไม่ได้', 'error'); return false; } },
-    isBlank(){ const z = o => JSON.stringify(Object.assign({}, o, {docDate:'', draft:false, draftNote:''})); return z(this.d) === z(blank()); },
+    isBlank(){ const z = o => JSON.stringify(Object.assign({}, o, {docDate:'', draft:false, draftNote:'', notes:(o.notes || []).map(n => n && n.t || '').filter(Boolean).join('\n')})); return z(this.d) === z(blank()); },
     draftsModal(){
       if ($('#pcdOv')) return;
       const ov = document.createElement('div'); ov.className = 'pcd-ov'; ov.id = 'pcdOv';
@@ -23258,8 +23279,8 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
       page.innerHTML = `
         <div class="pc-hero"><div><div class="pc-eyebrow">E-Form · Maker Price Summary · Before GO Work</div>
             <h1>สรุปราคา MAKER ก่อน GO WORK</h1><p>กรอกข้อความและใส่รูปลงในแบบฟอร์มได้โดยตรง แล้วกดดาวน์โหลดเป็น PDF</p></div>
-          <div class="pc-actions"><button class="pc-btn" id="pcImp">${I.xls}นำเข้าจาก Excel</button><button class="pc-btn${d.draft ? ' on' : ''}" id="pcDraft" title="บันทึก / เปิด / ลบ แบบร่างที่ยังสรุปไม่ได้ (เก็บในเครื่องนี้)">${I.dft}แบบร่าง${this.drafts().length ? ' (' + this.drafts().length + ')' : ''}</button><button class="pc-btn" id="pcClr">${I.clr}ล้างฟอร์ม</button><button class="pc-btn pri" id="pcPdf">${I.pdf}<span>ดาวน์โหลด PDF</span></button></div></div>
-        <div class="pc-desk"><p class="pc-tip">คลิกช่องเพื่อพิมพ์ · รูปชิ้นงาน: ตัดจาก DWG ด้วย Snipping Tool (Win+Shift+S) → คลิกที่กรอบรูป → กด Ctrl+V · ตัวเลขในตารางด้านล่างคำนวณให้อัตโนมัติ · ข้อมูลที่กรอกจะค้างไว้ในเครื่องนี้จนกว่าจะกดล้างฟอร์ม</p>
+          <div class="pc-actions"><button class="pc-btn" id="pcImp">${I.xls}นำเข้าจาก Excel</button><button class="pc-btn${d.draft ? ' on' : ''}" id="pcDraft" title="บันทึก / เปิด / ลบ แบบร่างที่ยังสรุปไม่ได้ (เก็บในเครื่องนี้)">${I.dft}แบบร่าง${this.drafts().length ? ' (' + this.drafts().length + ')' : ''}</button><button class="pc-btn" id="pcNote" title="เพิ่มกล่องข้อความ (โน้ต) แล้วลากไปวางในช่องที่ต้องการ">${I.note}เพิ่มกล่องข้อความ</button><button class="pc-btn" id="pcClr">${I.clr}ล้างฟอร์ม</button><button class="pc-btn pri" id="pcPdf">${I.pdf}<span>ดาวน์โหลด PDF</span></button></div></div>
+        <div class="pc-desk"><p class="pc-tip">คลิกช่องเพื่อพิมพ์ · กล่อง REMARK / กล่องข้อความ: เอาเมาส์วางบนกล่องแล้วลากแถบสีน้ำเงินเพื่อย้าย ลากมุมขวาล่างเพื่อปรับขนาด · รูปชิ้นงาน: ตัดจาก DWG ด้วย Snipping Tool (Win+Shift+S) → คลิกที่กรอบรูป → กด Ctrl+V · ตัวเลขในตารางด้านล่างคำนวณให้อัตโนมัติ · ข้อมูลที่กรอกจะค้างไว้ในเครื่องนี้จนกว่าจะกดล้างฟอร์ม</p>
         <div id="pcSheet">${d.draft ? `<div class="pcs-wm"><span>DRAFT</span></div><div class="pcs-draft"><b>✎ แบบร่าง · DRAFT — ยังสรุปไม่ได้</b><input data-k="draftNote" value="${esc(this.get('draftNote'))}" placeholder="เหตุผล / สิ่งที่รอ เช่น รอราคา MAKER รายที่ 2, รอลูกค้ายืนยัน Spec" autocomplete="off"></div>` : ''}
           <div class="pcs-hd"><div class="pcs-hd-l"><small>PURCHASING DEPARTMENT · PU-EN · E-FORM</small><b>MAKER PRICE SUMMARY<span>สรุปราคา MAKER ก่อน GO WORK</span></b></div>
             <table><tr><td class="lb" style="width:110px">CUSTOMER NO.</td><td>${F('docNo','c')}</td></tr><tr><td class="lb">DATE</td><td><input data-k="docDate" class="c" value="${esc(d.docDate || today())}" title="ใส่วันที่วันนี้ให้อัตโนมัติ — แก้ไขได้"></td></tr></table></div>
@@ -23273,13 +23294,12 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
                 ${['partNo','rev','model'].map((k, i) => `<tr><td class="lb">${['PART NO.','REV.','MODEL'][i]}</td><td>${F(k)}</td><td class="lb c">PP ${i + 1}</td><td class="lb c">DATE</td><td>${F('trial.' + i + '.date', 'c')}</td><td class="r"><div class="u">${F('trial.' + i + '.pcs')}<span>PCS</span></div></td></tr>`).join('')}
                 <tr><td class="lb">VOLUME</td><td style="padding:0"><div class="pcs-vol"><div class="u">${F('volume', '', 'text-align:right')}<span class="un">PCS</span></div><div class="sl">/</div><div class="u yr">${F('years', '', 'text-align:right')}${UB('yUnit')}</div></div></td><td colspan="4" style="background:#FAFAFA"></td></tr>
               </table></div>
-            <div style="display:flex;gap:24px;justify-content:space-between;margin-top:10px;align-items:stretch">
+            <div id="pcsRow" style="display:flex;gap:24px;justify-content:space-between;margin-top:10px;align-items:stretch">
             <div style="flex:0 0 340px"><table class="pcs-pt pcs-ptc"><colgroup><col style="width:150px"><col><col style="width:22px"><col style="width:112px"></colgroup>
               <tr><td class="lb cu">ราคาที่เสนอลูกค้า :</td><td class="cu">${F('custCode','c')}</td><td class="c cu">=</td><td class="pc r cu"><div class="u">${F('custPrice')}<span>THB</span></div></td></tr>
             </table><table class="pcs-pt pcs-ptm"><colgroup><col style="width:112px"><col><col style="width:22px"><col style="width:112px"></colgroup>
               ${d.makers.map((m, i) => `<tr class="pcs-mk" data-mi="${i}"><td class="${i ? 'nl' : 'lb mk'}">${i ? '' : 'ราคาของ MAKER'}</td><td class="mv" style="position:relative">${F('makers.' + i + '.name', 'c')}${i ? `<button class="pcs-rm" data-rm="${i}" title="ลบแถวนี้">×</button>` : ''}</td><td class="c mv">=</td><td class="pc r mv"><div class="u">${F('makers.' + i + '.price')}<span>THB</span></div></td></tr>`).join('')}
             </table>${d.makers.length < MROWS ? '<button class="pcs-add" id="pcsAddMk">+ เพิ่ม MAKER</button>' : ''}</div>
-            <div class="pcs-rmk"><div class="pcs-cap">REMARK<span>หมายเหตุ</span></div><div class="pcs-rmk-b" id="pcsRemark" contenteditable="true" spellcheck="false">${esc(d.remark).replace(/\n/g, '<br>')}</div></div>
             </div>
             <div class="pcs-note" title="พื้นที่ว่างสำหรับเขียนสรุป / Note หลังพิมพ์"></div>
             <div class="pcs-row"><div class="pcs-bbox"><div>รายละเอียดของ</div><div>ชิ้นงานที่ใกล้เคียง</div><div>(BASE)</div></div>
@@ -23322,10 +23342,72 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
       $('#pcPdf').onclick = () => this.pdf();
       const add = $('#pcsAddMk'); if (add) add.onclick = () => { this.d.makers.push({name:'', price:''}); this.save(); this.render(); const ins = document.querySelectorAll('#pcSheet tr.pcs-mk input[data-k$=".name"]'); ins[ins.length - 1].focus(); };
       page.querySelectorAll('.pcs-rm').forEach(b => b.onclick = () => { this.d.makers.splice(+b.dataset.rm, 1); this.save(); this.render(); });
-      const rmk = $('#pcsRemark'); rmk.addEventListener('input', () => { this.d.remark = rmk.innerText.replace(/\n$/, ''); if (!rmk.textContent && rmk.innerHTML === '<br>') rmk.innerHTML = ''; this.save(); });
-      rmk.addEventListener('paste', e => { e.preventDefault(); document.execCommand('insertText', false, (e.clipboardData || window.clipboardData).getData('text')); });
+      $('#pcNote').onclick = () => this.addNote();
+      this.initNotes();
       this.fit();
       this.calc();
+    },
+    /* ── กล่องข้อความ REMARK / โน้ต (ลากย้าย · ปรับขนาด · A− A+ · B · รูปแบบ · ลบ) เหมือนหน้า RFQ ── */
+    addNote(){ if (this._addNote) this._addNote(); },
+    initNotes(){
+      const sheet = $('#pcSheet'); if (!sheet) return;
+      const self = this, layer = document.createElement('div'); layer.className = 'pcs-nl'; sheet.appendChild(layer);
+      const base = () => { const h = sheet.querySelector('.pcs-hd'); return h ? h.offsetTop : 0; };   // พิกัดแกน Y วัดจากหัวฟอร์ม → ป้าย DRAFT ดันฟอร์มลง กล่องก็ตามลงด้วย
+      const save = () => { const b = base();
+        self.d.notes = [...layer.querySelectorAll('.pcs-nt')].map(n => ({x:n.offsetLeft, y:n.offsetTop - b, w:n.offsetWidth, h:n.offsetHeight,
+          t:n.querySelector('.pcs-nt-text').innerText.replace(/\n$/, ''), s:+n.dataset.s || 0, f:+n.dataset.f || 14, b:n.dataset.b === '1' ? 1 : 0}));
+        self.d.remark = ''; self.save(); };
+      let tm; const saveSoon = () => { clearTimeout(tm); tm = setTimeout(save, 300); };
+      const grow = n => { const cur = n.offsetHeight; n.style.height = 'auto'; n.style.height = Math.max(cur, n.offsetHeight) + 'px'; };   // ขยายให้พอดีข้อความ ไม่หดเอง
+      const setStyle = (n, s) => { n.dataset.s = s; n.classList.remove('s0', 's1', 's2'); n.classList.add('s' + s); };
+      const setFont = (n, f, b) => { f = Math.max(7, Math.min(60, f)); n.dataset.f = f; n.dataset.b = b ? '1' : '0';
+        const t = n.querySelector('.pcs-nt-text'); t.style.fontSize = f + 'px'; t.style.fontWeight = b ? '700' : '400';
+        n.querySelector('.pcs-nt-fm').title = 'ลดขนาดตัวอักษร (ตอนนี้ ' + f + ')'; n.querySelector('.pcs-nt-bold').style.background = b ? 'rgba(255,255,255,.35)' : ''; };
+      const clamp = (n, x, y) => { x = Math.max(0, Math.min(x, sheet.clientWidth - n.offsetWidth)); y = Math.max(0, Math.min(y, sheet.scrollHeight - 20)); n.style.left = x + 'px'; n.style.top = y + 'px'; };
+      const resizer = n => { const h = document.createElement('div'); h.className = 'pcs-nt-rs'; h.title = 'ลากเพื่อปรับขนาด'; h.setAttribute('data-html2canvas-ignore', 'true'); n.appendChild(h);
+        h.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); h.setPointerCapture(e.pointerId); n.classList.add('dragging');
+          const sx = e.clientX, sy = e.clientY, sw = n.offsetWidth, sh = n.offsetHeight;
+          const mv = ev => { n.style.width = Math.max(120, Math.min(sw + ev.clientX - sx, sheet.clientWidth - n.offsetLeft)) + 'px'; n.style.height = Math.max(24, sh + ev.clientY - sy) + 'px'; };
+          const up = () => { n.classList.remove('dragging'); h.removeEventListener('pointermove', mv); h.removeEventListener('pointerup', up); h.removeEventListener('pointercancel', up); save(); };
+          h.addEventListener('pointermove', mv); h.addEventListener('pointerup', up); h.addEventListener('pointercancel', up); }); };
+      const create = (d, ph) => {
+        const n = document.createElement('div'); n.className = 'pcs-nt';
+        n.innerHTML = '<div class="pcs-nt-bar" data-html2canvas-ignore="true"><span class="pcs-nt-grip" title="ลากเพื่อย้าย">⋮⋮ ลากย้าย</span>' +
+          '<button type="button" class="pcs-nt-fm" title="ลดขนาดตัวอักษร">A−</button><button type="button" class="pcs-nt-fp" title="เพิ่มขนาดตัวอักษร">A+</button><button type="button" class="pcs-nt-bold" title="ตัวหนา" style="font-weight:bold">B</button>' +
+          '<button type="button" class="pcs-nt-style" title="สลับรูปแบบ: โน้ตเหลือง / ขอบดำ / ไม่มีขอบ">รูปแบบ</button>' +
+          '<button type="button" class="pcs-nt-del" title="ลบกล่องข้อความ">×</button></div>' +
+          '<div class="pcs-nt-text" contenteditable="plaintext-only" spellcheck="false"></div>';
+        const tx = n.querySelector('.pcs-nt-text'); tx.textContent = d.t || ''; tx.dataset.ph = ph || 'พิมพ์ข้อความ...';
+        resizer(n); layer.appendChild(n);
+        n.style.width = (d.w || 200) + 'px'; n.style.height = (d.h || 60) + 'px';
+        setFont(n, d.f || 14, d.b); setStyle(n, d.s || 0); clamp(n, d.x || 0, (d.y || 0) + base()); grow(n);
+        tx.addEventListener('input', () => { if (!tx.textContent && tx.innerHTML === '<br>') tx.innerHTML = ''; grow(n); saveSoon(); });
+        n.querySelector('.pcs-nt-style').onclick = () => { setStyle(n, ((+n.dataset.s || 0) + 1) % 3); save(); };
+        n.querySelector('.pcs-nt-fm').onclick = () => { setFont(n, (+n.dataset.f || 14) - 1, n.dataset.b === '1'); save(); };
+        n.querySelector('.pcs-nt-fp').onclick = () => { setFont(n, (+n.dataset.f || 14) + 1, n.dataset.b === '1'); grow(n); save(); };
+        n.querySelector('.pcs-nt-bold').onclick = () => { setFont(n, +n.dataset.f || 14, n.dataset.b !== '1'); grow(n); save(); };
+        n.querySelector('.pcs-nt-del').onclick = () => { if (tx.innerText.trim() && !confirm('ลบกล่องข้อความนี้?')) return; n.remove(); save(); };
+        const g = n.querySelector('.pcs-nt-grip');
+        g.addEventListener('pointerdown', e => { e.preventDefault(); g.setPointerCapture(e.pointerId); n.classList.add('dragging');
+          const sx = e.clientX, sy = e.clientY, ox = n.offsetLeft, oy = n.offsetTop;
+          const mv = ev => clamp(n, ox + ev.clientX - sx, oy + ev.clientY - sy);
+          const up = () => { n.classList.remove('dragging'); g.removeEventListener('pointermove', mv); g.removeEventListener('pointerup', up); g.removeEventListener('pointercancel', up); save(); };
+          g.addEventListener('pointermove', mv); g.addEventListener('pointerup', up); g.addEventListener('pointercancel', up); });
+        return n;
+      };
+      const ready = (fn, k) => { k = k || 0; if (!sheet.isConnected) return; if (!sheet.offsetWidth && k < 50) { setTimeout(() => ready(fn, k + 1), 100); return; } fn(); };   // รอจนหน้าแสดงจริงจึงวัดตำแหน่ง
+      ready(() => {
+        if (Array.isArray(self.d.notes)) { self.d.notes.forEach(n => create(n, 'พิมพ์ข้อความ...')); return; }
+        /* ยังไม่เคยแก้กล่อง → วาง REMARK เริ่มต้นไว้ตำแหน่งเดิม (ขวาของตารางราคา MAKER) */
+        const row = $('#pcsRow'), sr = sheet.getBoundingClientRect(), rr = row ? row.getBoundingClientRect() : sr;
+        create({x:Math.round(rr.right - sr.left) - 306, y:Math.round(rr.top - sr.top) + 8 - base(), w:300, h:Math.max(72, Math.round(rr.height) - 8), t:self.d.remark || '', s:0, f:19, b:1},
+          'REMARK · พิมพ์หมายเหตุ เช่น งาน Prototype / เงื่อนไขพิเศษ ...');
+      });
+      this._addNote = () => ready(() => {
+        const r = sheet.getBoundingClientRect(), y = Math.max(0, -r.top) + Math.max(80, innerHeight * 0.25);
+        const n = create({x:sheet.clientWidth - 240, y:y - base(), w:200, h:60, t:'', s:0, f:14, b:0}, 'พิมพ์ข้อความ...');
+        n.querySelector('.pcs-nt-text').focus(); save();
+      });
     },
     /* ช่องตัวเลขที่มีหน่วยต่อท้าย: ปรับความกว้างตามข้อความ ให้ตัวเลข + หน่วยอยู่กลางช่องด้วยกัน */
     fit(){},
@@ -23430,8 +23512,17 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
       return this._lib;
     },
     /* ข้อความไทยที่ตัดบรรทัดเองจะเพี้ยนใน PDF → วาดเป็นรูปก่อน (ตัดคำด้วย Intl.Segmenter) */
-    remarkToImg(){
-      const box = $('#pcsRemark'); if (!box || !box.innerText.trim()) return null;
+    remarkToImg(){          // กล่อง REMARK / กล่องข้อความทุกกล่อง → วาดเป็นรูปก่อนสร้าง PDF; กล่องว่างซ่อนไว้ไม่พิมพ์
+      const undo = [];
+      document.querySelectorAll('#pcSheet .pcs-nt').forEach(n => {
+        const box = n.querySelector('.pcs-nt-text');
+        if (!box.innerText.trim()) { const v = n.style.visibility; n.style.visibility = 'hidden'; undo.push(() => { n.style.visibility = v; }); return; }
+        const u = this.textToImg(box); if (u) undo.push(u);
+      });
+      return () => undo.forEach(f => f());
+    },
+    textToImg(box){
+      if (!box || !box.innerText.trim()) return null;
       const cs = getComputedStyle(box), padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight), padY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
       const W = box.clientWidth - padX, lh = parseFloat(cs.lineHeight) || 17, sc = 3;
       const font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
@@ -23484,7 +23575,9 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
       if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
       const st = sheet.querySelector('[data-k2="newStart"]'), stOld = st && st.value;
       if (st && !st.value && st.placeholder) st.value = st.placeholder;     // ช่อง START ว่าง → ใช้ราคา MAKER ต่ำสุด
+      const hd0 = sheet.querySelector('.pcs-hd'), lay = sheet.querySelector('.pcs-nl'), hx = hd0 ? hd0.offsetLeft : 0, hy = hd0 ? hd0.offsetTop : 0;
       sheet.classList.add('pdf');
+      if (lay && hd0) { lay.style.left = (hd0.offsetLeft - hx) + 'px'; lay.style.top = (hd0.offsetTop - hy) + 'px'; }   // โหมด PDF ลด padding ของแผ่น → ขยับกล่องตามเนื้อหา
       let undoRmk = null, ok = false;
       try {
         await new Promise(r => setTimeout(r, 60));
@@ -23514,7 +23607,7 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
         setTimeout(() => window.print(), 250);
       } finally {
         this.dlHide(!ok);
-        sheet.classList.remove('pdf'); if (st) st.value = stOld; if (undoRmk) undoRmk();
+        sheet.classList.remove('pdf'); if (lay) { lay.style.left = ''; lay.style.top = ''; } if (st) st.value = stOld; if (undoRmk) undoRmk();
         btn.disabled = false; btn.lastChild.textContent = 'ดาวน์โหลด PDF';
         this._busy = false;
       }
