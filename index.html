@@ -17956,7 +17956,7 @@ async function prFetchWithTimeout(url, options){
 }
 async function prApiGet(action, params){
  params = params || {};
- const qs = new URLSearchParams(Object.assign({action, _t: Date.now()}, params)).toString();
+ const qs = new URLSearchParams(Object.assign({action}, params)).toString();
  const res = await prFetchWithTimeout(`${prPayrollUrl()}?${qs}`);
  const json = await prReadJson(res);
  if(!json.success) throw new Error(json.error || 'API error');
@@ -18029,14 +18029,13 @@ function prDirtyClearIfSame(userId, dk, rec){
  const d = prDirtyLoad(), k = userId + '|' + dk, cur = d[k];
  if (cur && cur.work === (rec.work||0) && cur.ot === (rec.ot||0) && (cur.note||'') === (rec.note||'')) { delete d[k]; prDirtySave(d); }
 }
-let _prSaveEpoch = 0; // นับจำนวนครั้งที่บันทึกขึ้น Sheet สำเร็จ ใช้ตรวจว่าผล GET เก่ากว่าหรือไม่
 let _prLastSaveErrToast = 0;
 function prPostAttendance(userId, dk, rec){
  return prApiPost('saveAttendanceRecord', { userId, dateKey: dk, record: rec })
- .then(r => { prDirtyClearIfSame(userId, dk, rec); _prSaveEpoch++; return r; })
+ .then(r => { prDirtyClearIfSame(userId, dk, rec); return r; })
  .catch(err => {
  console.warn('[payroll] saveAttendanceRecord ไม่สำเร็จ:', err.message||err);
- if (Date.now() - _prLastSaveErrToast > 8000) { _prLastSaveErrToast = Date.now(); showToast('❌ บันทึกขึ้น Sheet ไม่สำเร็จ (' + String((err && err.message) || err).slice(0,160) + ') — เก็บไว้ในเครื่องและจะส่งซ้ำอัตโนมัติ', 'error'); }
+ if (Date.now() - _prLastSaveErrToast > 8000) { _prLastSaveErrToast = Date.now(); showToast('❌ บันทึกขึ้น Sheet ไม่สำเร็จ — เก็บไว้ในเครื่องและจะส่งซ้ำอัตโนมัติ (เครื่องอื่นจะยังไม่เห็นจนกว่าจะส่งสำเร็จ)', 'error'); }
  });
 }
 /* สำรอง cache เก่าครั้งเดียวก่อนเลิกใช้วิธีเดิม (เผื่ออยากกู้ข้อมูล) */
@@ -18067,7 +18066,6 @@ setInterval(prAutoRefresh, 60000);
  request ล่าสุด (เช่น กด Work แล้ว refresh ก่อน sync เสร็จ) */
 async function prSyncFromSheet(){
  prSyncStatus = 'loading';
- const _epoch0 = _prSaveEpoch;
  prRenderGrid(); // โชว์สถานะกำลังโหลดทันที (เผื่อยังไม่มี cache)
  try{
  /* ชื่อ action 'getAll' ชนกับ getAll ของ CCIP Extension ใน doGet (CCIP_route_ ทำงานก่อน) จึงใช้ชื่อเฉพาะ payrollGetAll
@@ -18078,27 +18076,8 @@ async function prSyncFromSheet(){
  if (/Unknown action/i.test(String(e1 && e1.message))) all = await prApiGet('getAll');
  else throw e1;
  }
- if (_prSaveEpoch !== _epoch0 || Object.values(_prSyncRunning).some(Boolean)) {
-  /* มีการบันทึกเสร็จ/กำลังบันทึกระหว่างดึงข้อมูล → ผลที่ได้อาจเก่ากว่า ทิ้งแล้วดึงใหม่ */
-  prSyncStatus = prUsers.length ? 'online' : 'idle';
-  prRenderGrid();
-  setTimeout(prSyncFromSheet, 1500);
-  return;
- }
  if (!all || !Array.isArray(all.employees)) throw new Error('ข้อมูลจาก Sheet ไม่ตรงรูปแบบ (ไม่มีรายชื่อพนักงาน) — อาจถูก action อื่นตอบแทน');
  const fromSheet = prMergeFromSheet(all.employees, all.attendance);
- /* วันตัดรอบเก็บที่ Sheet ให้ตรงกันทุกเครื่อง */
- if (all.settings) {
-  const sc = String(all.settings.cutoffDay || '');
-  if (sc) {
-   prCutoffDayGlobal = sc;
-   try { localStorage.setItem('prpo_payroll_cutoffday', sc); } catch (e) {}
-   const cEl = document.getElementById('pr-cutoff-day');
-   if (cEl && document.activeElement !== cEl) cEl.value = sc;
-  } else if (prCutoffDayGlobal) {
-   prApiPost('saveSetting', { key: 'cutoffDay', value: prCutoffDayGlobal }).catch(() => {});
-  }
- }
 
  // FIX v2: Sheet คือข้อมูลจริง (ใช้ได้ตรงกันทุกเครื่อง) — ไม่เอา cache มา max แล้ว
  // เพราะ cache เก่าในเครื่องอื่นจะดึงค่าที่ถูกยกเลิก/ลดแล้วกลับมาแสดง (ข้อมูลไม่ตรงกันข้ามเครื่อง)
@@ -18414,8 +18393,6 @@ function prUpdateCutoffDay(){
  const v = document.getElementById('pr-cutoff-day').value || '';
  prCutoffDayGlobal = v;
  localStorage.setItem('prpo_payroll_cutoffday', v);
- prApiPost('saveSetting', { key: 'cutoffDay', value: v })
-  .catch(err => showToast('❌ บันทึกวันตัดรอบขึ้น Sheet ไม่สำเร็จ — เครื่องอื่นจะยังไม่เห็นค่านี้ (' + String((err && err.message) || err).slice(0,80) + ')', 'error'));
  prRefreshDetail();
 }
 
@@ -23158,6 +23135,28 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
 @keyframes pcShine{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
 .pc-dl-row{display:flex;justify-content:space-between;margin-top:8px;font-size:.76rem;color:var(--muted,#64748B)}
 .pc-dl-row b{color:var(--text,#0F172A);font-variant-numeric:tabular-nums}
+#pcSheet{position:relative}
+.pcs-draft{display:flex;align-items:center;gap:10px;margin:0 0 6px;padding:5px 10px;background:#FEF3C7;border:2px dashed #D97706;color:#92400E;border-radius:4px}
+.pcs-draft b{font-size:13px;letter-spacing:.5px;white-space:nowrap}
+.pcs-draft input{flex:1;min-width:0;border:0;border-bottom:1px dashed #D97706;background:transparent;font:inherit;font-size:12px;color:#92400E;padding:2px 4px;outline:none}
+.pcs-draft input::placeholder{color:#B45309;opacity:.65}
+.pcs-wm{position:absolute;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:5;overflow:hidden}
+.pcs-wm span{font:800 150px/1 Arial,Helvetica,sans-serif;letter-spacing:12px;color:rgba(217,119,6,.13);transform:rotate(-24deg);white-space:nowrap}
+.pcd-ov{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:100000;display:flex;align-items:center;justify-content:center;padding:16px;font-family:'Sarabun','Tahoma',sans-serif}
+.pcd-box{background:#fff;color:#111827;width:min(560px,100%);max-height:86vh;display:flex;flex-direction:column;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden}
+.pcd-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #E5E7EB}
+.pcd-hd b{font-size:16px}.pcd-x{border:0;background:none;font-size:22px;line-height:1;cursor:pointer;color:#6B7280}
+.pcd-bd{padding:14px 18px;overflow:auto;display:flex;flex-direction:column;gap:12px}
+.pcd-new{display:flex;gap:8px}.pcd-new input{flex:1;min-width:0;border:1px solid #CBD5E1;border-radius:8px;padding:8px 10px;font:inherit;font-size:13px}
+.pcd-b{border:1px solid #CBD5E1;background:#fff;color:#111827;border-radius:8px;padding:7px 12px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap}
+.pcd-b:hover{border-color:#2563EB;color:#2563EB}.pcd-b.pri{background:#2563EB;border-color:#2563EB;color:#fff}.pcd-b.pri:hover{filter:brightness(1.1);color:#fff}
+.pcd-b.del:hover,.pcd-b.del.ask{border-color:#DC2626;color:#DC2626}.pcd-b.del.ask{background:#FEE2E2}
+.pcd-tg{display:flex;align-items:center;gap:8px;font-size:13px;background:#FEF3C7;border:1px dashed #D97706;color:#92400E;border-radius:8px;padding:8px 10px;cursor:pointer}
+.pcd-lst{display:flex;flex-direction:column;gap:8px}
+.pcd-it{display:flex;align-items:center;gap:10px;border:1px solid #E5E7EB;border-radius:10px;padding:9px 12px}
+.pcd-it .t{flex:1;min-width:0}.pcd-it .t b{display:block;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pcd-it .t small{color:#6B7280;font-size:11.5px}.pcd-emp{text-align:center;color:#6B7280;font-size:13px;padding:14px 0}
+.pc-btn.on{background:#FEF3C7;border-color:#D97706;color:#92400E}
 .pcs-meta{margin-top:6px;display:flex;justify-content:space-between;font-size:9px;color:#9CA3AF;}
 /* โหมดสร้าง PDF: ซ่อนส่วนช่วยกรอก */
 #pcSheet.pdf .pcs-hint,#pcSheet.pdf .tools{display:none !important}
@@ -23177,7 +23176,7 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
 <script id="pcmp-js">
 (function(){
   'use strict';
-  const DKEY = 'ccip_pcmp_draft', MROWS = 8;
+  const DKEY = 'ccip_pcmp_draft', DRKEY = 'ccip_pcmp_drafts_v1', MROWS = 8;
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const toast = (m, t) => { try { showToast(m, t || 'info'); } catch (e) { console.log(m); } };
@@ -23192,6 +23191,7 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
     xls:'<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="m9 13 4 5M13 13l-4 5"/></svg>',
     pdf:'<svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>',
     clr:'<svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>',
+    dft:'<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
     img:'<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>'
   };
   const blank = () => ({
@@ -23200,7 +23200,7 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
     trial:[{date:'',pcs:''},{date:'',pcs:''},{date:'',pcs:''}],
     custCode:'TYM', custPrice:'', makers:[{name:'', price:''}], remark:'',
     base:{partName:'', volume:'', years:'', yUnit:'Y', maker:'', customer:'', plant:'CCIS', model:'', price:'', makerPrice:'', custPrice:''},
-    newStart:'', newFinish:'', remake:'', docNo:'', signPrep:'', signChk:'', signApp:'', images:{}
+    draft:false, draftNote:'', newStart:'', newFinish:'', remake:'', docNo:'', signPrep:'', signChk:'', signApp:'', images:{}
   });
   const load = () => { try { const d = JSON.parse(localStorage.getItem(DKEY) || ''); if (d && typeof d === 'object') return d; } catch (e) {} return blank(); };
   const fixYU = o => { const m = String(o.years || '').trim().match(/^([\d.,]*)\s*([ymYM])[a-zA-Z]*$/); if (m) { o.yUnit = m[2].toUpperCase(); o.years = m[1]; } };
@@ -23213,6 +23213,42 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
     get(k){ return k.split('.').reduce((o, p) => o == null ? '' : o[p], this.d) ?? ''; },
     set(k, v){ const ps = k.split('.'); let o = this.d; ps.slice(0, -1).forEach(p => { o = o[p]; }); o[ps[ps.length - 1]] = v; },
     open(){ if (!$('#pcSheet')) this.render(); },
+    drafts(){ try { const a = JSON.parse(localStorage.getItem(DRKEY) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } },
+    putDrafts(a){ try { localStorage.setItem(DRKEY, JSON.stringify(a)); return true; } catch (e) { toast('พื้นที่เก็บในเครื่องเต็ม (อาจเพราะรูปใหญ่) — บันทึกแบบร่างไม่ได้', 'error'); return false; } },
+    isBlank(){ const z = o => JSON.stringify(Object.assign({}, o, {docDate:'', draft:false, draftNote:''})); return z(this.d) === z(blank()); },
+    draftsModal(){
+      if ($('#pcdOv')) return;
+      const ov = document.createElement('div'); ov.className = 'pcd-ov'; ov.id = 'pcdOv';
+      const close = () => { ov.remove(); };
+      const fmt = t => { const x = new Date(t); return x.getDate() + '/' + (x.getMonth() + 1) + '/' + x.getFullYear() + ' ' + String(x.getHours()).padStart(2, '0') + ':' + String(x.getMinutes()).padStart(2, '0'); };
+      const autoName = () => [this.d.partName, this.d.partNo].map(x => String(x || '').trim()).filter(Boolean).join(' · ') || 'แบบร่างไม่มีชื่อ';
+      const draw = () => {
+        const L = this.drafts(); const cnt = $('#pcDraft'); if (cnt) cnt.lastChild.nodeType === 3 && (cnt.lastChild.textContent = 'แบบร่าง' + (L.length ? ' (' + L.length + ')' : ''));
+        ov.innerHTML = `<div class="pcd-box" role="dialog" aria-modal="true"><div class="pcd-hd"><b>แบบร่าง E-FORM</b><button class="pcd-x" data-a="x" title="ปิด">×</button></div><div class="pcd-bd">
+          <div class="pcd-new"><input id="pcdName" maxlength="80" placeholder="ตั้งชื่อแบบร่าง (เว้นว่าง = ใช้ชื่อ/เลขชิ้นงานในฟอร์ม)"><button class="pcd-b pri" data-a="save">บันทึกฟอร์มนี้เป็นแบบร่างใหม่</button></div>
+          <label class="pcd-tg"><input type="checkbox" id="pcdTg"${this.d.draft ? ' checked' : ''}> ติดป้าย DRAFT บนฟอร์มนี้ (แสดงใน PDF ด้วย)</label>
+          <div class="pcd-lst">${L.length ? L.map(it => `<div class="pcd-it" data-id="${it.id}"><div class="t"><b>${esc(it.name)}</b><small>บันทึกเมื่อ ${fmt(it.savedAt)}${it.data && it.data.draftNote ? ' · ' + esc(it.data.draftNote) : ''}</small></div><button class="pcd-b" data-a="open">เปิด</button><button class="pcd-b" data-a="upd" title="บันทึกทับด้วยฟอร์มปัจจุบัน">อัปเดต</button><button class="pcd-b del" data-a="del">ลบ</button></div>`).join('') : '<div class="pcd-emp">ยังไม่มีแบบร่างที่บันทึกไว้</div>'}</div>
+          <small style="color:#6B7280;font-size:11.5px">แบบร่างเก็บในเครื่อง/เบราว์เซอร์นี้เท่านั้น — เปิดเครื่องอื่นจะไม่เห็น</small></div></div>`;
+      };
+      ov.addEventListener('click', ev => {
+        if (ev.target === ov) return close();
+        const b = ev.target.closest('[data-a]'); if (!b) return; const a = b.dataset.a, row = b.closest('.pcd-it'), id = row && row.dataset.id;
+        if (a === 'x') return close();
+        const snap = () => JSON.parse(JSON.stringify(Object.assign({}, this.d, {draft:true})));
+        if (a === 'save') { const L = this.drafts(); const nm = ($('#pcdName', ov).value || '').trim() || autoName();
+          L.unshift({id:'d' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name:nm, savedAt:Date.now(), data:snap()}); if (this.putDrafts(L)) { toast('บันทึกแบบร่างแล้ว', 'success'); draw(); } }
+        else if (a === 'upd') { const L = this.drafts(), it = L.find(x => x.id === id); if (!it) return; if (b.dataset.ask !== '1') { b.dataset.ask = '1'; b.textContent = 'ยืนยันทับ?'; b.classList.add('pri'); setTimeout(() => { if (b.isConnected) { delete b.dataset.ask; b.textContent = 'อัปเดต'; b.classList.remove('pri'); } }, 3000); return; }
+          it.data = snap(); it.savedAt = Date.now(); if (this.putDrafts(L)) { toast('อัปเดตแบบร่างแล้ว', 'success'); draw(); } }
+        else if (a === 'del') { if (b.dataset.ask !== '1') { b.dataset.ask = '1'; b.textContent = 'ยืนยันลบ?'; b.classList.add('ask'); setTimeout(() => { if (b.isConnected) { delete b.dataset.ask; b.textContent = 'ลบ'; b.classList.remove('ask'); } }, 3000); return; }
+          this.putDrafts(this.drafts().filter(x => x.id !== id)); toast('ลบแบบร่างแล้ว', 'success'); draw(); this.render(); }
+        else if (a === 'open') { const it = this.drafts().find(x => x.id === id); if (!it) return;
+          if (!this.isBlank() && b.dataset.ask !== '1') { b.dataset.ask = '1'; b.textContent = 'แทนที่ฟอร์มนี้?'; b.classList.add('pri'); setTimeout(() => { if (b.isConnected) { delete b.dataset.ask; b.textContent = 'เปิด'; b.classList.remove('pri'); } }, 3000); return; }
+          this.d = norm(JSON.parse(JSON.stringify(it.data))); try { localStorage.setItem(DKEY, JSON.stringify(this.d)); } catch (e) {} this.render(); close(); toast('เปิดแบบร่าง “' + it.name + '” แล้ว', 'success'); }
+      });
+      ov.addEventListener('change', ev => { if (ev.target.id === 'pcdTg') { this.d.draft = ev.target.checked; try { localStorage.setItem(DKEY, JSON.stringify(this.d)); } catch (e) {} this.render(); } });
+      document.addEventListener('keydown', function esc_(e) { if (!ov.isConnected) return document.removeEventListener('keydown', esc_); if (e.key === 'Escape') close(); });
+      draw(); document.body.appendChild(ov);
+    },
 
     render(){
       const page = $('#page-pcmp'), d = this.d;
@@ -23222,9 +23258,9 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
       page.innerHTML = `
         <div class="pc-hero"><div><div class="pc-eyebrow">E-Form · Maker Price Summary · Before GO Work</div>
             <h1>สรุปราคา MAKER ก่อน GO WORK</h1><p>กรอกข้อความและใส่รูปลงในแบบฟอร์มได้โดยตรง แล้วกดดาวน์โหลดเป็น PDF</p></div>
-          <div class="pc-actions"><button class="pc-btn" id="pcImp">${I.xls}นำเข้าจาก Excel</button><button class="pc-btn" id="pcClr">${I.clr}ล้างฟอร์ม</button><button class="pc-btn pri" id="pcPdf">${I.pdf}<span>ดาวน์โหลด PDF</span></button></div></div>
+          <div class="pc-actions"><button class="pc-btn" id="pcImp">${I.xls}นำเข้าจาก Excel</button><button class="pc-btn${d.draft ? ' on' : ''}" id="pcDraft" title="บันทึก / เปิด / ลบ แบบร่างที่ยังสรุปไม่ได้ (เก็บในเครื่องนี้)">${I.dft}แบบร่าง${this.drafts().length ? ' (' + this.drafts().length + ')' : ''}</button><button class="pc-btn" id="pcClr">${I.clr}ล้างฟอร์ม</button><button class="pc-btn pri" id="pcPdf">${I.pdf}<span>ดาวน์โหลด PDF</span></button></div></div>
         <div class="pc-desk"><p class="pc-tip">คลิกช่องเพื่อพิมพ์ · รูปชิ้นงาน: ตัดจาก DWG ด้วย Snipping Tool (Win+Shift+S) → คลิกที่กรอบรูป → กด Ctrl+V · ตัวเลขในตารางด้านล่างคำนวณให้อัตโนมัติ · ข้อมูลที่กรอกจะค้างไว้ในเครื่องนี้จนกว่าจะกดล้างฟอร์ม</p>
-        <div id="pcSheet">
+        <div id="pcSheet">${d.draft ? `<div class="pcs-wm"><span>DRAFT</span></div><div class="pcs-draft"><b>✎ แบบร่าง · DRAFT — ยังสรุปไม่ได้</b><input data-k="draftNote" value="${esc(this.get('draftNote'))}" placeholder="เหตุผล / สิ่งที่รอ เช่น รอราคา MAKER รายที่ 2, รอลูกค้ายืนยัน Spec" autocomplete="off"></div>` : ''}
           <div class="pcs-hd"><div class="pcs-hd-l"><small>PURCHASING DEPARTMENT · PU-EN · E-FORM</small><b>MAKER PRICE SUMMARY<span>สรุปราคา MAKER ก่อน GO WORK</span></b></div>
             <table><tr><td class="lb" style="width:110px">CUSTOMER NO.</td><td>${F('docNo','c')}</td></tr><tr><td class="lb">DATE</td><td><input data-k="docDate" class="c" value="${esc(d.docDate || today())}" title="ใส่วันที่วันนี้ให้อัตโนมัติ — แก้ไขได้"></td></tr></table></div>
           <table><colgroup><col style="width:124px"><col><col style="width:70px"><col><col style="width:82px"><col></colgroup>
@@ -23281,6 +23317,7 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
         page.querySelectorAll('.pcs-chk i').forEach(x => { x.textContent = x.parentNode.dataset.p === this.d.plant ? '✓' : ''; }); });
       this.bindImgs();
       $('#pcImp').onclick = () => this.importXlsx();
+      $('#pcDraft').onclick = () => this.draftsModal();
       $('#pcClr').onclick = () => { if (!confirm('ล้างข้อมูลและรูปในแบบฟอร์มทั้งหมด?')) return; this.d = blank(); try { localStorage.removeItem(DKEY); } catch (e) {} this.render(); };
       $('#pcPdf').onclick = () => this.pdf();
       const add = $('#pcsAddMk'); if (add) add.onclick = () => { this.d.makers.push({name:'', price:''}); this.save(); this.render(); const ins = document.querySelectorAll('#pcSheet tr.pcs-mk input[data-k$=".name"]'); ins[ins.length - 1].focus(); };
@@ -23441,7 +23478,7 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
       const btn = $('#pcPdf'), sheet = $('#pcSheet'); if (!sheet) return;
       if (this._busy) { toast('กำลังสร้าง PDF อยู่ — รอสักครู่', 'info'); return; }
       this._busy = true;
-      const name = ('สรุปราคาก่อนGO ' + [this.d.partName, this.d.partNo].map(x => String(x || '').trim()).filter(Boolean).join(' , ')).trim().replace(/[\\/:*?"<>|]/g, '-') + '.pdf';
+      const name = ((this.d.draft ? 'แบบร่าง ' : '') + 'สรุปราคาก่อนGO ' + [this.d.partName, this.d.partNo].map(x => String(x || '').trim()).filter(Boolean).join(' , ')).trim().replace(/[\\/:*?"<>|]/g, '-') + '.pdf';
       btn.disabled = true; btn.lastChild.textContent = 'กำลังสร้าง PDF...';
       this.dlShow(name); this.dlSet(6, 'กำลังเตรียมข้อมูล...');
       if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
