@@ -5416,6 +5416,11 @@ html body .gx-table tbody tr:last-child td { border-bottom: none; }
 .gx-modal-foot { display: flex; justify-content: flex-end; gap: .5rem; padding: .85rem 1.3rem; border-top: 1px solid var(--border); background: var(--surface2); }
 .gx-form { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem 1rem; }
 .gx-form .span2 { grid-column: 1 / -1; }
+.gx-form .mt-trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .85rem 1rem; }
+@media (max-width: 720px) { .gx-form .mt-trio { grid-template-columns: 1fr; } }
+.mt-parts { display: flex; flex-wrap: wrap; gap: .35rem; margin: .1rem 0 .45rem; }
+.mt-part { display: inline-flex; align-items: center; gap: .35rem; font-size: .74rem; padding: .18rem .55rem; border-radius: 999px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mt-part i { font-style: normal; font-weight: 700; font-size: .66rem; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
 .gx-form label { display: grid; gap: .35rem; align-content: start; font-size: .8rem; font-weight: 600; color: var(--muted); }
 .gx-form label em { color: var(--danger); font-style: normal; }
 .gx-form input, .gx-form textarea {
@@ -8747,8 +8752,9 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
     </section>
     <div class="gx-toolbar">
       <label class="gx-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input id="mtSearch" type="search" placeholder="ค้นหาหัวข้อ, Maker, รายละเอียด" oninput="Meeting.render()" aria-label="ค้นหาการประชุม"></label>
+        <input id="mtSearch" type="search" placeholder="ค้นหาหัวข้อ, Maker, Model, Part No, Part Name, รายละเอียด" oninput="Meeting.render()" aria-label="ค้นหาการประชุม"></label>
       <select id="mtMaker" class="gx-select" onchange="Meeting.render()" aria-label="กรอง Maker"></select>
+      <select id="mtModel" class="gx-select" onchange="Meeting.render()" aria-label="กรอง Model"></select>
       <span class="gx-spacer"></span>
       <button class="gx-btn primary" onclick="Meeting.openForm()">บันทึกการประชุม</button>
     </div>
@@ -20413,6 +20419,10 @@ function endTour() {
       const makers = [...new Set(this.list.map(m => m.maker).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'th'));
       mk.innerHTML = '<option value="">Maker ทั้งหมด</option>' + makers.map(m => `<option>${esc(m)}</option>`).join('');
       mk.value = makers.includes(cur) ? cur : '';
+      const md = $('#mtModel'), curModel = md.value;
+      const models = [...new Set(this.list.map(m => (m.model || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'th', { numeric: true }));
+      md.innerHTML = '<option value="">Model ทั้งหมด</option>' + models.map(m => `<option>${esc(m)}</option>`).join('');
+      md.value = models.includes(curModel) ? curModel : '';
       const nowKey = monthKey(isoToDMY(todayISO()));
       const imgCount = this.list.reduce((s, m) => s + (m.images || []).length, 0);
       $('#mtMetrics').innerHTML = [
@@ -20424,12 +20434,12 @@ function endTour() {
       if (!this.loaded && !errMsg) { wrap.innerHTML = '<div class="gx-skel tall"></div><div class="gx-skel tall"></div>'; return; }
       if (errMsg && !this.list.length) { wrap.innerHTML = `<div class="gx-empty warn"><strong>โหลด Summary Meeting ไม่สำเร็จ</strong><span>${esc(errMsg)} — กด Sync เพื่อลองใหม่</span></div>`; return; }
       const q = ($('#mtSearch').value || '').trim().toLowerCase();
-      const items = this.list.filter(m => (!mk.value || m.maker === mk.value) &&
-        (!q || [m.topic, m.maker, m.detail, m.by].some(v => String(v || '').toLowerCase().includes(q))))
+      const items = this.list.filter(m => (!mk.value || m.maker === mk.value) && (!md.value || (m.model || '').trim() === md.value) &&
+        (!q || [m.topic, m.maker, m.model, m.partNo, m.partName, m.detail, m.by].some(v => String(v || '').toLowerCase().includes(q))))
         .sort((a, b) => (parseDMY(b.date) || 0) - (parseDMY(a.date) || 0));
       if (!items.length) {
         wrap.innerHTML = `<div class="gx-empty"><strong>${this.list.length ? 'ไม่พบการประชุมที่ตรงกับตัวกรอง' : 'ยังไม่มีบันทึกการประชุม'}</strong>
-          <span>${this.list.length ? 'ลองล้างคำค้นหรือเลือก Maker อื่น' : 'บันทึกหัวข้อ วันที่ Maker และแนบรูปจากการประชุม รูปจะถูกเก็บเข้า Google Drive ให้เอง'}</span>
+          <span>${this.list.length ? 'ลองล้างคำค้นหรือเลือก Maker / Model อื่น' : 'บันทึกหัวข้อ วันที่ Maker และแนบรูปจากการประชุม รูปจะถูกเก็บเข้า Google Drive ให้เอง'}</span>
           ${this.list.length ? '' : '<button class="gx-btn primary" onclick="Meeting.openForm()">บันทึกการประชุม</button>'}</div>`;
         return;
       }
@@ -20439,6 +20449,10 @@ function endTour() {
         <section class="mt-month"><h3>${k.includes('-') ? monthLabel(k) : k}<span>${arr.length} การประชุม</span></h3>
         ${arr.map(m => this.card(m)).join('')}</section>`).join('');
     },
+    partTags(m) {
+      const t = [['Model', m.model], ['Part No', m.partNo], ['Part Name', m.partName]].filter(x => String(x[1] || '').trim());
+      return t.length ? `<div class="mt-parts">${t.map(([l, v]) => `<span class="mt-part"><i>${l}</i>${esc(v)}</span>`).join('')}</div>` : '';
+    },
     card(m) {
       const d = parseDMY(m.date);
       const imgs = m.images || [];
@@ -20447,6 +20461,7 @@ function endTour() {
         <div class="mt-date"><b>${d ? d.getDate() : '—'}</b><span>${d ? MON_S[d.getMonth()] : ''}</span><small>${d ? d.getFullYear() + 543 : ''}</small></div>
         <div class="mt-main">
           <div class="mt-top"><h4><button class="mt-open" onclick="Meeting.show('${esc(m.id)}')" title="ดูรายละเอียดทั้งหมด">${esc(m.topic)}</button></h4><span class="gx-tag maker">${esc(m.maker) || 'ไม่ระบุ Maker'}</span></div>
+          ${this.partTags(m)}
           ${m.detail ? `<p class="mt-detail">${esc(m.detail)}</p>${m.detail.split('\n').length > 3 || m.detail.length > 240 ? `<button class="mt-more-btn" onclick="Meeting.show('${esc(m.id)}')">อ่านทั้งหมด</button>` : ''}` : ''}
           ${imgs.length ? `<div class="mt-thumbs">${shown.map((im, i) => `
             <button class="mt-thumb" onclick="Meeting.view('${esc(m.id)}',${i})" aria-label="ดูรูป ${esc(im.name)}">
@@ -20473,6 +20488,11 @@ function endTour() {
           <label class="span2"><span>หัวข้อ Meeting <em>*</em></span><input name="topic" required value="${esc(m && m.topic)}" placeholder="เช่น ทบทวนคุณภาพ Lot มิ.ย. / เจรจาราคา"></label>
           <label><span>วันที่ <em>*</em> <small class="gx-hint">วัน/เดือน/ปี ค.ศ.</small></span>${dateField('date', m ? (normDMY(m.date) || m.date) : todayDMY())}</label>
           <label><span>Maker <em>*</em></span><input name="maker" list="mtMakerList" required value="${esc(m && m.maker)}"></label>
+          <div class="span2 mt-trio">
+            <label><span>Model</span><input name="model" list="mtModelList" value="${esc(m && m.model)}" placeholder="เช่น BRKT NUMBER PLATE"></label>
+            <label><span>Part No</span><input name="partNo" list="mtPartNoList" value="${esc(m && m.partNo)}" placeholder="เช่น 12345-67890"></label>
+            <label><span>Part Name</span><input name="partName" list="mtPartNameList" value="${esc(m && m.partName)}" placeholder="ชื่อชิ้นงาน"></label>
+          </div>
           <label class="span2"><span>สรุป / รายละเอียด</span><textarea name="detail" rows="4" placeholder="ประเด็นที่คุย ข้อตกลง และสิ่งที่ต้องติดตาม">${esc(m && m.detail)}</textarea></label>
           <div class="span2">
             <div class="mt-drop" id="mtDrop" tabindex="0" role="button" aria-label="เลือกรูปภาพ">
@@ -20483,6 +20503,9 @@ function endTour() {
             ${m && (m.images || []).length ? `<div class="mt-existing"><span>รูปที่อยู่ใน Drive แล้ว (${m.images.length})</span><div>${m.images.map(im =>
               `<figure><img loading="lazy" src="${thumb(im.id, 200)}" alt=""><button type="button" class="mt-x" title="ลบรูปนี้ออกจาก Drive" data-rm="${esc(im.id)}">${ICON.close}</button></figure>`).join('')}</div></div>` : ''}
           </div>
+          <datalist id="mtModelList">${[...new Set(this.list.map(x => x.model).filter(Boolean))].map(x => `<option value="${esc(x)}">`).join('')}</datalist>
+          <datalist id="mtPartNoList">${[...new Set(this.list.map(x => x.partNo).filter(Boolean))].map(x => `<option value="${esc(x)}">`).join('')}</datalist>
+          <datalist id="mtPartNameList">${[...new Set(this.list.map(x => x.partName).filter(Boolean))].map(x => `<option value="${esc(x)}">`).join('')}</datalist>
           <datalist id="mtMakerList">${makerOptions().map(x => `<option value="${esc(x)}">`).join('')}</datalist>
           <div class="mt-progress span2" id="mtProg" hidden><div><i id="mtBar"></i></div><span id="mtProgText"></span></div>
           <p class="gx-form-err span2" id="mtErr" role="alert"></p>
@@ -20535,7 +20558,7 @@ function endTour() {
         if (!dmy) { f.date.classList.add('bad'); $('#mtErr').textContent = 'วันที่ไม่ถูกต้อง — ใช้รูปแบบ วัน/เดือน/ปี เช่น 24/9/2026'; f.date.focus(); return; }
         f.date.value = dmy;
         const btn = $('#mtSave'); setBusy(btn, true, 'กำลังบันทึก'); el._busy = true;
-        const rec = { topic: v('topic'), date: dmy, maker: v('maker'), detail: v('detail') };
+        const rec = { topic: v('topic'), date: dmy, maker: v('maker'), model: v('model'), partNo: v('partNo'), partName: v('partName'), detail: v('detail') };
         const by = localStorage.getItem('prpo_username') || '';
         let target;
         try {
@@ -20545,7 +20568,7 @@ function endTour() {
             this.list.unshift(target);
           } else {
             target = this.list.find(x => x.id === createdId);
-            const changed = !m || ['topic', 'date', 'maker', 'detail'].some(k => String(m[k] || '') !== rec[k]);
+            const changed = !m || ['topic', 'date', 'maker', 'model', 'partNo', 'partName', 'detail'].some(k => String(m[k] || '') !== rec[k]);
             if (changed) { await api.post(Object.assign({ action: 'updateMeeting', id: createdId }, rec)); Object.assign(target, rec); }
           }
           this.save(); this.render();
@@ -20600,6 +20623,7 @@ function endTour() {
       const el = openModal({
         wide: true, title: m.topic, sub: `${m.maker || 'ไม่ระบุ Maker'} · ${thDate(m.date)}${m.by ? ' · บันทึกโดย ' + m.by : ''}`,
         body: `<div class="mt-view">
+            ${(m.model || m.partNo || m.partName) ? `<h5>ข้อมูลชิ้นงาน</h5>${this.partTags(m)}` : ''}
             <h5>สรุป / รายละเอียด</h5>
             <p class="mt-view-detail">${m.detail ? esc(m.detail) : '<span class="gx-dim">ไม่มีรายละเอียด</span>'}</p>
             <h5>รูปภาพ (${imgs.length})</h5>
@@ -21582,7 +21606,8 @@ function endTour() {
       if (search) {
         search.className = 'tb-search';
         search.innerHTML = `<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>ค้นหาหน้า, Part No, Maker, Meeting…</span><kbd>Ctrl K</kbd>`;
-        const mid = document.createElement('div'); mid.className = 'tb-center'; mid.appendChild(search);
+        const mid = document.createElement('div'); mid.className = 'tb-center'; // ซ่อนช่องค้นหาบนแถบ (ยังกด Ctrl+K เปิดได้)
+        search.hidden = true; search.style.display = 'none'; mid.appendChild(search);
         bar.insertBefore(mid, right);
       }
       // ขวา: เก็บเฉพาะที่ใช้บ่อย
@@ -21789,7 +21814,7 @@ function endTour() {
         type: 'ext', group: 'GO WORK', icon: TRUCK, label: `${esc(r.partNo)} — ${esc(r.partName)} · ${esc(r.work)} · ${esc(r.maker)}`,
         run: () => { showPage('gowork', $('#nav-gowork')); setTimeout(() => GoWork.openForm(r.id), 60); }
       }));
-      const mt = Meeting.list.filter(m => has(m, ['topic', 'maker', 'detail'])).slice(0, 5).map(m => ({
+      const mt = Meeting.list.filter(m => has(m, ['topic', 'maker', 'model', 'partNo', 'partName', 'detail'])).slice(0, 5).map(m => ({
         type: 'ext', group: 'Summary Meeting', icon: CHAT, label: `${esc(m.topic)} · ${esc(m.maker)} · ${thDate(m.date)}`,
         run: () => { showPage('meeting', $('#nav-meeting')); setTimeout(() => { const c = document.getElementById('mt-' + m.id); if (c) { c.scrollIntoView({ block: 'center' }); c.classList.add('flash'); } }, 120); }
       }));
