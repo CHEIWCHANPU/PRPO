@@ -5819,6 +5819,17 @@ html body .gd-table small { color: var(--muted); font-size: .72rem; }
 .lb-spin { width: 34px; height: 34px; border-radius: 50%; border: 3px solid rgba(255,255,255,.18); border-top-color: #8FB0FF; animation: gxSpin .8s linear infinite !important; animation-duration: .8s !important; animation-iteration-count: infinite !important; }
 .lb-fail { display: grid; justify-items: center; gap: .5rem; text-align: center; max-width: 380px; padding: 1.4rem; border-radius: 12px; background: rgba(255,255,255,.05); border: 1px solid rgba(160,190,255,.15); }
 .lb-fail span { font-size: .84rem; color: #93A4C2; }
+.lb-btn { width: 38px; height: 38px; display: grid; place-items: center; border: 0; border-radius: 9px; background: rgba(255,255,255,.08); color: #fff; cursor: pointer; }
+.lb-btn:hover, .lb-btn.on { background: rgba(143,176,255,.25); }
+.lb-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.lb-zoom { display: flex; align-items: center; gap: .15rem; padding: 2px; border-radius: 11px; background: rgba(255,255,255,.05); }
+.lb-zlabel { min-width: 52px; height: 34px; border: 0; border-radius: 8px; background: transparent; color: #E3EAF4; font: 600 .8rem var(--mono, monospace); cursor: pointer; }
+.lb-zlabel:hover { background: rgba(255,255,255,.1); }
+.lb-img { overflow: hidden; touch-action: none; }
+.lb-img img { transform-origin: center center; transition: transform .12s ease-out; will-change: transform; user-select: none; -webkit-user-drag: none; cursor: zoom-in; }
+.gx-lightbox.zoomed .lb-img img { cursor: grab; }
+.lb-img.panning img { cursor: grabbing; transition: none; }
+.gx-lightbox:fullscreen .lb-img img { max-height: calc(100vh - 150px); }
 .lb-nav { width: 48px; height: 48px; justify-self: center; border-radius: 50%; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.06); color: #fff; font-size: 1.7rem; line-height: 1; cursor: pointer; }
 .lb-nav.prev { grid-column: 1; } .lb-nav.next { grid-column: 3; }
 .lb-nav:hover { background: rgba(255,255,255,.14); }
@@ -5836,7 +5847,7 @@ html body .gd-table small { color: var(--muted); font-size: .72rem; }
 .mt-view-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: .55rem; }
 .mt-view-grid button { padding: 0; aspect-ratio: 4 / 3; border-radius: 9px; overflow: hidden; border: 1px solid var(--border); background: var(--surface2); cursor: zoom-in; }
 .mt-view-grid img { width: 100%; height: 100%; object-fit: cover; display: block; }
-@media (max-width: 760px) { .lb-stage { grid-template-columns: 44px minmax(0,1fr) 44px; } .lb-nav { width: 38px; height: 38px; } .lb-open { display: none; } }
+@media (max-width: 760px) { .lb-stage { grid-template-columns: 44px minmax(0,1fr) 44px; } .lb-nav { width: 38px; height: 38px; } .lb-open { display: none; } .lb-zlabel { min-width: 44px; } }
 a.gx-btn { text-decoration: none !important; }
 
 /* ── แถบตัวเลขบนหัว Dashboard ── */
@@ -19632,6 +19643,13 @@ function endTour() {
       if ($('#gxLightbox')) Lightbox.close(); else closeModal();
       return;
     }
+    if ($('#gxLightbox') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      const k = e.key;
+      if (k === '+' || k === '=') { e.preventDefault(); e.stopImmediatePropagation(); Lightbox.zoomBy(1.25); return; }
+      if (k === '-' || k === '_') { e.preventDefault(); e.stopImmediatePropagation(); Lightbox.zoomBy(0.8); return; }
+      if (k === '0') { e.preventDefault(); e.stopImmediatePropagation(); Lightbox.resetZoom(); return; }
+      if (k === 'f' || k === 'F') { e.preventDefault(); e.stopImmediatePropagation(); Lightbox.toggleFull(); return; }
+    }
     if ($('#gxLightbox') && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { e.preventDefault(); e.stopImmediatePropagation(); Lightbox.go(e.key === 'ArrowLeft' ? -1 : 1); return; }
     const tag = (document.activeElement && document.activeElement.tagName || '').toLowerCase();
     if (!['input', 'textarea', 'select'].includes(tag)) e.stopImmediatePropagation(); // กันคีย์ลัด N / S ของหน้าหลักทำงานซ้อน
@@ -20652,6 +20670,12 @@ function endTour() {
       el.id = 'gxLightbox'; el.className = 'gx-lightbox';
       el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'ดูรูปการประชุม');
       el.innerHTML = `<header class="lb-top"><div class="lb-title"></div><div class="lb-tools">
+          <div class="lb-zoom" role="group" aria-label="ซูมรูป">
+            <button type="button" class="lb-btn" data-z="out" title="ซูมออก (-)" aria-label="ซูมออก"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5M8 11h6"/></svg></button>
+            <button type="button" class="lb-zlabel" data-z="reset" title="กลับขนาดพอดีจอ (0)">100%</button>
+            <button type="button" class="lb-btn" data-z="in" title="ซูมเข้า (+)" aria-label="ซูมเข้า"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5M8 11h6M11 8v6"/></svg></button>
+          </div>
+          <button type="button" class="lb-btn" data-z="full" title="เต็มจอ (F)" aria-label="เต็มจอ"><svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button>
           <a class="lb-open" target="_blank" rel="noopener">เปิดใน Google Drive</a>
           <button class="lb-close" aria-label="ปิด">${ICON.close}</button></div></header>
         <div class="lb-stage">
@@ -20665,6 +20689,7 @@ function endTour() {
       el.querySelector('.next').onclick = e => { e.stopPropagation(); this.go(1); };
       el.querySelector('.lb-strip').onclick = e => { const t = e.target.closest('[data-i]'); if (t) { this.i = +t.dataset.i; this.draw(); } };
       const img = el.querySelector('.lb-img img');
+      this.wireZoom(el, img);
       img.onload = () => { el.querySelector('.lb-spin').hidden = true; img.hidden = false; };
       img.onerror = () => { el.querySelector('.lb-spin').hidden = true; img.hidden = true; el.querySelector('.lb-fail').hidden = false; };
       document.body.appendChild(el);
@@ -20678,13 +20703,61 @@ function endTour() {
       const drive = `https://drive.google.com/file/d/${encodeURIComponent(im.id)}/view`;
       const img = el.querySelector('.lb-img img');
       el.querySelector('.lb-spin').hidden = false; el.querySelector('.lb-fail').hidden = true; img.hidden = true;
-      img.src = thumb(im.id, 1600);
+      this.resetZoom(); img.src = thumb(im.id, 2400);
       el.querySelector('.lb-title').innerHTML = `<b>${esc(this.m.topic)}</b><span>${esc(this.m.maker)} · ${thDate(this.m.date)} · รูป ${this.i + 1}/${n}</span>`;
       el.querySelectorAll('.lb-open, .lb-fail a').forEach(a => a.href = drive);
       el.querySelectorAll('.lb-nav').forEach(b => b.style.visibility = n < 2 ? 'hidden' : 'visible');
       el.querySelectorAll('.lb-strip [data-i]').forEach(b => b.classList.toggle('on', +b.dataset.i === this.i));
     },
-    close() { const el = $('#gxLightbox'); if (el) el.remove(); }
+    close() { if (document.fullscreenElement) { try { document.exitFullscreen(); } catch (e) {} } if (this._fs) document.removeEventListener('fullscreenchange', this._fs); const el = $('#gxLightbox'); if (el) el.remove(); },
+    z: 1, x: 0, y: 0,
+    apply() {
+      const el = $('#gxLightbox'); if (!el) return;
+      const img = el.querySelector('.lb-img img');
+      if (this.z <= 1) { this.x = 0; this.y = 0; }
+      img.style.transform = `translate(${this.x}px, ${this.y}px) scale(${this.z})`;
+      el.classList.toggle('zoomed', this.z > 1);
+      const l = el.querySelector('.lb-zlabel'); if (l) l.textContent = Math.round(this.z * 100) + '%';
+    },
+    setZoom(z, cx, cy) {   // cx, cy = จุดโฟกัส (พิกัดเทียบกึ่งกลางรูป) ให้ซูมเข้าตรงตำแหน่งเมาส์
+      const nz = Math.min(8, Math.max(1, z)), r = nz / this.z;
+      if (cx != null) { this.x = cx - (cx - this.x) * r; this.y = cy - (cy - this.y) * r; }
+      this.z = nz; this.apply();
+    },
+    zoomBy(f) { this.setZoom(this.z * f); },
+    resetZoom() { this.z = 1; this.x = 0; this.y = 0; this.apply(); },
+    toggleFull() {
+      const el = $('#gxLightbox'); if (!el) return;
+      if (document.fullscreenElement) document.exitFullscreen(); else if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+    },
+    wireZoom(el, img) {
+      this.z = 1; this.x = 0; this.y = 0;
+      const stage = el.querySelector('.lb-img');
+      el.querySelector('.lb-tools').addEventListener('click', e => {
+        const b = e.target.closest('[data-z]'); if (!b) return;
+        ({ in: () => this.zoomBy(1.25), out: () => this.zoomBy(0.8), reset: () => this.resetZoom(), full: () => this.toggleFull() })[b.dataset.z]();
+      });
+      const rel = e => { const r = img.getBoundingClientRect(); const w = r.width / this.z, h = r.height / this.z; return [e.clientX - (r.left + r.width / 2) + this.x, e.clientY - (r.top + r.height / 2) + this.y]; };
+      const center = e => { const r = stage.getBoundingClientRect(); return [e.clientX - (r.left + r.width / 2), e.clientY - (r.top + r.height / 2)]; };
+      stage.addEventListener('wheel', e => { e.preventDefault(); const [cx, cy] = center(e); this.setZoom(this.z * (e.deltaY < 0 ? 1.15 : 1 / 1.15), cx, cy); }, { passive: false });
+      stage.addEventListener('dblclick', e => { e.preventDefault(); if (this.z > 1) this.resetZoom(); else { const [cx, cy] = center(e); this.setZoom(2.5, cx, cy); } });
+      const ptrs = new Map(); let pinch = 0;
+      stage.addEventListener('pointerdown', e => { if (e.target.closest('.lb-fail')) return; ptrs.set(e.pointerId, [e.clientX, e.clientY]); try { stage.setPointerCapture(e.pointerId); } catch (x) {} pinch = 0; });
+      stage.addEventListener('pointermove', e => {
+        if (!ptrs.has(e.pointerId)) return;
+        const prev = ptrs.get(e.pointerId); ptrs.set(e.pointerId, [e.clientX, e.clientY]);
+        if (ptrs.size === 2) {
+          const [a, b] = [...ptrs.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]);
+          if (pinch) this.setZoom(this.z * d / pinch); pinch = d; return;
+        }
+        if (this.z > 1) { this.x += e.clientX - prev[0]; this.y += e.clientY - prev[1]; this.apply(); stage.classList.add('panning'); }
+      });
+      const up = e => { ptrs.delete(e.pointerId); pinch = 0; stage.classList.remove('panning'); };
+      stage.addEventListener('pointerup', up); stage.addEventListener('pointercancel', up);
+      document.addEventListener('fullscreenchange', this._fs = () => {
+        const b = el.querySelector('[data-z=full]'); if (b) b.classList.toggle('on', !!document.fullscreenElement);
+      });
+    }
   };
 
   /* ══════════════════════ RFQ ขอใบเสนอราคา (E-Form เดิมฝังในกรอบแยก) ══════════════════════ */
