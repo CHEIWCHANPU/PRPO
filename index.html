@@ -6520,6 +6520,9 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
  <button class="nav-item" id="nav-costcalc" onclick="showPage('costcalc',this)">
  <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></span><span class="nav-text">เครื่องมือคำนวณ COST UP / DOWN</span>
  </button>
+ <button class="nav-item" id="nav-platingcalc" onclick="showPage('platingcalc',this)">
+ <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h2M12 11h2M16 11h0M8 15h2M12 15h2M16 15h0"/></svg></span><span class="nav-text">คำนวณค่าชุบ Zinc &amp; EDP</span>
+ </button>
  </div>
  </div>
 
@@ -8036,6 +8039,65 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
  </div>
  </div>
  <!-- /COST CALC PAGE -->
+
+ <!-- ═══ PLATING COST CALC PAGE (Zinc & EDP) ═══ -->
+ <div class="page" id="page-platingcalc">
+ <style>
+ .pc-box { border:1px solid var(--border); border-radius:4px; padding:1.2rem 1rem; text-align:center; background:var(--surface); }
+ .pc-box.zn { border-color:#4da3ff; box-shadow:0 0 0 1px #4da3ff inset; }
+ .pc-box.edp { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset; }
+ .pc-label { font-size:0.75rem; color:var(--muted); font-weight:700; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:0.4rem; }
+ .pc-val { font-family:'IBM Plex Mono',monospace; font-size:2rem; font-weight:700; color:var(--text); letter-spacing:-0.02em; }
+ .pc-sub { font-size:0.75rem; color:var(--muted); margin-top:0.35rem; font-family:'IBM Plex Mono',monospace; }
+ .pc-unit { font-size:1rem; color:var(--muted); font-weight:500; margin-left:0.25rem; }
+ </style>
+ <div style="margin-bottom:1.1rem">
+ <div style="font-size:1.15rem;font-weight:700;color:var(--text);font-family:var(--font-display)">คำนวณ Rate Cost งานชุบ Zinc &amp; EDP</div>
+ <div style="font-size:0.777rem;color:var(--muted);margin-top:0.15rem">ใส่พื้นที่ผิว (ตารางเมตร) แล้วระบบคำนวณค่าชุบตาม Rate Standard โรงงานให้ทันที</div>
+ </div>
+ <div class="chart-card">
+ <div class="form-grid">
+ <div class="form-group full">
+ <label class="form-label">พื้นที่ผิวงานชุบ (ตารางเมตร / m²)</label>
+ <input type="number" class="form-input" id="pc-area" placeholder="เช่น 12.5" step="any" min="0" oninput="calcPlating()" style="font-family:'IBM Plex Mono',monospace;font-size:1.2rem;font-weight:700">
+ </div>
+ <div class="form-group">
+ <label class="form-label">Rate Zinc (บาท / m²)</label>
+ <input type="number" class="form-input" id="pc-rate-zn" value="280" step="any" min="0" oninput="calcPlating()" style="font-family:'IBM Plex Mono',monospace">
+ </div>
+ <div class="form-group">
+ <label class="form-label">Rate EDP (บาท / m²)</label>
+ <input type="number" class="form-input" id="pc-rate-edp" value="160" step="any" min="0" oninput="calcPlating()" style="font-family:'IBM Plex Mono',monospace">
+ </div>
+ </div>
+ <div style="margin-top:0.5rem;font-size:0.72rem;color:var(--muted)">Rate Standard: Zinc 280 บาท/m² · EDP 160 บาท/m² (แก้ไขได้ — ระบบจำค่าที่แก้ไว้ในเครื่องนี้) <a href="javascript:void(0)" onclick="resetPlatingRates()" style="color:var(--accent);margin-left:0.4rem">คืนค่ามาตรฐาน</a></div>
+
+ <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-top:1.2rem">
+ <div class="pc-box zn">
+ <div class="pc-label">ค่าชุบ Zinc</div>
+ <div class="pc-val"><span id="pc-out-zn">0.00</span><span class="pc-unit">฿</span></div>
+ <div class="pc-sub" id="pc-sub-zn"></div>
+ </div>
+ <div class="pc-box edp">
+ <div class="pc-label">ค่าชุบ EDP</div>
+ <div class="pc-val" style="color:var(--accent)"><span id="pc-out-edp">0.00</span><span class="pc-unit">฿</span></div>
+ <div class="pc-sub" id="pc-sub-edp"></div>
+ </div>
+ <div class="pc-box">
+ <div class="pc-label">ส่วนต่าง Zinc − EDP</div>
+ <div class="pc-val"><span id="pc-out-diff">0.00</span><span class="pc-unit">฿</span></div>
+ <div class="pc-sub" id="pc-sub-diff"></div>
+ </div>
+ </div>
+
+ <div style="margin-top:1.1rem;border:1px dashed var(--border);border-radius:4px;padding:0.85rem 1rem;background:var(--surface2)">
+ <div style="font-size:0.7rem;font-weight:700;color:var(--muted);letter-spacing:0.04em;text-transform:uppercase;margin-bottom:0.45rem">วิธีคิด</div>
+ <div id="pc-formula" style="font-family:'IBM Plex Mono',monospace;font-size:0.87rem;color:var(--text);line-height:1.9"></div>
+ </div>
+ </div>
+ </div>
+ <!-- /PLATING COST CALC PAGE -->
+
 
  <!-- ═══════════════════════════════════════════════════
  COST SAVING REPORT PAGE
@@ -9828,6 +9890,41 @@ async function pushTeamToSheet(silent) {
 }
 
 /* ── PAGE NAV ── */
+Object.assign(PAGE_TITLES.th, { platingcalc: 'คำนวณค่าชุบ Zinc & EDP' });
+Object.assign(PAGE_TITLES.en, { platingcalc: 'Plating Cost Calculator (Zinc & EDP)' });
+const PLATING_STD = { zn: 280, edp: 160 };
+function platingFmt(n) { return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function renderPlatingPage() {
+ try {
+ const z = localStorage.getItem('platingRateZn'), e = localStorage.getItem('platingRateEdp');
+ if (z !== null) document.getElementById('pc-rate-zn').value = z;
+ if (e !== null) document.getElementById('pc-rate-edp').value = e;
+ } catch (err) {}
+ calcPlating();
+}
+function resetPlatingRates() {
+ document.getElementById('pc-rate-zn').value = PLATING_STD.zn;
+ document.getElementById('pc-rate-edp').value = PLATING_STD.edp;
+ try { localStorage.removeItem('platingRateZn'); localStorage.removeItem('platingRateEdp'); } catch (err) {}
+ calcPlating();
+}
+function calcPlating() {
+ const a = parseFloat(document.getElementById('pc-area').value) || 0;
+ const rz = parseFloat(document.getElementById('pc-rate-zn').value) || 0;
+ const re = parseFloat(document.getElementById('pc-rate-edp').value) || 0;
+ try { localStorage.setItem('platingRateZn', rz); localStorage.setItem('platingRateEdp', re); } catch (err) {}
+ const zn = a * rz, edp = a * re, diff = zn - edp;
+ document.getElementById('pc-out-zn').textContent = platingFmt(zn);
+ document.getElementById('pc-out-edp').textContent = platingFmt(edp);
+ document.getElementById('pc-out-diff').textContent = platingFmt(diff);
+ document.getElementById('pc-sub-zn').textContent = platingFmt(a) + ' m² × ' + platingFmt(rz);
+ document.getElementById('pc-sub-edp').textContent = platingFmt(a) + ' m² × ' + platingFmt(re);
+ document.getElementById('pc-sub-diff').textContent = zn > 0 ? 'EDP ถูกกว่า ' + (diff / zn * 100).toFixed(1) + '%' : '';
+ document.getElementById('pc-formula').innerHTML =
+ 'Zinc = ' + platingFmt(a) + ' m² × ' + platingFmt(rz) + ' = <b>' + platingFmt(zn) + ' ฿</b><br>' +
+ 'EDP&nbsp; = ' + platingFmt(a) + ' m² × ' + platingFmt(re) + ' = <b>' + platingFmt(edp) + ' ฿</b>';
+}
+
 function showPage(name, btn) {
  if (ADMIN_LOCKED_PAGES.includes(name) && !isAdminUnlocked()) {
  requireAdminPin(name, btn);
@@ -9855,6 +9952,7 @@ function showPage(name, btn) {
  if (name === 'manual') loadManualsFromServer();
  if (name === 'todo') loadTodoTasks().then(renderTodoList);
  if (name === 'costcalc') renderCostUpDownPage();
+ if (name === 'platingcalc') renderPlatingPage();
  if (name === 'costsaving') loadCostSavingData();
  if (name === 'team') renderTeamOrgChart();
 }
@@ -21877,7 +21975,8 @@ function endTour() {
       { key: 'meeting', label: 'บันทึกการประชุม', group: 'Summary Meeting', icon: CHAT },
       { key: 'rfq', label: 'RFQ ขอใบเสนอราคา (E-Form)', group: 'RFQ', icon: svg('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/>') },
       { key: 'costsaving', label: 'Cost Saving Report', group: 'COST SAVING', icon: COIN },
-      { key: 'costcalc', label: 'เครื่องมือคำนวณ COST UP / DOWN', group: 'COST SAVING', icon: COIN });
+      { key: 'costcalc', label: 'เครื่องมือคำนวณ COST UP / DOWN', group: 'COST SAVING', icon: COIN },
+      { key: 'platingcalc', label: 'คำนวณค่าชุบ Zinc & EDP', group: 'COST SAVING', icon: COIN });
     const origSearch = window.cmdkSearchData;
     window.cmdkSearchData = function (q) {
       const base = (origSearch && origSearch.apply(this, arguments)) || [];
