@@ -7456,11 +7456,23 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
    <h2 data-i18n="nav_iso">เอกสาร ISO</h2>
    <div class="iso-sub" data-i18n="iso_sub">เอกสารระบบคุณภาพ ISO ของแผนกจัดซื้อ</div>
   </div></div>
-  <div class="iso-empty">
-   <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 2l7 3v6c0 5-3.5 9-7 11-3.5-2-7-6-7-11V5z"/><polyline points="9 12 11 14 15 10"/></svg></div>
-   <b data-i18n="iso_empty_t">ยังไม่มีเอกสาร</b>
-   <span data-i18n="iso_empty_d">หน้านี้พร้อมสำหรับจัดเก็บเอกสาร ISO</span>
+  <style>.iso-cat-btn.active { background: var(--accent) !important; border-color: var(--accent) !important; color: #fff !important; }</style>
+  <div class="toolbar" style="margin-bottom:0.9rem;flex-wrap:wrap;gap:0.6rem">
+   <div class="search-box" style="max-width:300px">
+    <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+    <input type="text" id="isoSearch" placeholder="ค้นหาชื่อเอกสาร ISO..." oninput="renderIsoDocs()">
+   </div>
+   <div class="chip-filter" id="isoCategoryFilter" style="display:flex;gap:0.4rem;flex-wrap:wrap">
+    <button class="btn btn-ghost iso-cat-btn active" data-cat="" onclick="setIsoCategoryFilter('', this)" style="padding:0.4rem 0.9rem;font-size: 0.777rem">ทั้งหมด</button>
+    <button class="btn btn-ghost iso-cat-btn" data-cat="ISO 9001" onclick="setIsoCategoryFilter('ISO 9001', this)" style="padding:0.4rem 0.9rem;font-size: 0.777rem">ISO 9001</button>
+    <button class="btn btn-ghost iso-cat-btn" data-cat="ISO 14001" onclick="setIsoCategoryFilter('ISO 14001', this)" style="padding:0.4rem 0.9rem;font-size: 0.777rem">ISO 14001</button>
+    <button class="btn btn-ghost iso-cat-btn" data-cat="ISO 45001" onclick="setIsoCategoryFilter('ISO 45001', this)" style="padding:0.4rem 0.9rem;font-size: 0.777rem">ISO 45001</button>
+    <button class="btn btn-ghost iso-cat-btn" data-cat="อื่นๆ" onclick="setIsoCategoryFilter('อื่นๆ', this)" style="padding:0.4rem 0.9rem;font-size: 0.777rem">อื่นๆ</button>
+   </div>
+   <button class="btn btn-ghost" onclick="openIsoFolder(this)" style="margin-left:auto" title="เปิดโฟลเดอร์เก็บไฟล์ PDF ใน Google Drive (ตามหมวดที่เลือกอยู่)">📁 โฟลเดอร์ Drive</button>
+   <button class="btn btn-primary" onclick="openIsoModal()">+ อัพโหลดเอกสาร ISO (PDF)</button>
   </div>
+  <div id="isoGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:1rem"></div>
  </div>
 
  <div class="page" id="page-cer">
@@ -9950,6 +9962,7 @@ function showPage(name, btn) {
  if (name === 'workplan') renderWorkplan();
  if (name === 'payroll') payrollInit();
  if (name === 'manual') loadManualsFromServer();
+ if (name === 'iso') loadIsoDocsFromServer();
  if (name === 'todo') loadTodoTasks().then(renderTodoList);
  if (name === 'costcalc') renderCostUpDownPage();
  if (name === 'platingcalc') renderPlatingPage();
@@ -14060,6 +14073,269 @@ function renderManuals() {
 }
 
 /* ══════════════════════════════════════════════════
+ เอกสาร ISO (ISO DOCUMENT LIBRARY) — ทำงานเหมือนคู่มือการทำงานทุกอย่าง
+ รายการเก็บในชีต ISO_DOCS / ไฟล์ PDF อัพโหลดขึ้น Google Drive ผ่าน WEB_APP_URL
+ (Apps Script: 15_ISO_DOCS.gs — action: getIsoDocs / addIsoDoc / editIsoDoc / delIsoDoc / viewIsoDoc / getIsoFolder)
+ ══════════════════════════════════════════════════ */
+let isoDocs = [];
+let isoCategoryFilter = '';
+let isoPendingBase64 = '';
+let isoSaving = false;
+
+function isoEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function mapIsoRow(o) {
+ return {
+ id: o['ID'],
+ title: o['ชื่อเอกสาร'] || '',
+ category: o['หมวดหมู่'] || '',
+ note: o['รายละเอียด'] || '',
+ version: o['เวอร์ชัน'] || '',
+ fileName: o['ชื่อไฟล์'] || '',
+ fileId: o['FILE_ID'] || '',
+ url: o['ลิงก์ไฟล์'] || '',
+ sizeKB: o['ขนาด (KB)'] || 0,
+ uploader: o['ผู้อัปโหลด'] || '',
+ uploadedAt: o['วันที่อัปโหลด'] || '',
+ updatedAt: o['แก้ไขล่าสุด'] || '',
+ views: o['ยอดเปิดอ่าน'] || 0,
+ status: o['สถานะ'] || 'ใช้งาน'
+ };
+}
+
+async function loadIsoDocsFromServer() {
+ const grid = document.getElementById('isoGrid');
+ if (!grid) return;
+ if (!WEB_APP_URL) {
+ isoDocs = [];
+ grid.innerHTML = '<div style="color:var(--muted);font-size: 0.892rem;padding:2rem 0;text-align:center;grid-column:1/-1">ยังไม่ได้ตั้งค่า Web App URL — ไปตั้งค่าที่หน้า Setup ก่อน</div>';
+ return;
+ }
+ grid.innerHTML = '<div style="color:var(--muted);font-size: 0.892rem;padding:2rem 0;text-align:center;grid-column:1/-1"><span class="spinner" style="width:14px;height:14px;border-width:2px"></span> กำลังโหลดเอกสาร ISO...</div>';
+ try {
+ const res = await fetch(WEB_APP_URL + '?action=getIsoDocs');
+ const json = await res.json();
+ if (!json.success) throw new Error(json.error || 'โหลดข้อมูลไม่สำเร็จ');
+ isoDocs = (json.data || []).map(mapIsoRow);
+ } catch (err) {
+ showToast('โหลดเอกสาร ISO ไม่สำเร็จ: ' + err.message, 'error');
+ isoDocs = [];
+ }
+ renderIsoDocs();
+}
+
+function setIsoCategoryFilter(cat, btn) {
+ isoCategoryFilter = cat;
+ document.querySelectorAll('.iso-cat-btn').forEach(b => b.classList.remove('active'));
+ if (btn) btn.classList.add('active');
+ renderIsoDocs();
+}
+
+function openIsoModal(id) {
+ document.getElementById('iso-id').value = id || '';
+ document.getElementById('iso-fileName').value = '';
+ document.getElementById('iso-file').value = '';
+ isoPendingBase64 = '';
+ const statusEl = document.getElementById('isoFile-status');
+ const fileWrap = document.getElementById('iso-file').closest('.form-group');
+ if (id) {
+ const m = isoDocs.find(x => String(x.id) === String(id));
+ if (!m) return;
+ document.getElementById('isoModalTitle').textContent = '✏️ แก้ไขเอกสาร ISO';
+ document.getElementById('iso-title').value = m.title || '';
+ document.getElementById('iso-category').value = m.category || 'ISO 9001';
+ document.getElementById('iso-note').value = m.note || '';
+ document.getElementById('iso-fileName').value = m.fileName || '';
+ statusEl.innerHTML = m.url
+ ? `ไฟล์เดิม — "${isoEsc(m.fileName || 'ไฟล์ PDF')}" <a href="${isoEsc(m.url)}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">เปิดดู →</a> — แก้ไขได้เฉพาะข้อมูลรายละเอียด (ถ้าจะเปลี่ยนไฟล์ ให้ลบแล้วอัพโหลดใหม่)`
+ : 'ไม่มีไฟล์แนบ';
+ if (fileWrap) fileWrap.style.display = 'none';
+ } else {
+ document.getElementById('isoModalTitle').textContent = 'อัพโหลดเอกสาร ISO';
+ document.getElementById('iso-title').value = '';
+ document.getElementById('iso-category').value = (isoCategoryFilter || 'ISO 9001');
+ document.getElementById('iso-note').value = '';
+ statusEl.textContent = 'เลือกไฟล์ PDF เพื่ออัพโหลด (ไม่เกิน 20MB)';
+ if (fileWrap) fileWrap.style.display = '';
+ }
+ document.getElementById('isoModalOverlay').classList.add('open');
+}
+
+function closeIsoModal() {
+ document.getElementById('isoModalOverlay').classList.remove('open');
+}
+
+async function handleIsoFileUpload(event) {
+ const file = event.target.files && event.target.files[0];
+ if (!file) return;
+ const statusEl = document.getElementById('isoFile-status');
+ const ext = (file.name.split('.').pop() || '').toLowerCase();
+ if (ext !== 'pdf') { showToast('รองรับเฉพาะไฟล์ PDF เท่านั้น', 'error'); event.target.value = ''; return; }
+ if (file.size > MANUAL_FILE_MAX_BYTES) { showToast('ไฟล์ใหญ่เกินไป (จำกัด 20MB)', 'error'); event.target.value = ''; return; }
+ if (!document.getElementById('iso-title').value.trim()) {
+ document.getElementById('iso-title').value = file.name.replace(/\.pdf$/i, '');
+ }
+ statusEl.innerHTML = `<span class="spinner" style="width:12px;height:12px;border-width:2px"></span> กำลังอ่านไฟล์...`;
+ try {
+ isoPendingBase64 = await fileToBase64(file);
+ document.getElementById('iso-fileName').value = file.name;
+ statusEl.textContent = `พร้อมอัพโหลด — "${file.name}" (จะขึ้น Google Drive ตอนกดบันทึก)`;
+ } catch (err) {
+ statusEl.textContent = 'อ่านไฟล์ไม่สำเร็จ: ' + err.message;
+ isoPendingBase64 = '';
+ event.target.value = '';
+ }
+}
+
+async function saveIsoDoc() {
+ if (isoSaving) { showToast('กำลังบันทึกอยู่ — รอสักครู่', 'info'); return; }
+ const title = document.getElementById('iso-title').value.trim();
+ const id = document.getElementById('iso-id').value;
+ const isEdit = !!id;
+ if (!title) { showToast('กรุณากรอกชื่อเอกสาร', 'error'); return; }
+ if (!isEdit && !isoPendingBase64) { showToast('กรุณาเลือกไฟล์ PDF ก่อนบันทึก', 'error'); return; }
+ if (!WEB_APP_URL) { showToast('กรุณาตั้งค่า Web App URL ก่อน (หน้า Setup)', 'error'); return; }
+
+ const category = document.getElementById('iso-category').value;
+ const description = document.getElementById('iso-note').value.trim();
+ const body = isEdit
+ ? { action: 'editIsoDoc', id, title, category, description }
+ : { action: 'addIsoDoc', title, category, description, version: 'v1.0', status: 'ใช้งาน',
+ fileName: document.getElementById('iso-fileName').value, base64: isoPendingBase64 };
+
+ if (isEdit) {
+ const idx = isoDocs.findIndex(m => String(m.id) === String(id));
+ if (idx >= 0) isoDocs[idx] = { ...isoDocs[idx], title, category, note: description };
+ closeIsoModal(); renderIsoDocs();
+ addHistoryLog('edit', title, category, 'เอกสาร ISO: แก้ไขข้อมูล');
+ showResultModal('แก้ไขเอกสาร ISO สำเร็จ', 'success');
+ }
+ isoSaving = true;
+ try {
+ const res = await fetch(WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) });
+ const json = await res.json();
+ if (!json.success) throw new Error(json.error || 'บันทึกไม่สำเร็จ');
+ if (isEdit) return;
+ closeIsoModal();
+ isoDocs.unshift(mapIsoRow(json.data || {
+ 'ID': json.id, 'ชื่อเอกสาร': title, 'หมวดหมู่': category, 'รายละเอียด': description,
+ 'ชื่อไฟล์': body.fileName, 'ลิงก์ไฟล์': json.fileUrl || json.url || '', 'สถานะ': 'ใช้งาน'
+ }));
+ renderIsoDocs();
+ addHistoryLog('add', title, category, 'เอกสาร ISO: เพิ่มเอกสารใหม่');
+ showResultModal('อัพโหลดเอกสาร ISO สำเร็จ', 'success');
+ } catch (err) {
+ showResultModal(isEdit ? 'บันทึกใน Sheet ไม่สำเร็จ' : 'อัพโหลดเอกสาร ISO ไม่สำเร็จ', 'error', err.message);
+ } finally { isoSaving = false; }
+}
+
+async function deleteIsoDoc(id) {
+ if (!confirm('ต้องการลบเอกสาร ISO นี้?')) return;
+ if (!WEB_APP_URL) { showToast('ยังไม่ได้ตั้งค่า Web App URL', 'error'); return; }
+ const item = isoDocs.find(m => String(m.id) === String(id));
+ const removedIdx = isoDocs.findIndex(m => String(m.id) === String(id));
+ isoDocs = isoDocs.filter(m => String(m.id) !== String(id));
+ addHistoryLog('del', item?.title || '-', item?.category || '', 'ลบเอกสาร ISO');
+ renderIsoDocs();
+ showResultModal('ลบเอกสาร ISO สำเร็จ', 'success');
+ try {
+ const res = await fetch(WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'delIsoDoc', id, hard: true }) });
+ const json = await res.json();
+ if (!json.success) throw new Error(json.error || 'ลบไม่สำเร็จ');
+ } catch (err) {
+ if (item && removedIdx >= 0) isoDocs.splice(removedIdx, 0, item);
+ renderIsoDocs();
+ showResultModal('ลบเอกสาร ISO ไม่สำเร็จ', 'error', err.message);
+ }
+}
+
+function viewIsoDoc(id) {
+ const item = isoDocs.find(m => String(m.id) === String(id));
+ if (!item) return;
+ document.getElementById('isoViewTitle').textContent = item.title;
+ document.getElementById('isoViewFrame').src = toManualEmbedUrl(item.url);
+ document.getElementById('isoViewOpenTab').href = item.url;
+ document.getElementById('isoViewOverlay').classList.add('open');
+ if (WEB_APP_URL && item.id) fetch(WEB_APP_URL + '?action=viewIsoDoc&id=' + encodeURIComponent(item.id)).catch(() => {});
+}
+
+function closeIsoViewer() {
+ document.getElementById('isoViewOverlay').classList.remove('open');
+ document.getElementById('isoViewFrame').src = '';
+}
+
+async function openIsoFolder(btn) {
+ if (!WEB_APP_URL) { showToast('ยังไม่ได้ตั้งค่า Web App URL', 'error'); return; }
+ const win = window.open('', '_blank');
+ if (win) win.document.write('<p style="font-family:sans-serif;padding:2rem;color:#555">กำลังเปิดโฟลเดอร์ Google Drive…</p>');
+ if (btn) btn.disabled = true;
+ try {
+ const res = await fetch(WEB_APP_URL + '?action=getIsoFolder');
+ const j = await res.json();
+ if (!j.success) throw new Error(j.error || 'unknown');
+ const target = (isoCategoryFilter && j.folders && j.folders[isoCategoryFilter]) || j.url;
+ if (win) win.location.href = target; else window.open(target, '_blank');
+ } catch (e) {
+ if (win) win.close();
+ showToast(/unknown|Unknown/.test(e.message) ? 'ต้องเพิ่มไฟล์ 15_ISO_DOCS.gs ใน Apps Script และ Deploy ใหม่ก่อน' : 'เปิดโฟลเดอร์ไม่สำเร็จ: ' + e.message, 'error');
+ } finally { if (btn) btn.disabled = false; }
+}
+
+function isoCategoryIcon(cat) {
+ if (cat === 'ISO 9001') return '🛡️';
+ if (cat === 'ISO 14001') return '🌿';
+ if (cat === 'ISO 45001') return '🦺';
+ return '📄';
+}
+
+function renderIsoDocs() {
+ const grid = document.getElementById('isoGrid');
+ if (!grid) return;
+ const q = (document.getElementById('isoSearch')?.value || '').toLowerCase();
+ const list = isoDocs.filter(m =>
+ (!isoCategoryFilter || m.category === isoCategoryFilter) &&
+ ((m.title || '').toLowerCase().includes(q) || (m.note || '').toLowerCase().includes(q))
+ );
+ if (!list.length) {
+ grid.innerHTML = '<div style="color:var(--muted);font-size: 0.892rem;padding:2rem 0;text-align:center;grid-column:1/-1">' +
+ (isoDocs.length ? 'ไม่พบเอกสารที่ค้นหา' : 'ยังไม่มีเอกสาร ISO — กด "+ อัพโหลดเอกสาร ISO (PDF)" เพื่อเริ่มต้น') + '</div>';
+ return;
+ }
+ grid.innerHTML = list.map(m => {
+ const t = isoEsc(m.title), icon = isoCategoryIcon(m.category);
+ const dateStr = m.uploadedAt ? new Date(m.uploadedAt).toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' }) : '';
+ const thumbHtml = m.fileId
+ ? `<div class="manual-thumb" style="margin:-1.1rem -1.2rem 0.9rem;height:150px;background:var(--surface2);display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:4px 14px 0 0;border-bottom:1px solid var(--border)">
+ <img src="https://drive.google.com/thumbnail?id=${encodeURIComponent(m.fileId)}&sz=w500" loading="lazy" alt="หน้าแรก ${t}" style="width:100%;height:100%;object-fit:cover;object-position:top center;display:block"
+ onerror="this.parentElement.innerHTML='<span style=&quot;font-size:2.6rem;opacity:.5&quot;>${icon}</span>'">
+ </div>` : '';
+ const idq = isoEsc(String(m.id));
+ return `<div class="supplier-card">
+ ${thumbHtml}
+ <div class="supplier-header">
+ <div style="display:flex;align-items:center;gap:0.7rem;min-width:0">
+ <div class="supplier-avatar" style="background:linear-gradient(135deg,var(--accent),var(--accent2))">${icon}</div>
+ <div style="min-width:0">
+ <div class="supplier-name" style="white-space:normal">${t}</div>
+ <div class="supplier-category">${isoEsc(m.category) || 'ไม่ระบุหมวดหมู่'}</div>
+ </div>
+ </div>
+ <div style="display:flex;gap:0.3rem;flex-shrink:0">
+ <button class="icon-btn" onclick="openIsoModal('${idq}')" title="แก้ไข"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+ <button class="icon-btn del" onclick="deleteIsoDoc('${idq}')" title="ลบ"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
+ </div>
+ </div>
+ ${m.note ? `<div class="supplier-field"><span style="color:var(--muted);font-size: 0.777rem">${isoEsc(m.note)}</span></div>` : ''}
+ ${dateStr ? `<div class="supplier-field"> อัพโหลดเมื่อ: <span class="supplier-field-val">${dateStr}</span></div>` : ''}
+ <div style="display:flex;gap:0.5rem;margin-top:0.7rem">
+ <button class="btn btn-primary" style="flex:1;padding:0.5rem;font-size: 0.819rem" onclick="viewIsoDoc('${idq}')">เปิดดู PDF</button>
+ <a class="btn btn-ghost" style="padding:0.5rem 0.8rem;font-size: 0.819rem" href="${isoEsc(m.url)}" target="_blank" rel="noopener" title="ดาวน์โหลด / เปิดในแท็บใหม่">⬇</a>
+ </div>
+ </div>`;
+ }).join('');
+}
+
+/* ══════════════════════════════════════════════════
  TO-DO งานประจำวัน (ขอราคา / ติดตาม Maker / ส่งเอกสาร ฯลฯ)
  เชื่อมกับ Google Sheet ผ่าน Apps Script (action: getTodos /
  addTodoItem / updateTodoItem / deleteTodoItem) — sync ข้ามเครื่องได้
@@ -16167,6 +16443,58 @@ function renderLeaderboard() {
     <div>ลิงก์นี้เป็นลิงก์แบบย่อ แสดงในหน้านี้โดยตรงไม่ได้</div>
     <a id="spMapFbLink" class="btn btn-primary" target="_blank" rel="noopener" style="text-decoration:none">เปิดใน Google Maps ↗</a>
    </div>
+  </div>
+ </div>
+</div>
+
+<!-- ISO DOCUMENT: ADD/EDIT MODAL -->
+<div class="modal-overlay" id="isoModalOverlay">
+ <div class="modal" style="max-width:480px">
+  <div class="modal-header">
+   <div class="modal-title" id="isoModalTitle">อัพโหลดเอกสาร ISO</div>
+   <button class="modal-close" onclick="closeIsoModal()"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  </div>
+  <div class="modal-body">
+   <input type="hidden" id="iso-id">
+   <input type="hidden" id="iso-fileName">
+   <div class="form-grid">
+    <div class="form-group full"><label class="form-label">ชื่อเอกสาร ISO *</label><input type="text" class="form-input" id="iso-title" placeholder="เช่น ขั้นตอนการจัดซื้อ (QP-PU-01)"></div>
+    <div class="form-group full">
+     <label class="form-label">หมวดหมู่</label>
+     <select class="form-input" id="iso-category">
+      <option value="ISO 9001">ISO 9001</option>
+      <option value="ISO 14001">ISO 14001</option>
+      <option value="ISO 45001">ISO 45001</option>
+      <option value="อื่นๆ">อื่นๆ</option>
+     </select>
+    </div>
+    <div class="form-group full"><label class="form-label">หมายเหตุ</label><input type="text" class="form-input" id="iso-note" placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)"></div>
+    <div class="form-group full">
+     <label class="form-label">ไฟล์ PDF *</label>
+     <input type="file" id="iso-file" class="form-input" style="padding:0.5rem" accept=".pdf,application/pdf" onchange="handleIsoFileUpload(event)">
+     <div id="isoFile-status" style="margin-top:0.5rem;font-size: 0.777rem;color:var(--muted)">เลือกไฟล์ PDF เพื่ออัพโหลด (ไม่เกิน 20MB)</div>
+    </div>
+   </div>
+  </div>
+  <div class="modal-footer">
+   <button class="btn btn-ghost" onclick="closeIsoModal()">ยกเลิก</button>
+   <button class="btn btn-primary" onclick="saveIsoDoc()">บันทึก</button>
+  </div>
+ </div>
+</div>
+
+<!-- ISO DOCUMENT: PDF VIEWER MODAL -->
+<div class="modal-overlay" id="isoViewOverlay">
+ <div class="modal" style="max-width:960px;width:94vw;height:88vh;display:flex;flex-direction:column">
+  <div class="modal-header">
+   <div class="modal-title" id="isoViewTitle">ดูเอกสาร ISO</div>
+   <div style="display:flex;align-items:center;gap:0.5rem">
+    <a id="isoViewOpenTab" href="#" target="_blank" rel="noopener" class="btn btn-ghost" style="padding:0.35rem 0.8rem;font-size: 0.777rem">↗ เปิดแท็บใหม่</a>
+    <button class="modal-close" onclick="closeIsoViewer()"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+   </div>
+  </div>
+  <div class="modal-body" style="flex:1;padding:0;display:flex">
+   <iframe id="isoViewFrame" src="" style="border:0;width:100%;height:100%;flex:1;background:#525659" loading="lazy"></iframe>
   </div>
  </div>
 </div>
@@ -21690,8 +22018,8 @@ function endTour() {
      - ระหว่างส่งไฟล์ แสดงหน้าต่าง "กำลังอัปโหลด" บังทั้งจอ → กดปุ่มซ้ำไม่ได้
      - คำขอเดียวกันที่ยังส่งอยู่ → ใช้ผลเดียวกัน, ไฟล์เดิมที่เพิ่งอัปโหลดสำเร็จภายใน 2 นาที → ไม่อัปโหลดซ้ำ */
   const UploadGuard = (() => {
-    const LABEL = { addManual: 'คู่มือการทำงาน (PDF)', uploadFile: 'ไฟล์แนบ PR/PO', uploadMeetingImage: 'รูป Summary Meeting', uploadCerFile: 'ใบรับรอง CER' };
-    const SHOW_OVERLAY = { addManual: true, uploadFile: true, uploadCerFile: true };      // รูป Meeting มีแถบความคืบหน้าในหน้าต่างของตัวเองอยู่แล้ว
+    const LABEL = { addIsoDoc: 'เอกสาร ISO (PDF)', addManual: 'คู่มือการทำงาน (PDF)', uploadFile: 'ไฟล์แนบ PR/PO', uploadMeetingImage: 'รูป Summary Meeting', uploadCerFile: 'ใบรับรอง CER' };
+    const SHOW_OVERLAY = { addIsoDoc: true, addManual: true, uploadFile: true, uploadCerFile: true };      // รูป Meeting มีแถบความคืบหน้าในหน้าต่างของตัวเองอยู่แล้ว
     const inflight = new Map(), recent = new Map();
     let el = null, timer = null, t0 = 0;
     const kb = n => n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
