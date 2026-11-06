@@ -7456,20 +7456,12 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
    <h2 data-i18n="nav_iso">เอกสาร ISO</h2>
    <div class="iso-sub" data-i18n="iso_sub">เอกสารระบบคุณภาพ ISO ของแผนกจัดซื้อ</div>
   </div></div>
-  <style>.iso-cat-btn.active { background: var(--accent) !important; border-color: var(--accent) !important; color: #fff !important; }</style>
-  <div class="toolbar" style="margin-bottom:0.9rem;flex-wrap:wrap;gap:0.6rem">
+    <div class="toolbar" style="margin-bottom:0.9rem;flex-wrap:wrap;gap:0.6rem">
    <div class="search-box" style="max-width:300px">
     <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
     <input type="text" id="isoSearch" placeholder="ค้นหาชื่อเอกสาร ISO..." oninput="renderIsoDocs()">
    </div>
-   <div class="chip-filter" id="isoCategoryFilter" style="display:flex;gap:0.4rem;flex-wrap:wrap">
-    <button class="btn btn-ghost iso-cat-btn active" data-cat="" onclick="setIsoCategoryFilter('', this)" style="padding:0.4rem 0.9rem;font-size: 0.777rem">ทั้งหมด</button>
-    <button class="btn btn-ghost iso-cat-btn" data-cat="ISO 9001" onclick="setIsoCategoryFilter('ISO 9001', this)" style="padding:0.4rem 0.9rem;font-size: 0.777rem">ISO 9001</button>
-    <button class="btn btn-ghost iso-cat-btn" data-cat="ISO 14001" onclick="setIsoCategoryFilter('ISO 14001', this)" style="padding:0.4rem 0.9rem;font-size: 0.777rem">ISO 14001</button>
-    <button class="btn btn-ghost iso-cat-btn" data-cat="ISO 45001" onclick="setIsoCategoryFilter('ISO 45001', this)" style="padding:0.4rem 0.9rem;font-size: 0.777rem">ISO 45001</button>
-    <button class="btn btn-ghost iso-cat-btn" data-cat="อื่นๆ" onclick="setIsoCategoryFilter('อื่นๆ', this)" style="padding:0.4rem 0.9rem;font-size: 0.777rem">อื่นๆ</button>
-   </div>
-   <button class="btn btn-ghost" onclick="openIsoFolder(this)" style="margin-left:auto" title="เปิดโฟลเดอร์เก็บไฟล์ PDF ใน Google Drive (ตามหมวดที่เลือกอยู่)">📁 โฟลเดอร์ Drive</button>
+   <button class="btn btn-ghost" onclick="openIsoFolder(this)" style="margin-left:auto" title="เปิดโฟลเดอร์เก็บไฟล์ PDF ใน Google Drive ">📁 โฟลเดอร์ Drive</button>
    <button class="btn btn-primary" onclick="openIsoModal()">+ อัพโหลดเอกสาร ISO (PDF)</button>
   </div>
   <div id="isoGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:1rem"></div>
@@ -8448,7 +8440,7 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
  <button class="btn btn-ghost manual-cat-btn" data-cat="พื้นฐานการทำงาน" onclick="setManualCategoryFilter('พื้นฐานการทำงาน', this)" style="padding:0.4rem 0.9rem;font-size: 0.777rem">พื้นฐานการทำงาน</button>
  <button class="btn btn-ghost manual-cat-btn" data-cat="อื่นๆ" onclick="setManualCategoryFilter('อื่นๆ', this)" style="padding:0.4rem 0.9rem;font-size: 0.777rem">อื่นๆ</button>
  </div>
- <button class="btn btn-ghost mnl-folder-btn" onclick="openManualFolder(this)" style="margin-left:auto" title="เปิดโฟลเดอร์เก็บไฟล์ PDF ใน Google Drive (ตามหมวดที่เลือกอยู่)"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg> โฟลเดอร์ Google Drive</button>
+ <button class="btn btn-ghost mnl-folder-btn" onclick="openManualFolder(this)" style="margin-left:auto" title="เปิดโฟลเดอร์เก็บไฟล์ PDF ใน Google Drive "><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg> โฟลเดอร์ Google Drive</button>
  <button class="btn btn-primary" onclick="openManualModal()">+ อัพโหลดคู่มือ (PDF)</button>
  </div>
  <div id="manualGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:1rem"></div>
@@ -14078,6 +14070,7 @@ function renderManuals() {
  (Apps Script: 15_ISO_DOCS.gs — action: getIsoDocs / addIsoDoc / editIsoDoc / delIsoDoc / viewIsoDoc / getIsoFolder)
  ══════════════════════════════════════════════════ */
 let isoDocs = [];
+const ISO_CATEGORY = 'เอกสาร ISO';
 let isoCategoryFilter = '';
 let isoPendingBase64 = '';
 let isoSaving = false;
@@ -14143,7 +14136,6 @@ function openIsoModal(id) {
  if (!m) return;
  document.getElementById('isoModalTitle').textContent = '✏️ แก้ไขเอกสาร ISO';
  document.getElementById('iso-title').value = m.title || '';
- document.getElementById('iso-category').value = m.category || 'ISO 9001';
  document.getElementById('iso-note').value = m.note || '';
  document.getElementById('iso-fileName').value = m.fileName || '';
  statusEl.innerHTML = m.url
@@ -14153,7 +14145,6 @@ function openIsoModal(id) {
  } else {
  document.getElementById('isoModalTitle').textContent = 'อัพโหลดเอกสาร ISO';
  document.getElementById('iso-title').value = '';
- document.getElementById('iso-category').value = (isoCategoryFilter || 'ISO 9001');
  document.getElementById('iso-note').value = '';
  statusEl.textContent = 'เลือกไฟล์ PDF เพื่ออัพโหลด (ไม่เกิน 20MB)';
  if (fileWrap) fileWrap.style.display = '';
@@ -14196,7 +14187,7 @@ async function saveIsoDoc() {
  if (!isEdit && !isoPendingBase64) { showToast('กรุณาเลือกไฟล์ PDF ก่อนบันทึก', 'error'); return; }
  if (!WEB_APP_URL) { showToast('กรุณาตั้งค่า Web App URL ก่อน (หน้า Setup)', 'error'); return; }
 
- const category = document.getElementById('iso-category').value;
+ const category = ISO_CATEGORY;
  const description = document.getElementById('iso-note').value.trim();
  const body = isEdit
  ? { action: 'editIsoDoc', id, title, category, description }
@@ -14281,19 +14272,13 @@ async function openIsoFolder(btn) {
  } finally { if (btn) btn.disabled = false; }
 }
 
-function isoCategoryIcon(cat) {
- if (cat === 'ISO 9001') return '🛡️';
- if (cat === 'ISO 14001') return '🌿';
- if (cat === 'ISO 45001') return '🦺';
- return '📄';
-}
+function isoCategoryIcon() { return '🛡️'; }
 
 function renderIsoDocs() {
  const grid = document.getElementById('isoGrid');
  if (!grid) return;
  const q = (document.getElementById('isoSearch')?.value || '').toLowerCase();
  const list = isoDocs.filter(m =>
- (!isoCategoryFilter || m.category === isoCategoryFilter) &&
  ((m.title || '').toLowerCase().includes(q) || (m.note || '').toLowerCase().includes(q))
  );
  if (!list.length) {
@@ -14317,7 +14302,7 @@ function renderIsoDocs() {
  <div class="supplier-avatar" style="background:linear-gradient(135deg,var(--accent),var(--accent2))">${icon}</div>
  <div style="min-width:0">
  <div class="supplier-name" style="white-space:normal">${t}</div>
- <div class="supplier-category">${isoEsc(m.category) || 'ไม่ระบุหมวดหมู่'}</div>
+ <div class="supplier-category">${ISO_CATEGORY}</div>
  </div>
  </div>
  <div style="display:flex;gap:0.3rem;flex-shrink:0">
@@ -16459,15 +16444,6 @@ function renderLeaderboard() {
    <input type="hidden" id="iso-fileName">
    <div class="form-grid">
     <div class="form-group full"><label class="form-label">ชื่อเอกสาร ISO *</label><input type="text" class="form-input" id="iso-title" placeholder="เช่น ขั้นตอนการจัดซื้อ (QP-PU-01)"></div>
-    <div class="form-group full">
-     <label class="form-label">หมวดหมู่</label>
-     <select class="form-input" id="iso-category">
-      <option value="ISO 9001">ISO 9001</option>
-      <option value="ISO 14001">ISO 14001</option>
-      <option value="ISO 45001">ISO 45001</option>
-      <option value="อื่นๆ">อื่นๆ</option>
-     </select>
-    </div>
     <div class="form-group full"><label class="form-label">หมายเหตุ</label><input type="text" class="form-input" id="iso-note" placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)"></div>
     <div class="form-group full">
      <label class="form-label">ไฟล์ PDF *</label>
