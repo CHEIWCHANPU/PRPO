@@ -24164,7 +24164,7 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
 .qc-tip{font-size:.74rem;color:var(--qc-sub);margin:0 0 .8rem}
 
 /* ── แผ่นฟอร์ม (พื้นขาวเสมอ) ── */
-#qcSheet{--ln:#3A3F47;--lb:#F2F4F7;--hd:#1F3A5F;--cu:#DCE9F6;--mk:#FDF0E6;--lo:#DDF3E1;--bs:#E3EFDB;--cp:#FBE3D3;--bad:#C62828;--ok:#1B7F3B;
+#qcSheet{--ln:#1A1A1A;--lb:#E4E4E4;--hd:#000;--cu:#D2D2D2;--mk:#F0F0F0;--lo:#fff;--bs:#EDEDED;--cp:#E0E0E0;--bad:#000;--ok:#000;
   width:1076px;min-height:752px;display:flex;flex-direction:column;margin:0 auto;background:#fff;color:#111827;padding:14px 16px 12px;box-shadow:0 1px 3px rgba(0,0,0,.12),0 8px 24px rgba(0,0,0,.08);font-family:'Sarabun','Tahoma',sans-serif;font-size:12px;line-height:1.25;position:relative}
 #qcSheet *{box-sizing:border-box}
 #qcSheet table{border-collapse:collapse;width:100%;table-layout:fixed}
@@ -24290,6 +24290,28 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
 .qc-nt-bar button:hover{background:rgba(255,255,255,.25)}
 #qcSheet.pdf .qc-nt-bar,#qcSheet.pdf .qc-nt-rs{display:none !important}
 #qcSheet.pdf .qc-nt-text:empty::before{content:''}
+/* ══ ธีมขาว-ดำ: ออกแบบให้ปริ้นเครื่องขาวดำแล้วอ่านชัด — แยกความต่างด้วย "ความเข้ม / กรอบหนา / สัญลักษณ์" ไม่พึ่งสี ══ */
+#qcSheet .qc-hd{border-top-width:5px}
+#qcSheet .qc-hd-l small,#qcSheet .qc-cap span,#qcSheet .u span,#qcSheet table.qc-cmp td.rl small{color:#333}
+#qcSheet .qc-hd-l b span{color:#222}
+#qcSheet .lb,#qcSheet table.qc-cmp td.rl{color:#000}
+#qcSheet .qc-meta{color:#444}
+#qcSheet .qc-chk i,#qcSheet table.qc-cmp td.pick i{border:1.5px solid #000;font-weight:700}
+#qcSheet table.qc-cmp th.mh{background:#222 !important;color:#fff;overflow:visible}
+#qcSheet table.qc-cmp td.cal{background:#F7F7F7}
+#qcSheet td.neg{color:#000;font-weight:700;text-decoration:underline}
+#qcSheet td.pos{color:#000;font-weight:700}
+/* รายที่ราคาต่ำสุด: หัวคอลัมน์กลับสี (ดำบนขาว) + กรอบหนาล้อมทั้งคอลัมน์ + ป้ายดำ */
+#qcSheet .qc-tag{background:#000;color:#fff;border-radius:0;font-size:9.5px}
+#qcSheet table.qc-cmp th.mh.low{background:#fff !important;color:#000;border-top:3px solid #000;border-left:3px solid #000;border-right:3px solid #000}
+#qcSheet table.qc-cmp th.mh.low input,#qcSheet table.qc-cmp th.mh.low .qc-rm{color:#000}
+#qcSheet table.qc-cmp td.low,#qcSheet table.qc-cmp tr.pr td.low{background:#fff !important;border-left:3px solid #000;border-right:3px solid #000;font-weight:700}
+#qcSheet table.qc-cmp tr:last-child td.low{border-bottom:3px solid #000}
+/* ผลการพิจารณา (เลือก): พื้นดำ ตัวขาว */
+#qcSheet table.qc-cmp td.pick{color:#555}
+#qcSheet table.qc-cmp td.pick.on{background:#000 !important;color:#fff}
+#qcSheet table.qc-cmp td.pick.on i{background:#fff;border-color:#fff;color:#000}
+#qcSheet,#qcSheet *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 @media print{
   body *{visibility:hidden !important}
   #qcSheet,#qcSheet *{visibility:visible !important}
@@ -24386,14 +24408,14 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
           </div>
           <div class="qc-foot">
             <div><table><colgroup><col style="width:112px"><col></colgroup>
-              <tr><td class="lb" rowspan="3" style="text-align:center;white-space:normal;line-height:1.35">สรุป /<br>หมายเหตุ<br><span style="font-weight:400;font-size:9.5px;color:#6B7280">CONCLUSION</span></td><td>${F('conclusion.0')}</td></tr>
+              <tr><td class="lb" rowspan="3" style="text-align:center;white-space:normal;line-height:1.35">สรุป /<br>หมายเหตุ<br><span style="font-weight:400;font-size:9.5px;color:#333">CONCLUSION</span></td><td>${F('conclusion.0')}</td></tr>
               <tr><td>${F('conclusion.1')}</td></tr><tr><td>${F('conclusion.2')}</td></tr></table></div>
             <table class="qc-sign"><colgroup><col><col><col></colgroup>
               <tr><th class="lb">PREPARED</th><th class="lb">CHECKED</th><th class="lb">APPROVED</th></tr>
               <tr><td class="sp"></td><td class="sp"></td><td class="sp"></td></tr>
               <tr><td class="c">${F('signPrep', 'c', '', 'ชื่อ')}</td><td class="c">${F('signChk', 'c', '', 'ชื่อ')}</td><td class="c">${F('signApp', 'c', '', 'ชื่อ')}</td></tr></table>
           </div>
-          <div class="qc-meta"><span>PURCHASE-EN-CCIP · E-FORM QUOTATION COMPARISON</span><span>${esc(d.partNo || '')}</span></div>
+          <div class="qc-meta"><span>PURCHASE-EN-CCIP · E-FORM QUOTATION COMPARISON · ตัวเลขขีดเส้นใต้ = ราคา MAKER สูงกว่าราคาลูกค้า</span><span>${esc(d.partNo || '')}</span></div>
         </div></div>`;
       page.querySelectorAll('#qcSheet [data-k]').forEach(inp => {
         inp.addEventListener('input', () => {
@@ -24605,32 +24627,68 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
         s.onload = () => window.html2pdf ? res(window.html2pdf) : rej(new Error('load')); s.onerror = () => { this._lib = null; rej(new Error('load')); }; document.head.appendChild(s); });
       return this._lib;
     },
+    /* ── popup ระหว่างสร้าง/ดาวน์โหลด PDF (หน้าตาเดียวกับหมวดอื่น) ── */
+    dlShow(name){
+      this.dlHide(true);
+      const el = document.createElement('div'); el.className = 'pc-dl'; el.setAttribute('role', 'alertdialog'); el.setAttribute('aria-live', 'polite');
+      el.innerHTML = `<div class="pc-dl-box"><div class="pc-dl-ic"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 12v6"/><path d="m9 15 3 3 3-3"/></svg></div>
+        <h3 id="qcDlT">กำลังสร้างไฟล์ PDF</h3><p class="pc-dl-f">${esc(name)}</p>
+        <div class="pc-dl-bar"><i id="qcDlBar"></i></div><div class="pc-dl-row"><span id="qcDlS">กำลังเตรียมข้อมูล...</span><b id="qcDlP">0%</b></div></div>`;
+      document.body.appendChild(el); requestAnimationFrame(() => el.classList.add('on'));
+      this._dl = el; this._dlP = 0;
+    },
+    dlSet(p, text){
+      if (!this._dl) return; this._dlP = Math.max(this._dlP, p);
+      $('#qcDlBar').style.width = this._dlP + '%'; $('#qcDlP').textContent = Math.round(this._dlP) + '%'; if (text) $('#qcDlS').textContent = text;
+    },
+    dlCreep(to, text){          // ขยับหลอดช้าๆ ระหว่างขั้นตอนที่ใช้เวลานาน
+      clearInterval(this._dlT); this.dlSet(this._dlP, text);
+      this._dlT = setInterval(() => { if (this._dlP < to) this.dlSet(this._dlP + Math.max(.4, (to - this._dlP) * .08)); }, 120);
+    },
+    dlHide(now){
+      clearInterval(this._dlT); const el = this._dl; this._dl = null; if (!el) return;
+      if (now) { el.remove(); return; }
+      el.classList.remove('on'); setTimeout(() => el.remove(), 220);
+    },
     async pdf(){
       const btn = $('#qcPdf'), sheet = $('#qcSheet'); if (!sheet) return;
-      if (this._busy) return; this._busy = true;
+      if (this._busy) { toast('กำลังสร้าง PDF อยู่ — รอสักครู่', 'info'); return; }
+      this._busy = true;
       const name = ('Quotation Comparison ' + [this.d.partName, this.d.partNo].map(x => String(x || '').trim()).filter(Boolean).join(' , ')).trim().replace(/[\\/:*?"<>|]/g, '-') + '.pdf';
       const lab = btn.querySelector('span'); lab.textContent = 'กำลังสร้าง PDF...'; btn.disabled = true;
+      this.dlShow(name); this.dlSet(6, 'กำลังเตรียมข้อมูล...');
       if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
       const hd0 = sheet.querySelector('.qc-hd'), lay = sheet.querySelector('.qc-nl'), hx = hd0 ? hd0.offsetLeft : 0, hy = hd0 ? hd0.offsetTop : 0;
       sheet.classList.add('pdf');
       if (lay && hd0) { lay.style.left = (hd0.offsetLeft - hx) + 'px'; lay.style.top = (hd0.offsetTop - hy) + 'px'; }
-      let undoRmk = null;
+      let undoRmk = null, ok = false;
       try {
         await new Promise(r => setTimeout(r, 60));
         undoRmk = this.remarkToImg();
+        this.dlCreep(22, 'กำลังโหลดตัวสร้าง PDF...');
         const h2p = await this.lib();
+        this.dlCreep(78, 'กำลังจัดหน้าแบบฟอร์ม และรูปภาพ...');
         const worker = h2p().set({margin:0, image:{type:'jpeg', quality:0.97}, html2canvas:{scale:2.2, backgroundColor:'#ffffff', useCORS:true, logging:false, scrollX:0, scrollY:0}, jsPDF:{unit:'mm', format:'a4', orientation:'landscape'}}).from(sheet);
         const canvas = await worker.toCanvas().get('canvas');
+        this.dlCreep(94, 'กำลังสร้างไฟล์ PDF (A4)...');
         const doc = await worker.toPdf().get('pdf');
         for (let k = doc.internal.getNumberOfPages(); k > 0; k--) doc.deletePage(k);
         doc.addPage('a4', 'landscape');
         const PW = 297, PH = 210, M = 4, k = Math.min((PW - 2 * M) / canvas.width, (PH - 2 * M) / canvas.height), w = canvas.width * k, h = canvas.height * k;
         doc.addImage(canvas.toDataURL('image/jpeg', 0.97), 'JPEG', (PW - w) / 2, (PH - h) / 2, w, h);
-        doc.save(name); toast('ดาวน์โหลด PDF เรียบร้อย', 'success');
+        clearInterval(this._dlT); this.dlSet(100, 'กำลังดาวน์โหลด...');
+        doc.save(name);
+        ok = true;
+        if (this._dl) { this._dl.classList.add('done'); $('#qcDlT').textContent = 'ดาวน์โหลดเรียบร้อย'; $('#qcDlS').textContent = 'บันทึกไฟล์ลงเครื่องแล้ว'; }
+        await new Promise(r => setTimeout(r, 1100));
       } catch (e) {
         toast('สร้างไฟล์ PDF โดยตรงไม่ได้ — เปิดหน้าต่างพิมพ์แทน ให้เลือก "Save as PDF"', 'info');
         setTimeout(() => window.print(), 250);
-      } finally { sheet.classList.remove('pdf'); if (lay) { lay.style.left = ''; lay.style.top = ''; } if (undoRmk) undoRmk(); btn.disabled = false; lab.textContent = 'ดาวน์โหลด PDF'; this._busy = false; }
+      } finally {
+        this.dlHide(!ok);
+        sheet.classList.remove('pdf'); if (lay) { lay.style.left = ''; lay.style.top = ''; } if (undoRmk) undoRmk();
+        btn.disabled = false; lab.textContent = 'ดาวน์โหลด PDF'; this._busy = false;
+      }
     }
   };
   window.CCIPQuotationCompare = Q;
@@ -24683,7 +24741,7 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
 .rv-tip{font-size:.74rem;color:var(--rv-sub);margin:0 0 .8rem}
 
 /* ── แผ่นฟอร์ม (พื้นขาวเสมอ) ── */
-#rvSheet{--ln:#3A3F47;--lb:#F2F4F7;--hd:#1F3A5F;--cu:#DCE9F6;--mk:#FDF0E6;--lo:#DDF3E1;--bs:#E3EFDB;--cp:#FBE3D3;--bad:#C62828;--ok:#1B7F3B;
+#rvSheet{--ln:#1A1A1A;--lb:#E4E4E4;--hd:#000;--cu:#D2D2D2;--mk:#F0F0F0;--lo:#fff;--bs:#EDEDED;--cp:#E0E0E0;--bad:#000;--ok:#000;
   width:1076px;min-height:752px;display:flex;flex-direction:column;margin:0 auto;background:#fff;color:#111827;padding:14px 16px 12px;box-shadow:0 1px 3px rgba(0,0,0,.12),0 8px 24px rgba(0,0,0,.08);font-family:'Sarabun','Tahoma',sans-serif;font-size:12px;line-height:1.25;position:relative}
 #rvSheet *{box-sizing:border-box}
 #rvSheet table{border-collapse:collapse;width:100%;table-layout:fixed}
@@ -24819,6 +24877,42 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
 .rv-nt-bar button:hover{background:rgba(255,255,255,.25)}
 #rvSheet.pdf .rv-nt-bar,#rvSheet.pdf .rv-nt-rs{display:none !important}
 #rvSheet.pdf .rv-nt-text:empty::before{content:''}
+/* ══ ธีมขาว-ดำ: ออกแบบให้ปริ้นเครื่องขาวดำแล้วอ่านชัด — แยกความต่างด้วย "ความเข้ม / กรอบหนา / สัญลักษณ์ ▲▼" ไม่พึ่งสี ══ */
+#rvSheet .rv-hd{border-top-width:5px}
+#rvSheet .rv-hd-l small,#rvSheet .rv-cap span,#rvSheet .u span,#rvSheet table.rv-cmp td.rl small{color:#333}
+#rvSheet .rv-hd-l b span{color:#222}
+#rvSheet .lb,#rvSheet table.rv-cmp td.rl{color:#000}
+#rvSheet .rv-meta{color:#444}
+#rvSheet .rv-chk i{border:1.5px solid #000;font-weight:700}
+/* ราคาลูกค้า: กรอบดำหนา พื้นเทา */
+#rvSheet .rv-custbox{border:3px solid #000;background:#D9D9D9}
+#rvSheet .rv-custbox .l small,#rvSheet .rv-custbox .l b,#rvSheet .rv-custbox .eq,#rvSheet .rv-custbox .un,#rvSheet .rv-custbox input.rv-cp{color:#000}
+#rvSheet .rv-custbox input{border:1px solid #000 !important}
+#rvSheet .rv-custbox em{background:#000;color:#fff}
+/* ป้าย COST UP / COST DOWN: UP = พื้นดำตัวขาว ▲ · DOWN = พื้นขาวกรอบคู่ ▼ · เท่าเดิม = เทา */
+#rvSheet .rv-banner{border:2px solid #000;background:#EDEDED}
+#rvSheet .rv-banner b{color:#444}
+#rvSheet .rv-banner.up{background:#000;border-color:#000}
+#rvSheet .rv-banner.up b,#rvSheet .rv-banner.up span{color:#fff}
+#rvSheet .rv-banner.down{background:#fff;border:4px double #000}
+#rvSheet .rv-banner.down b,#rvSheet .rv-banner.down span{color:#000}
+#rvSheet .rv-banner.same{background:#D9D9D9}
+/* ตาราง เก่า-ใหม่: หัวตารางไล่ระดับความเข้ม (เก่า = เทา · ใหม่ = ดำ) */
+#rvSheet table.rv-cmp th{background:#222;color:#fff}
+#rvSheet table.rv-cmp th:nth-child(2){background:#555}
+#rvSheet table.rv-cmp th.nw{background:#000}
+#rvSheet table.rv-cmp th.ch{background:#777}
+#rvSheet table.rv-cmp th small{opacity:1;color:#EEE}
+#rvSheet table.rv-cmp td.cal,#rvSheet table.rv-cmp td.vd{background:#F7F7F7}
+#rvSheet .neg{color:#000;font-weight:700;text-decoration:underline}
+#rvSheet .pos{color:#000;font-weight:700}
+/* แท่งเปรียบเทียบ: ลูกค้า = ดำทึบ · MAKER เก่า = เทาอ่อน · MAKER ใหม่ = เทาเข้ม (มีตัวเลขกำกับทุกแท่ง) */
+#rvSheet .rv-bars{border:1px solid #000}
+#rvSheet .rv-bar .tr{background:#fff;border:1px solid #000}
+#rvSheet #rvBc{background:#000}
+#rvSheet #rvBo{background:#BDBDBD}
+#rvSheet #rvBn{background:#555}
+#rvSheet,#rvSheet *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 @media print{
   body *{visibility:hidden !important}
   #rvSheet,#rvSheet *{visibility:visible !important}
@@ -24908,22 +25002,22 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
                 <tr><td class="rl">เทียบราคาลูกค้า<small>NEW MAKER VS CUSTOMER</small></td><td class="vd" colspan="3" data-c="verdict"></td></tr>
               </table>
               <div class="rv-bars"><h4>เปรียบเทียบราคาต่อชิ้น (THB)</h4>
-                <div class="rv-bar"><label>ราคาลูกค้า</label><div class="tr"><i id="rvBc" style="background:#2563EB"></i></div><em data-c="bc"></em></div>
-                <div class="rv-bar"><label>MAKER เก่า</label><div class="tr"><i id="rvBo" style="background:#9CA3AF"></i></div><em data-c="bo"></em></div>
-                <div class="rv-bar"><label>MAKER ใหม่</label><div class="tr"><i id="rvBn" style="background:#D97706"></i></div><em data-c="bn"></em></div>
+                <div class="rv-bar"><label>ราคาลูกค้า</label><div class="tr"><i id="rvBc"></i></div><em data-c="bc"></em></div>
+                <div class="rv-bar"><label>MAKER เก่า</label><div class="tr"><i id="rvBo"></i></div><em data-c="bo"></em></div>
+                <div class="rv-bar"><label>MAKER ใหม่</label><div class="tr"><i id="rvBn"></i></div><em data-c="bn"></em></div>
               </div>
             </div>
           </div>
           <div class="rv-foot">
             <div><table><colgroup><col style="width:112px"><col></colgroup>
-              <tr><td class="lb" rowspan="3" style="text-align:center;white-space:normal;line-height:1.35">สรุป /<br>หมายเหตุ<br><span style="font-weight:400;font-size:9.5px;color:#6B7280">CONCLUSION</span></td><td>${F('conclusion.0')}</td></tr>
+              <tr><td class="lb" rowspan="3" style="text-align:center;white-space:normal;line-height:1.35">สรุป /<br>หมายเหตุ<br><span style="font-weight:400;font-size:9.5px;color:#333">CONCLUSION</span></td><td>${F('conclusion.0')}</td></tr>
               <tr><td>${F('conclusion.1')}</td></tr><tr><td>${F('conclusion.2')}</td></tr></table></div>
             <table class="rv-sign"><colgroup><col><col><col></colgroup>
               <tr><th class="lb">PREPARED</th><th class="lb">CHECKED</th><th class="lb">APPROVED</th></tr>
               <tr><td class="sp"></td><td class="sp"></td><td class="sp"></td></tr>
               <tr><td class="c">${F('signPrep', 'c', '', 'ชื่อ')}</td><td class="c">${F('signChk', 'c', '', 'ชื่อ')}</td><td class="c">${F('signApp', 'c', '', 'ชื่อ')}</td></tr></table>
           </div>
-          <div class="rv-meta"><span>PURCHASE-EN-CCIP · E-FORM PRICE REVISION (OLD vs NEW)</span><span>${esc(d.partNo || '')}</span></div>
+          <div class="rv-meta"><span>PURCHASE-EN-CCIP · E-FORM PRICE REVISION (OLD vs NEW) · ตัวเลขขีดเส้นใต้ = ผลไม่เป็นผลดี / ขาดทุน</span><span>${esc(d.partNo || '')}</span></div>
         </div></div>`;
       page.querySelectorAll('#rvSheet [data-k]').forEach(inp => {
         inp.addEventListener('input', () => {
@@ -24989,12 +25083,12 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
       if (bn) { bn.className = 'rv-banner';
         if (ok(mo) && ok(mn)) { const dv = mn - mo, p = pc(mo, mn);
           bn.classList.add(dv > 0 ? 'up' : dv < 0 ? 'down' : 'same');
-          bn.innerHTML = `<b>${dv > 0 ? 'COST UP' : dv < 0 ? 'COST DOWN' : 'NO CHANGE'}</b><span>ราคา MAKER ${f2(mo)} → ${f2(mn)} บาท<br>${dv === 0 ? 'ไม่เปลี่ยนแปลง' : (dv > 0 ? '+' : '−') + f2(Math.abs(dv)) + ' บาท/ชิ้น (' + (dv > 0 ? '+' : '−') + Math.abs(p).toFixed(2) + ' %)'}</span>`;
+          bn.innerHTML = `<b>${dv > 0 ? '▲ COST UP' : dv < 0 ? '▼ COST DOWN' : '＝ NO CHANGE'}</b><span>ราคา MAKER ${f2(mo)} → ${f2(mn)} บาท<br>${dv === 0 ? 'ไม่เปลี่ยนแปลง' : (dv > 0 ? '+' : '−') + f2(Math.abs(dv)) + ' บาท/ชิ้น (' + (dv > 0 ? '+' : '−') + Math.abs(p).toFixed(2) + ' %)'}</span>`;
         } else bn.innerHTML = '<b>—</b><span>กรอกราคา MAKER เก่า / ใหม่</span>'; }
       // แท่งเปรียบเทียบ
       const vals = [cn, mo, mn].filter(ok), mx = vals.length ? Math.max(...vals) : 0;
       const bar = (id, tid, v, col) => { const el = $('#' + id, sh), t = sh.querySelector(`[data-c="${tid}"]`); if (el) { el.style.width = ok(v) && mx ? (v / mx * 100) + '%' : '0'; if (col) el.style.background = col; } if (t) t.textContent = ok(v) ? f2(v) : ''; };
-      bar('rvBc', 'bc', cn); bar('rvBo', 'bo', mo); bar('rvBn', 'bn', mn, ok(mn) && ok(cn) && mn > cn ? '#C62828' : (ok(mn) && ok(mo) && mn < mo ? '#1B7F3B' : '#D97706'));
+      bar('rvBc', 'bc', cn); bar('rvBo', 'bo', mo); bar('rvBn', 'bn', mn);
     },
 
     /* ── รูปภาพ: ย่อแล้วเก็บในเครื่อง และฝังลง PDF ── */
@@ -25159,32 +25253,68 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
         s.onload = () => window.html2pdf ? res(window.html2pdf) : rej(new Error('load')); s.onerror = () => { this._lib = null; rej(new Error('load')); }; document.head.appendChild(s); });
       return this._lib;
     },
+    /* ── popup ระหว่างสร้าง/ดาวน์โหลด PDF (หน้าตาเดียวกับหมวดอื่น) ── */
+    dlShow(name){
+      this.dlHide(true);
+      const el = document.createElement('div'); el.className = 'pc-dl'; el.setAttribute('role', 'alertdialog'); el.setAttribute('aria-live', 'polite');
+      el.innerHTML = `<div class="pc-dl-box"><div class="pc-dl-ic"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 12v6"/><path d="m9 15 3 3 3-3"/></svg></div>
+        <h3 id="rvDlT">กำลังสร้างไฟล์ PDF</h3><p class="pc-dl-f">${esc(name)}</p>
+        <div class="pc-dl-bar"><i id="rvDlBar"></i></div><div class="pc-dl-row"><span id="rvDlS">กำลังเตรียมข้อมูล...</span><b id="rvDlP">0%</b></div></div>`;
+      document.body.appendChild(el); requestAnimationFrame(() => el.classList.add('on'));
+      this._dl = el; this._dlP = 0;
+    },
+    dlSet(p, text){
+      if (!this._dl) return; this._dlP = Math.max(this._dlP, p);
+      $('#rvDlBar').style.width = this._dlP + '%'; $('#rvDlP').textContent = Math.round(this._dlP) + '%'; if (text) $('#rvDlS').textContent = text;
+    },
+    dlCreep(to, text){          // ขยับหลอดช้าๆ ระหว่างขั้นตอนที่ใช้เวลานาน
+      clearInterval(this._dlT); this.dlSet(this._dlP, text);
+      this._dlT = setInterval(() => { if (this._dlP < to) this.dlSet(this._dlP + Math.max(.4, (to - this._dlP) * .08)); }, 120);
+    },
+    dlHide(now){
+      clearInterval(this._dlT); const el = this._dl; this._dl = null; if (!el) return;
+      if (now) { el.remove(); return; }
+      el.classList.remove('on'); setTimeout(() => el.remove(), 220);
+    },
     async pdf(){
       const btn = $('#rvPdf'), sheet = $('#rvSheet'); if (!sheet) return;
-      if (this._busy) return; this._busy = true;
+      if (this._busy) { toast('กำลังสร้าง PDF อยู่ — รอสักครู่', 'info'); return; }
+      this._busy = true;
       const name = ('Price Revision ' + [this.d.partName, this.d.partNo].map(x => String(x || '').trim()).filter(Boolean).join(' , ')).trim().replace(/[\\/:*?"<>|]/g, '-') + '.pdf';
       const lab = btn.querySelector('span'); lab.textContent = 'กำลังสร้าง PDF...'; btn.disabled = true;
+      this.dlShow(name); this.dlSet(6, 'กำลังเตรียมข้อมูล...');
       if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
       const hd0 = sheet.querySelector('.rv-hd'), lay = sheet.querySelector('.rv-nl'), hx = hd0 ? hd0.offsetLeft : 0, hy = hd0 ? hd0.offsetTop : 0;
       sheet.classList.add('pdf');
       if (lay && hd0) { lay.style.left = (hd0.offsetLeft - hx) + 'px'; lay.style.top = (hd0.offsetTop - hy) + 'px'; }
-      let undoRmk = null;
+      let undoRmk = null, ok = false;
       try {
         await new Promise(r => setTimeout(r, 60));
         undoRmk = this.remarkToImg();
+        this.dlCreep(22, 'กำลังโหลดตัวสร้าง PDF...');
         const h2p = await this.lib();
+        this.dlCreep(78, 'กำลังจัดหน้าแบบฟอร์ม และรูปภาพ...');
         const worker = h2p().set({margin:0, image:{type:'jpeg', quality:0.97}, html2canvas:{scale:2.2, backgroundColor:'#ffffff', useCORS:true, logging:false, scrollX:0, scrollY:0}, jsPDF:{unit:'mm', format:'a4', orientation:'landscape'}}).from(sheet);
         const canvas = await worker.toCanvas().get('canvas');
+        this.dlCreep(94, 'กำลังสร้างไฟล์ PDF (A4)...');
         const doc = await worker.toPdf().get('pdf');
         for (let k = doc.internal.getNumberOfPages(); k > 0; k--) doc.deletePage(k);
         doc.addPage('a4', 'landscape');
         const PW = 297, PH = 210, M = 4, k = Math.min((PW - 2 * M) / canvas.width, (PH - 2 * M) / canvas.height), w = canvas.width * k, h = canvas.height * k;
         doc.addImage(canvas.toDataURL('image/jpeg', 0.97), 'JPEG', (PW - w) / 2, (PH - h) / 2, w, h);
-        doc.save(name); toast('ดาวน์โหลด PDF เรียบร้อย', 'success');
+        clearInterval(this._dlT); this.dlSet(100, 'กำลังดาวน์โหลด...');
+        doc.save(name);
+        ok = true;
+        if (this._dl) { this._dl.classList.add('done'); $('#rvDlT').textContent = 'ดาวน์โหลดเรียบร้อย'; $('#rvDlS').textContent = 'บันทึกไฟล์ลงเครื่องแล้ว'; }
+        await new Promise(r => setTimeout(r, 1100));
       } catch (e) {
         toast('สร้างไฟล์ PDF โดยตรงไม่ได้ — เปิดหน้าต่างพิมพ์แทน ให้เลือก "Save as PDF"', 'info');
         setTimeout(() => window.print(), 250);
-      } finally { sheet.classList.remove('pdf'); if (lay) { lay.style.left = ''; lay.style.top = ''; } if (undoRmk) undoRmk(); btn.disabled = false; lab.textContent = 'ดาวน์โหลด PDF'; this._busy = false; }
+      } finally {
+        this.dlHide(!ok);
+        sheet.classList.remove('pdf'); if (lay) { lay.style.left = ''; lay.style.top = ''; } if (undoRmk) undoRmk();
+        btn.disabled = false; lab.textContent = 'ดาวน์โหลด PDF'; this._busy = false;
+      }
     }
   };
   window.CCIPPriceRevision = Q;
