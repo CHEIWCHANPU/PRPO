@@ -24734,6 +24734,16 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
 .rv-img .tools button{border:1px solid #ccc;background:#fff;border-radius:6px;font:inherit;font-size:11px;padding:2px 7px;cursor:pointer;color:#111}
 .rv-img .tools button:hover{border-color:#2563EB;color:#2563EB}
 /* สถานะ + ตารางเก่า-ใหม่ */
+.rv-custbox{display:flex;align-items:center;gap:10px;border:3px solid #1D4ED8;background:linear-gradient(90deg,#DCE9F6,#EAF2FB);padding:6px 14px;margin-bottom:8px;min-height:62px}
+.rv-custbox .l{display:flex;flex-direction:column;line-height:1.1}
+.rv-custbox .l small{font-size:9.5px;letter-spacing:.14em;font-weight:700;color:#1D4ED8}
+.rv-custbox .l b{font-size:19px;color:#1E3A8A}
+#rvSheet .rv-custbox input{height:40px;background:#fff !important;border:1px solid #93B4E6 !important;font-weight:700}
+#rvSheet .rv-custbox input.rv-cc{width:84px;font-size:18px;text-align:center}
+#rvSheet .rv-custbox input.rv-cp{width:220px;flex:none;font-size:30px;text-align:right;padding-right:8px;color:#1E3A8A;margin-left:auto}
+.rv-custbox .eq{font-size:24px;font-weight:700;color:#1E3A8A}
+.rv-custbox .un{font-size:14px;font-weight:700;color:#1E3A8A;white-space:nowrap}
+.rv-custbox em{font-style:normal;font-size:10.5px;font-weight:700;color:#fff;background:#1D4ED8;padding:3px 9px;border-radius:99px;white-space:nowrap}
 .rv-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;border:2px solid #111827;padding:6px 12px;background:#F3F4F6;min-height:46px}
 .rv-banner b{font-size:22px;letter-spacing:.02em;color:#6B7280;line-height:1.1}
 .rv-banner span{font-size:12px;color:#374151;text-align:right;line-height:1.3}
@@ -24885,16 +24895,17 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
           <div class="rv-grid">
             <div><div class="rv-cap">รูปชิ้นงาน<span>PART IMAGE</span></div>${this.imgBox('main', 'lg')}</div>
             <div>
+              <div class="rv-custbox"><div class="l"><small>CUSTOMER PRICE</small><b>ราคาลูกค้า</b></div>
+                ${F('custCode', 'c rv-cc')}<span class="eq">=</span>${F('custOld', 'r rv-cp', '', '0.00')}<span class="un">THB / ชิ้น</span><em>FIX · ไม่ปรับราคา</em></div>
               <div class="rv-banner" id="rvBanner"><b>—</b><span>กรอกราคา MAKER เก่า / ใหม่</span></div>
-              <table class="rv-cmp"><colgroup><col style="width:190px"><col><col><col><col></colgroup>
-                <tr><th>รายการ</th><th>ราคาเก่า<small>OLD</small></th><th class="nw">ราคาใหม่<small>NEW</small></th><th class="ch">ส่วนต่าง (THB)<small>NEW − OLD</small></th><th class="ch">% เปลี่ยน<small>CHANGE</small></th></tr>
-                <tr class="cu"><td class="rl">ราคาลูกค้า <input data-k="custCode" value="${esc(d.custCode)}" autocomplete="off"><small>CUSTOMER PRICE · FIX ไม่ปรับ</small></td><td colspan="4" style="padding:0 10px"><div class="u" style="justify-content:flex-end">${F('custOld', 'r', 'max-width:180px', '0.00')}<span>THB / PC &nbsp;(FIX)</span></div></td></tr>
-                <tr class="mk"><td class="rl">ราคา MAKER<small>MAKER PRICE (THB / PC)</small></td><td>${F('mkOld', 'r', '', '0.00')}</td><td>${F('mkNew', 'r', '', '0.00')}</td>${cal('mk-d')}${cal('mk-p')}</tr>
-                <tr><td class="rl">ส่วนต่าง ลูกค้า − MAKER<small>MARGIN / PC (THB)</small></td>${cal('df-o')}${cal('df-n')}${cal('df-d')}${cal('df-p')}</tr>
-                <tr><td class="rl">% ส่วนต่าง (Margin)<small>เทียบราคาลูกค้า</small></td>${cal('mg-o')}${cal('mg-n')}${cal('mg-d')}<td class="cal"></td></tr>
-                <tr><td class="rl">ต้นทุน MAKER ต่อปี<small>PRICE × VOLUME/YEAR (THB)</small></td>${cal('an-o')}${cal('an-n')}${cal('an-d')}${cal('an-p')}</tr>
-                <tr><td class="rl">ส่วนต่างรวมต่อปี<small>MARGIN × VOLUME/YEAR (THB)</small></td>${cal('ay-o')}${cal('ay-n')}${cal('ay-d')}${cal('ay-p')}</tr>
-                <tr><td class="rl">เทียบราคาลูกค้า<small>NEW MAKER VS CUSTOMER</small></td><td class="vd" colspan="4" data-c="verdict"></td></tr>
+              <table class="rv-cmp"><colgroup><col style="width:210px"><col><col><col></colgroup>
+                <tr><th>รายการ</th><th>ราคาเก่า<small>OLD</small></th><th class="nw">ราคาใหม่<small>NEW</small></th><th class="ch">ส่วนต่าง (THB)<small>NEW − OLD</small></th></tr>
+                <tr class="mk"><td class="rl">ราคา MAKER<small>MAKER PRICE (THB / PC)</small></td><td>${F('mkOld', 'r', '', '0.00')}</td><td>${F('mkNew', 'r', '', '0.00')}</td>${cal('mk-d')}</tr>
+                <tr><td class="rl">ส่วนต่าง ลูกค้า − MAKER<small>MARGIN / PC (THB)</small></td>${cal('df-o')}${cal('df-n')}${cal('df-d')}</tr>
+                <tr><td class="rl">% ส่วนต่าง (Margin)<small>เทียบราคาลูกค้า</small></td>${cal('mg-o')}${cal('mg-n')}${cal('mg-d')}</tr>
+                <tr><td class="rl">ต้นทุน MAKER ต่อปี<small>PRICE × VOLUME/YEAR (THB)</small></td>${cal('an-o')}${cal('an-n')}${cal('an-d')}</tr>
+                <tr><td class="rl">ส่วนต่างรวมต่อปี<small>MARGIN × VOLUME/YEAR (THB)</small></td>${cal('ay-o')}${cal('ay-n')}${cal('ay-d')}</tr>
+                <tr><td class="rl">เทียบราคาลูกค้า<small>NEW MAKER VS CUSTOMER</small></td><td class="vd" colspan="3" data-c="verdict"></td></tr>
               </table>
               <div class="rv-bars"><h4>เปรียบเทียบราคาต่อชิ้น (THB)</h4>
                 <div class="rv-bar"><label>ราคาลูกค้า</label><div class="tr"><i id="rvBc" style="background:#2563EB"></i></div><em data-c="bc"></em></div>
