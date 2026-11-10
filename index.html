@@ -24833,7 +24833,7 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
   const today = () => { const t = new Date(); return t.getDate() + '/' + (t.getMonth() + 1) + '/' + t.getFullYear(); };
   const commas = v => { const t = String(v == null ? '' : v).replace(/[^\d.]/g, ''); if (!t) return ''; const [a, b] = t.split('.'); return a.replace(/^0+(?=\d)/, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',') + (b !== undefined ? '.' + b : ''); };
   const isQty = k => k === 'volume';
-  const isMoney = k => /^(custOld|custNew|mkOld|mkNew)$/.test(k);
+  const isMoney = k => /^(custOld|mkOld|mkNew)$/.test(k);
   const IMG = '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>';
   const IC = {
     pdf:'<svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>',
@@ -24841,14 +24841,14 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
     note:'<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 7v6M9 10h6"/></svg>',
     sav:'<svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>'
   };
-  const REASONS = ['ราคาวัตถุดิบ', 'ค่าแรง', 'ค่าเงิน / FX', 'ปรับแบบ / Spec', 'Volume เปลี่ยน', 'อื่นๆ'];
+  const REASONS = ['ค่าวัตถุดิบ', 'เพิ่ม Process', 'ลด Process', 'อื่นๆ'];
   const blank = () => ({
     notes:null, docNo:'', docDate:'', partName:'', partNo:'', rev:'', model:'', maker:'', effDate:'', typeOfWork:'', spec:'', plating:'', plant:'',
     volume:'', years:'', yUnit:'Y', reasons:[], reasonOther:'', custCode:'TYM', custOld:'', custNew:'', mkOld:'', mkNew:'',
     conclusion:['', '', ''], signPrep:'', signChk:'', signApp:'', images:{}
   });
   const norm = d => { const b = blank(); d = Object.assign(b, d || {});
-    d.reasons = Array.isArray(d.reasons) ? d.reasons : [];
+    d.reasons = Array.isArray(d.reasons) ? d.reasons.filter(r => REASONS.includes(r)) : [];
     d.conclusion = Array.isArray(d.conclusion) ? d.conclusion.slice(0, 3) : ['', '', '']; while (d.conclusion.length < 3) d.conclusion.push('');
     d.notes = Array.isArray(d.notes) ? d.notes : null; d.images = d.images || {}; return d; };
   const load = () => { try { const d = JSON.parse(localStorage.getItem(DKEY) || ''); if (d && typeof d === 'object') return d; } catch (e) {} return null; };
@@ -24871,7 +24871,7 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
         <div class="rv-hero"><div><div class="rv-eyebrow">E-Form · Price Revision · Old vs New</div>
             <h1>ปรับราคา เก่า – ใหม่</h1><p>ใส่ราคา MAKER เก่า/ใหม่ และราคาลูกค้า — ระบบคำนวณ Cost UP/DOWN, ส่วนต่างกับราคาลูกค้า, % Margin และผลกระทบต่อปี แล้วดาวน์โหลดเป็น PDF</p></div>
           <div class="rv-actions"><button class="rv-btn" id="rvList" title="บันทึก / เปิด / ลบ ฟอร์มที่เก็บไว้ (เก็บในเครื่องนี้)">${IC.sav}บันทึก / เปิดฟอร์ม${this.list().length ? ' (' + this.list().length + ')' : ''}</button><button class="rv-btn" id="rvNote" title="เพิ่มกล่องข้อความ แล้วลากไปวางตรงไหนก็ได้ในฟอร์ม">${IC.note}เพิ่มกล่องข้อความ</button><button class="rv-btn" id="rvClr">${IC.clr}ล้างฟอร์ม</button><button class="rv-btn pri" id="rvPdf">${IC.pdf}<span>ดาวน์โหลด PDF</span></button></div></div>
-        <div class="rv-desk"><p class="rv-tip">คลิกช่องเพื่อพิมพ์ · รูปชิ้นงาน: ตัดจาก DWG ด้วย Snipping Tool (Win+Shift+S) → คลิกที่กรอบรูป → กด Ctrl+V · ช่องสีเทาคำนวณอัตโนมัติ · ราคาลูกค้า "ใหม่" ว่างไว้ = ใช้ราคาลูกค้าเดิม · กล่องข้อความ: กด "เพิ่มกล่องข้อความ" แล้วลากแถบสีน้ำเงินเพื่อย้าย ลากมุมขวาล่างเพื่อปรับขนาด</p>
+        <div class="rv-desk"><p class="rv-tip">คลิกช่องเพื่อพิมพ์ · รูปชิ้นงาน: ตัดจาก DWG ด้วย Snipping Tool (Win+Shift+S) → คลิกที่กรอบรูป → กด Ctrl+V · ช่องสีเทาคำนวณอัตโนมัติ  · ราคาลูกค้า FIX ไม่เปลี่ยน ใช้เป็นเกณฑ์เทียบราคา MAKER เก่า/ใหม่ · กล่องข้อความ: กด "เพิ่มกล่องข้อความ" แล้วลากแถบสีน้ำเงินเพื่อย้าย ลากมุมขวาล่างเพื่อปรับขนาด</p>
         <div id="rvSheet">
           <div class="rv-hd"><div class="rv-hd-l"><small>PURCHASING DEPARTMENT · PU-EN · E-FORM</small><b>PRICE REVISION<span>ปรับราคา เก่า – ใหม่ เทียบราคาลูกค้า</span></b></div>
             <table><tr><td class="lb" style="width:110px">DOC NO.</td><td>${F('docNo', 'c')}</td></tr><tr><td class="lb">DATE</td><td><input data-k="docDate" class="c" value="${esc(d.docDate || today())}"></td></tr></table></div>
@@ -24888,7 +24888,7 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
               <div class="rv-banner" id="rvBanner"><b>—</b><span>กรอกราคา MAKER เก่า / ใหม่</span></div>
               <table class="rv-cmp"><colgroup><col style="width:190px"><col><col><col><col></colgroup>
                 <tr><th>รายการ</th><th>ราคาเก่า<small>OLD</small></th><th class="nw">ราคาใหม่<small>NEW</small></th><th class="ch">ส่วนต่าง (THB)<small>NEW − OLD</small></th><th class="ch">% เปลี่ยน<small>CHANGE</small></th></tr>
-                <tr class="cu"><td class="rl">ราคาลูกค้า <input data-k="custCode" value="${esc(d.custCode)}" autocomplete="off"><small>CUSTOMER PRICE (THB / PC)</small></td><td>${F('custOld', 'r', '', '0.00')}</td><td>${F('custNew', 'r', '', '= เดิม')}</td>${cal('cu-d')}${cal('cu-p')}</tr>
+                <tr class="cu"><td class="rl">ราคาลูกค้า <input data-k="custCode" value="${esc(d.custCode)}" autocomplete="off"><small>CUSTOMER PRICE · FIX ไม่ปรับ</small></td><td colspan="4" style="padding:0 10px"><div class="u" style="justify-content:flex-end">${F('custOld', 'r', 'max-width:180px', '0.00')}<span>THB / PC &nbsp;(FIX)</span></div></td></tr>
                 <tr class="mk"><td class="rl">ราคา MAKER<small>MAKER PRICE (THB / PC)</small></td><td>${F('mkOld', 'r', '', '0.00')}</td><td>${F('mkNew', 'r', '', '0.00')}</td>${cal('mk-d')}${cal('mk-p')}</tr>
                 <tr><td class="rl">ส่วนต่าง ลูกค้า − MAKER<small>MARGIN / PC (THB)</small></td>${cal('df-o')}${cal('df-n')}${cal('df-d')}${cal('df-p')}</tr>
                 <tr><td class="rl">% ส่วนต่าง (Margin)<small>เทียบราคาลูกค้า</small></td>${cal('mg-o')}${cal('mg-n')}${cal('mg-d')}<td class="cal"></td></tr>
@@ -24941,7 +24941,7 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
     /* คำนวณช่องสีเทา / ป้าย COST UP-DOWN / แท่งเปรียบเทียบ (ไม่ render ใหม่ เพื่อไม่ให้เคอร์เซอร์หลุด) */
     calc(){
       const sh = $('#rvSheet'); if (!sh) return; const d = this.d;
-      const co = num(d.custOld), cnRaw = num(d.custNew), cn = cnRaw > 0 ? cnRaw : co, mo = num(d.mkOld), mn = num(d.mkNew);
+      const co = num(d.custOld), cn = co, mo = num(d.mkOld), mn = num(d.mkNew);
       const vol = num(d.volume), y = num(d.years), mon = d.yUnit === 'M' ? (isFinite(y) && y > 0 ? y : 1) : y * 12, qty = isFinite(vol) && isFinite(mon) && mon > 0 ? vol / (mon / 12) : NaN;
       const set = (id, txt, cls) => { const el = sh.querySelector(`[data-c="${id}"]`); if (!el) return; el.textContent = txt; el.classList.remove('neg', 'pos'); if (cls) el.classList.add(cls); };
       const pc = (a, b) => isFinite(a) && isFinite(b) && a > 0 ? (b - a) / a * 100 : NaN;
@@ -24949,9 +24949,6 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
       const good = (v, upIsGood) => !isFinite(v) || v === 0 ? '' : ((v > 0) === upIsGood ? 'pos' : 'neg');
       const ok = v => isFinite(v) && v > 0;
       const diffs = (id, a, b, upIsGood, cnt) => { const dv = ok(a) && ok(b) ? b - a : NaN; set(id + '-d', sgn(dv), good(dv, upIsGood)); set(id + '-p', sp(pc(a, b)), good(dv, upIsGood)); return dv; };
-      // ราคาลูกค้า: ช่อง "ใหม่" ว่าง = ใช้ราคาเดิม
-      const cuNewIn = sh.querySelector('[data-k="custNew"]'); if (cuNewIn) cuNewIn.placeholder = ok(co) ? '= ' + f2(co) : '= เดิม';
-      if (cnRaw > 0) diffs('cu', co, cn, true); else { set('cu-d', ''); set('cu-p', ''); }
       const mkd = diffs('mk', mo, mn, false);
       // ส่วนต่าง (ลูกค้า − MAKER)
       const dfo = ok(co) && ok(mo) ? co - mo : NaN, dfn = ok(cn) && ok(mn) ? cn - mn : NaN;
