@@ -24291,26 +24291,29 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
 #qcSheet.pdf .qc-nt-bar,#qcSheet.pdf .qc-nt-rs{display:none !important}
 #qcSheet.pdf .qc-nt-text:empty::before{content:''}
 /* ══ ธีมขาว-ดำ: ออกแบบให้ปริ้นเครื่องขาวดำแล้วอ่านชัด — แยกความต่างด้วย "ความเข้ม / กรอบหนา / สัญลักษณ์" ไม่พึ่งสี ══ */
-#qcSheet .qc-hd{border-top-width:5px}
+#qcSheet .qc-hd{border-top-width:3px}
 #qcSheet .qc-hd-l small,#qcSheet .qc-cap span,#qcSheet .u span,#qcSheet table.qc-cmp td.rl small{color:#333}
 #qcSheet .qc-hd-l b span{color:#222}
 #qcSheet .lb,#qcSheet table.qc-cmp td.rl{color:#000}
 #qcSheet .qc-meta{color:#444}
 #qcSheet .qc-chk i,#qcSheet table.qc-cmp td.pick i{border:1.5px solid #000;font-weight:700}
-#qcSheet table.qc-cmp th.mh{background:#222 !important;color:#fff;overflow:visible}
+#qcSheet table.qc-cmp th.mh{background:#E4E4E4 !important;color:#000;overflow:visible;border-bottom:2px solid #000}
+#qcSheet table.qc-cmp th.mh input{color:#000}
+#qcSheet table.qc-cmp th.mh input::placeholder{color:#777}
+#qcSheet .qc-rm{color:#555}
 #qcSheet table.qc-cmp td.cal{background:#F7F7F7}
 #qcSheet td.neg{color:#000;font-weight:700;text-decoration:underline}
 #qcSheet td.pos{color:#000;font-weight:700}
 /* รายที่ราคาต่ำสุด: หัวคอลัมน์กลับสี (ดำบนขาว) + กรอบหนาล้อมทั้งคอลัมน์ + ป้ายดำ */
-#qcSheet .qc-tag{background:#000;color:#fff;border-radius:0;font-size:9.5px}
-#qcSheet table.qc-cmp th.mh.low{background:#fff !important;color:#000;border-top:3px solid #000;border-left:3px solid #000;border-right:3px solid #000}
+#qcSheet .qc-tag{background:#fff;color:#000;border:1.5px solid #000;border-bottom:0;border-radius:0;font-size:9.5px;font-weight:700}
+#qcSheet table.qc-cmp th.mh.low{background:#fff !important;color:#000;border-bottom:2px solid #000;border-top:3px solid #000;border-left:3px solid #000;border-right:3px solid #000}
 #qcSheet table.qc-cmp th.mh.low input,#qcSheet table.qc-cmp th.mh.low .qc-rm{color:#000}
 #qcSheet table.qc-cmp td.low,#qcSheet table.qc-cmp tr.pr td.low{background:#fff !important;border-left:3px solid #000;border-right:3px solid #000;font-weight:700}
 #qcSheet table.qc-cmp tr:last-child td.low{border-bottom:3px solid #000}
 /* ผลการพิจารณา (เลือก): พื้นดำ ตัวขาว */
 #qcSheet table.qc-cmp td.pick{color:#555}
-#qcSheet table.qc-cmp td.pick.on{background:#000 !important;color:#fff}
-#qcSheet table.qc-cmp td.pick.on i{background:#fff;border-color:#fff;color:#000}
+#qcSheet table.qc-cmp td.pick.on{background:#fff !important;color:#000;border:3px solid #000;font-weight:800}
+#qcSheet table.qc-cmp td.pick.on i{background:#fff;border-color:#000;color:#000}
 #qcSheet,#qcSheet *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 @media print{
   body *{visibility:hidden !important}
@@ -24878,40 +24881,41 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
 #rvSheet.pdf .rv-nt-bar,#rvSheet.pdf .rv-nt-rs{display:none !important}
 #rvSheet.pdf .rv-nt-text:empty::before{content:''}
 /* ══ ธีมขาว-ดำ: ออกแบบให้ปริ้นเครื่องขาวดำแล้วอ่านชัด — แยกความต่างด้วย "ความเข้ม / กรอบหนา / สัญลักษณ์ ▲▼" ไม่พึ่งสี ══ */
-#rvSheet .rv-hd{border-top-width:5px}
+#rvSheet .rv-hd{border-top-width:3px}
 #rvSheet .rv-hd-l small,#rvSheet .rv-cap span,#rvSheet .u span,#rvSheet table.rv-cmp td.rl small{color:#333}
 #rvSheet .rv-hd-l b span{color:#222}
 #rvSheet .lb,#rvSheet table.rv-cmp td.rl{color:#000}
 #rvSheet .rv-meta{color:#444}
 #rvSheet .rv-chk i{border:1.5px solid #000;font-weight:700}
 /* ราคาลูกค้า: กรอบดำหนา พื้นเทา */
-#rvSheet .rv-custbox{border:3px solid #000;background:#D9D9D9}
+#rvSheet .rv-custbox{border:3px solid #000;background:#F0F0F0}
 #rvSheet .rv-custbox .l small,#rvSheet .rv-custbox .l b,#rvSheet .rv-custbox .eq,#rvSheet .rv-custbox .un,#rvSheet .rv-custbox input.rv-cp{color:#000}
 #rvSheet .rv-custbox input{border:1px solid #000 !important}
-#rvSheet .rv-custbox em{background:#000;color:#fff}
+#rvSheet .rv-custbox em{background:#fff;color:#000;border:1.5px solid #000}
 /* ป้าย COST UP / COST DOWN: UP = พื้นดำตัวขาว ▲ · DOWN = พื้นขาวกรอบคู่ ▼ · เท่าเดิม = เทา */
-#rvSheet .rv-banner{border:2px solid #000;background:#EDEDED}
+#rvSheet .rv-banner{border:2px dashed #555;background:#fff}
 #rvSheet .rv-banner b{color:#444}
-#rvSheet .rv-banner.up{background:#000;border-color:#000}
-#rvSheet .rv-banner.up b,#rvSheet .rv-banner.up span{color:#fff}
+#rvSheet .rv-banner.up{background:#fff;border:4px solid #000}
+#rvSheet .rv-banner.up b,#rvSheet .rv-banner.up span{color:#000}
 #rvSheet .rv-banner.down{background:#fff;border:4px double #000}
 #rvSheet .rv-banner.down b,#rvSheet .rv-banner.down span{color:#000}
-#rvSheet .rv-banner.same{background:#D9D9D9}
+#rvSheet .rv-banner.same{background:#fff;border:2px dashed #555}
 /* ตาราง เก่า-ใหม่: หัวตารางไล่ระดับความเข้ม (เก่า = เทา · ใหม่ = ดำ) */
-#rvSheet table.rv-cmp th{background:#222;color:#fff}
-#rvSheet table.rv-cmp th:nth-child(2){background:#555}
-#rvSheet table.rv-cmp th.nw{background:#000}
-#rvSheet table.rv-cmp th.ch{background:#777}
-#rvSheet table.rv-cmp th small{opacity:1;color:#EEE}
+#rvSheet table.rv-cmp th{background:#E4E4E4;color:#000;border-bottom:2px solid #000}
+#rvSheet table.rv-cmp th:nth-child(2){background:#F6F6F6}
+#rvSheet table.rv-cmp th.nw{background:#CFCFCF}
+#rvSheet table.rv-cmp th.ch{background:#E4E4E4}
+#rvSheet table.rv-cmp th small{opacity:1;color:#333}
 #rvSheet table.rv-cmp td.cal,#rvSheet table.rv-cmp td.vd{background:#F7F7F7}
 #rvSheet .neg{color:#000;font-weight:700;text-decoration:underline}
 #rvSheet .pos{color:#000;font-weight:700}
-/* แท่งเปรียบเทียบ: ลูกค้า = ดำทึบ · MAKER เก่า = เทาอ่อน · MAKER ใหม่ = เทาเข้ม (มีตัวเลขกำกับทุกแท่ง) */
+/* แท่งเปรียบเทียบ: ลูกค้า = เทาเข้ม · MAKER เก่า = เทาอ่อนมาก · MAKER ใหม่ = เทากลาง (มีตัวเลขกำกับทุกแท่ง) */
 #rvSheet .rv-bars{border:1px solid #000}
 #rvSheet .rv-bar .tr{background:#fff;border:1px solid #000}
-#rvSheet #rvBc{background:#000}
-#rvSheet #rvBo{background:#BDBDBD}
-#rvSheet #rvBn{background:#555}
+#rvSheet .rv-bar .tr i{border-right:1px solid #000}
+#rvSheet #rvBc{background:#8A8A8A}
+#rvSheet #rvBo{background:#E6E6E6}
+#rvSheet #rvBn{background:#BDBDBD}
 #rvSheet,#rvSheet *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 @media print{
   body *{visibility:hidden !important}
