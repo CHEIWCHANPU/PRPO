@@ -24199,7 +24199,7 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
 .qc-cap{border:1px solid var(--ln);border-bottom:0;background:var(--lb);font-weight:700;font-size:11px;padding:4px 8px;display:flex;justify-content:space-between}
 .qc-cap span{font-weight:600;color:#6B7280}
 .qc-img{position:relative;border:1px solid var(--ln);min-height:150px;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;color:#9CA3AF;font-size:11.5px;outline:0;background:#fff}
-.qc-img.lg{min-height:262px}
+.qc-img.lg{min-height:330px}
 .qc-img img{position:absolute;inset:3px;width:calc(100% - 6px);height:calc(100% - 6px);object-fit:contain}
 .qc-hint{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;padding:0 12px;pointer-events:none}
 .qc-hint b{color:#4B5563}
@@ -24266,11 +24266,30 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
 .qc-it{display:flex;align-items:center;gap:10px;border:1px solid #E5E7EB;border-radius:10px;padding:9px 12px}
 .qc-it .t{flex:1;min-width:0}.qc-it .t b{display:block;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .qc-it .t small{color:#6B7280;font-size:11.5px}.qc-emp{text-align:center;color:#6B7280;font-size:13px;padding:14px 0}
+/* ── กล่องข้อความ (REMARK / โน้ต) แบบเดียวกับ RFQ: ลากย้าย ปรับขนาด เปลี่ยนรูปแบบได้ ── */
+.qc-nl{position:absolute;left:0;top:0;width:0;height:0;z-index:20}
+.qc-nt{position:absolute;z-index:20;box-sizing:border-box;min-width:120px;min-height:24px;overflow:visible;font-family:'Sarabun','Tahoma',sans-serif}
+.qc-nt-rs{position:absolute;right:-1px;bottom:-1px;width:13px;height:13px;cursor:nwse-resize;display:none;background:linear-gradient(135deg,transparent 50%,#1E56F0 50%);touch-action:none;z-index:3}
+.qc-nt:hover .qc-nt-rs,.qc-nt:focus-within .qc-nt-rs,.qc-nt.dragging .qc-nt-rs{display:block}
+.qc-nt-text{box-sizing:border-box;width:100%;height:100%;overflow:hidden;padding:3px 5px;font-size:14px;line-height:1.35;white-space:pre-wrap;word-break:break-word;outline:none;display:flex;flex-direction:column;justify-content:center;justify-content:safe center;text-align:center;color:#000;border:1px solid #c9a400;background:#fff6b0}
+.qc-nt-text:empty::before{content:attr(data-ph);color:#9A8F4A;font-size:12px;font-weight:400}
+.qc-nt-text:focus,.qc-nt-text:focus-visible{box-shadow:none !important;outline:none !important}
+.qc-nt.s1 .qc-nt-text{border:1px solid #000;background:transparent}
+.qc-nt.s2 .qc-nt-text{border:1px dashed transparent;background:transparent}
+.qc-nt.s2:hover .qc-nt-text,.qc-nt.s2:focus-within .qc-nt-text{border-color:#9aa}
+.qc-nt-bar{position:absolute;left:-1px;right:-1px;top:-19px;height:18px;display:none;align-items:center;gap:2px;background:#1E56F0;border-radius:4px 4px 0 0;color:#fff;font-size:11px;user-select:none}
+.qc-nt:hover .qc-nt-bar,.qc-nt:focus-within .qc-nt-bar,.qc-nt.dragging .qc-nt-bar{display:flex}
+.qc-nt-grip{flex:1;min-width:0;white-space:nowrap;overflow:hidden;height:100%;cursor:move;touch-action:none;padding-left:6px;line-height:18px;letter-spacing:1px}
+.qc-nt-bar button{all:unset;cursor:pointer;padding:0 6px;height:18px;line-height:18px;font-size:11px;color:#fff}
+.qc-nt-bar button:hover{background:rgba(255,255,255,.25)}
+#qcSheet.pdf .qc-nt-bar,#qcSheet.pdf .qc-nt-rs{display:none !important}
+#qcSheet.pdf .qc-nt-text:empty::before{content:''}
 @media print{
   body *{visibility:hidden !important}
   #qcSheet,#qcSheet *{visibility:visible !important}
   #qcSheet{position:fixed;left:0;top:0;box-shadow:none;margin:0}
-  #qcSheet .qc-hint,#qcSheet .tools,#qcSheet .qc-add,#qcSheet .qc-rm{display:none !important}
+  #qcSheet .qc-hint,#qcSheet .tools,#qcSheet .qc-add,#qcSheet .qc-rm,#qcSheet .qc-nt-bar,#qcSheet .qc-nt-rs{display:none !important}
+  #qcSheet .qc-nt-text:empty::before{content:''}
   @page{size:A4 landscape;margin:6mm}
 }
 </style>
@@ -24294,11 +24313,12 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
   const IC = {
     pdf:'<svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>',
     clr:'<svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>',
+    note:'<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 7v6M9 10h6"/></svg>',
     sav:'<svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>'
   };
   const mk = () => ({name:'', quoteNo:'', quoteDate:'', price:'', tooling:'', lead:'', moq:'', payment:'', remark:''});
   const blank = () => ({
-    docNo:'', docDate:'', partName:'', partNo:'', rev:'', model:'', typeOfWork:'', spec:'', plating:'', plant:'',
+    notes:null, docNo:'', docDate:'', partName:'', partNo:'', rev:'', model:'', typeOfWork:'', spec:'', plating:'', plant:'',
     volume:'', years:'', yUnit:'Y', custCode:'TYM', custPrice:'',
     makers:[mk(), mk(), mk()], selected:-1, conclusion:['', '', ''], signPrep:'', signChk:'', signApp:'', images:{}
   });
@@ -24306,7 +24326,7 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
     d.makers = (Array.isArray(d.makers) && d.makers.length ? d.makers : b.makers).slice(0, MMAX).map(m => Object.assign(mk(), m));
     while (d.makers.length < MMIN) d.makers.push(mk());
     d.conclusion = Array.isArray(d.conclusion) ? d.conclusion.slice(0, 3) : ['', '', '']; while (d.conclusion.length < 3) d.conclusion.push('');
-    d.images = d.images || {}; if (!(d.selected >= 0 && d.selected < d.makers.length)) d.selected = -1; return d; };
+    d.notes = Array.isArray(d.notes) ? d.notes : null; d.images = d.images || {}; if (!(d.selected >= 0 && d.selected < d.makers.length)) d.selected = -1; return d; };
   const load = () => { try { const d = JSON.parse(localStorage.getItem(DKEY) || ''); if (d && typeof d === 'object') return d; } catch (e) {} return null; };
 
   const Q = {
@@ -24328,8 +24348,8 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
       page.innerHTML = `
         <div class="qc-hero"><div><div class="qc-eyebrow">E-Form · Quotation Comparison</div>
             <h1>เปรียบเทียบใบเสนอราคา MAKER</h1><p>ใส่รูปชิ้นงาน ข้อมูล Part แล้วเทียบราคา MAKER แต่ละรายกับราคาลูกค้า — ระบบคำนวณส่วนต่างและทำเครื่องหมายรายที่ราคาต่ำสุดให้ แล้วดาวน์โหลดเป็น PDF</p></div>
-          <div class="qc-actions"><button class="qc-btn" id="qcList" title="บันทึก / เปิด / ลบ ฟอร์มที่เก็บไว้ (เก็บในเครื่องนี้)">${IC.sav}บันทึก / เปิดฟอร์ม${this.list().length ? ' (' + this.list().length + ')' : ''}</button><button class="qc-btn" id="qcClr">${IC.clr}ล้างฟอร์ม</button><button class="qc-btn pri" id="qcPdf">${IC.pdf}<span>ดาวน์โหลด PDF</span></button></div></div>
-        <div class="qc-desk"><p class="qc-tip">คลิกช่องเพื่อพิมพ์ · รูปชิ้นงาน: ตัดจาก DWG ด้วย Snipping Tool (Win+Shift+S) → คลิกที่กรอบรูป → กด Ctrl+V (หรือลากไฟล์รูปมาวาง) · ตัวเลขในแถวสีเทาคำนวณอัตโนมัติ · กดแถว "ผลการพิจารณา" เพื่อเลือก MAKER ที่ตัดสินใจ</p>
+          <div class="qc-actions"><button class="qc-btn" id="qcList" title="บันทึก / เปิด / ลบ ฟอร์มที่เก็บไว้ (เก็บในเครื่องนี้)">${IC.sav}บันทึก / เปิดฟอร์ม${this.list().length ? ' (' + this.list().length + ')' : ''}</button><button class="qc-btn" id="qcNote" title="เพิ่มกล่องข้อความ แล้วลากไปวางตรงไหนก็ได้ในฟอร์ม">${IC.note}เพิ่มกล่องข้อความ</button><button class="qc-btn" id="qcClr">${IC.clr}ล้างฟอร์ม</button><button class="qc-btn pri" id="qcPdf">${IC.pdf}<span>ดาวน์โหลด PDF</span></button></div></div>
+        <div class="qc-desk"><p class="qc-tip">คลิกช่องเพื่อพิมพ์ · กล่องข้อความ: กด "เพิ่มกล่องข้อความ" แล้วเอาเมาส์วางบนกล่อง ลากแถบสีน้ำเงินเพื่อย้าย ลากมุมขวาล่างเพื่อปรับขนาด · รูปชิ้นงาน: ตัดจาก DWG ด้วย Snipping Tool (Win+Shift+S) → คลิกที่กรอบรูป → กด Ctrl+V (หรือลากไฟล์รูปมาวาง) · ตัวเลขในแถวสีเทาคำนวณอัตโนมัติ · กดแถว "ผลการพิจารณา" เพื่อเลือก MAKER ที่ตัดสินใจ</p>
         <div id="qcSheet">
           <div class="qc-hd"><div class="qc-hd-l"><small>PURCHASING DEPARTMENT · PU-EN · E-FORM</small><b>QUOTATION COMPARISON<span>เปรียบเทียบใบเสนอราคา MAKER</span></b></div>
             <table><tr><td class="lb" style="width:110px">DOC NO.</td><td>${F('docNo', 'c')}</td></tr><tr><td class="lb">DATE</td><td><input data-k="docDate" class="c" value="${esc(d.docDate || today())}"></td></tr></table></div>
@@ -24342,7 +24362,6 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
           <div class="qc-grid">
             <div>
               <div class="qc-cap">รูปชิ้นงาน<span>PART IMAGE</span></div>${this.imgBox('main', 'lg')}
-              <div class="qc-cap" style="margin-top:8px">รูปเพิ่มเติม / DWG<span>OPTIONAL</span></div>${this.imgBox('extra', '')}
             </div>
             <div>
               <table class="qc-cust"><colgroup><col style="width:150px"><col style="width:90px"><col style="width:22px"><col></colgroup>
@@ -24394,6 +24413,8 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
       $('#qcList').onclick = () => this.listModal();
       $('#qcClr').onclick = () => { if (!confirm('ล้างข้อมูลและรูปในแบบฟอร์มทั้งหมด?')) return; this.d = blank(); try { localStorage.removeItem(DKEY); } catch (e) {} this.render(); };
       $('#qcPdf').onclick = () => this.pdf();
+      $('#qcNote').onclick = () => this.addNote();
+      this.initNotes();
       this.calc();
     },
 
@@ -24481,6 +24502,95 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
       draw(); document.body.appendChild(ov);
     },
 
+    addNote(){ if (this._addNote) this._addNote(); },
+    initNotes(){
+      const sheet = $('#qcSheet'); if (!sheet) return;
+      const self = this, layer = document.createElement('div'); layer.className = 'qc-nl'; sheet.appendChild(layer);
+      const base = () => { const h = sheet.querySelector('.qc-hd'); return h ? h.offsetTop : 0; };   // พิกัดแกน Y วัดจากหัวฟอร์ม → ป้าย DRAFT ดันฟอร์มลง กล่องก็ตามลงด้วย
+      const save = () => { const b = base();
+        self.d.notes = [...layer.querySelectorAll('.qc-nt')].map(n => ({x:n.offsetLeft, y:n.offsetTop - b, w:n.offsetWidth, h:n.offsetHeight,
+          t:n.querySelector('.qc-nt-text').innerText.replace(/\n$/, ''), s:+n.dataset.s || 0, f:+n.dataset.f || 14, b:n.dataset.b === '1' ? 1 : 0}));
+        self.d.remark = ''; self.save(); };
+      let tm; const saveSoon = () => { clearTimeout(tm); tm = setTimeout(save, 300); };
+      const grow = n => { const cur = n.offsetHeight; n.style.height = 'auto'; n.style.height = Math.max(cur, n.offsetHeight) + 'px'; };   // ขยายให้พอดีข้อความ ไม่หดเอง
+      const setStyle = (n, s) => { n.dataset.s = s; n.classList.remove('s0', 's1', 's2'); n.classList.add('s' + s); };
+      const setFont = (n, f, b) => { f = Math.max(7, Math.min(60, f)); n.dataset.f = f; n.dataset.b = b ? '1' : '0';
+        const t = n.querySelector('.qc-nt-text'); t.style.fontSize = f + 'px'; t.style.fontWeight = b ? '700' : '400';
+        n.querySelector('.qc-nt-fm').title = 'ลดขนาดตัวอักษร (ตอนนี้ ' + f + ')'; n.querySelector('.qc-nt-bold').style.background = b ? 'rgba(255,255,255,.35)' : ''; };
+      const clamp = (n, x, y) => { x = Math.max(0, Math.min(x, sheet.clientWidth - n.offsetWidth)); y = Math.max(0, Math.min(y, sheet.scrollHeight - 20)); n.style.left = x + 'px'; n.style.top = y + 'px'; };
+      const resizer = n => { const h = document.createElement('div'); h.className = 'qc-nt-rs'; h.title = 'ลากเพื่อปรับขนาด'; h.setAttribute('data-html2canvas-ignore', 'true'); n.appendChild(h);
+        h.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); h.setPointerCapture(e.pointerId); n.classList.add('dragging');
+          const sx = e.clientX, sy = e.clientY, sw = n.offsetWidth, sh = n.offsetHeight;
+          const mv = ev => { n.style.width = Math.max(120, Math.min(sw + ev.clientX - sx, sheet.clientWidth - n.offsetLeft)) + 'px'; n.style.height = Math.max(24, sh + ev.clientY - sy) + 'px'; };
+          const up = () => { n.classList.remove('dragging'); h.removeEventListener('pointermove', mv); h.removeEventListener('pointerup', up); h.removeEventListener('pointercancel', up); save(); };
+          h.addEventListener('pointermove', mv); h.addEventListener('pointerup', up); h.addEventListener('pointercancel', up); }); };
+      const create = (d, ph) => {
+        const n = document.createElement('div'); n.className = 'qc-nt';
+        n.innerHTML = '<div class="qc-nt-bar" data-html2canvas-ignore="true"><span class="qc-nt-grip" title="ลากเพื่อย้าย">⋮⋮ ลากย้าย</span>' +
+          '<button type="button" class="qc-nt-fm" title="ลดขนาดตัวอักษร">A−</button><button type="button" class="qc-nt-fp" title="เพิ่มขนาดตัวอักษร">A+</button><button type="button" class="qc-nt-bold" title="ตัวหนา" style="font-weight:bold">B</button>' +
+          '<button type="button" class="qc-nt-style" title="สลับรูปแบบ: โน้ตเหลือง / ขอบดำ / ไม่มีขอบ">รูปแบบ</button>' +
+          '<button type="button" class="qc-nt-del" title="ลบกล่องข้อความ">×</button></div>' +
+          '<div class="qc-nt-text" contenteditable="plaintext-only" spellcheck="false"></div>';
+        const tx = n.querySelector('.qc-nt-text'); tx.textContent = d.t || ''; tx.dataset.ph = ph || 'พิมพ์ข้อความ...';
+        resizer(n); layer.appendChild(n);
+        n.style.width = (d.w || 200) + 'px'; n.style.height = (d.h || 60) + 'px';
+        setFont(n, d.f || 14, d.b); setStyle(n, d.s || 0); clamp(n, d.x || 0, (d.y || 0) + base()); grow(n);
+        tx.addEventListener('input', () => { if (!tx.textContent && tx.innerHTML === '<br>') tx.innerHTML = ''; grow(n); saveSoon(); });
+        n.querySelector('.qc-nt-style').onclick = () => { setStyle(n, ((+n.dataset.s || 0) + 1) % 3); save(); };
+        n.querySelector('.qc-nt-fm').onclick = () => { setFont(n, (+n.dataset.f || 14) - 1, n.dataset.b === '1'); save(); };
+        n.querySelector('.qc-nt-fp').onclick = () => { setFont(n, (+n.dataset.f || 14) + 1, n.dataset.b === '1'); grow(n); save(); };
+        n.querySelector('.qc-nt-bold').onclick = () => { setFont(n, +n.dataset.f || 14, n.dataset.b !== '1'); grow(n); save(); };
+        n.querySelector('.qc-nt-del').onclick = () => { if (tx.innerText.trim() && !confirm('ลบกล่องข้อความนี้?')) return; n.remove(); save(); };
+        const g = n.querySelector('.qc-nt-grip');
+        g.addEventListener('pointerdown', e => { e.preventDefault(); g.setPointerCapture(e.pointerId); n.classList.add('dragging');
+          const sx = e.clientX, sy = e.clientY, ox = n.offsetLeft, oy = n.offsetTop;
+          const mv = ev => clamp(n, ox + ev.clientX - sx, oy + ev.clientY - sy);
+          const up = () => { n.classList.remove('dragging'); g.removeEventListener('pointermove', mv); g.removeEventListener('pointerup', up); g.removeEventListener('pointercancel', up); save(); };
+          g.addEventListener('pointermove', mv); g.addEventListener('pointerup', up); g.addEventListener('pointercancel', up); });
+        return n;
+      };
+      const ready = (fn, k) => { k = k || 0; if (!sheet.isConnected) return; if (!sheet.offsetWidth && k < 50) { setTimeout(() => ready(fn, k + 1), 100); return; } fn(); };   // รอจนหน้าแสดงจริงจึงวัดตำแหน่ง
+      ready(() => {
+        if (Array.isArray(self.d.notes)) self.d.notes.forEach(n => create(n, 'พิมพ์ข้อความ...'));
+      });
+      this._addNote = () => ready(() => {
+        const r = sheet.getBoundingClientRect(), y = Math.max(0, -r.top) + Math.max(80, innerHeight * 0.25);
+        const n = create({x:sheet.clientWidth - 240, y:y - base(), w:200, h:60, t:'', s:0, f:14, b:0}, 'พิมพ์ข้อความ...');
+        n.querySelector('.qc-nt-text').focus(); save();
+      });
+    },
+    remarkToImg(){          // กล่อง REMARK / กล่องข้อความทุกกล่อง → วาดเป็นรูปก่อนสร้าง PDF; กล่องว่างซ่อนไว้ไม่พิมพ์
+      const undo = [];
+      document.querySelectorAll('#qcSheet .qc-nt').forEach(n => {
+        const box = n.querySelector('.qc-nt-text');
+        if (!box.innerText.trim()) { const v = n.style.visibility; n.style.visibility = 'hidden'; undo.push(() => { n.style.visibility = v; }); return; }
+        const u = this.textToImg(box); if (u) undo.push(u);
+      });
+      return () => undo.forEach(f => f());
+    },
+    textToImg(box){
+      if (!box || !box.innerText.trim()) return null;
+      const cs = getComputedStyle(box), padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight), padY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+      const W = box.clientWidth - padX, lh = parseFloat(cs.lineHeight) || 17, sc = 3;
+      const font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+      const cv = document.createElement('canvas'), g = cv.getContext('2d'); g.font = font;
+      const seg = typeof Intl !== 'undefined' && Intl.Segmenter ? new Intl.Segmenter('th', {granularity:'word'}) : null;
+      const lines = [];
+      box.innerText.replace(/\n$/, '').split('\n').forEach(par => {
+        const parts = seg ? [...seg.segment(par)].map(x => x.segment) : par.split(/(\s+)/);
+        let line = '';
+        parts.forEach(w => { if (g.measureText(line + w).width <= W || !line) line += w; else { lines.push(line); line = w.replace(/^\s+/, ''); } });
+        lines.push(line);
+      });
+      const H = Math.max(lines.length * lh, box.clientHeight - padY), top = (H - lines.length * lh) / 2;
+      cv.width = Math.ceil(W * sc); cv.height = Math.ceil(H * sc);
+      g.scale(sc, sc); g.font = font; g.fillStyle = cs.color; g.textBaseline = 'middle'; g.textAlign = 'center';
+      lines.forEach((l, i) => g.fillText(l, W / 2, top + i * lh + lh / 2));
+      const old = box.innerHTML;
+      box.innerHTML = `<img src="${cv.toDataURL('image/png')}" style="display:block;width:${W}px;height:${H}px">`;
+      return () => { box.innerHTML = old; };
+    },
+
     /* ── PDF (A4 แนวนอน หน้าเดียว) ── */
     lib(){
       if (window.html2pdf) return Promise.resolve(window.html2pdf);
@@ -24495,9 +24605,13 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
       const name = ('Quotation Comparison ' + [this.d.partName, this.d.partNo].map(x => String(x || '').trim()).filter(Boolean).join(' , ')).trim().replace(/[\\/:*?"<>|]/g, '-') + '.pdf';
       const lab = btn.querySelector('span'); lab.textContent = 'กำลังสร้าง PDF...'; btn.disabled = true;
       if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+      const hd0 = sheet.querySelector('.qc-hd'), lay = sheet.querySelector('.qc-nl'), hx = hd0 ? hd0.offsetLeft : 0, hy = hd0 ? hd0.offsetTop : 0;
       sheet.classList.add('pdf');
+      if (lay && hd0) { lay.style.left = (hd0.offsetLeft - hx) + 'px'; lay.style.top = (hd0.offsetTop - hy) + 'px'; }
+      let undoRmk = null;
       try {
         await new Promise(r => setTimeout(r, 60));
+        undoRmk = this.remarkToImg();
         const h2p = await this.lib();
         const worker = h2p().set({margin:0, image:{type:'jpeg', quality:0.97}, html2canvas:{scale:2.2, backgroundColor:'#ffffff', useCORS:true, logging:false, scrollX:0, scrollY:0}, jsPDF:{unit:'mm', format:'a4', orientation:'landscape'}}).from(sheet);
         const canvas = await worker.toCanvas().get('canvas');
@@ -24510,7 +24624,7 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
       } catch (e) {
         toast('สร้างไฟล์ PDF โดยตรงไม่ได้ — เปิดหน้าต่างพิมพ์แทน ให้เลือก "Save as PDF"', 'info');
         setTimeout(() => window.print(), 250);
-      } finally { sheet.classList.remove('pdf'); btn.disabled = false; lab.textContent = 'ดาวน์โหลด PDF'; this._busy = false; }
+      } finally { sheet.classList.remove('pdf'); if (lay) { lay.style.left = ''; lay.style.top = ''; } if (undoRmk) undoRmk(); btn.disabled = false; lab.textContent = 'ดาวน์โหลด PDF'; this._busy = false; }
     }
   };
   window.CCIPQuotationCompare = Q;
