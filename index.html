@@ -24245,6 +24245,12 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
 .qc-wrapc{position:relative;padding-top:14px}
 .qc-add{margin-top:5px;border:1px dashed #9CA3AF;background:#fff;color:#374151;border-radius:6px;font:inherit;font-size:11px;font-weight:600;padding:3px 10px;cursor:pointer}
 .qc-add:hover{border-color:#2563EB;color:#2563EB}
+#qcSheet .qc-grid{flex:1;align-items:stretch}
+#qcSheet .qc-grid > div{display:flex;flex-direction:column;min-width:0}
+#qcSheet .qc-grid .qc-img.lg{flex:1;min-height:300px}
+#qcSheet .qc-wrapc{flex:1;display:flex;flex-direction:column}
+#qcSheet .qc-wrapc > table.qc-cmp{flex:1 1 auto}
+#qcSheet .qc-foot{margin-top:10px}
 .qc-foot{display:grid;grid-template-columns:1fr 380px;gap:10px;margin-top:10px;align-items:start}
 #qcSheet .qc-sign td{height:21px}
 #qcSheet .qc-sign td.sp{height:34px}
@@ -24651,6 +24657,552 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
     const prev = window.showPage;
     window.showPage = function(name, btn){
       if (name === 'qcmp') { const r = prev.call(this, name, btn || document.getElementById('nav-qcmp')); Q.open(); return r; }
+      return prev.apply(this, arguments);
+    };
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install); else install();
+})();
+</script>
+
+
+<!-- ═══ E-FORM · PRICE REVISION (ปรับราคา เก่า-ใหม่ เทียบราคาลูกค้า) ═══ -->
+<style id="rvcmp-css">
+#page-rvcmp{--rv-ink:var(--text,#0F172A);--rv-sub:var(--muted,#64748B);--rv-card:var(--surface,#fff);--rv-line:var(--border,#E3E7EE);--rv-blu:#2563EB}
+.rv-hero{display:flex;justify-content:space-between;align-items:flex-end;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
+.rv-eyebrow{font-size:.68rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--rv-sub)}
+.rv-hero h1{font-size:1.4rem;font-weight:700;margin:.25rem 0 .15rem;color:var(--rv-ink)}
+.rv-hero p{margin:0;font-size:.8rem;color:var(--rv-sub)}
+.rv-actions{display:flex;gap:.5rem;flex-wrap:wrap}
+.rv-btn{display:inline-flex;align-items:center;gap:.4rem;border:1px solid var(--rv-line);background:var(--rv-card);color:var(--rv-ink);border-radius:9px;font:inherit;font-size:.8rem;font-weight:600;padding:.5rem .9rem;cursor:pointer;white-space:nowrap}
+.rv-btn:hover{border-color:var(--rv-blu);color:var(--rv-blu)}
+.rv-btn.pri{background:var(--rv-blu);border-color:var(--rv-blu);color:#fff}
+.rv-btn.pri:hover{filter:brightness(1.08);color:#fff}
+.rv-btn[disabled]{opacity:.6;pointer-events:none}
+.rv-btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.rv-desk{background:var(--rv-card);border:1px solid var(--rv-line);border-radius:14px;padding:1.2rem;overflow-x:auto}
+.rv-tip{font-size:.74rem;color:var(--rv-sub);margin:0 0 .8rem}
+
+/* ── แผ่นฟอร์ม (พื้นขาวเสมอ) ── */
+#rvSheet{--ln:#3A3F47;--lb:#F2F4F7;--hd:#1F3A5F;--cu:#DCE9F6;--mk:#FDF0E6;--lo:#DDF3E1;--bs:#E3EFDB;--cp:#FBE3D3;--bad:#C62828;--ok:#1B7F3B;
+  width:1076px;min-height:752px;display:flex;flex-direction:column;margin:0 auto;background:#fff;color:#111827;padding:14px 16px 12px;box-shadow:0 1px 3px rgba(0,0,0,.12),0 8px 24px rgba(0,0,0,.08);font-family:'Sarabun','Tahoma',sans-serif;font-size:12px;line-height:1.25;position:relative}
+#rvSheet *{box-sizing:border-box}
+#rvSheet table{border-collapse:collapse;width:100%;table-layout:fixed}
+#rvSheet tr{background:transparent !important}
+#rvSheet td,#rvSheet th{border:1px solid var(--ln);padding:0 6px;height:25px;vertical-align:middle;color:#111827;font-weight:400;background:transparent;white-space:nowrap;overflow:hidden}
+#rvSheet th{font-weight:700;font-size:11px;text-align:center}
+#rvSheet .lb{background:var(--lb);font-weight:700;font-size:11px;color:#1F2937}
+#rvSheet input{border:0;background:transparent;font:inherit;color:#111827;width:100%;height:22px;padding:0 2px;outline:0;border-radius:0;box-shadow:none;margin:0}
+#rvSheet input,#rvSheet input:hover,#rvSheet input:focus,#rvSheet input:focus-visible{background:transparent !important;box-shadow:none !important;outline:none !important;border:0 !important}
+#rvSheet input::placeholder{color:#B8BEC8}
+#rvSheet .r,#rvSheet .r input{text-align:right}
+#rvSheet .c,#rvSheet .c input{text-align:center}
+#rvSheet .u{display:flex;align-items:center;gap:4px}
+#rvSheet .u span{flex:0 0 auto;font-size:10.5px;color:#4B5563;font-weight:600}
+#rvSheet .vol{display:flex;align-items:stretch;height:24px}
+#rvSheet .vol > .u{flex:1;padding:0 6px}
+#rvSheet .vol > .sl{flex:0 0 22px;border-left:1px solid var(--ln);border-right:1px solid var(--ln);display:flex;align-items:center;justify-content:center}
+#rvSheet .vol > .yr{flex:0 0 76px}
+#rvSheet .rv-unit{flex:0 0 auto;border:0;background:none;padding:0 2px;font:inherit;font-size:12px;color:#111827;cursor:pointer}
+#rvSheet .rv-unit:hover{color:#1D4ED8}
+.rv-hd{display:flex;justify-content:space-between;align-items:stretch;border:1px solid var(--ln);border-top:4px solid var(--hd);margin-bottom:6px}
+.rv-hd-l{padding:6px 12px;display:flex;flex-direction:column;justify-content:center}
+.rv-hd-l small{font-size:9.5px;font-weight:700;letter-spacing:.16em;color:#6B7280}
+.rv-hd-l b{font-size:17px;color:var(--hd)}
+.rv-hd-l b span{font-size:13px;font-weight:600;color:#374151;margin-left:8px;letter-spacing:0}
+#rvSheet .rv-hd table{width:250px;border-left:1px solid var(--ln)}
+#rvSheet .rv-hd td{border-top:0;border-right:0}
+#rvSheet .rv-hd tr:last-child td{border-bottom:0}
+.rv-chk{display:inline-flex;align-items:center;gap:5px;margin-right:24px;cursor:pointer;user-select:none;font-weight:600}
+.rv-chk i{width:13px;height:13px;border:1px solid var(--ln);display:inline-flex;align-items:center;justify-content:center;font-style:normal;font-size:11px;line-height:1;background:#fff}
+.rv-grid{display:grid;grid-template-columns:292px 1fr;gap:10px;margin-top:8px;align-items:start}
+.rv-cap{border:1px solid var(--ln);border-bottom:0;background:var(--lb);font-weight:700;font-size:11px;padding:4px 8px;display:flex;justify-content:space-between}
+.rv-cap span{font-weight:600;color:#6B7280}
+.rv-img{position:relative;border:1px solid var(--ln);min-height:150px;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;color:#9CA3AF;font-size:11.5px;outline:0;background:#fff}
+.rv-img.lg{min-height:330px}
+.rv-img img{position:absolute;inset:3px;width:calc(100% - 6px);height:calc(100% - 6px);object-fit:contain}
+.rv-hint{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;padding:0 12px;pointer-events:none}
+.rv-hint b{color:#4B5563}
+.rv-img svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.6}
+.rv-ready{display:none;font-style:normal;font-weight:700;color:#2563EB;background:rgba(255,255,255,.92);border:1px solid #BFDBFE;border-radius:6px;padding:3px 10px}
+.rv-img:hover{border-color:#93C5FD}
+.rv-img:focus,.rv-img.drag{border-color:#2563EB;box-shadow:inset 0 0 0 2px #2563EB}
+.rv-img:focus .rv-hint b,.rv-img:focus .rv-hint span,.rv-img:focus .rv-hint svg{display:none}
+.rv-img:focus .rv-ready{display:inline-block;position:relative;z-index:1}
+.rv-img.has:focus .rv-hint{position:absolute;bottom:6px;left:0;right:0}
+.rv-img .tools{position:absolute;top:6px;right:6px;display:none;gap:4px;z-index:2}
+.rv-img:hover .tools,.rv-img:focus .tools{display:flex}
+.rv-img .tools button{border:1px solid #ccc;background:#fff;border-radius:6px;font:inherit;font-size:11px;padding:2px 7px;cursor:pointer;color:#111}
+.rv-img .tools button:hover{border-color:#2563EB;color:#2563EB}
+/* สถานะ + ตารางเก่า-ใหม่ */
+.rv-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;border:2px solid #111827;padding:6px 12px;background:#F3F4F6;min-height:46px}
+.rv-banner b{font-size:22px;letter-spacing:.02em;color:#6B7280;line-height:1.1}
+.rv-banner span{font-size:12px;color:#374151;text-align:right;line-height:1.3}
+.rv-banner.up{background:#FDE8E8;border-color:#C62828}.rv-banner.up b{color:#C62828}
+.rv-banner.down{background:#DDF3E1;border-color:#1B7F3B}.rv-banner.down b{color:#1B7F3B}
+.rv-banner.same{background:#EEF2F7}
+#rvSheet table.rv-cmp{margin-top:8px}
+#rvSheet table.rv-cmp td,#rvSheet table.rv-cmp th{height:28px}
+#rvSheet table.rv-cmp th{background:var(--hd);color:#fff;font-size:11px}
+#rvSheet table.rv-cmp th small{display:block;font-weight:400;font-size:9px;opacity:.8;line-height:1}
+#rvSheet table.rv-cmp th.nw{background:#B45309}
+#rvSheet table.rv-cmp th.ch{background:#4B5563}
+#rvSheet table.rv-cmp td.rl{background:var(--lb);font-weight:700;font-size:11px;color:#1F2937}
+#rvSheet table.rv-cmp td.rl small{display:block;font-weight:400;font-size:9px;color:#6B7280;line-height:1}
+#rvSheet table.rv-cmp td.rl input{width:46px;height:15px;margin-left:4px;vertical-align:top;display:inline-block;font-weight:700;font-size:11px;text-align:center;border-bottom:1px dotted #9CA3AF !important}
+#rvSheet table.rv-cmp tr.cu td:not(.rl){background:var(--cu)}
+#rvSheet table.rv-cmp tr.mk td:not(.rl){background:var(--mk)}
+#rvSheet table.rv-cmp td input{text-align:right;font-weight:700;font-size:13px;padding-right:4px}
+#rvSheet table.rv-cmp td.cal{background:#FAFAFA;text-align:right;font-variant-numeric:tabular-nums;padding-right:8px}
+#rvSheet table.rv-cmp td.vd{white-space:normal;line-height:1.3;font-weight:700;padding:3px 10px;background:#FAFAFA}
+#rvSheet .neg{color:var(--bad);font-weight:700}
+#rvSheet .pos{color:var(--ok);font-weight:700}
+.rv-bars{margin-top:8px;border:1px solid var(--ln);padding:6px 10px 8px}
+.rv-bars h4{margin:0 0 5px;font-size:11px;color:#1F2937}
+.rv-bar{display:grid;grid-template-columns:130px 1fr 96px;align-items:center;gap:8px;height:21px}
+.rv-bar label{font-size:11px;font-weight:700;color:#374151;white-space:nowrap}
+.rv-bar .tr{height:13px;background:#EEF2F7;position:relative}
+.rv-bar .tr i{position:absolute;left:0;top:0;bottom:0;width:0;transition:none}
+.rv-bar em{font-style:normal;font-size:11.5px;text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.rv-rs{display:flex;flex-wrap:wrap;align-items:center;gap:2px 0}
+.rv-rs .rv-chk{margin-right:16px}
+#rvSheet .rv-rs input{width:170px;flex:none;border-bottom:1px dotted #9CA3AF !important}
+#rvSheet .rv-grid{flex:1;align-items:stretch}
+#rvSheet .rv-grid > div{display:flex;flex-direction:column;min-width:0}
+#rvSheet .rv-grid .rv-img.lg{flex:1;min-height:300px}
+#rvSheet .rv-foot{margin-top:10px}
+.rv-foot{display:grid;grid-template-columns:1fr 380px;gap:10px;margin-top:10px;align-items:start}
+#rvSheet .rv-sign td{height:21px}
+#rvSheet .rv-sign td.sp{height:34px}
+.rv-meta{margin-top:auto;padding-top:6px;display:flex;justify-content:space-between;font-size:9px;color:#9CA3AF}
+#rvSheet.pdf .rv-hint,#rvSheet.pdf .tools,#rvSheet.pdf .rv-add,#rvSheet.pdf .rv-rm{display:none !important}
+#rvSheet.pdf .rv-img{box-shadow:none !important;border-color:var(--ln) !important}
+#rvSheet.pdf{box-shadow:none;padding:4px 5px;min-height:748px}
+#rvSheet.pdf input::placeholder{color:transparent}
+.rv-ov{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:100000;display:flex;align-items:center;justify-content:center;padding:16px;font-family:'Sarabun','Tahoma',sans-serif}
+.rv-box{background:#fff;color:#111827;width:min(560px,100%);max-height:86vh;display:flex;flex-direction:column;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden}
+.rv-mhd{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #E5E7EB}
+.rv-mhd b{font-size:16px}.rv-x{border:0;background:none;font-size:22px;line-height:1;cursor:pointer;color:#6B7280}
+.rv-mbd{padding:14px 18px;overflow:auto;display:flex;flex-direction:column;gap:12px}
+.rv-new{display:flex;gap:8px}.rv-new input{flex:1;min-width:0;border:1px solid #CBD5E1;border-radius:8px;padding:8px 10px;font:inherit;font-size:13px}
+.rv-b{border:1px solid #CBD5E1;background:#fff;color:#111827;border-radius:8px;padding:7px 12px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap}
+.rv-b:hover{border-color:#2563EB;color:#2563EB}.rv-b.pri{background:#2563EB;border-color:#2563EB;color:#fff}
+.rv-b.ask{border-color:#DC2626;color:#DC2626;background:#FEE2E2}
+.rv-lst{display:flex;flex-direction:column;gap:8px}
+.rv-it{display:flex;align-items:center;gap:10px;border:1px solid #E5E7EB;border-radius:10px;padding:9px 12px}
+.rv-it .t{flex:1;min-width:0}.rv-it .t b{display:block;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rv-it .t small{color:#6B7280;font-size:11.5px}.rv-emp{text-align:center;color:#6B7280;font-size:13px;padding:14px 0}
+/* ── กล่องข้อความ (REMARK / โน้ต) แบบเดียวกับ RFQ: ลากย้าย ปรับขนาด เปลี่ยนรูปแบบได้ ── */
+.rv-nl{position:absolute;left:0;top:0;width:0;height:0;z-index:20}
+.rv-nt{position:absolute;z-index:20;box-sizing:border-box;min-width:120px;min-height:24px;overflow:visible;font-family:'Sarabun','Tahoma',sans-serif}
+.rv-nt-rs{position:absolute;right:-1px;bottom:-1px;width:13px;height:13px;cursor:nwse-resize;display:none;background:linear-gradient(135deg,transparent 50%,#1E56F0 50%);touch-action:none;z-index:3}
+.rv-nt:hover .rv-nt-rs,.rv-nt:focus-within .rv-nt-rs,.rv-nt.dragging .rv-nt-rs{display:block}
+.rv-nt-text{box-sizing:border-box;width:100%;height:100%;overflow:hidden;padding:3px 5px;font-size:14px;line-height:1.35;white-space:pre-wrap;word-break:break-word;outline:none;display:flex;flex-direction:column;justify-content:center;justify-content:safe center;text-align:center;color:#000;border:1px solid #c9a400;background:#fff6b0}
+.rv-nt-text:empty::before{content:attr(data-ph);color:#9A8F4A;font-size:12px;font-weight:400}
+.rv-nt-text:focus,.rv-nt-text:focus-visible{box-shadow:none !important;outline:none !important}
+.rv-nt.s1 .rv-nt-text{border:1px solid #000;background:transparent}
+.rv-nt.s2 .rv-nt-text{border:1px dashed transparent;background:transparent}
+.rv-nt.s2:hover .rv-nt-text,.rv-nt.s2:focus-within .rv-nt-text{border-color:#9aa}
+.rv-nt-bar{position:absolute;left:-1px;right:-1px;top:-19px;height:18px;display:none;align-items:center;gap:2px;background:#1E56F0;border-radius:4px 4px 0 0;color:#fff;font-size:11px;user-select:none}
+.rv-nt:hover .rv-nt-bar,.rv-nt:focus-within .rv-nt-bar,.rv-nt.dragging .rv-nt-bar{display:flex}
+.rv-nt-grip{flex:1;min-width:0;white-space:nowrap;overflow:hidden;height:100%;cursor:move;touch-action:none;padding-left:6px;line-height:18px;letter-spacing:1px}
+.rv-nt-bar button{all:unset;cursor:pointer;padding:0 6px;height:18px;line-height:18px;font-size:11px;color:#fff}
+.rv-nt-bar button:hover{background:rgba(255,255,255,.25)}
+#rvSheet.pdf .rv-nt-bar,#rvSheet.pdf .rv-nt-rs{display:none !important}
+#rvSheet.pdf .rv-nt-text:empty::before{content:''}
+@media print{
+  body *{visibility:hidden !important}
+  #rvSheet,#rvSheet *{visibility:visible !important}
+  #rvSheet{position:fixed;left:0;top:0;box-shadow:none;margin:0}
+  #rvSheet .rv-hint,#rvSheet .tools,#rvSheet .rv-add,#rvSheet .rv-rm,#rvSheet .rv-nt-bar,#rvSheet .rv-nt-rs{display:none !important}
+  #rvSheet .rv-nt-text:empty::before{content:''}
+  @page{size:A4 landscape;margin:6mm}
+}
+</style>
+<script id="rvcmp-js">
+(function(){
+  'use strict';
+  const DKEY = 'ccip_rvcmp_draft', LKEY = 'ccip_rvcmp_list_v1', MMAX = 6, MMIN = 1;
+  const $ = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => [...(r || document).querySelectorAll(s)];
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const toast = (m, t) => { try { showToast(m, t || 'info'); } catch (e) { console.log(m); } };
+  const num = v => { if (v === '' || v == null) return NaN; const n = +String(v).replace(/[,฿\s]/g, ''); return isFinite(n) ? n : NaN; };
+  const f2 = v => isFinite(v) ? v.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) : '';
+  const f0 = v => isFinite(v) ? Math.round(v).toLocaleString('en-US') : '';
+  const sgn = v => isFinite(v) ? (v > 0 ? '+' : v < 0 ? '−' : '') + f2(Math.abs(v)) : '';
+  const today = () => { const t = new Date(); return t.getDate() + '/' + (t.getMonth() + 1) + '/' + t.getFullYear(); };
+  const commas = v => { const t = String(v == null ? '' : v).replace(/[^\d.]/g, ''); if (!t) return ''; const [a, b] = t.split('.'); return a.replace(/^0+(?=\d)/, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',') + (b !== undefined ? '.' + b : ''); };
+  const isQty = k => k === 'volume';
+  const isMoney = k => /^(custOld|custNew|mkOld|mkNew)$/.test(k);
+  const IMG = '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>';
+  const IC = {
+    pdf:'<svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>',
+    clr:'<svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>',
+    note:'<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 7v6M9 10h6"/></svg>',
+    sav:'<svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>'
+  };
+  const REASONS = ['ราคาวัตถุดิบ', 'ค่าแรง', 'ค่าเงิน / FX', 'ปรับแบบ / Spec', 'Volume เปลี่ยน', 'อื่นๆ'];
+  const blank = () => ({
+    notes:null, docNo:'', docDate:'', partName:'', partNo:'', rev:'', model:'', maker:'', effDate:'', typeOfWork:'', spec:'', plating:'', plant:'',
+    volume:'', years:'', yUnit:'Y', reasons:[], reasonOther:'', custCode:'TYM', custOld:'', custNew:'', mkOld:'', mkNew:'',
+    conclusion:['', '', ''], signPrep:'', signChk:'', signApp:'', images:{}
+  });
+  const norm = d => { const b = blank(); d = Object.assign(b, d || {});
+    d.reasons = Array.isArray(d.reasons) ? d.reasons : [];
+    d.conclusion = Array.isArray(d.conclusion) ? d.conclusion.slice(0, 3) : ['', '', '']; while (d.conclusion.length < 3) d.conclusion.push('');
+    d.notes = Array.isArray(d.notes) ? d.notes : null; d.images = d.images || {}; return d; };
+  const load = () => { try { const d = JSON.parse(localStorage.getItem(DKEY) || ''); if (d && typeof d === 'object') return d; } catch (e) {} return null; };
+
+  const Q = {
+    d: norm(load()),
+    save(){ clearTimeout(this._t); this._t = setTimeout(() => { try { localStorage.setItem(DKEY, JSON.stringify(this.d)); } catch (e) {} }, 300); },
+    get(k){ return k.split('.').reduce((o, p) => o == null ? '' : o[p], this.d) ?? ''; },
+    set(k, v){ const ps = k.split('.'); let o = this.d; ps.slice(0, -1).forEach(p => { o = o[p]; }); o[ps[ps.length - 1]] = v; },
+    open(){ if (!$('#rvSheet')) this.render(); },
+    list(){ try { const a = JSON.parse(localStorage.getItem(LKEY) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } },
+    putList(a){ try { localStorage.setItem(LKEY, JSON.stringify(a)); return true; } catch (e) { toast('พื้นที่เก็บในเครื่องเต็ม (อาจเพราะรูปใหญ่) — บันทึกไม่ได้', 'error'); return false; } },
+    isBlank(){ return JSON.stringify(Object.assign({}, this.d, {docDate:''})) === JSON.stringify(Object.assign(blank(), {docDate:''})); },
+
+    render(){
+      const page = $('#page-rvcmp'), d = this.d;
+      const F = (k, cls, st, ph) => `<input data-k="${k}" value="${esc(isQty(k) ? commas(this.get(k)) : this.get(k))}"${isQty(k) ? ' inputmode="numeric"' : ''}${cls ? ` class="${cls}"` : ''}${st ? ` style="${st}"` : ''}${ph ? ` placeholder="${esc(ph)}"` : ''} autocomplete="off">`;
+      const cal = id => `<td class="cal" data-c="${id}"></td>`;
+      page.innerHTML = `
+        <div class="rv-hero"><div><div class="rv-eyebrow">E-Form · Price Revision · Old vs New</div>
+            <h1>ปรับราคา เก่า – ใหม่</h1><p>ใส่ราคา MAKER เก่า/ใหม่ และราคาลูกค้า — ระบบคำนวณ Cost UP/DOWN, ส่วนต่างกับราคาลูกค้า, % Margin และผลกระทบต่อปี แล้วดาวน์โหลดเป็น PDF</p></div>
+          <div class="rv-actions"><button class="rv-btn" id="rvList" title="บันทึก / เปิด / ลบ ฟอร์มที่เก็บไว้ (เก็บในเครื่องนี้)">${IC.sav}บันทึก / เปิดฟอร์ม${this.list().length ? ' (' + this.list().length + ')' : ''}</button><button class="rv-btn" id="rvNote" title="เพิ่มกล่องข้อความ แล้วลากไปวางตรงไหนก็ได้ในฟอร์ม">${IC.note}เพิ่มกล่องข้อความ</button><button class="rv-btn" id="rvClr">${IC.clr}ล้างฟอร์ม</button><button class="rv-btn pri" id="rvPdf">${IC.pdf}<span>ดาวน์โหลด PDF</span></button></div></div>
+        <div class="rv-desk"><p class="rv-tip">คลิกช่องเพื่อพิมพ์ · รูปชิ้นงาน: ตัดจาก DWG ด้วย Snipping Tool (Win+Shift+S) → คลิกที่กรอบรูป → กด Ctrl+V · ช่องสีเทาคำนวณอัตโนมัติ · ราคาลูกค้า "ใหม่" ว่างไว้ = ใช้ราคาลูกค้าเดิม · กล่องข้อความ: กด "เพิ่มกล่องข้อความ" แล้วลากแถบสีน้ำเงินเพื่อย้าย ลากมุมขวาล่างเพื่อปรับขนาด</p>
+        <div id="rvSheet">
+          <div class="rv-hd"><div class="rv-hd-l"><small>PURCHASING DEPARTMENT · PU-EN · E-FORM</small><b>PRICE REVISION<span>ปรับราคา เก่า – ใหม่ เทียบราคาลูกค้า</span></b></div>
+            <table><tr><td class="lb" style="width:110px">DOC NO.</td><td>${F('docNo', 'c')}</td></tr><tr><td class="lb">DATE</td><td><input data-k="docDate" class="c" value="${esc(d.docDate || today())}"></td></tr></table></div>
+          <table><colgroup><col style="width:112px"><col><col style="width:96px"><col><col style="width:96px"><col></colgroup>
+            <tr><td class="lb">PART NAME</td><td>${F('partName')}</td><td class="lb">PART NO.</td><td>${F('partNo')}</td><td class="lb">REV.</td><td>${F('rev')}</td></tr>
+            <tr><td class="lb">MODEL</td><td>${F('model')}</td><td class="lb">MAKER</td><td>${F('maker')}</td><td class="lb">วันที่มีผล</td><td>${F('effDate', 'c')}</td></tr>
+            <tr><td class="lb">VOLUME</td><td style="padding:0"><div class="vol"><div class="u">${F('volume', '', 'text-align:right')}<span>PCS</span></div><div class="sl">/</div><div class="u yr">${F('years', '', 'text-align:right')}<button type="button" class="rv-unit" title="คลิกเพื่อสลับ Y (ปี) / M (เดือน)">${d.yUnit === 'M' ? 'M' : 'Y'}</button></div></div></td>
+              <td class="lb">TYPE OF WORK</td><td>${F('typeOfWork')}</td><td class="lb">PLATING</td><td>${F('plating')}</td></tr>
+            <tr><td class="lb">PLANT MASS PRO.</td><td colspan="5">${['CCI','CCIS','CCIR','CNN'].map(p => `<span class="rv-chk" data-p="${p}"><i>${d.plant === p ? '✓' : ''}</i>${p}</span>`).join('')}</td></tr>
+            <tr><td class="lb">สาเหตุปรับราคา</td><td colspan="5"><div class="rv-rs">${REASONS.map(r => `<span class="rv-chk" data-r="${esc(r)}"><i>${d.reasons.includes(r) ? '✓' : ''}</i>${esc(r)}</span>`).join('')}${F('reasonOther', '', '', 'ระบุเพิ่มเติม')}</div></td></tr></table>
+          <div class="rv-grid">
+            <div><div class="rv-cap">รูปชิ้นงาน<span>PART IMAGE</span></div>${this.imgBox('main', 'lg')}</div>
+            <div>
+              <div class="rv-banner" id="rvBanner"><b>—</b><span>กรอกราคา MAKER เก่า / ใหม่</span></div>
+              <table class="rv-cmp"><colgroup><col style="width:190px"><col><col><col><col></colgroup>
+                <tr><th>รายการ</th><th>ราคาเก่า<small>OLD</small></th><th class="nw">ราคาใหม่<small>NEW</small></th><th class="ch">ส่วนต่าง (THB)<small>NEW − OLD</small></th><th class="ch">% เปลี่ยน<small>CHANGE</small></th></tr>
+                <tr class="cu"><td class="rl">ราคาลูกค้า <input data-k="custCode" value="${esc(d.custCode)}" autocomplete="off"><small>CUSTOMER PRICE (THB / PC)</small></td><td>${F('custOld', 'r', '', '0.00')}</td><td>${F('custNew', 'r', '', '= เดิม')}</td>${cal('cu-d')}${cal('cu-p')}</tr>
+                <tr class="mk"><td class="rl">ราคา MAKER<small>MAKER PRICE (THB / PC)</small></td><td>${F('mkOld', 'r', '', '0.00')}</td><td>${F('mkNew', 'r', '', '0.00')}</td>${cal('mk-d')}${cal('mk-p')}</tr>
+                <tr><td class="rl">ส่วนต่าง ลูกค้า − MAKER<small>MARGIN / PC (THB)</small></td>${cal('df-o')}${cal('df-n')}${cal('df-d')}${cal('df-p')}</tr>
+                <tr><td class="rl">% ส่วนต่าง (Margin)<small>เทียบราคาลูกค้า</small></td>${cal('mg-o')}${cal('mg-n')}${cal('mg-d')}<td class="cal"></td></tr>
+                <tr><td class="rl">ต้นทุน MAKER ต่อปี<small>PRICE × VOLUME/YEAR (THB)</small></td>${cal('an-o')}${cal('an-n')}${cal('an-d')}${cal('an-p')}</tr>
+                <tr><td class="rl">ส่วนต่างรวมต่อปี<small>MARGIN × VOLUME/YEAR (THB)</small></td>${cal('ay-o')}${cal('ay-n')}${cal('ay-d')}${cal('ay-p')}</tr>
+                <tr><td class="rl">เทียบราคาลูกค้า<small>NEW MAKER VS CUSTOMER</small></td><td class="vd" colspan="4" data-c="verdict"></td></tr>
+              </table>
+              <div class="rv-bars"><h4>เปรียบเทียบราคาต่อชิ้น (THB)</h4>
+                <div class="rv-bar"><label>ราคาลูกค้า</label><div class="tr"><i id="rvBc" style="background:#2563EB"></i></div><em data-c="bc"></em></div>
+                <div class="rv-bar"><label>MAKER เก่า</label><div class="tr"><i id="rvBo" style="background:#9CA3AF"></i></div><em data-c="bo"></em></div>
+                <div class="rv-bar"><label>MAKER ใหม่</label><div class="tr"><i id="rvBn" style="background:#D97706"></i></div><em data-c="bn"></em></div>
+              </div>
+            </div>
+          </div>
+          <div class="rv-foot">
+            <div><table><colgroup><col style="width:112px"><col></colgroup>
+              <tr><td class="lb" rowspan="3" style="text-align:center;white-space:normal;line-height:1.35">สรุป /<br>หมายเหตุ<br><span style="font-weight:400;font-size:9.5px;color:#6B7280">CONCLUSION</span></td><td>${F('conclusion.0')}</td></tr>
+              <tr><td>${F('conclusion.1')}</td></tr><tr><td>${F('conclusion.2')}</td></tr></table></div>
+            <table class="rv-sign"><colgroup><col><col><col></colgroup>
+              <tr><th class="lb">PREPARED</th><th class="lb">CHECKED</th><th class="lb">APPROVED</th></tr>
+              <tr><td class="sp"></td><td class="sp"></td><td class="sp"></td></tr>
+              <tr><td class="c">${F('signPrep', 'c', '', 'ชื่อ')}</td><td class="c">${F('signChk', 'c', '', 'ชื่อ')}</td><td class="c">${F('signApp', 'c', '', 'ชื่อ')}</td></tr></table>
+          </div>
+          <div class="rv-meta"><span>PURCHASE-EN-CCIP · E-FORM PRICE REVISION (OLD vs NEW)</span><span>${esc(d.partNo || '')}</span></div>
+        </div></div>`;
+      page.querySelectorAll('#rvSheet [data-k]').forEach(inp => {
+        inp.addEventListener('input', () => {
+          if (isQty(inp.dataset.k)) { const pos = inp.selectionStart, before = inp.value.slice(0, pos).replace(/[^\d.]/g, '').length, f = commas(inp.value);
+            if (f !== inp.value) { inp.value = f; let c = 0, i = 0; while (i < f.length && c < before) { if (/[\d.]/.test(f[i])) c++; i++; } inp.setSelectionRange(i, i); } }
+          if (inp.dataset.k === 'years' && /[^\d.,]/.test(inp.value)) {
+            const u = (inp.value.match(/[ymYM]/) || [])[0]; if (u) { this.d.yUnit = u.toUpperCase(); const b = $('#rvSheet .rv-unit'); if (b) b.textContent = this.d.yUnit; }
+            inp.value = inp.value.replace(/[^\d.,]/g, ''); }
+          this.set(inp.dataset.k, inp.value); this.save(); this.calc();
+        });
+        if (isMoney(inp.dataset.k)) inp.addEventListener('blur', () => { const v = num(inp.value); if (isFinite(v)) { inp.value = f2(v); this.set(inp.dataset.k, inp.value); this.save(); this.calc(); } });
+      });
+      const ub = $('#rvSheet .rv-unit'); if (ub) ub.onclick = () => { this.d.yUnit = this.d.yUnit === 'M' ? 'Y' : 'M'; ub.textContent = this.d.yUnit; this.save(); this.calc(); };
+      page.querySelectorAll('.rv-chk[data-p]').forEach(c => c.onclick = () => { this.d.plant = this.d.plant === c.dataset.p ? '' : c.dataset.p; this.save();
+        page.querySelectorAll('.rv-chk[data-p] i').forEach(x => { x.textContent = x.parentNode.dataset.p === this.d.plant ? '✓' : ''; }); });
+      page.querySelectorAll('.rv-chk[data-r]').forEach(c => c.onclick = () => { const r = c.dataset.r, a = this.d.reasons, i = a.indexOf(r); if (i >= 0) a.splice(i, 1); else a.push(r); this.save(); c.firstChild.textContent = i >= 0 ? '' : '✓'; });
+      this.bindImgs();
+      $('#rvList').onclick = () => this.listModal();
+      $('#rvClr').onclick = () => { if (!confirm('ล้างข้อมูลและรูปในแบบฟอร์มทั้งหมด?')) return; this.d = blank(); try { localStorage.removeItem(DKEY); } catch (e) {} this.render(); };
+      $('#rvPdf').onclick = () => this.pdf();
+      $('#rvNote').onclick = () => this.addNote();
+      this.initNotes();
+      this.calc();
+    },
+
+    /* คำนวณช่องสีเทา / ป้าย COST UP-DOWN / แท่งเปรียบเทียบ (ไม่ render ใหม่ เพื่อไม่ให้เคอร์เซอร์หลุด) */
+    calc(){
+      const sh = $('#rvSheet'); if (!sh) return; const d = this.d;
+      const co = num(d.custOld), cnRaw = num(d.custNew), cn = cnRaw > 0 ? cnRaw : co, mo = num(d.mkOld), mn = num(d.mkNew);
+      const vol = num(d.volume), y = num(d.years), mon = d.yUnit === 'M' ? (isFinite(y) && y > 0 ? y : 1) : y * 12, qty = isFinite(vol) && isFinite(mon) && mon > 0 ? vol / (mon / 12) : NaN;
+      const set = (id, txt, cls) => { const el = sh.querySelector(`[data-c="${id}"]`); if (!el) return; el.textContent = txt; el.classList.remove('neg', 'pos'); if (cls) el.classList.add(cls); };
+      const pc = (a, b) => isFinite(a) && isFinite(b) && a > 0 ? (b - a) / a * 100 : NaN;
+      const sp = v => isFinite(v) ? (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(2) + ' %' : '';
+      const good = (v, upIsGood) => !isFinite(v) || v === 0 ? '' : ((v > 0) === upIsGood ? 'pos' : 'neg');
+      const ok = v => isFinite(v) && v > 0;
+      const diffs = (id, a, b, upIsGood, cnt) => { const dv = ok(a) && ok(b) ? b - a : NaN; set(id + '-d', sgn(dv), good(dv, upIsGood)); set(id + '-p', sp(pc(a, b)), good(dv, upIsGood)); return dv; };
+      // ราคาลูกค้า: ช่อง "ใหม่" ว่าง = ใช้ราคาเดิม
+      const cuNewIn = sh.querySelector('[data-k="custNew"]'); if (cuNewIn) cuNewIn.placeholder = ok(co) ? '= ' + f2(co) : '= เดิม';
+      if (cnRaw > 0) diffs('cu', co, cn, true); else { set('cu-d', ''); set('cu-p', ''); }
+      const mkd = diffs('mk', mo, mn, false);
+      // ส่วนต่าง (ลูกค้า − MAKER)
+      const dfo = ok(co) && ok(mo) ? co - mo : NaN, dfn = ok(cn) && ok(mn) ? cn - mn : NaN;
+      set('df-o', isFinite(dfo) ? sgn(dfo).replace(/^\+/, '') : '', isFinite(dfo) && dfo < 0 ? 'neg' : ''); set('df-n', isFinite(dfn) ? sgn(dfn).replace(/^\+/, '') : '', isFinite(dfn) && dfn < 0 ? 'neg' : '');
+      const dfd = isFinite(dfo) && isFinite(dfn) ? dfn - dfo : NaN; set('df-d', sgn(dfd), good(dfd, true)); set('df-p', isFinite(dfd) && isFinite(dfo) && dfo !== 0 ? sp((dfn - dfo) / Math.abs(dfo) * 100) : '', good(dfd, true));
+      // % Margin
+      const mgo = isFinite(dfo) ? dfo / co * 100 : NaN, mgn = isFinite(dfn) ? dfn / cn * 100 : NaN, mgd = isFinite(mgo) && isFinite(mgn) ? mgn - mgo : NaN;
+      set('mg-o', isFinite(mgo) ? mgo.toFixed(2) + ' %' : '', isFinite(mgo) && mgo < 0 ? 'neg' : ''); set('mg-n', isFinite(mgn) ? mgn.toFixed(2) + ' %' : '', isFinite(mgn) && mgn < 0 ? 'neg' : '');
+      set('mg-d', isFinite(mgd) ? (mgd > 0 ? '+' : mgd < 0 ? '−' : '') + Math.abs(mgd).toFixed(2) + ' pt' : '', good(mgd, true));
+      // ต่อปี
+      const ano = ok(mo) && isFinite(qty) ? mo * qty : NaN, ann = ok(mn) && isFinite(qty) ? mn * qty : NaN;
+      set('an-o', f0(ano)); set('an-n', f0(ann)); const and = isFinite(ano) && isFinite(ann) ? ann - ano : NaN; set('an-d', isFinite(and) ? (and > 0 ? '+' : and < 0 ? '−' : '') + f0(Math.abs(and)) : '', good(and, false)); set('an-p', sp(pc(ano, ann)), good(and, false));
+      const ayo = isFinite(dfo) && isFinite(qty) ? dfo * qty : NaN, ayn = isFinite(dfn) && isFinite(qty) ? dfn * qty : NaN;
+      set('ay-o', isFinite(ayo) ? (ayo < 0 ? '−' : '') + f0(Math.abs(ayo)) : '', isFinite(ayo) && ayo < 0 ? 'neg' : ''); set('ay-n', isFinite(ayn) ? (ayn < 0 ? '−' : '') + f0(Math.abs(ayn)) : '', isFinite(ayn) && ayn < 0 ? 'neg' : '');
+      const ayd = isFinite(ayo) && isFinite(ayn) ? ayn - ayo : NaN; set('ay-d', isFinite(ayd) ? (ayd > 0 ? '+' : ayd < 0 ? '−' : '') + f0(Math.abs(ayd)) : '', good(ayd, true)); set('ay-p', isFinite(ayd) && isFinite(ayo) && ayo !== 0 ? sp(ayd / Math.abs(ayo) * 100) : '', good(ayd, true));
+      sh.querySelectorAll('[data-c^="an-"],[data-c^="ay-"]').forEach(el => { el.title = isFinite(qty) ? '' : 'กรอก VOLUME และจำนวนปี/เดือน เพื่อคำนวณมูลค่าต่อปี'; });
+      // เทียบราคาลูกค้า
+      const vd = sh.querySelector('[data-c="verdict"]');
+      if (vd) { vd.classList.remove('neg', 'pos');
+        if (ok(mn) && ok(cn)) { const g = cn - mn, gp = Math.abs(g / cn * 100).toFixed(2);
+          if (g < 0) { vd.textContent = 'ราคา MAKER ใหม่ “สูงกว่า” ราคาลูกค้า ' + f2(-g) + ' บาท (' + gp + ' %) → ขาดทุนต่อชิ้น' + (isFinite(qty) ? ' ≈ ' + f0(-g * qty) + ' บาท/ปี' : ''); vd.classList.add('neg'); }
+          else if (g === 0) vd.textContent = 'ราคา MAKER ใหม่ เท่ากับราคาลูกค้า — ไม่มีส่วนต่าง';
+          else { vd.textContent = 'ราคา MAKER ใหม่ ต่ำกว่าราคาลูกค้า ' + f2(g) + ' บาท (' + gp + ' %)' + (isFinite(qty) ? ' ≈ ' + f0(g * qty) + ' บาท/ปี' : ''); vd.classList.add('pos'); } }
+        else vd.textContent = ''; }
+      // ป้ายสถานะ
+      const bn = $('#rvBanner');
+      if (bn) { bn.className = 'rv-banner';
+        if (ok(mo) && ok(mn)) { const dv = mn - mo, p = pc(mo, mn);
+          bn.classList.add(dv > 0 ? 'up' : dv < 0 ? 'down' : 'same');
+          bn.innerHTML = `<b>${dv > 0 ? 'COST UP' : dv < 0 ? 'COST DOWN' : 'NO CHANGE'}</b><span>ราคา MAKER ${f2(mo)} → ${f2(mn)} บาท<br>${dv === 0 ? 'ไม่เปลี่ยนแปลง' : (dv > 0 ? '+' : '−') + f2(Math.abs(dv)) + ' บาท/ชิ้น (' + (dv > 0 ? '+' : '−') + Math.abs(p).toFixed(2) + ' %)'}</span>`;
+        } else bn.innerHTML = '<b>—</b><span>กรอกราคา MAKER เก่า / ใหม่</span>'; }
+      // แท่งเปรียบเทียบ
+      const vals = [cn, mo, mn].filter(ok), mx = vals.length ? Math.max(...vals) : 0;
+      const bar = (id, tid, v, col) => { const el = $('#' + id, sh), t = sh.querySelector(`[data-c="${tid}"]`); if (el) { el.style.width = ok(v) && mx ? (v / mx * 100) + '%' : '0'; if (col) el.style.background = col; } if (t) t.textContent = ok(v) ? f2(v) : ''; };
+      bar('rvBc', 'bc', cn); bar('rvBo', 'bo', mo); bar('rvBn', 'bn', mn, ok(mn) && ok(cn) && mn > cn ? '#C62828' : (ok(mn) && ok(mo) && mn < mo ? '#1B7F3B' : '#D97706'));
+    },
+
+    /* ── รูปภาพ: ย่อแล้วเก็บในเครื่อง และฝังลง PDF ── */
+    imgBox(slot, cls){
+      const im = this.d.images[slot];
+      return `<div class="rv-img ${cls}${im ? ' has' : ''}" data-slot="${slot}" tabindex="0" title="คลิกที่กรอบ แล้วกด Ctrl+V เพื่อวางรูปที่ตัดมา">${im ? `<img src="${im}" alt="">` : ''}
+        <div class="rv-hint">${im ? '' : `${IMG}<b>คลิกที่กรอบ แล้วกด Ctrl+V</b><span>วางรูปที่ตัดจาก DWG ด้วย Snipping Tool (Win+Shift+S)</span>`}<em class="rv-ready">พร้อมวาง — กด Ctrl+V</em></div>
+        <div class="tools"><button data-a="file">เลือกไฟล์</button>${im ? '<button data-a="del">ลบรูป</button>' : ''}</div></div>`;
+    },
+    bindImgs(){
+      $$('#rvSheet .rv-img').forEach(box => {
+        const slot = box.dataset.slot;
+        const pick = () => { const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*'; i.onchange = () => i.files[0] && this.setImg(slot, i.files[0]); i.click(); };
+        box.onclick = e => { const a = e.target.closest('[data-a]');
+          if (a && a.dataset.a === 'del') { e.stopPropagation(); delete this.d.images[slot]; this.save(); this.redrawImg(slot); return; }
+          if (a && a.dataset.a === 'file') { e.stopPropagation(); pick(); return; }
+          box.focus(); };
+        box.ondragover = e => { e.preventDefault(); box.classList.add('drag'); };
+        box.ondragleave = () => box.classList.remove('drag');
+        box.ondrop = e => { e.preventDefault(); box.classList.remove('drag'); const f = e.dataTransfer.files[0]; if (f) this.setImg(slot, f); };
+        box.onpaste = e => { const it = [...((e.clipboardData || {}).items || [])].find(x => /^image\//.test(x.type)); e.preventDefault();
+          if (it) this.setImg(slot, it.getAsFile()); else toast('ไม่พบรูปในคลิปบอร์ด — ตัดรูปด้วย Snipping Tool (Win+Shift+S) ก่อน แล้วกด Ctrl+V อีกครั้ง', 'info'); };
+        box.onkeydown = e => { if ((e.key === 'Delete' || e.key === 'Backspace') && this.d.images[slot]) { e.preventDefault(); delete this.d.images[slot]; this.save(); this.redrawImg(slot); } };
+      });
+    },
+    redrawImg(slot){ const b = $(`#rvSheet [data-slot="${slot}"]`); if (!b) return; b.outerHTML = this.imgBox(slot, b.classList.contains('lg') ? 'lg' : ''); this.bindImgs(); const nb = $(`#rvSheet [data-slot="${slot}"]`); if (nb) nb.focus(); },
+    async setImg(slot, file){
+      if (!file || !/^image\//.test(file.type)) { toast('รองรับเฉพาะไฟล์รูป (JPG / PNG)', 'error'); return; }
+      try {
+        const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('อ่านรูปไม่ได้')); i.src = URL.createObjectURL(file); });
+        const sc = Math.min(1, 1400 / Math.max(img.naturalWidth, img.naturalHeight));
+        const cv = document.createElement('canvas'); cv.width = Math.round(img.naturalWidth * sc); cv.height = Math.round(img.naturalHeight * sc);
+        const g = cv.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height); g.drawImage(img, 0, 0, cv.width, cv.height);
+        this.d.images[slot] = cv.toDataURL('image/jpeg', 0.85); this.save(); this.redrawImg(slot);
+      } catch (e) { toast('แนบรูปไม่สำเร็จ: ' + e.message, 'error'); }
+    },
+
+    /* ── บันทึก / เปิด / ลบ ฟอร์มที่เก็บไว้ (localStorage) ── */
+    listModal(){
+      if ($('#rvOv')) return;
+      const ov = document.createElement('div'); ov.className = 'rv-ov'; ov.id = 'rvOv';
+      const close = () => ov.remove();
+      const fmt = t => { const x = new Date(t); return x.getDate() + '/' + (x.getMonth() + 1) + '/' + x.getFullYear() + ' ' + String(x.getHours()).padStart(2, '0') + ':' + String(x.getMinutes()).padStart(2, '0'); };
+      const autoName = () => [this.d.partName, this.d.partNo].map(x => String(x || '').trim()).filter(Boolean).join(' · ') || 'ฟอร์มไม่มีชื่อ';
+      const snap = () => JSON.parse(JSON.stringify(this.d));
+      const draw = () => { const L = this.list(); const btn = $('#rvList'); if (btn) btn.lastChild.textContent = 'บันทึก / เปิดฟอร์ม' + (L.length ? ' (' + L.length + ')' : '');
+        ov.innerHTML = `<div class="rv-box" role="dialog" aria-modal="true"><div class="rv-mhd"><b>ฟอร์มเปรียบเทียบที่บันทึกไว้</b><button class="rv-x" data-a="x" title="ปิด">×</button></div><div class="rv-mbd">
+          <div class="rv-new"><input id="rvName" maxlength="80" placeholder="ตั้งชื่อ (เว้นว่าง = ใช้ชื่อ/เลข Part ในฟอร์ม)"><button class="rv-b pri" data-a="save">บันทึกฟอร์มนี้</button></div>
+          <div class="rv-lst">${L.length ? L.map(it => `<div class="rv-it" data-id="${it.id}"><div class="t"><b>${esc(it.name)}</b><small>บันทึกเมื่อ ${fmt(it.savedAt)}</small></div><button class="rv-b" data-a="open">เปิด</button><button class="rv-b" data-a="upd">อัปเดต</button><button class="rv-b" data-a="del">ลบ</button></div>`).join('') : '<div class="rv-emp">ยังไม่มีฟอร์มที่บันทึกไว้</div>'}</div>
+          <small style="color:#6B7280;font-size:11.5px">เก็บในเครื่อง/เบราว์เซอร์นี้เท่านั้น — เปิดเครื่องอื่นจะไม่เห็น</small></div></div>`; };
+      const confirmBtn = (b, txt, cls) => { if (b.dataset.ask === '1') return true; b.dataset.ask = '1'; const o = b.textContent; b.textContent = txt; b.classList.add(cls);
+        setTimeout(() => { if (b.isConnected) { delete b.dataset.ask; b.textContent = o; b.classList.remove(cls); } }, 3000); return false; };
+      ov.addEventListener('click', ev => {
+        if (ev.target === ov) return close();
+        const b = ev.target.closest('[data-a]'); if (!b) return; const a = b.dataset.a, row = b.closest('.rv-it'), id = row && row.dataset.id;
+        if (a === 'x') return close();
+        if (a === 'save') { const L = this.list(), nm = ($('#rvName', ov).value || '').trim() || autoName();
+          L.unshift({id:'q' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name:nm, savedAt:Date.now(), data:snap()}); if (this.putList(L)) { toast('บันทึกฟอร์มแล้ว', 'success'); draw(); } }
+        else if (a === 'upd') { const L = this.list(), it = L.find(x => x.id === id); if (!it || !confirmBtn(b, 'ยืนยันทับ?', 'pri')) return; it.data = snap(); it.savedAt = Date.now(); if (this.putList(L)) { toast('อัปเดตแล้ว', 'success'); draw(); } }
+        else if (a === 'del') { if (!confirmBtn(b, 'ยืนยันลบ?', 'ask')) return; this.putList(this.list().filter(x => x.id !== id)); toast('ลบแล้ว', 'success'); draw(); }
+        else if (a === 'open') { const it = this.list().find(x => x.id === id); if (!it) return; if (!this.isBlank() && !confirmBtn(b, 'แทนที่ฟอร์มนี้?', 'pri')) return;
+          this.d = norm(JSON.parse(JSON.stringify(it.data))); try { localStorage.setItem(DKEY, JSON.stringify(this.d)); } catch (e) {} this.render(); close(); toast('เปิด “' + it.name + '” แล้ว', 'success'); }
+      });
+      document.addEventListener('keydown', function k(e) { if (!ov.isConnected) return document.removeEventListener('keydown', k); if (e.key === 'Escape') close(); });
+      draw(); document.body.appendChild(ov);
+    },
+
+    addNote(){ if (this._addNote) this._addNote(); },
+    initNotes(){
+      const sheet = $('#rvSheet'); if (!sheet) return;
+      const self = this, layer = document.createElement('div'); layer.className = 'rv-nl'; sheet.appendChild(layer);
+      const base = () => { const h = sheet.querySelector('.rv-hd'); return h ? h.offsetTop : 0; };   // พิกัดแกน Y วัดจากหัวฟอร์ม → ป้าย DRAFT ดันฟอร์มลง กล่องก็ตามลงด้วย
+      const save = () => { const b = base();
+        self.d.notes = [...layer.querySelectorAll('.rv-nt')].map(n => ({x:n.offsetLeft, y:n.offsetTop - b, w:n.offsetWidth, h:n.offsetHeight,
+          t:n.querySelector('.rv-nt-text').innerText.replace(/\n$/, ''), s:+n.dataset.s || 0, f:+n.dataset.f || 14, b:n.dataset.b === '1' ? 1 : 0}));
+        self.d.remark = ''; self.save(); };
+      let tm; const saveSoon = () => { clearTimeout(tm); tm = setTimeout(save, 300); };
+      const grow = n => { const cur = n.offsetHeight; n.style.height = 'auto'; n.style.height = Math.max(cur, n.offsetHeight) + 'px'; };   // ขยายให้พอดีข้อความ ไม่หดเอง
+      const setStyle = (n, s) => { n.dataset.s = s; n.classList.remove('s0', 's1', 's2'); n.classList.add('s' + s); };
+      const setFont = (n, f, b) => { f = Math.max(7, Math.min(60, f)); n.dataset.f = f; n.dataset.b = b ? '1' : '0';
+        const t = n.querySelector('.rv-nt-text'); t.style.fontSize = f + 'px'; t.style.fontWeight = b ? '700' : '400';
+        n.querySelector('.rv-nt-fm').title = 'ลดขนาดตัวอักษร (ตอนนี้ ' + f + ')'; n.querySelector('.rv-nt-bold').style.background = b ? 'rgba(255,255,255,.35)' : ''; };
+      const clamp = (n, x, y) => { x = Math.max(0, Math.min(x, sheet.clientWidth - n.offsetWidth)); y = Math.max(0, Math.min(y, sheet.scrollHeight - 20)); n.style.left = x + 'px'; n.style.top = y + 'px'; };
+      const resizer = n => { const h = document.createElement('div'); h.className = 'rv-nt-rs'; h.title = 'ลากเพื่อปรับขนาด'; h.setAttribute('data-html2canvas-ignore', 'true'); n.appendChild(h);
+        h.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); h.setPointerCapture(e.pointerId); n.classList.add('dragging');
+          const sx = e.clientX, sy = e.clientY, sw = n.offsetWidth, sh = n.offsetHeight;
+          const mv = ev => { n.style.width = Math.max(120, Math.min(sw + ev.clientX - sx, sheet.clientWidth - n.offsetLeft)) + 'px'; n.style.height = Math.max(24, sh + ev.clientY - sy) + 'px'; };
+          const up = () => { n.classList.remove('dragging'); h.removeEventListener('pointermove', mv); h.removeEventListener('pointerup', up); h.removeEventListener('pointercancel', up); save(); };
+          h.addEventListener('pointermove', mv); h.addEventListener('pointerup', up); h.addEventListener('pointercancel', up); }); };
+      const create = (d, ph) => {
+        const n = document.createElement('div'); n.className = 'rv-nt';
+        n.innerHTML = '<div class="rv-nt-bar" data-html2canvas-ignore="true"><span class="rv-nt-grip" title="ลากเพื่อย้าย">⋮⋮ ลากย้าย</span>' +
+          '<button type="button" class="rv-nt-fm" title="ลดขนาดตัวอักษร">A−</button><button type="button" class="rv-nt-fp" title="เพิ่มขนาดตัวอักษร">A+</button><button type="button" class="rv-nt-bold" title="ตัวหนา" style="font-weight:bold">B</button>' +
+          '<button type="button" class="rv-nt-style" title="สลับรูปแบบ: โน้ตเหลือง / ขอบดำ / ไม่มีขอบ">รูปแบบ</button>' +
+          '<button type="button" class="rv-nt-del" title="ลบกล่องข้อความ">×</button></div>' +
+          '<div class="rv-nt-text" contenteditable="plaintext-only" spellcheck="false"></div>';
+        const tx = n.querySelector('.rv-nt-text'); tx.textContent = d.t || ''; tx.dataset.ph = ph || 'พิมพ์ข้อความ...';
+        resizer(n); layer.appendChild(n);
+        n.style.width = (d.w || 200) + 'px'; n.style.height = (d.h || 60) + 'px';
+        setFont(n, d.f || 14, d.b); setStyle(n, d.s || 0); clamp(n, d.x || 0, (d.y || 0) + base()); grow(n);
+        tx.addEventListener('input', () => { if (!tx.textContent && tx.innerHTML === '<br>') tx.innerHTML = ''; grow(n); saveSoon(); });
+        n.querySelector('.rv-nt-style').onclick = () => { setStyle(n, ((+n.dataset.s || 0) + 1) % 3); save(); };
+        n.querySelector('.rv-nt-fm').onclick = () => { setFont(n, (+n.dataset.f || 14) - 1, n.dataset.b === '1'); save(); };
+        n.querySelector('.rv-nt-fp').onclick = () => { setFont(n, (+n.dataset.f || 14) + 1, n.dataset.b === '1'); grow(n); save(); };
+        n.querySelector('.rv-nt-bold').onclick = () => { setFont(n, +n.dataset.f || 14, n.dataset.b !== '1'); grow(n); save(); };
+        n.querySelector('.rv-nt-del').onclick = () => { if (tx.innerText.trim() && !confirm('ลบกล่องข้อความนี้?')) return; n.remove(); save(); };
+        const g = n.querySelector('.rv-nt-grip');
+        g.addEventListener('pointerdown', e => { e.preventDefault(); g.setPointerCapture(e.pointerId); n.classList.add('dragging');
+          const sx = e.clientX, sy = e.clientY, ox = n.offsetLeft, oy = n.offsetTop;
+          const mv = ev => clamp(n, ox + ev.clientX - sx, oy + ev.clientY - sy);
+          const up = () => { n.classList.remove('dragging'); g.removeEventListener('pointermove', mv); g.removeEventListener('pointerup', up); g.removeEventListener('pointercancel', up); save(); };
+          g.addEventListener('pointermove', mv); g.addEventListener('pointerup', up); g.addEventListener('pointercancel', up); });
+        return n;
+      };
+      const ready = (fn, k) => { k = k || 0; if (!sheet.isConnected) return; if (!sheet.offsetWidth && k < 50) { setTimeout(() => ready(fn, k + 1), 100); return; } fn(); };   // รอจนหน้าแสดงจริงจึงวัดตำแหน่ง
+      ready(() => {
+        if (Array.isArray(self.d.notes)) self.d.notes.forEach(n => create(n, 'พิมพ์ข้อความ...'));
+      });
+      this._addNote = () => ready(() => {
+        const r = sheet.getBoundingClientRect(), y = Math.max(0, -r.top) + Math.max(80, innerHeight * 0.25);
+        const n = create({x:sheet.clientWidth - 240, y:y - base(), w:200, h:60, t:'', s:0, f:14, b:0}, 'พิมพ์ข้อความ...');
+        n.querySelector('.rv-nt-text').focus(); save();
+      });
+    },
+    remarkToImg(){          // กล่อง REMARK / กล่องข้อความทุกกล่อง → วาดเป็นรูปก่อนสร้าง PDF; กล่องว่างซ่อนไว้ไม่พิมพ์
+      const undo = [];
+      document.querySelectorAll('#rvSheet .rv-nt').forEach(n => {
+        const box = n.querySelector('.rv-nt-text');
+        if (!box.innerText.trim()) { const v = n.style.visibility; n.style.visibility = 'hidden'; undo.push(() => { n.style.visibility = v; }); return; }
+        const u = this.textToImg(box); if (u) undo.push(u);
+      });
+      return () => undo.forEach(f => f());
+    },
+    textToImg(box){
+      if (!box || !box.innerText.trim()) return null;
+      const cs = getComputedStyle(box), padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight), padY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+      const W = box.clientWidth - padX, lh = parseFloat(cs.lineHeight) || 17, sc = 3;
+      const font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+      const cv = document.createElement('canvas'), g = cv.getContext('2d'); g.font = font;
+      const seg = typeof Intl !== 'undefined' && Intl.Segmenter ? new Intl.Segmenter('th', {granularity:'word'}) : null;
+      const lines = [];
+      box.innerText.replace(/\n$/, '').split('\n').forEach(par => {
+        const parts = seg ? [...seg.segment(par)].map(x => x.segment) : par.split(/(\s+)/);
+        let line = '';
+        parts.forEach(w => { if (g.measureText(line + w).width <= W || !line) line += w; else { lines.push(line); line = w.replace(/^\s+/, ''); } });
+        lines.push(line);
+      });
+      const H = Math.max(lines.length * lh, box.clientHeight - padY), top = (H - lines.length * lh) / 2;
+      cv.width = Math.ceil(W * sc); cv.height = Math.ceil(H * sc);
+      g.scale(sc, sc); g.font = font; g.fillStyle = cs.color; g.textBaseline = 'middle'; g.textAlign = 'center';
+      lines.forEach((l, i) => g.fillText(l, W / 2, top + i * lh + lh / 2));
+      const old = box.innerHTML;
+      box.innerHTML = `<img src="${cv.toDataURL('image/png')}" style="display:block;width:${W}px;height:${H}px">`;
+      return () => { box.innerHTML = old; };
+    },
+
+    /* ── PDF (A4 แนวนอน หน้าเดียว) ── */
+    lib(){
+      if (window.html2pdf) return Promise.resolve(window.html2pdf);
+      if (this._lib) return this._lib;
+      this._lib = new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+        s.onload = () => window.html2pdf ? res(window.html2pdf) : rej(new Error('load')); s.onerror = () => { this._lib = null; rej(new Error('load')); }; document.head.appendChild(s); });
+      return this._lib;
+    },
+    async pdf(){
+      const btn = $('#rvPdf'), sheet = $('#rvSheet'); if (!sheet) return;
+      if (this._busy) return; this._busy = true;
+      const name = ('Price Revision ' + [this.d.partName, this.d.partNo].map(x => String(x || '').trim()).filter(Boolean).join(' , ')).trim().replace(/[\\/:*?"<>|]/g, '-') + '.pdf';
+      const lab = btn.querySelector('span'); lab.textContent = 'กำลังสร้าง PDF...'; btn.disabled = true;
+      if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+      const hd0 = sheet.querySelector('.rv-hd'), lay = sheet.querySelector('.rv-nl'), hx = hd0 ? hd0.offsetLeft : 0, hy = hd0 ? hd0.offsetTop : 0;
+      sheet.classList.add('pdf');
+      if (lay && hd0) { lay.style.left = (hd0.offsetLeft - hx) + 'px'; lay.style.top = (hd0.offsetTop - hy) + 'px'; }
+      let undoRmk = null;
+      try {
+        await new Promise(r => setTimeout(r, 60));
+        undoRmk = this.remarkToImg();
+        const h2p = await this.lib();
+        const worker = h2p().set({margin:0, image:{type:'jpeg', quality:0.97}, html2canvas:{scale:2.2, backgroundColor:'#ffffff', useCORS:true, logging:false, scrollX:0, scrollY:0}, jsPDF:{unit:'mm', format:'a4', orientation:'landscape'}}).from(sheet);
+        const canvas = await worker.toCanvas().get('canvas');
+        const doc = await worker.toPdf().get('pdf');
+        for (let k = doc.internal.getNumberOfPages(); k > 0; k--) doc.deletePage(k);
+        doc.addPage('a4', 'landscape');
+        const PW = 297, PH = 210, M = 4, k = Math.min((PW - 2 * M) / canvas.width, (PH - 2 * M) / canvas.height), w = canvas.width * k, h = canvas.height * k;
+        doc.addImage(canvas.toDataURL('image/jpeg', 0.97), 'JPEG', (PW - w) / 2, (PH - h) / 2, w, h);
+        doc.save(name); toast('ดาวน์โหลด PDF เรียบร้อย', 'success');
+      } catch (e) {
+        toast('สร้างไฟล์ PDF โดยตรงไม่ได้ — เปิดหน้าต่างพิมพ์แทน ให้เลือก "Save as PDF"', 'info');
+        setTimeout(() => window.print(), 250);
+      } finally { sheet.classList.remove('pdf'); if (lay) { lay.style.left = ''; lay.style.top = ''; } if (undoRmk) undoRmk(); btn.disabled = false; lab.textContent = 'ดาวน์โหลด PDF'; this._busy = false; }
+    }
+  };
+  window.CCIPPriceRevision = Q;
+
+  /* ── เมนู + หน้า ── */
+  function install(){
+    if (document.getElementById('page-rvcmp')) return;
+    const main = document.querySelector('main'), home = document.getElementById('page-home');
+    if (!main || !home) return;
+    const page = document.createElement('div'); page.className = 'page'; page.id = 'page-rvcmp';
+    (home.parentNode || main).appendChild(page);
+    const ico = '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="8" height="16" rx="1.5"/><rect x="13" y="4" width="8" height="16" rx="1.5"/><path d="M5.5 9h3M5.5 13h3M15.5 9h3M15.5 13h3"/></svg>';
+    const grp = document.createElement('div'); grp.className = 'nav-group'; grp.id = 'navGroup-rvcmp';
+    grp.innerHTML = `<div class="nav-label" onclick="toggleNavGroup('rvcmp')"><span class="nav-label-text"><span class="nav-label-icon">${ico}</span><span data-i18n="group_rvcmp">ปรับราคา เก่า-ใหม่</span></span><span class="nav-label-chevron">▾</span></div>
+      <div class="nav-group-items"><button class="nav-item" id="nav-rvcmp" onclick="showPage('rvcmp',this)"><span class="nav-icon">${ico}</span><span class="nav-text" data-i18n="nav_rvcmp">ปรับราคา เก่า - ใหม่</span></button></div>`;
+    const anchor = document.getElementById('navGroup-qcmp') || document.getElementById('navGroup-pcmp') || document.getElementById('navGroup-rfq');
+    if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(grp, anchor.nextSibling);
+    else { const nav = document.querySelector('.nav-section'); if (nav) nav.appendChild(grp); }
+    try {
+      Object.assign(PAGE_TITLES.th, {rvcmp:'Price Revision · ปรับราคา เก่า-ใหม่'}); Object.assign(PAGE_TITLES.en, {rvcmp:'Price Revision (Old vs New)'});
+      Object.assign(I18N.th, {group_rvcmp:'ปรับราคา เก่า-ใหม่', nav_rvcmp:'ปรับราคา เก่า - ใหม่'}); Object.assign(I18N.en, {group_rvcmp:'Price Revision', nav_rvcmp:'Price Revision (Old vs New)'});
+    } catch (e) {}
+    try { CMDK_ITEMS.push({key:'rvcmp', label:'Price Revision · ปรับราคา เก่า-ใหม่', group:'ปรับราคา เก่า-ใหม่', icon:ico}); } catch (e) {}
+    const prev = window.showPage;
+    window.showPage = function(name, btn){
+      if (name === 'rvcmp') { const r = prev.call(this, name, btn || document.getElementById('nav-rvcmp')); Q.open(); return r; }
       return prev.apply(this, arguments);
     };
   }
