@@ -11361,8 +11361,8 @@ async function fetchCerDieFromSheet(silent = false) {
  if (!cerDieLoaded) { cerDieData = JSON.parse(localStorage.getItem(CER_MODES.die.lsKey) || 'null') || []; }
  if (!silent && cerMode === 'die') {
  const msg = /unknown/i.test(e.message)
- ? 'เซิร์ฟเวอร์ยังไม่รองรับข้อมูล MAKER DIE — ต้องเพิ่ม action getCerDie ใน Apps Script ก่อน (ตอนนี้แสดงข้อมูลที่บันทึกในเครื่อง)'
- : 'ดึงข้อมูล MAKER DIE จาก Sheet ไม่สำเร็จ — แสดงข้อมูลสำรอง';
+ ? 'เซิร์ฟเวอร์ยังไม่รองรับข้อมูล MAKER DIE — ต้องเพิ่ม action getCerDie ใน Apps Script ก่อน (ตอนนี้แสดงข้อมูลที่บันทึกในเครื่อง) · ข้อความจากเซิร์ฟเวอร์: ' + e.message
+ : 'ดึงข้อมูล MAKER DIE จาก Sheet ไม่สำเร็จ — แสดงข้อมูลสำรอง · ' + e.message;
  document.getElementById('cerFetchErrorText').textContent = msg;
  document.getElementById('cerFetchError').style.display = 'block';
  }
