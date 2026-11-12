@@ -26584,5 +26584,99 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountButtons); else mountButtons();
 })();
 </script>
+<style id="pvStyle">
+.pv-tools{display:flex;align-items:center;gap:.25rem;padding:.15rem;border:1px solid var(--border,#d0d7e2);border-radius:10px;background:var(--surface2,transparent)}
+.pv-tools button{all:unset;box-sizing:border-box;min-width:30px;height:28px;padding:0 .5rem;display:inline-flex;align-items:center;justify-content:center;gap:.3rem;border-radius:7px;font-size:.8rem;font-weight:600;cursor:pointer;color:var(--text,inherit);user-select:none}
+.pv-tools button:hover{background:rgba(120,140,180,.18)}
+.pv-tools button:focus-visible{outline:2px solid var(--accent,#3b82f6)}
+.pv-tools button:disabled{opacity:.35;cursor:default}
+.pv-tools .pv-pct{min-width:52px;font-variant-numeric:tabular-nums}
+.pv-tools .pv-sep{width:1px;height:18px;background:var(--border,#d0d7e2);margin:0 .15rem}
+.pv-tools svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.modal.pv-max{max-width:100vw!important;width:100vw!important;height:100vh!important;height:100dvh!important;border-radius:0!important}
+.modal-overlay:has(.pv-max){padding:0!important}
+.modal.pv-max{margin:0!important}
+.modal-overlay.pv-fs{padding:0!important;background:#000!important}
+.pv-body{overflow:hidden!important;background:#525659}
+.pv-body iframe{flex:none!important;transform-origin:0 0}
+@media(max-width:640px){.pv-tools .pv-lbl{display:none}.pv-tools .pv-fit{display:none}}
+</style>
+<script>
+(function(){
+ var MIN=.5,MAX=3,STEP=.25;
+ var I={
+  minus:'<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+  plus:'<svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+  fit:'<svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
+  max:'<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 4v16"/></svg>',
+  fs:'<svg viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg>',
+  fsx:'<svg viewBox="0 0 24 24"><path d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg>'
+ };
+ function enhance(overlayId, frameId){
+  var ov=document.getElementById(overlayId), frame=document.getElementById(frameId);
+  if(!ov||!frame||ov.dataset.pv) return; ov.dataset.pv='1';
+  var modal=ov.querySelector('.modal'), body=frame.parentElement;
+  var right=modal.querySelector('.modal-header > div:last-child');
+  var z=1, maxed=false;
+  body.classList.add('pv-body'); frame.setAttribute('allow','fullscreen; autoplay'); frame.setAttribute('allowfullscreen','');
+  var t=document.createElement('div'); t.className='pv-tools'; t.setAttribute('role','toolbar'); t.setAttribute('aria-label','เครื่องมือดู PDF');
+  t.innerHTML=
+   '<button type="button" data-a="out" title="ซูมออก ( - )" aria-label="ซูมออก">'+I.minus+'</button>'+
+   '<button type="button" data-a="reset" class="pv-pct" title="คืนค่า 100% ( 0 )">100%</button>'+
+   '<button type="button" data-a="in" title="ซูมเข้า ( + )" aria-label="ซูมเข้า">'+I.plus+'</button>'+
+   '<span class="pv-sep"></span>'+
+   '<button type="button" data-a="fit" class="pv-fit" title="พอดีหน้ากระดาษ" aria-label="พอดีหน้ากระดาษ">'+I.fit+'</button>'+
+   '<button type="button" data-a="max" title="ขยายเต็มหน้าเว็บ ( M )" aria-label="ขยายเต็มหน้าเว็บ">'+I.max+'<span class="pv-lbl">เต็มหน้า</span></button>'+
+   '<button type="button" data-a="fs" title="เต็มจอ ( F )" aria-label="เต็มจอ">'+I.fs+'<span class="pv-lbl">เต็มจอ</span></button>';
+  right.insertBefore(t,right.firstChild);
+  var pct=t.querySelector('.pv-pct'), bOut=t.querySelector('[data-a=out]'), bIn=t.querySelector('[data-a=in]'),
+      bMax=t.querySelector('[data-a=max]'), bFs=t.querySelector('[data-a=fs]');
+  function setZoom(v){
+   z=Math.min(MAX,Math.max(MIN,Math.round(v*100)/100));
+   frame.style.width=(100/z)+'%'; frame.style.height=(100/z)+'%'; frame.style.transform='scale('+z+')';
+   pct.textContent=Math.round(z*100)+'%'; bOut.disabled=z<=MIN; bIn.disabled=z>=MAX;
+  }
+  function setMax(on){
+   maxed=on; modal.classList.toggle('pv-max',on);
+   bMax.setAttribute('aria-pressed',on); bMax.querySelector('.pv-lbl').textContent=on?'ย่อกลับ':'เต็มหน้า';
+  }
+  function isFs(){return document.fullscreenElement===ov||document.webkitFullscreenElement===ov;}
+  function toggleFs(){
+   if(isFs()){(document.exitFullscreen||document.webkitExitFullscreen).call(document);return;}
+   var rq=ov.requestFullscreen||ov.webkitRequestFullscreen;
+   if(rq){var p=rq.call(ov); if(p&&p.catch)p.catch(function(){setMax(true);});} else setMax(true);
+  }
+  function onFs(){
+   var on=isFs(); ov.classList.toggle('pv-fs',on); if(on) setMax(true); else if(ov.dataset.fsmax) setMax(false);
+   ov.dataset.fsmax=on?'1':''; bFs.innerHTML=(on?I.fsx:I.fs)+'<span class="pv-lbl">'+(on?'ออกเต็มจอ':'เต็มจอ')+'</span>';
+  }
+  document.addEventListener('fullscreenchange',onFs); document.addEventListener('webkitfullscreenchange',onFs);
+  t.addEventListener('click',function(e){
+   var b=e.target.closest('button'); if(!b) return; var a=b.dataset.a;
+   if(a==='in')setZoom(z+STEP); else if(a==='out')setZoom(z-STEP);
+   else if(a==='reset'||a==='fit')setZoom(1);
+   else if(a==='max')setMax(!maxed); else if(a==='fs')toggleFs();
+  });
+  /* Ctrl + ล้อเมาส์ ซูมได้เมื่อเมาส์อยู่บนแถบเครื่องมือ/ขอบ; คีย์ลัด */
+  document.addEventListener('keydown',function(e){
+   if(!ov.classList.contains('open')||e.ctrlKey||e.metaKey||e.altKey) return;
+   var tg=e.target&&e.target.tagName; if(tg==='INPUT'||tg==='TEXTAREA'||tg==='SELECT') return;
+   var k=e.key;
+   if(k==='+'||k==='='){setZoom(z+STEP);e.preventDefault();}
+   else if(k==='-'||k==='_'){setZoom(z-STEP);e.preventDefault();}
+   else if(k==='0'){setZoom(1);e.preventDefault();}
+   else if(k==='f'||k==='F'){toggleFs();e.preventDefault();}
+   else if(k==='m'||k==='M'){setMax(!maxed);e.preventDefault();}
+  });
+  /* รีเซ็ตทุกอย่างเมื่อปิดหน้าต่าง */
+  new MutationObserver(function(){
+   if(!ov.classList.contains('open')){ setZoom(1); setMax(false); if(isFs())(document.exitFullscreen||document.webkitExitFullscreen).call(document); }
+  }).observe(ov,{attributes:true,attributeFilter:['class']});
+  setZoom(1);
+ }
+ function init(){ enhance('manualViewOverlay','manualViewFrame'); enhance('isoViewOverlay','isoViewFrame'); }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init); else init();
+})();
+</script>
 </body>
 </html>
