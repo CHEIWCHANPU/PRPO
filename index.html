@@ -1126,6 +1126,16 @@
  .page-btn:disabled { opacity: 0.35; cursor: not-allowed; box-shadow: none; }
 
  /* CER PAGE */
+.cer-mode-bar { display: flex; align-items: center; gap: 0.9rem; flex-wrap: wrap; margin-bottom: 0.95rem; }
+.cer-mode-switch { display: inline-flex; padding: 3px; gap: 3px; border-radius: var(--r-pill, 999px); background: var(--surface2); border: 1px solid var(--border); }
+.cer-mode-btn { display: inline-flex; align-items: center; gap: 0.45rem; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 0.84rem; font-weight: 700; padding: 0.5rem 1.05rem; border-radius: var(--r-pill, 999px); cursor: pointer; transition: background .15s, color .15s, box-shadow .15s; white-space: nowrap; }
+.cer-mode-btn:hover { color: var(--text); }
+.cer-mode-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.cer-mode-btn.active { background: var(--accent); color: #fff; box-shadow: 0 2px 10px color-mix(in srgb, var(--accent) 35%, transparent); }
+.cer-mode-n { font-family: var(--mono); font-size: 0.7rem; font-weight: 600; min-width: 1.4em; padding: 0.05rem 0.4rem; border-radius: 999px; background: color-mix(in srgb, currentColor 14%, transparent); text-align: center; }
+.cer-mode-n:empty { display: none; }
+.cer-mode-hint { font-size: 0.78rem; color: var(--muted); }
+@media (max-width: 640px) { .cer-mode-switch { width: 100%; } .cer-mode-btn { flex: 1; justify-content: center; padding: 0.5rem 0.6rem; } .cer-mode-hint { width: 100%; } }
  .cer-stat-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: 0.85rem; margin-bottom: 1.1rem; }
  .cer-stat-card {
  cursor: pointer;
@@ -7467,7 +7477,14 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
   <div id="isoGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:1rem"></div>
  </div>
 
- <div class="page" id="page-cer">
+ <div class="page" id="page-cer" data-cer-mode="component">
+ <div class="cer-mode-bar">
+  <div class="cer-mode-switch" id="cerModeSwitch" role="tablist" aria-label="เลือกชุดข้อมูลใบ CER">
+   <button type="button" role="tab" class="cer-mode-btn active" data-mode="component" aria-selected="true" onclick="setCerMode('component')">MAKER Component<span class="cer-mode-n" id="cer-modecnt-component"></span></button>
+   <button type="button" role="tab" class="cer-mode-btn" data-mode="die" aria-selected="false" onclick="setCerMode('die')">MAKER DIE<span class="cer-mode-n" id="cer-modecnt-die"></span></button>
+  </div>
+  <span class="cer-mode-hint" id="cerModeHint">ใบรับรองของผู้ผลิตชิ้นส่วน (MAKER Component)</span>
+ </div>
  <div class="cer-stat-grid">
  <div class="cer-stat-card" id="cer-stat-total" onclick="filterCerByStat('total')">
  <div class="cer-stat-label">บริษัทรวม</div>
@@ -9168,6 +9185,21 @@ let cerLoadedTime = 0; // เวลาที่ดึงข้อมูล CER �
 let cerSortCol = 'name';
 let cerSortDir = 'asc';
 let cerCurrentPage = 1;
+/* ── โหมดข้อมูลหน้า CER: 'component' = MAKER Component (เดิม) · 'die' = MAKER DIE ──
+   cerData ยังเป็นข้อมูล Component เสมอ (แจ้งเตือน/หน้าหลักใช้ชุดนี้) ส่วน DIE เก็บใน cerDieData */
+let cerMode = (() => { try { return localStorage.getItem('cer_mode') === 'die' ? 'die' : 'component'; } catch (e) { return 'component'; } })();
+let cerDieData = [];
+let cerDieLoaded = false;
+let cerDieLoadedTime = 0;
+const CER_MODES = {
+ component: { label: 'MAKER Component', short: 'Component', lsKey: 'cer_data',     get: 'getCer',    add: 'addCer',    edit: 'editCer',    del: 'delCer',    bulk: 'bulkImportCer',    idPrefix: 'CC-' },
+ die:       { label: 'MAKER DIE',       short: 'DIE',       lsKey: 'cer_die_data', get: 'getCerDie', add: 'addCerDie', edit: 'editCerDie', del: 'delCerDie', bulk: 'bulkImportCerDie', idPrefix: 'DIE-' }
+};
+function cerCfg() { return CER_MODES[cerMode] || CER_MODES.component; }
+function cerCur() { return cerMode === 'die' ? cerDieData : cerData; }
+function cerSetCur(arr) { if (cerMode === 'die') cerDieData = arr; else cerData = arr; }
+function cerCurLoaded() { return cerMode === 'die' ? cerDieLoaded : cerLoaded; }
+function cerLS() { try { return JSON.parse(localStorage.getItem(cerCfg().lsKey) || 'null'); } catch (e) { return null; } }
 const cerPerPage = 15;
 
 const DEMO = [
@@ -10105,7 +10137,7 @@ function buildNotifications() {
  };
  const makeCerItem = (r, iconClass, icon, chipClass, chipText, sub) => {
  const key = cerNotifKey(r);
- return `<div class="notif-item" onclick="closeNotif();showPage('cer');setTimeout(()=>openCerModal('${r.rowIndex}'),150)">
+ return `<div class="notif-item" onclick="closeNotif();showPage('cer');setTimeout(()=>{cerForceMode('component');openCerModal('${r.rowIndex}')},150)">
  <div class="notif-icon ${iconClass}">${icon}</div>
  <div class="notif-body">
  <div class="notif-name">${r.name}</div>
@@ -11279,9 +11311,9 @@ async function fetchCerFromSheet() {
  cerData = json.data;
  cerLoaded = true;
  cerLoadedTime = Date.now();
- if (unchanged) { document.getElementById('cerFetchError').style.display = 'none'; return; }
+ if (unchanged) { if (cerMode === 'component') document.getElementById('cerFetchError').style.display = 'none'; return; }
  localStorage.setItem('cer_data', raw);
- document.getElementById('cerFetchError').style.display = 'none';
+ if (cerMode === 'component') document.getElementById('cerFetchError').style.display = 'none';
  // ถ้าเป็นการรีเฟรชเบื้องหลัง (ข้อมูลเก่าถูกแสดงไปแล้ว) ต้องอัปเดตหน้าจอซ้ำเมื่อของใหม่มาถึง
  buildNotifications();
  renderDailyBriefing();
@@ -11296,16 +11328,116 @@ async function fetchCerFromSheet() {
  const local = JSON.parse(localStorage.getItem('cer_data') || 'null');
  cerData = local || CER_DEMO;
  }
+ if (cerMode === 'component') {
  document.getElementById('cerFetchErrorText').textContent = 'ดึงข้อมูลจาก Sheet ไม่สำเร็จ — แสดงข้อมูลสำรอง';
  document.getElementById('cerFetchError').style.display = 'block';
  }
+ }
+}
+
+// ── MAKER DIE: โหลด/ซิงค์ (แยก action ออกจาก Component เพื่อไม่ให้ข้อมูลสองชุดปนกัน) ──
+async function fetchCerDieFromSheet(silent = false) {
+ try {
+ const res = await fetch(WEB_APP_URL + '?action=' + CER_MODES.die.get);
+ const json = await res.json();
+ if (!json.success) throw new Error(json.error || 'unknown error');
+ const raw = JSON.stringify(json.data);
+ const unchanged = cerDieLoaded && raw === window.__lastCerDieRaw;
+ window.__lastCerDieRaw = raw;
+ cerDieData = json.data;
+ cerDieLoaded = true;
+ cerDieLoadedTime = Date.now();
+ if (!unchanged) { try { localStorage.setItem(CER_MODES.die.lsKey, raw); } catch (e) {} }
+ if (cerMode === 'die') document.getElementById('cerFetchError').style.display = 'none';
+ if (!unchanged && document.getElementById('cerTableBody')) renderCerTable();
+ else cerUpdateModeCounts();
+ } catch (e) {
+ if (!cerDieLoaded) { cerDieData = JSON.parse(localStorage.getItem(CER_MODES.die.lsKey) || 'null') || []; }
+ if (!silent && cerMode === 'die') {
+ const msg = /unknown/i.test(e.message)
+ ? 'เซิร์ฟเวอร์ยังไม่รองรับข้อมูล MAKER DIE — ต้องเพิ่ม action getCerDie ใน Apps Script ก่อน (ตอนนี้แสดงข้อมูลที่บันทึกในเครื่อง)'
+ : 'ดึงข้อมูล MAKER DIE จาก Sheet ไม่สำเร็จ — แสดงข้อมูลสำรอง';
+ document.getElementById('cerFetchErrorText').textContent = msg;
+ document.getElementById('cerFetchError').style.display = 'block';
+ }
+ }
+}
+
+async function loadCerDieData(forceRefresh = false, silent = false) {
+ if (!WEB_APP_URL) {
+ if (!cerDieLoaded) { cerDieData = JSON.parse(localStorage.getItem(CER_MODES.die.lsKey) || 'null') || []; cerDieLoaded = true; }
+ return;
+ }
+ if (!forceRefresh && !cerDieLoaded) {
+ const local = JSON.parse(localStorage.getItem(CER_MODES.die.lsKey) || 'null');
+ if (local) { cerDieData = local; cerDieLoaded = true; cerDieLoadedTime = Date.now(); }
+ }
+ if (!forceRefresh && cerDieLoaded) { fetchCerDieFromSheet(true); return; }
+ await fetchCerDieFromSheet(silent);
+}
+
+function cerUpdateModeCounts() {
+ const c = document.getElementById('cer-modecnt-component'), d = document.getElementById('cer-modecnt-die');
+ if (c) c.textContent = cerLoaded || cerData.length ? cerData.length : '';
+ if (d) d.textContent = cerDieLoaded || cerDieData.length ? cerDieData.length : '';
+}
+
+function cerApplyModeUI() {
+ cerApplyAdminUI();
+ document.querySelectorAll('#cerModeSwitch .cer-mode-btn').forEach(b => {
+ const on = b.dataset.mode === cerMode;
+ b.classList.toggle('active', on);
+ b.setAttribute('aria-selected', on ? 'true' : 'false');
+ });
+ const pg = document.getElementById('page-cer');
+ if (pg) pg.dataset.cerMode = cerMode;
+ const info = document.getElementById('cerModeHint');
+ if (info) info.textContent = cerMode === 'die' ? 'ใบรับรองของผู้ผลิตแม่พิมพ์ (MAKER DIE)' : 'ใบรับรองของผู้ผลิตชิ้นส่วน (MAKER Component)';
+ const search = document.getElementById('cerSearchInput');
+ if (search) search.placeholder = 'ค้นหาชื่อบริษัท หรือ ID... (' + cerCfg().short + ')';
+ cerUpdateModeCounts();
+}
+
+// เปลี่ยนโหมดแบบทันที ไม่โหลดข้อมูล (ใช้ภายใน เช่น เปิดจากแจ้งเตือน)
+function cerForceMode(mode) {
+ mode = mode === 'die' ? 'die' : 'component';
+ if (mode === cerMode) return;
+ cerMode = mode;
+ try { localStorage.setItem('cer_mode', mode); } catch (e) {}
+ cerApplyModeUI();
+ renderCerTable();
+}
+
+// ปุ่มสลับ MAKER Component ⇄ MAKER DIE
+async function setCerMode(mode) {
+ mode = mode === 'die' ? 'die' : 'component';
+ if (mode === cerMode) return;
+ cerMode = mode;
+ try { localStorage.setItem('cer_mode', mode); } catch (e) {}
+ // ล้างตัวกรอง/ค้นหา/หน้า เพื่อไม่ให้ตัวกรองของชุดเดิมค้างข้ามชุด
+ ['cerSearchInput','cerFilterIso9001','cerFilterIso14001','cerFilterIatf','cerFilterStatus'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+ document.querySelectorAll('.cer-stat-card').forEach(el => el.classList.remove('active-filter'));
+ cerCurrentPage = 1;
+ document.getElementById('cerFetchError').style.display = 'none';
+ cerApplyModeUI();
+ await loadCerPage();
 }
 
 async function loadCerPage(forceRefresh = false) {
- if (!cerLoaded || forceRefresh) {
+ cerApplyModeUI();
+ const loaded = cerCurLoaded();
+ if (!loaded || forceRefresh) {
  document.getElementById('cerTableBody').innerHTML = '<tr><td colspan="10" class="empty"><div class="spinner" style="margin:0 auto"></div></td></tr>';
  }
+ const modeAtStart = cerMode;
+ if (cerMode === 'die') {
+ await loadCerDieData(forceRefresh);
+ if (!cerLoaded) loadCerData(false, true).catch(() => {}); // โหลดจำนวน Component ไว้โชว์บนปุ่มสลับ
+ } else {
  await loadCerData(forceRefresh);
+ if (!cerDieLoaded) loadCerDieData(false, true).catch(() => {}); // โหลดจำนวน DIE ไว้โชว์บนปุ่มสลับ (เงียบๆ)
+ }
+ if (modeAtStart !== cerMode) return; // ผู้ใช้สลับโหมดระหว่างรอ — ให้การโหลดของโหมดใหม่วาดหน้าเอง
  renderCerTable();
 }
 
@@ -11316,7 +11448,7 @@ function getCerFiltered() {
  const fIatf = document.getElementById('cerFilterIatf')?.value || '';
  const fStatus = document.getElementById('cerFilterStatus')?.value || '';
 
- return cerData.filter(r => {
+ return cerCur().filter(r => {
  if (q && !(r.name.toLowerCase().includes(q) || r.id.toLowerCase().includes(q))) return false;
  const checkCol = (filterVal, dateStr, hasStr) => {
  if (!filterVal) return true;
@@ -11368,7 +11500,14 @@ function filterCerByStat(type) {
 }
 
 // ── ปุ่มทดสอบแจ้งเตือน LINE — กดแล้วยิงการ์ดสรุป + การ์ดแจ้งเตือนเข้ากลุ่มทันที ──
+// ปุ่มทดสอบแจ้งเตือน LINE ใช้ได้เฉพาะผู้ดูแลระบบ (role = admin)
+function cerIsAdmin() { try { return !!(window.CCIPAuth && CCIPAuth.isAdmin()); } catch (e) { return false; } }
+function cerApplyAdminUI() {
+ const card = document.getElementById('cer-stat-linetest');
+ if (card) card.style.display = cerIsAdmin() ? '' : 'none';
+}
 async function testLineAlert(el) {
+ if (!cerIsAdmin()) { showToast('เฉพาะผู้ดูแลระบบเท่านั้น', 'error'); cerApplyAdminUI(); return; }
  if (el.classList.contains('loading')) return;
  el.classList.add('loading');
  const valueEl = document.getElementById('cer-linetest-value');
@@ -11399,14 +11538,15 @@ async function testLineAlert(el) {
 }
 
 function renderCerStats() {
- const total = cerData.length;
- const has9001 = cerData.filter(r => r.iso9001Date).length;
- const has14001 = cerData.filter(r => r.iso14001Date).length;
- const hasIatf = cerData.filter(r => r.iatfDate).length;
- const expiring = cerData.filter(r => cerOverallStatus(r) === 'warn').length;
- const inProgress = cerData.filter(r => cerHasTrackingStatus(r)).length;
- const inTemp = cerData.filter(r => cerHasTempStatus(r)).length;
- const expired = cerData.filter(r => cerOverallStatus(r) === 'danger').length;
+ const rowsAll = cerCur();
+ const total = rowsAll.length;
+ const has9001 = rowsAll.filter(r => r.iso9001Date).length;
+ const has14001 = rowsAll.filter(r => r.iso14001Date).length;
+ const hasIatf = rowsAll.filter(r => r.iatfDate).length;
+ const expiring = rowsAll.filter(r => cerOverallStatus(r) === 'warn').length;
+ const inProgress = rowsAll.filter(r => cerHasTrackingStatus(r)).length;
+ const inTemp = rowsAll.filter(r => cerHasTempStatus(r)).length;
+ const expired = rowsAll.filter(r => cerOverallStatus(r) === 'danger').length;
  document.getElementById('cer-cnt-total').textContent = total;
  document.getElementById('cer-cnt-iso9001').textContent = has9001;
  document.getElementById('cer-cnt-iso14001').textContent = has14001;
@@ -11415,6 +11555,7 @@ function renderCerStats() {
  document.getElementById('cer-cnt-progress').textContent = inProgress;
  document.getElementById('cer-cnt-temp').textContent = inTemp;
  document.getElementById('cer-cnt-expired').textContent = expired;
+ cerUpdateModeCounts();
 }
 
 function renderCerTable() {
@@ -11505,9 +11646,9 @@ function sortCerTable(col) {
 function openCerModal(rowIndex) {
  document.getElementById('cer-rowIndex').value = rowIndex || '';
  if (rowIndex) {
- const r = cerData.find(x => String(x.rowIndex) === String(rowIndex));
+ const r = cerCur().find(x => String(x.rowIndex) === String(rowIndex));
  if (!r) return;
- document.getElementById('cerModalTitle').textContent = '✏️ แก้ไขบริษัท';
+ document.getElementById('cerModalTitle').textContent = '✏️ แก้ไขบริษัท' + (cerMode === 'die' ? ' · MAKER DIE' : '');
  document.getElementById('cer-id').value = r.id || '';
  document.getElementById('cer-name').value = r.name || '';
  document.getElementById('cer-iso9001Date').value = r.iso9001Date || '';
@@ -11517,7 +11658,7 @@ function openCerModal(rowIndex) {
  document.getElementById('cer-iso14001Has').value = r.iso14001Has || (r.iso14001Date ? 'มี' : 'ไม่มี');
  document.getElementById('cer-iatfHas').value = r.iatfHas || (r.iatfDate ? 'มี' : 'ไม่มี');
  } else {
- document.getElementById('cerModalTitle').textContent = 'เพิ่มบริษัท';
+ document.getElementById('cerModalTitle').textContent = 'เพิ่มบริษัท' + (cerMode === 'die' ? ' · MAKER DIE' : '');
  ['id','name','iso9001Date','iso14001Date','iatfDate'].forEach(f => {
  document.getElementById('cer-'+f).value = '';
  });
@@ -11536,6 +11677,7 @@ async function saveCer() {
  const name = document.getElementById('cer-name').value.trim();
  if (!name) { showToast('กรุณากรอกชื่อบริษัท', 'error'); return; }
  const rowIndex = document.getElementById('cer-rowIndex').value;
+ const mode = cerMode, cfg = cerCfg();
  const payload = {
  id: document.getElementById('cer-id').value.trim(),
  name,
@@ -11548,70 +11690,77 @@ async function saveCer() {
  };
 
  if (!WEB_APP_URL) {
- const local = JSON.parse(localStorage.getItem('cer_data') || 'null') || cerData.slice();
+ const local = cerLS() || cerCur().slice();
  if (rowIndex) {
  const idx = local.findIndex(x => String(x.rowIndex) === String(rowIndex));
  if (idx >= 0) local[idx] = { ...local[idx], ...payload };
  } else {
- const newId = payload.id || ('CC-' + String(local.length + 1).padStart(3, '0'));
+ const newId = payload.id || (cfg.idPrefix + String(local.length + 1).padStart(3, '0'));
  local.push({ ...payload, id: newId, rowIndex: 'local-' + Date.now() });
  }
- localStorage.setItem('cer_data', JSON.stringify(local));
- cerData = local;
+ localStorage.setItem(cfg.lsKey, JSON.stringify(local));
+ cerSetCur(local);
  closeCerModal(); renderCerTable();
  showResultModal('บันทึกสำเร็จ', 'success', '(บันทึกในเครื่องนี้ ยังไม่ตั้งค่า Web App URL)');
  return;
  }
 
  // อัปเดตหน้าจอทันที (optimistic) ไม่ต้องรอ Sheet ตอบกลับ
+ const rows = cerCur();
  if (rowIndex) {
- const idx = cerData.findIndex(x => String(x.rowIndex) === String(rowIndex));
- if (idx >= 0) cerData[idx] = { ...cerData[idx], ...payload };
+ const idx = rows.findIndex(x => String(x.rowIndex) === String(rowIndex));
+ if (idx >= 0) rows[idx] = { ...rows[idx], ...payload };
  } else {
- cerData.push({ ...payload, rowIndex: 'pending-' + Date.now() });
+ rows.push({ ...payload, rowIndex: 'pending-' + Date.now() });
  }
+ try { localStorage.setItem(cfg.lsKey, JSON.stringify(rows)); } catch (e) {}
  closeCerModal(); renderCerTable();
  showResultModal('บันทึกสำเร็จ', 'success');
 
- const action = rowIndex ? 'editCer' : 'addCer';
+ const action = rowIndex ? cfg.edit : cfg.add;
  const params = new URLSearchParams({ action, ...payload });
  if (rowIndex) params.set('rowIndex', rowIndex);
  try {
  const res = await fetch(WEB_APP_URL + '?' + params.toString());
  const json = await res.json();
- if (!json.success) { showResultModal('บันทึกใน Sheet ไม่สำเร็จ', 'error', json.error || 'ข้อมูลอาจไม่ถูกบันทึกลง Google Sheet'); return; }
+ if (!json.success) { showResultModal('บันทึกใน Sheet ไม่สำเร็จ', 'error', (/unknown/i.test(json.error || '') && mode === 'die') ? 'เซิร์ฟเวอร์ยังไม่รองรับ MAKER DIE — ต้องเพิ่ม action ' + action + ' ใน Apps Script' : (json.error || 'ข้อมูลอาจไม่ถูกบันทึกลง Google Sheet')); return; }
  // เพิ่มใหม่ → รีเฟรชเบื้องหลังเงียบๆ เพื่อให้ได้ rowIndex จริงจาก Sheet (ไม่บล็อก UI ที่อัปเดตไปแล้ว)
- if (!rowIndex) loadCerPage(true);
+ if (!rowIndex) { if (mode === 'die') fetchCerDieFromSheet(true); else loadCerPage(true); }
  } catch (e) {
  showResultModal('ซิงค์ Sheet ไม่สำเร็จ', 'error', e.message + ' — ข้อมูลอยู่ในหน้าจอนี้แล้ว แต่อาจยังไม่ถูกบันทึกลง Sheet');
  }
 }
 
 async function deleteCerItem(rowIndex) {
- if (!confirm('ต้องการลบบริษัทนี้?')) return;
+ if (!confirm('ต้องการลบบริษัทนี้?' + (cerMode === 'die' ? ' (MAKER DIE)' : ''))) return;
+ const mode = cerMode, cfg = cerCfg();
  if (!WEB_APP_URL) {
- const local = (JSON.parse(localStorage.getItem('cer_data') || 'null') || cerData.slice())
+ const local = (cerLS() || cerCur().slice())
  .filter(x => String(x.rowIndex) !== String(rowIndex));
- localStorage.setItem('cer_data', JSON.stringify(local));
- cerData = local;
+ localStorage.setItem(cfg.lsKey, JSON.stringify(local));
+ cerSetCur(local);
  renderCerTable();
  showResultModal('ลบสำเร็จ', 'success');
  return;
  }
  // ลบออกจากหน้าจอทันที (optimistic)
- const removedIdx = cerData.findIndex(x => String(x.rowIndex) === String(rowIndex));
- const removed = removedIdx >= 0 ? cerData[removedIdx] : null;
- cerData = cerData.filter(x => String(x.rowIndex) !== String(rowIndex));
+ const before = cerCur();
+ const removedIdx = before.findIndex(x => String(x.rowIndex) === String(rowIndex));
+ const removed = removedIdx >= 0 ? before[removedIdx] : null;
+ cerSetCur(before.filter(x => String(x.rowIndex) !== String(rowIndex)));
  renderCerTable();
  showResultModal('ลบสำเร็จ', 'success');
+ const restore = () => {
+ // คืนรายการเข้าชุดข้อมูลเดิมของโหมดนั้น (ผู้ใช้อาจสลับโหมดไปแล้ว)
+ const arr = mode === 'die' ? cerDieData : cerData;
+ if (removed) arr.splice(Math.min(removedIdx, arr.length), 0, removed);
+ if (cerMode === mode) renderCerTable();
+ };
  try {
- const res = await fetch(WEB_APP_URL + '?action=delCer&rowIndex=' + rowIndex);
+ const res = await fetch(WEB_APP_URL + '?action=' + cfg.del + '&rowIndex=' + rowIndex);
  const json = await res.json();
- if (!json.success) {
- if (removed) cerData.splice(removedIdx, 0, removed);
- renderCerTable();
- showResultModal('ลบใน Sheet ไม่สำเร็จ', 'error', json.error || '');
- }
+ if (!json.success) { restore(); showResultModal('ลบใน Sheet ไม่สำเร็จ', 'error', json.error || ''); }
+ else { try { localStorage.setItem(cfg.lsKey, JSON.stringify(mode === 'die' ? cerDieData : cerData)); } catch (e) {} }
  } catch (e) {
  showToast('ซิงค์ Sheet ไม่สำเร็จ: ' + e.message, 'error');
  }
@@ -11645,6 +11794,7 @@ let cerPendingImportRows = [];
 const CER_HAS_OPTIONS = ['มี', 'ไม่มี', 'กำลังติดตาม', 'มีใบรับรองชั่วคราว'];
 
 function openCerUploadModal() {
+ const t = document.getElementById('cerUploadTitle'); if (t) t.textContent = 'โหลดข้อมูลบริษัทจาก Excel · ' + cerCfg().label;
  document.getElementById('cerUploadModalOverlay').classList.add('open');
 }
 function closeCerUploadModal() {
@@ -11833,14 +11983,14 @@ async function cerImportSelected() {
  const res = await fetch(WEB_APP_URL, {
  method: 'POST',
  headers: { 'Content-Type': 'text/plain;charset=utf-8' },
- body: JSON.stringify({ action: 'bulkImportCer', rows: cerPendingImportRows })
+ body: JSON.stringify({ action: cerCfg().bulk, rows: cerPendingImportRows })
  });
  const json = await res.json();
  if (json.imported === undefined && json.success === undefined) {
- throw new Error('เซิร์ฟเวอร์ยังไม่รู้จัก action "bulkImportCer" — ต้องเพิ่มฟังก์ชันนี้ใน Apps Script (Router.gs) ก่อน แล้ว Deploy เป็น "New version"');
+ throw new Error('เซิร์ฟเวอร์ยังไม่รู้จัก action "' + cerCfg().bulk + '" — ต้องเพิ่มฟังก์ชันนี้ใน Apps Script (Router.gs) ก่อน แล้ว Deploy เป็น "New version"');
  }
  if (!json.success) throw new Error(json.error || 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุจากฝั่งเซิร์ฟเวอร์');
- showResultModal('นำเข้าข้อมูลสำเร็จ', 'success', `นำเข้า ${json.imported} รายการ`);
+ showResultModal('นำเข้าข้อมูลสำเร็จ', 'success', `นำเข้า ${json.imported} รายการ (${cerCfg().label})`);
  closeCerUploadModal();
  await loadCerPage(true);
  } catch (err) {
@@ -16643,7 +16793,7 @@ function renderLeaderboard() {
 <div class="modal-overlay" id="cerUploadModalOverlay">
  <div class="modal" style="max-width:560px">
  <div class="modal-header">
- <div class="modal-title">โหลดข้อมูลบริษัทจาก Excel</div>
+ <div class="modal-title" id="cerUploadTitle">โหลดข้อมูลบริษัทจาก Excel</div>
  <button class="modal-close" onclick="closeCerUploadModal()"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
  </div>
  <div class="modal-body">
@@ -22127,7 +22277,9 @@ function endTour() {
     TYPES: { iso9001: 'ISO 9001', iso14001: 'ISO 14001', iatf: 'IATF 16949' },
     list: [], supported: true,
     k(company) { return String(company || '').trim().toLowerCase().replace(/\s+/g, ' '); },
-    find(company, cert) { const k = this.k(company); return this.list.find(f => this.k(f.company) === k && f.cert === cert); },
+    /* MAKER DIE เก็บไฟล์แยกจาก Component โดยต่อท้ายชื่อบริษัทด้วย " (DIE)" — ใช้คีย์นี้กับ Drive/Sheet ฝั่งเซิร์ฟเวอร์ */
+    key(company) { const c = String(company || '').trim(); return (typeof cerMode !== 'undefined' && cerMode === 'die') ? c + ' (DIE)' : c; },
+    find(company, cert) { const k = this.k(this.key(company)); return this.list.find(f => this.k(f.company) === k && f.cert === cert); },
     async load() {
       try { const c = JSON.parse(localStorage.getItem(this.KEY) || 'null'); if (Array.isArray(c) && !this.list.length) { this.list = c; this.decorate(); } } catch (e) {}
       if (!url()) return;
@@ -22182,7 +22334,7 @@ function endTour() {
       el.querySelector('[data-close2]').onclick = closeModal;
       el.querySelector('[data-edit]').onclick = () => {
         closeModal();
-        const r = (typeof cerData !== 'undefined' ? cerData : []).find(x => this.k(x.name) === this.k(company));
+        const r = (typeof cerCur === 'function' ? cerCur() : []).find(x => this.k(x.name) === this.k(company));
         if (r) openCerModal(r.rowIndex);
       };
     },
@@ -22215,7 +22367,7 @@ function endTour() {
         const rm = slot.querySelector('[data-rm]');
         if (rm) rm.onclick = async () => {
           if (!rm.dataset.sure) { rm.dataset.sure = '1'; rm.textContent = 'ยืนยันลบ?'; setTimeout(() => { if (rm.isConnected) { delete rm.dataset.sure; rm.textContent = 'ลบ'; } }, 3000); return; }
-          try { await api.post({ action: 'removeCerFile', company: company.trim(), cert }); this.list = this.list.filter(x => x !== f); localStorage.setItem(this.KEY, JSON.stringify(this.list)); this.drawSlots(); this.decorate(); toast('ลบไฟล์ใบรับรองแล้ว', 'success'); }
+          try { await api.post({ action: 'removeCerFile', company: this.key(company), cert }); this.list = this.list.filter(x => x !== f); localStorage.setItem(this.KEY, JSON.stringify(this.list)); this.drawSlots(); this.decorate(); toast('ลบไฟล์ใบรับรองแล้ว', 'success'); }
           catch (e) { toast('ลบไม่สำเร็จ: ' + e.message, 'error'); }
         };
       });
@@ -22239,8 +22391,8 @@ function endTour() {
           const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height); ctx.drawImage(img, 0, 0, c.width, c.height);
           base64 = c.toDataURL('image/jpeg', 0.9).split(',')[1]; mime = 'image/jpeg';
         }
-        const j = await api.post({ action: 'uploadCerFile', company, cert, expiry, mime, base64, fileName: file.name, by: localStorage.getItem('prpo_username') || '', batch: 'CER' + Date.now().toString(36) });
-        this.list = this.list.filter(x => !(this.k(x.company) === this.k(company) && x.cert === cert)).concat([j.data]);
+        const j = await api.post({ action: 'uploadCerFile', company: this.key(company), cert, expiry, mime, base64, fileName: file.name, by: localStorage.getItem('prpo_username') || '', batch: 'CER' + Date.now().toString(36) });
+        this.list = this.list.filter(x => !(this.k(x.company) === this.k(this.key(company)) && x.cert === cert)).concat([j.data]);
         localStorage.setItem(this.KEY, JSON.stringify(this.list));
         this.drawSlots(); this.decorate();
         toast(`แนบใบรับรอง ${this.TYPES[cert]} ของ ${company} เข้า Google Drive แล้ว`, 'success');
