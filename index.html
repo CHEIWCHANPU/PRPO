@@ -9193,12 +9193,18 @@ let cerDieLoaded = false;
 let cerDieLoadedTime = 0;
 const CER_MODES = {
  component: { label: 'MAKER Component', short: 'Component', lsKey: 'cer_data',     get: 'getCer',    add: 'addCer',    edit: 'editCer',    del: 'delCer',    bulk: 'bulkImportCer',    idPrefix: 'CC-' },
- die:       { label: 'MAKER DIE',       short: 'DIE',       lsKey: 'cer_die_data', get: 'getCerDie', add: 'addCerDie', edit: 'editCerDie', del: 'delCerDie', bulk: 'bulkImportCerDie', idPrefix: 'DIE-' }
+ die:       { label: 'MAKER DIE',       short: 'DIE',       lsKey: 'cer_die_data', get: 'getCerDie', add: 'addCerDie', edit: 'editCerDie', del: 'delCerDie', bulk: 'bulkImportCerDie', idPrefix: 'CD-' }
 };
 function cerCfg() { return CER_MODES[cerMode] || CER_MODES.component; }
 function cerCur() { return cerMode === 'die' ? cerDieData : cerData; }
 function cerSetCur(arr) { if (cerMode === 'die') cerDieData = arr; else cerData = arr; }
 function cerCurLoaded() { return cerMode === 'die' ? cerDieLoaded : cerLoaded; }
+// รหัสถัดไปของ MAKER DIE: CD-001, CD-002, ... (นับต่อจากเลขสูงสุดที่มีอยู่)
+function cerNextDieId() {
+ let max = 0;
+ (cerDieData || []).forEach(r => { const m = /^CD-(\d+)$/i.exec(String(r.id || '').trim()); if (m) max = Math.max(max, parseInt(m[1], 10)); });
+ return 'CD-' + String(max + 1).padStart(3, '0');
+}
 function cerLS() { try { return JSON.parse(localStorage.getItem(cerCfg().lsKey) || 'null'); } catch (e) { return null; } }
 const cerPerPage = 15;
 
@@ -11665,6 +11671,7 @@ function openCerModal(rowIndex) {
  ['cer-iso9001Has','cer-iso14001Has','cer-iatfHas'].forEach(id => {
  document.getElementById(id).value = 'ไม่มี';
  });
+ if (cerMode === 'die') document.getElementById('cer-id').value = cerNextDieId(); // MAKER DIE: ใส่ ID อัตโนมัติ (แก้เองได้)
  }
  document.getElementById('cerModalOverlay').classList.add('open');
 }
@@ -11695,7 +11702,7 @@ async function saveCer() {
  const idx = local.findIndex(x => String(x.rowIndex) === String(rowIndex));
  if (idx >= 0) local[idx] = { ...local[idx], ...payload };
  } else {
- const newId = payload.id || (cfg.idPrefix + String(local.length + 1).padStart(3, '0'));
+ const newId = payload.id || (mode === 'die' ? cerNextDieId() : cfg.idPrefix + String(local.length + 1).padStart(3, '0'));
  local.push({ ...payload, id: newId, rowIndex: 'local-' + Date.now() });
  }
  localStorage.setItem(cfg.lsKey, JSON.stringify(local));
