@@ -11680,6 +11680,9 @@ function closeCerModal() {
  document.getElementById('cerModalOverlay').classList.remove('open');
 }
 
+// ข้อความสรุปสำหรับ popup แจ้งเตือน (ชื่อบริษัท + ชุดข้อมูล)
+function cerPopupSub(name, extra) { return name + ' · ' + cerCfg().label + (extra ? ' · ' + extra : ''); }
+
 async function saveCer() {
  const name = document.getElementById('cer-name').value.trim();
  if (!name) { showToast('กรุณากรอกชื่อบริษัท', 'error'); return; }
@@ -11708,7 +11711,7 @@ async function saveCer() {
  localStorage.setItem(cfg.lsKey, JSON.stringify(local));
  cerSetCur(local);
  closeCerModal(); renderCerTable();
- showResultModal('บันทึกสำเร็จ', 'success', '(บันทึกในเครื่องนี้ ยังไม่ตั้งค่า Web App URL)');
+ showResultModal(rowIndex ? 'แก้ไขข้อมูลสำเร็จ' : 'เพิ่มบริษัทสำเร็จ', 'success', cerPopupSub(name, 'บันทึกในเครื่องนี้ (ยังไม่ตั้งค่า Web App URL)'));
  return;
  }
 
@@ -11722,7 +11725,7 @@ async function saveCer() {
  }
  try { localStorage.setItem(cfg.lsKey, JSON.stringify(rows)); } catch (e) {}
  closeCerModal(); renderCerTable();
- showResultModal('บันทึกสำเร็จ', 'success');
+ showToast('กำลังบันทึกลง Google Sheet...', 'info', 2500);
 
  const action = rowIndex ? cfg.edit : cfg.add;
  const params = new URLSearchParams({ action, ...payload });
@@ -11732,6 +11735,7 @@ async function saveCer() {
  const json = await res.json();
  if (!json.success) { showResultModal('บันทึกใน Sheet ไม่สำเร็จ', 'error', (/unknown/i.test(json.error || '') && mode === 'die') ? 'เซิร์ฟเวอร์ยังไม่รองรับ MAKER DIE — ต้องเพิ่ม action ' + action + ' ใน Apps Script' : (json.error || 'ข้อมูลอาจไม่ถูกบันทึกลง Google Sheet')); return; }
  // เพิ่มใหม่ → รีเฟรชเบื้องหลังเงียบๆ เพื่อให้ได้ rowIndex จริงจาก Sheet (ไม่บล็อก UI ที่อัปเดตไปแล้ว)
+ showResultModal(rowIndex ? 'แก้ไขข้อมูลสำเร็จ' : 'เพิ่มบริษัทสำเร็จ', 'success', cerPopupSub(name, 'บันทึกลง Google Sheet แล้ว'));
  if (!rowIndex) { if (mode === 'die') fetchCerDieFromSheet(true); else loadCerPage(true); }
  } catch (e) {
  showResultModal('ซิงค์ Sheet ไม่สำเร็จ', 'error', e.message + ' — ข้อมูลอยู่ในหน้าจอนี้แล้ว แต่อาจยังไม่ถูกบันทึกลง Sheet');
@@ -11739,7 +11743,13 @@ async function saveCer() {
 }
 
 async function deleteCerItem(rowIndex) {
- if (!confirm('ต้องการลบบริษัทนี้?' + (cerMode === 'die' ? ' (MAKER DIE)' : ''))) return;
+ const target = cerCur().find(x => String(x.rowIndex) === String(rowIndex));
+ const tName = target ? target.name : '';
+ const tLabel = (target && target.id ? target.id + ' · ' : '') + tName;
+ const confirmed = typeof window.CCIPConfirm === 'function'
+ ? await window.CCIPConfirm('ลบบริษัทนี้?', (tLabel || 'รายการนี้') + ' · ' + cerCfg().label + ' จะถูกลบออกจาก Google Sheet และกู้คืนไม่ได้', 'ลบบริษัท')
+ : confirm('ต้องการลบบริษัทนี้? (' + cerCfg().label + ')');
+ if (!confirmed) return;
  const mode = cerMode, cfg = cerCfg();
  if (!WEB_APP_URL) {
  const local = (cerLS() || cerCur().slice())
@@ -11747,7 +11757,7 @@ async function deleteCerItem(rowIndex) {
  localStorage.setItem(cfg.lsKey, JSON.stringify(local));
  cerSetCur(local);
  renderCerTable();
- showResultModal('ลบสำเร็จ', 'success');
+ showResultModal('ลบบริษัทสำเร็จ', 'success', cerPopupSub(tName, 'ลบในเครื่องนี้'));
  return;
  }
  // ลบออกจากหน้าจอทันที (optimistic)
@@ -11756,7 +11766,6 @@ async function deleteCerItem(rowIndex) {
  const removed = removedIdx >= 0 ? before[removedIdx] : null;
  cerSetCur(before.filter(x => String(x.rowIndex) !== String(rowIndex)));
  renderCerTable();
- showResultModal('ลบสำเร็จ', 'success');
  const restore = () => {
  // คืนรายการเข้าชุดข้อมูลเดิมของโหมดนั้น (ผู้ใช้อาจสลับโหมดไปแล้ว)
  const arr = mode === 'die' ? cerDieData : cerData;
@@ -11767,7 +11776,10 @@ async function deleteCerItem(rowIndex) {
  const res = await fetch(WEB_APP_URL + '?action=' + cfg.del + '&rowIndex=' + rowIndex);
  const json = await res.json();
  if (!json.success) { restore(); showResultModal('ลบใน Sheet ไม่สำเร็จ', 'error', json.error || ''); }
- else { try { localStorage.setItem(cfg.lsKey, JSON.stringify(mode === 'die' ? cerDieData : cerData)); } catch (e) {} }
+ else {
+ try { localStorage.setItem(cfg.lsKey, JSON.stringify(mode === 'die' ? cerDieData : cerData)); } catch (e) {}
+ showResultModal('ลบบริษัทสำเร็จ', 'success', cerPopupSub(tName, 'ลบออกจาก Google Sheet แล้ว'));
+ }
  } catch (e) {
  showToast('ซิงค์ Sheet ไม่สำเร็จ: ' + e.message, 'error');
  }
@@ -20196,6 +20208,7 @@ function endTour() {
       setTimeout(() => el.querySelector('[data-yes]').focus(), 60);
     });
   }
+  window.CCIPConfirm = confirmBox;   // ใช้เป็น popup ยืนยัน (เช่น ลบใบ CER)
   document.addEventListener('keydown', e => {
     if (!$('#gxOverlay') && !$('#gxLightbox')) return;
     if (e.key === 'Escape') {
