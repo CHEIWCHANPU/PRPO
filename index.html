@@ -21850,11 +21850,13 @@ function endTour() {
       $('#wlPassword').value = '';
       if (remember) localStorage.setItem(REMEMBER_KEY, JSON.stringify({ id, password: '' })); else localStorage.removeItem(REMEMBER_KEY);
       Auth.save({ token: fast.token, user: fast.user }, remember); Profile.fromAccount(fast.user);
+      try { window.CCIPPerms && CCIPPerms.syncAllowed(); } catch (e) {}
       wlBusy(true, 'เข้าสู่ระบบสำเร็จ');
       setTimeout(() => { enterApp(); if (fast.user && fast.user.name) setTimeout(() => toast(`ยินดีต้อนรับ คุณ${fast.user.name.split(/\s+/)[0]}`, 'success'), 700); }, 150);
       Auth.call({ action: 'authLogin', id, password: pw, remember }).then(res => {         // ยืนยันกับเซิร์ฟเวอร์เบื้องหลัง
         if (res && res.success && res.token) {
           Auth.save({ token: res.token, user: Object.assign({}, res.user, { pendingCount: res.pendingCount || 0 }) }, remember); Profile.fromAccount(res.user); fastSave(id, pw, res);
+          try { window.CCIPPerms && CCIPPerms.syncAllowed(); } catch (e) {}
           if (res.pendingCount) toast(`มีคำขอสร้างบัญชีรออนุมัติ ${res.pendingCount} รายการ`, 'info');
         } else if (res && !res.success && !/unknown action/i.test(res.error || '')) {
           fastForget(id); doLogout(); setTimeout(() => wlError(res.error || 'กรุณาเข้าสู่ระบบใหม่'), 600);
@@ -21879,7 +21881,7 @@ function endTour() {
     }
     if (remember) localStorage.setItem(REMEMBER_KEY, JSON.stringify({ id, password: '' })); else localStorage.removeItem(REMEMBER_KEY);
     $('#wlPassword').value = '';
-    if (res.token) { Auth.save({ token: res.token, user: Object.assign({}, res.user, { pendingCount: res.pendingCount || 0 }) }, remember); Profile.fromAccount(res.user); fastSave(id, pw, res); }
+    if (res.token) { Auth.save({ token: res.token, user: Object.assign({}, res.user, { pendingCount: res.pendingCount || 0 }) }, remember); Profile.fromAccount(res.user); fastSave(id, pw, res); try { window.CCIPPerms && CCIPPerms.syncAllowed(); } catch (e) {} }
     else { Auth.clear(); }
     wlBusy(true, 'เข้าสู่ระบบสำเร็จ');
     setTimeout(() => {
@@ -21903,7 +21905,7 @@ function endTour() {
     try {
       const j = await Auth.call({ action: 'authCheck', token: Auth.token() || '' });
       if (!j.success && /unknown action/i.test(j.error || '')) return;           // Apps Script เวอร์ชันเก่า
-      if (j.success) { Auth.update(Object.assign({}, j.user, { pendingCount: j.pendingCount || 0 })); Profile.fromAccount(j.user); return; }
+      if (j.success) { Auth.update(Object.assign({}, j.user, { pendingCount: j.pendingCount || 0 })); Profile.fromAccount(j.user); try { window.CCIPPerms && CCIPPerms.syncAllowed(); } catch (e) {} return; }
       if (Auth.token() || j.accounts) {                                          // หมดอายุ / ถูกปิด / ต้องใช้บัญชีส่วนตัวแล้ว
         doLogout();
         setTimeout(() => wlError(Auth.token() ? 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่' : 'ระบบเปลี่ยนเป็นบัญชีรายบุคคลแล้ว — เข้าสู่ระบบด้วยรหัสของคุณ'), 300);
@@ -22110,6 +22112,7 @@ function endTour() {
         if (!url() || !Auth.token()) return;
         const j = await Auth.call({ action: 'authCheck', token: Auth.token() });
         if (j && j.success && j.user) { Auth.update(Object.assign({}, j.user, { pendingCount: j.pendingCount || 0 })); }
+        await this.syncAllowed();
       } catch (e) {}
     },
 
@@ -22132,6 +22135,17 @@ function endTour() {
       $('#pmReload').onclick = () => this.load();
       $('#pmSearch').oninput = () => this.draw();
       await this.load();
+    },
+    /* ดึงสิทธิ์ "allowed" ของผู้ใช้ปัจจุบันมาเก็บ/ใช้งานทันที โดยไม่ต้องเปิดหน้าต่างตารางสิทธิ์ก่อน
+       (เดิม allowed จะถูกเติมให้ก็ต่อเมื่อมีคนเปิด CCIPPerms.open() เท่านั้น ทำให้ล็อกอินครั้งแรกไม่ซ่อนเมนูจนกว่าจะมีคนเปิดตารางดู) */
+    async syncAllowed() {
+      try {
+        const j = await Auth.api('getUserPerms');
+        if (Array.isArray(j.allowed)) {
+          const u = Auth.user();
+          if (u) Auth.update(Object.assign({}, u, { allowed: j.allowed }));
+        }
+      } catch (e) {}
     },
     async load() {
       const wrap = $('#pmWrap'); if (!wrap) return;
