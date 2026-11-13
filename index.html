@@ -11344,8 +11344,22 @@ async function fetchCerFromSheet() {
 // ── MAKER DIE: โหลด/ซิงค์ (แยก action ออกจาก Component เพื่อไม่ให้ข้อมูลสองชุดปนกัน) ──
 async function fetchCerDieFromSheet(silent = false) {
  try {
- const res = await fetch(WEB_APP_URL + '?action=' + CER_MODES.die.get);
- const json = await res.json();
+ let res = await fetch(WEB_APP_URL + '?action=' + CER_MODES.die.get);
+ let json = await res.json();
+ /* แก้อัตโนมัติ: เครื่องนี้เคยบันทึก Web App URL เก่าไว้ (เซิร์ฟเวอร์ตอบ Unknown action)
+    → ลองใช้ URL เริ่มต้นในไฟล์ ถ้าใช้ได้ ให้สลับไปใช้ตัวนั้นแล้วล้าง URL เก่าทิ้ง */
+ if (!json.success && /unknown action/i.test(json.error || '') && typeof DEFAULT_WEB_APP_URL === 'string' && /^https?:/.test(DEFAULT_WEB_APP_URL) && WEB_APP_URL !== DEFAULT_WEB_APP_URL) {
+ try {
+ const res2 = await fetch(DEFAULT_WEB_APP_URL + '?action=' + CER_MODES.die.get);
+ const json2 = await res2.json();
+ if (json2.success) {
+ WEB_APP_URL = DEFAULT_WEB_APP_URL;
+ try { localStorage.removeItem('prpo_url'); } catch (e) {}
+ json = json2;
+ showToast('สลับไปใช้ Web App URL ล่าสุดแล้ว', 'success');
+ }
+ } catch (e2) {}
+ }
  if (!json.success) throw new Error(json.error || 'unknown error');
  const raw = JSON.stringify(json.data);
  const unchanged = cerDieLoaded && raw === window.__lastCerDieRaw;
