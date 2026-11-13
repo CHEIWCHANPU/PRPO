@@ -21624,6 +21624,7 @@ function endTour() {
           </div>
           <nav class="pf-pop-menu">
             <button type="button" onclick="closeAccountPopover();CCIPProfile.edit()">${ico('<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>')}<span>${acct ? 'โปรไฟล์และรหัสผ่าน' : 'แก้ไขโปรไฟล์'}</span></button>
+            ${acct ? `<button type="button" onclick="closeAccountPopover();CCIPPerms.open()">${ico('<rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>')}<span>สิทธิ์การเข้าถึงเมนู</span></button>` : ''}
             ${admin ? `<button type="button" onclick="closeAccountPopover();CCIPUsers.open()">${ico('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.5 3-5.5 6.5-5.5s6.5 2 6.5 5.5"/><path d="M17 11h5M19.5 8.5v5"/>')}<span>จัดการผู้ใช้</span>${pending ? `<b class="pf-count">${pending}</b>` : ''}</button>` : ''}
             <button type="button" onclick="closeAccountPopover();toggleFullscreen()">${ico('<path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/>')}<span>เต็มจอ</span><kbd class="pf-kbd">F11</kbd></button>
             <button type="button" onclick="closeAccountPopover();typeof pwaInstallClick==='function'&&pwaInstallClick()">${ico('<path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/>')}<span>ติดตั้งแอปลงเครื่อง</span></button>
@@ -21742,6 +21743,7 @@ function endTour() {
       const s = JSON.stringify(a);
       (remember ? localStorage : sessionStorage).setItem(this.KEY, s);
       (remember ? sessionStorage : localStorage).removeItem(this.KEY);
+      try { if (window.CCIPPerms) setTimeout(() => CCIPPerms.apply(), 0); } catch (e) {}   // ใช้สิทธิ์เมนูทันทีที่ข้อมูลผู้ใช้เปลี่ยน
     },
     update(user) { const a = this.get(); if (!a) return; a.user = user; this.save(a, !!localStorage.getItem(this.KEY)); },
     clear() { localStorage.removeItem(this.KEY); sessionStorage.removeItem(this.KEY); },
@@ -21889,6 +21891,7 @@ function endTour() {
     try { const r = JSON.parse(localStorage.getItem(REMEMBER_KEY) || 'null'); if (r && r.password) localStorage.setItem(REMEMBER_KEY, JSON.stringify({ id: r.id, password: '' })); } catch (e) {}
     const pwEl = $('#wlPassword'); if (pwEl && /^\d+$/.test(pwEl.value) && pwEl.value === WL_CREDENTIALS.password) pwEl.value = '';
     setTimeout(verifySession, 1500);
+    setTimeout(() => { try { window.CCIPPerms && CCIPPerms.apply(); } catch (e) {} }, 0);   // ใช้สิทธิ์เมนูของบัญชีที่จำไว้ในเครื่องทันที
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', authBoot); else authBoot();
 
@@ -21917,9 +21920,10 @@ function endTour() {
             <p class="gx-form-err" id="usErr" role="alert"></p>
           </form>
           <div class="us-list" id="usList"><div class="gx-skel"></div></div>`,
-        foot: `<span class="us-count" id="usCount"></span><button class="gx-btn primary" data-close2>เสร็จสิ้น</button>`
+        foot: `<span class="us-count" id="usCount"></span><button class="gx-btn ghost" data-perms>สิทธิ์การเข้าถึงเมนู</button><button class="gx-btn primary" data-close2>เสร็จสิ้น</button>`
       });
       el.querySelector('[data-close2]').onclick = closeModal;
+      el.querySelector('[data-perms]').onclick = () => { closeModal(); setTimeout(() => Perms.open(), 60); };
       const f = $('#usForm');
       let editing = null;
       const resetForm = () => {
@@ -22022,6 +22026,176 @@ function endTour() {
     }
   };
   window.CCIPUsers = Users;
+
+  /* ── สิทธิ์การเข้าถึงหมวดเมนู (ผู้ใช้ × หมวดเมนูด้านซ้าย) ──
+     • ผู้ใช้ทุกคนเปิดดูตารางได้ (ดูอย่างเดียว) · เฉพาะ admin ติ๊กแก้ไขได้ (บันทึกทันทีที่ติ๊ก)
+     • ผู้ใช้ที่ไม่ใช่ admin จะเห็นเฉพาะหมวดที่ได้รับสิทธิ์ · admin เห็นทุกหมวดเสมอ
+     • เซิร์ฟเวอร์เวอร์ชันเก่า (ไม่ส่ง allowed มา) = เห็นทุกหมวด เหมือนเดิม */
+  const Perms = {
+    LABELS: {
+      main: ['เมนูหลัก', 'เมนูหลัก'], track: ['ติดตาม PART PR/PO', 'ติดตาม PART'], gowork: ['งาน GO WORK', 'GO WORK'],
+      meeting: ['Summary Meeting', 'Meeting'], rfq: ['RFQ ขอใบเสนอราคา', 'RFQ'], team: ['จัดทีมงาน', 'ทีมงาน'],
+      costsaving: ['COST SAVING', 'COST SAVING'], iso: ['เอกสาร ISO', 'ISO'], cer: ['ติดตามใบ CER', 'ใบ CER'],
+      modeltracker: ['แผนการผลิต MODEL', 'MODEL'], workplan: ['ตารางแผนงานข้างนอก', 'แผนงาน'], manual: ['คู่มือการทำงาน', 'คู่มือ'],
+      other: ['ข้อมูล MAKER', 'MAKER'], manage: ['จัดการ (Sync / History / ตั้งค่า)', 'จัดการ'],
+      pcmp: ['E-FORM สรุปราคา', 'สรุปราคา'], qcmp: ['Quotation Comparison', 'เทียบราคา'], rvcmp: ['ปรับราคา เก่า-ใหม่', 'ปรับราคา']
+    },
+    data: null,
+    groups() {   // อ่านหมวดจากเมนูด้านซ้ายจริง → ตรงกับที่เห็นเสมอ
+      return Array.from(document.querySelectorAll('.nav-group[id^="navGroup-"]')).map(el => {
+        const key = el.id.slice(9), pages = [];
+        el.querySelectorAll('button[onclick*="showPage("]').forEach(b => { const m = /showPage\('([\w-]+)'/.exec(b.getAttribute('onclick') || ''); if (m) pages.push(m[1]); });
+        const l = this.LABELS[key];
+        const txt = ((el.querySelector('.nav-label-text') || {}).textContent || key).replace(/\d+\s*$/, '').trim();
+        return { key, el, pages, label: l ? l[0] : txt, short: l ? l[1] : txt };
+      });
+    },
+    pageGroup(page) { const g = this.groups().find(g => g.pages.includes(page)); return g ? g.key : null; },
+    allowedSet() { const u = Auth.user(), a = u && u.allowed; return (!Array.isArray(a) || a.includes('*')) ? null : new Set(a); },
+    apply() {
+      const set = this.allowedSet();
+      this.groups().forEach(g => g.el.classList.toggle('perm-hide', !!set && !set.has(g.key)));
+      const act = document.querySelector('.page.active'), cur = act ? act.id.replace(/^page-/, '') : '';
+      if (!set) { if (cur === 'noperm') this.go('home'); return; }
+      const g = this.pageGroup(cur);
+      if (cur === 'noperm' ? (this.firstAllowed(set) != null) : (g && !set.has(g))) this.redirect();
+    },
+    firstAllowed(set) {
+      const g = this.groups().find(g => set.has(g.key) && g.pages.length);
+      return g ? g.pages[0] : null;
+    },
+    go(page) { const orig = this._show || window.showPage; orig(page, document.getElementById('nav-' + page)); },
+    redirect() {
+      const set = this.allowedSet(), first = set ? this.firstAllowed(set) : 'home';
+      if (first) { this.go(first); return; }
+      if (!$('#page-noperm')) {
+        const host = ($('#page-home') || document.querySelector('.page') || {}).parentNode;
+        if (!host) return;
+        host.insertAdjacentHTML('beforeend', `<div class="page" id="page-noperm"><div class="pm-noperm">
+          <div class="pm-noperm-ico">🔒</div><h2>ยังไม่ได้รับสิทธิ์เข้าถึงเมนู</h2>
+          <p>บัญชีของคุณยังไม่ถูกกำหนดสิทธิ์ให้ดูหมวดใดๆ — ติดต่อผู้ดูแลระบบเพื่อขอสิทธิ์</p>
+          <button type="button" class="gx-btn ghost" onclick="CCIPPerms.open()">ดูตารางสิทธิ์</button></div></div>`);
+      }
+      (this._show || window.showPage)('noperm');
+      const t = $('#topbarTitle'); if (t) t.textContent = 'ไม่มีสิทธิ์เข้าถึง';
+    },
+    /* ตรวจสิทธิ์ล่าสุดจากเซิร์ฟเวอร์ (เช่น admin เพิ่งเปลี่ยนสิทธิ์) */
+    async refresh() {
+      try {
+        if (!url() || !Auth.token()) return;
+        const j = await Auth.call({ action: 'authCheck', token: Auth.token() });
+        if (j && j.success && j.user) { Auth.update(Object.assign({}, j.user, { pendingCount: j.pendingCount || 0 })); }
+      } catch (e) {}
+    },
+
+    /* ── ตารางสิทธิ์ ── */
+    async open() {
+      const me = Auth.user();
+      if (!me || !Auth.token()) { toast('ต้องเข้าสู่ระบบด้วยบัญชีผู้ใช้ก่อน', 'error'); return; }
+      const admin = me.role === 'admin';
+      const el = openModal({
+        wide: true, title: 'สิทธิ์การเข้าถึงหมวดเมนู',
+        sub: 'ดูว่าผู้ใช้แต่ละคนเปิดดูหมวดเมนูไหนได้บ้าง',
+        body: `<div class="pm-note ${admin ? 'edit' : ''}">${admin ? 'ติ๊กช่องเพื่อให้สิทธิ์ — บันทึกอัตโนมัติทันที (ผู้ดูแลระบบเห็นทุกหมวดเสมอ)' : 'โหมดดูอย่างเดียว — เฉพาะผู้ดูแลระบบเท่านั้นที่เพิ่มหรือแก้ไขสิทธิ์ได้'}</div>
+          <div class="pm-bar"><button type="button" class="gx-btn ghost" id="pmReload">โหลดใหม่</button><span class="pm-count" id="pmCount"></span>
+            <input type="search" id="pmSearch" class="pm-search" placeholder="พิมพ์ชื่อหรือรหัสผู้ใช้เพื่อค้นหา" autocomplete="off"></div>
+          <div class="pm-wrap" id="pmWrap"><div class="gx-skel"></div></div>`,
+        foot: `<button class="gx-btn primary" data-close2>ปิด</button>`
+      });
+      el.querySelector('.gx-modal').classList.add('pm-modal');
+      el.querySelector('[data-close2]').onclick = closeModal;
+      $('#pmReload').onclick = () => this.load();
+      $('#pmSearch').oninput = () => this.draw();
+      await this.load();
+    },
+    async load() {
+      const wrap = $('#pmWrap'); if (!wrap) return;
+      try {
+        const j = await Auth.api('getUserPerms');
+        this.data = j;
+        if (Array.isArray(j.allowed)) { const u = Auth.user(); if (u) Auth.update(Object.assign({}, u, { allowed: j.allowed })); }
+        this.draw();
+      } catch (err) {
+        const old = /unknown|ยังไม่ได้เพิ่ม|ไม่รู้จัก/i.test(err.message);
+        wrap.innerHTML = `<div class="gx-empty warn"><strong>${old ? 'เซิร์ฟเวอร์ยังไม่รองรับสิทธิ์เมนู' : 'โหลดตารางสิทธิ์ไม่ได้'}</strong><span>${esc(old ? 'ต้องเพิ่มไฟล์ 24_Permissions.gs และอัปเดต 21_CCIP_Extension.gs ใน Apps Script แล้ว Deploy เวอร์ชันใหม่' : err.message)}</span></div>`;
+      }
+    },
+    effective(id) {   // สิทธิ์ที่มีผลจริงของผู้ใช้ (ไม่มีแถวของตัวเอง = ใช้ค่าเริ่มต้น)
+      const d = this.data; if (!d) return [];
+      const own = d.perms[String(id).toLowerCase()];
+      return own || d.def || [];
+    },
+    draw() {
+      const d = this.data, wrap = $('#pmWrap'); if (!d || !wrap) return;
+      const me = Auth.user() || {}, admin = !!d.isAdmin, groups = this.groups();
+      const q = (($('#pmSearch') || {}).value || '').trim().toLowerCase();
+      const fmt = s => { const t = s ? new Date(s) : null; return t && !isNaN(t) ? 'เข้าระบบล่าสุด: ' + t.toLocaleString('sv-SE', { hour12: false }).slice(0, 16) : 'ยังไม่เคยเข้าระบบ'; };
+      const users = d.users.filter(u => !q || (u.id + ' ' + (u.name || '')).toLowerCase().includes(q))
+        .sort((a, b) => (b.id === me.id) - (a.id === me.id) || (b.role === 'admin') - (a.role === 'admin') || a.id.localeCompare(b.id));
+      const cell = (uid, g, on, locked, inherit) => `<td class="pm-c"><input type="checkbox" data-u="${esc(uid)}" data-g="${g.key}" ${on ? 'checked' : ''} ${locked ? 'disabled' : ''} class="${inherit ? 'inh' : ''}" aria-label="${esc(uid)} — ${esc(g.label)}"></td>`;
+      const defSet = new Set(d.def || []);
+      const head = `<thead><tr><th class="pm-u">ผู้ใช้</th>${groups.map((g, i) => `<th title="${esc(g.label)}"><i>${String(i + 1).padStart(2, '0')}</i>${esc(g.short)}</th>`).join('')}${admin ? '<th class="pm-q"></th>' : ''}</tr></thead>`;
+      const quick = uid => admin ? `<td class="pm-q"><button type="button" class="pm-ql" data-all="${esc(uid)}">ทั้งหมด</button><button type="button" class="pm-ql" data-none="${esc(uid)}">ล้าง</button></td>` : '';
+      const defRow = `<tr class="pm-def"><td class="pm-u"><b>ค่าเริ่มต้น (ผู้ใช้ที่ยังไม่ได้ตั้งค่า)</b>${d.hasDefault ? '' : '<small>ยังไม่เคยตั้งค่า — ตอนนี้ผู้ใช้ที่ยังไม่ตั้งค่าจะไม่เห็นหมวดใดเลย</small>'}</td>${groups.map(g => cell('__default__', g, defSet.has(g.key), !admin, false)).join('')}${quick('__default__')}</tr>`;
+      const rows = users.map(u => {
+        const isAdm = u.role === 'admin', own = d.perms[u.id.toLowerCase()], eff = new Set(isAdm ? groups.map(g => g.key) : (own || d.def || []));
+        return `<tr class="${u.id === me.id ? 'pm-me' : ''}"><td class="pm-u"><b>${esc(u.id)}</b>${isAdm ? '<span class="pm-tag">ผู้ดูแลระบบ</span>' : ''}${u.id === me.id ? '<span class="pm-tag me">คุณ</span>' : ''}${!isAdm && !own ? '<span class="pm-tag dim">ใช้ค่าเริ่มต้น</span>' : ''}<small>${esc(u.name || '')}${u.name ? ' · ' : ''}${fmt(u.lastLogin)}</small></td>${groups.map(g => cell(u.id, g, eff.has(g.key), !admin || isAdm, !isAdm && !own)).join('')}${isAdm ? (admin ? '<td class="pm-q"></td>' : '') : quick(u.id)}</tr>`;
+      }).join('');
+      const keep = wrap.scrollTop, keepL = wrap.scrollLeft;
+      wrap.innerHTML = `<table class="pm-table">${head}<tbody>${defRow}${rows || '<tr><td class="pm-empty" colspan="' + (groups.length + 2) + '">ไม่พบผู้ใช้</td></tr>'}</tbody></table>`;
+      wrap.scrollTop = keep; wrap.scrollLeft = keepL;
+      const cnt = $('#pmCount'); if (cnt) cnt.textContent = `ผู้ใช้ทั้งหมด ${d.users.length} ราย`;
+      if (!admin) return;
+      wrap.onchange = e => { const c = e.target; if (c.dataset && c.dataset.u) this.saveRow(c.dataset.u); };
+      wrap.onclick = e => {
+        const b = e.target.closest('.pm-ql'); if (!b) return;
+        const uid = b.dataset.all || b.dataset.none, on = b.dataset.all != null;
+        wrap.querySelectorAll(`input[data-u="${CSS.escape(uid)}"]`).forEach(c => { c.checked = on; });
+        this.saveRow(uid);
+      };
+    },
+    async saveRow(uid) {
+      const wrap = $('#pmWrap'); if (!wrap) return;
+      const boxes = Array.from(wrap.querySelectorAll(`input[data-u="${CSS.escape(uid)}"]`));
+      const groups = boxes.filter(c => c.checked).map(c => c.dataset.g);
+      boxes.forEach(c => { c.disabled = true; });
+      try {
+        const j = await Auth.api('saveUserPerms', { id: uid, groups });
+        if (uid === '__default__') { this.data.def = j.groups; this.data.hasDefault = true; } else this.data.perms[uid.toLowerCase()] = j.groups;
+        toast(uid === '__default__' ? 'บันทึกค่าเริ่มต้นแล้ว' : `บันทึกสิทธิ์ ${uid} แล้ว`, 'success');
+      } catch (err) { toast(err.message, 'error'); }
+      this.draw();   // วาดใหม่จากข้อมูลที่บันทึกจริง (ถ้าบันทึกไม่สำเร็จ ช่องจะกลับเป็นค่าเดิม)
+    }
+  };
+  window.CCIPPerms = Perms;
+  /* ตาข่ายนิรภัย: ไม่ว่าหน้าไหนถูกเปิดด้วยวิธีใด ถ้าหมวดนั้นไม่มีสิทธิ์ → เด้งกลับ (ครอบคลุมหมวดที่สร้างทีหลังด้วย) */
+  const guardPages = () => {
+    try {
+      const set = Perms.allowedSet(); if (!set) return;
+      const act = document.querySelector('.page.active'); if (!act) return;
+      const cur = act.id.replace(/^page-/, ''), g = Perms.pageGroup(cur);
+      if (g && !set.has(g)) Perms.redirect();
+    } catch (e) {}
+  };
+  const startGuard = () => {
+    const host = ($('#page-home') || {}).parentNode; if (!host) return;
+    new MutationObserver(guardPages).observe(host, { attributes: true, attributeFilter: ['class'], subtree: true, childList: false });
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(startGuard, 1500)); else setTimeout(startGuard, 1500);
+  Perms._show = window.showPage;
+  window.showPage = function (name, btn) {   // กันเข้าหมวดที่ไม่มีสิทธิ์ (ทุกทางเข้า: เมนู ปุ่มลัด แจ้งเตือน)
+    const set = Perms.allowedSet();
+    if (set && name !== 'noperm') {
+      const g = Perms.pageGroup(name);
+      if (g && !set.has(g)) { toast('คุณไม่มีสิทธิ์เข้าหมวดนี้', 'error'); Perms.redirect(); return; }
+    }
+    return Perms._show.apply(this, arguments);
+  };
+  document.addEventListener('visibilitychange', () => {   // กลับมาเปิดหน้าเว็บ → ตรวจสิทธิ์ล่าสุด (ไม่เกินทุก 2 นาที)
+    if (document.visibilityState !== 'visible') return;
+    if (Date.now() - (Perms._at || 0) < 120000) return;
+    Perms._at = Date.now(); Perms.refresh();
+  });
 
   /* ── สร้างบัญชีใหม่จากหน้า Login (รอ admin อนุมัติ) ── */
   const Register = {
@@ -26786,6 +26960,41 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
 .pv-body{overflow:hidden!important;background:#525659}
 .pv-body iframe{flex:none!important;transform-origin:0 0}
 @media(max-width:640px){.pv-tools .pv-lbl{display:none}.pv-tools .pv-fit{display:none}}
+
+/* ── สิทธิ์การเข้าถึงหมวดเมนู ── */
+.nav-group.perm-hide { display: none !important; }
+.pm-modal { width: min(1180px, 100%) !important; }
+.pm-note { padding: .6rem .85rem; border-radius: 10px; font-size: .8rem; background: color-mix(in srgb, #f59e0b 14%, var(--surface)); border: 1px solid color-mix(in srgb, #f59e0b 40%, var(--border)); color: var(--text); margin-bottom: .75rem; }
+.pm-note.edit { background: color-mix(in srgb, var(--accent) 9%, var(--surface)); border-color: color-mix(in srgb, var(--accent) 35%, var(--border)); }
+.pm-bar { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; margin-bottom: .65rem; }
+.pm-count { font-size: .78rem; color: var(--muted); }
+.pm-search { margin-left: auto; min-width: 220px; padding: .45rem .7rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font: inherit; font-size: .82rem; }
+.pm-wrap { overflow: auto; max-height: 56vh; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+.pm-table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: .8rem; }
+.pm-table th, .pm-table td { padding: .5rem .45rem; border-bottom: 1px solid var(--border); text-align: center; vertical-align: middle; }
+.pm-table thead th { position: sticky; top: 0; z-index: 2; background: var(--surface2); font-size: .68rem; font-weight: 700; color: var(--muted); line-height: 1.25; min-width: 64px; }
+.pm-table thead th i { display: block; font-style: normal; font-family: var(--mono, monospace); color: var(--text); font-size: .74rem; margin-bottom: 2px; }
+.pm-table .pm-u { position: sticky; left: 0; z-index: 2; background: var(--surface) !important; background-clip: padding-box; text-align: left; min-width: 230px; padding-left: .8rem; box-shadow: 1px 0 0 var(--border); }
+.pm-table thead .pm-u { z-index: 4; background: var(--surface2) !important; }
+.pm-u b { font-weight: 700; }
+.pm-u small { display: block; font-size: .68rem; color: var(--muted); margin-top: 2px; font-weight: 400; }
+.pm-tag { display: inline-block; margin-left: .4rem; font-size: .62rem; font-weight: 700; padding: .05rem .4rem; border-radius: 999px; border: 1px solid var(--accent); color: var(--accent); vertical-align: middle; }
+.pm-tag.dim { border-color: var(--border); color: var(--muted); }
+.pm-def td { background: color-mix(in srgb, #ef4444 6%, var(--surface)); }
+.pm-def .pm-u { background: color-mix(in srgb, #ef4444 6%, var(--surface)) !important; }
+.pm-me .pm-u { box-shadow: inset 3px 0 0 var(--accent); }
+.pm-c { position: relative; z-index: 0; }
+.pm-c input { position: relative; z-index: 0; width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+.pm-c input:disabled { cursor: default; opacity: .75; }
+.pm-c input.inh { opacity: .55; }
+.pm-q { white-space: nowrap; min-width: 108px; }
+.pm-ql { border: 0; background: transparent; color: var(--accent); font: inherit; font-size: .7rem; font-weight: 600; cursor: pointer; padding: .15rem .35rem; border-radius: 6px; }
+.pm-ql:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.pm-empty { padding: 1.4rem !important; color: var(--muted); }
+.pm-noperm { max-width: 440px; margin: 12vh auto; text-align: center; padding: 2rem; }
+.pm-noperm-ico { font-size: 2.6rem; margin-bottom: .6rem; }
+.pm-noperm h2 { margin: 0 0 .5rem; font-size: 1.2rem; }
+.pm-noperm p { color: var(--muted); font-size: .88rem; margin: 0 0 1.1rem; }
 </style>
 <script>
 (function(){
