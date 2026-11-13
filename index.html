@@ -22232,9 +22232,10 @@ function endTour() {
   };
   document.addEventListener('visibilitychange', () => {   // กลับมาเปิดหน้าเว็บ → ตรวจสิทธิ์ล่าสุด (ไม่เกินทุก 2 นาที)
     if (document.visibilityState !== 'visible') return;
-    if (Date.now() - (Perms._at || 0) < 120000) return;
+    if (Date.now() - (Perms._at || 0) < 10000) return;
     Perms._at = Date.now(); Perms.refresh();
   });
+  setInterval(() => { if (document.visibilityState === 'visible') { Perms._at = Date.now(); Perms.refresh(); } }, 30000);   // ตรวจสิทธิ์จากชีตทุก 30 วินาที
 
   /* ── สร้างบัญชีใหม่จากหน้า Login (รอ admin อนุมัติ) ── */
   const Register = {
