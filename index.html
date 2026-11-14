@@ -14314,9 +14314,17 @@ async function loadIsoDocsFromServer() {
  }
  grid.innerHTML = '<div style="color:var(--muted);font-size: 0.892rem;padding:2rem 0;text-align:center;grid-column:1/-1"><span class="spinner" style="width:14px;height:14px;border-width:2px"></span> กำลังโหลดเอกสาร ISO...</div>';
  try {
- const res = await fetch(WEB_APP_URL + '?action=getIsoDocs');
- const json = await res.json();
- if (!json.success) throw new Error(json.error || 'โหลดข้อมูลไม่สำเร็จ');
+ let res = await fetch(WEB_APP_URL + '?action=getIsoDocs');
+  let json = await res.json();
+  /* แก้อัตโนมัติ: URL เก่าที่เก็บในเครื่อง (Unknown action) -> ลอง URL เริ่มต้นในไฟล์ */
+  if (!json.success && /unknown action/i.test(json.error || '') && /^https?:/.test(DEFAULT_WEB_APP_URL) && WEB_APP_URL !== DEFAULT_WEB_APP_URL) {
+  try {
+  const res2 = await fetch(DEFAULT_WEB_APP_URL + '?action=getIsoDocs');
+  const json2 = await res2.json();
+  if (json2.success) { WEB_APP_URL = DEFAULT_WEB_APP_URL; try { localStorage.removeItem('prpo_url'); } catch (e) {} json = json2; showToast('สลับไปใช้ Web App URL ล่าสุดแล้ว', 'success'); }
+  } catch (e2) {}
+  }
+  if (!json.success) throw new Error(json.error || 'โหลดข้อมูลไม่สำเร็จ');
  isoDocs = (json.data || []).map(mapIsoRow);
  } catch (err) {
  showToast('โหลดเอกสาร ISO ไม่สำเร็จ: ' + err.message, 'error');
