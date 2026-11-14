@@ -27171,5 +27171,76 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init); else init();
 })();
 </script>
+<!-- ═══ แถบโหลดตอนบันทึก / แก้ไข / ลบ ข้อมูลลง Sheet (ครอบ fetch ทุกคำสั่งเขียน) ═══ -->
+<style id="wrbar-css">
+#wrBar{position:fixed;top:0;left:0;right:0;height:3px;z-index:2147482000;pointer-events:none;opacity:0;transition:opacity .2s;overflow:hidden;background:rgba(127,127,127,.15)}
+#wrBar.on{opacity:1}
+#wrBar::before{content:"";position:absolute;top:0;bottom:0;width:40%;border-radius:3px;background:linear-gradient(90deg,transparent,var(--accent,#3E5A82),var(--live,#2dd4bf),transparent);animation:wrSlide 1.1s ease-in-out infinite}
+#wrBar.del::before{background:linear-gradient(90deg,transparent,#ef4444,#f59e0b,transparent)}
+@keyframes wrSlide{0%{left:-40%}100%{left:100%}}
+#wrPill{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);z-index:2147482001;display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:999px;font:600 13px/1.2 inherit;font-family:inherit;color:var(--text,#e8ecf2);background:var(--surface,#12151B);border:1px solid var(--border,rgba(127,127,127,.3));box-shadow:0 8px 28px rgba(0,0,0,.28);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
+#wrPill.on{opacity:1;transform:translate(-50%,0)}
+#wrPill i{width:16px;height:16px;border-radius:50%;border:2.5px solid rgba(127,127,127,.35);border-top-color:var(--accent,#3E5A82);animation:wrSpin .7s linear infinite;flex:none}
+#wrPill.del i{border-top-color:#ef4444}
+#wrPill small{font-weight:500;opacity:.65}
+@keyframes wrSpin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){#wrBar::before{animation-duration:2.4s}#wrPill i{animation-duration:1.6s}}
+</style>
+<script id="wrbar-js">
+(function(){
+  if (window.__wrBar) return; window.__wrBar = 1;
+  var prev = window.fetch; if (typeof prev !== 'function') return;
+  // คำสั่งที่ไม่ต้องขึ้นแถบ: งานเบื้องหลัง / อ่านอย่างเดียว / มีหน้าต่างอัปโหลดของตัวเองอยู่แล้ว
+  var SKIP = /^(get|list|fetch|load|read|check|ping|addLog$|authCheck|authLogin|authRegister|addIsoDoc$|addManual$|uploadFile$|uploadCerFile$|uploadMeetingImage$)/i;
+  var WRITE = /^(add|save|update|delete|remove|set|create|upload|import|sync|write|append|clear|rename|move|toggle|approve|reject|reset|auth(UpdateProfile|ChangePassword))/i;
+  function isGAS(u){ return /script\.google(usercontent)?\.com/.test(u); }
+  function actionOf(u, init){
+    var m = /[?&]action=([^&#]+)/.exec(u); if (m) return decodeURIComponent(m[1]);
+    try { if (init && typeof init.body === 'string') { var j = JSON.parse(init.body); if (j && j.action) return String(j.action); } } catch (e) {}
+    return '';
+  }
+  function kind(a){ return /^(delete|remove|clear)/i.test(a) ? 'del' : /^(update|rename|move|toggle|approve|reject|authUpdate|authChange)/i.test(a) ? 'edit' : 'save'; }
+  var TXT = { save: 'กำลังบันทึกลง Sheet…', edit: 'กำลังบันทึกการแก้ไข…', del: 'กำลังลบรายการ…' };
+  var bar, pill, pillTxt, n = 0, kinds = [], showT = null, hideT = null, shownAt = 0;
+  function mk(){
+    if (bar || !document.body) return !!bar;
+    bar = document.createElement('div'); bar.id = 'wrBar'; bar.setAttribute('role','progressbar'); bar.setAttribute('aria-label','กำลังบันทึกข้อมูล'); bar.setAttribute('aria-hidden','true');
+    pill = document.createElement('div'); pill.id = 'wrPill'; pill.setAttribute('role','status'); pill.setAttribute('aria-live','polite');
+    pill.innerHTML = '<i></i><span></span><small>อย่าปิดหน้านี้</small>'; pillTxt = pill.querySelector('span');
+    document.body.appendChild(bar); document.body.appendChild(pill); return true;
+  }
+  function render(){
+    if (!mk()) return;
+    var k = kinds.indexOf('del') >= 0 && kinds.every(function(x){return x==='del';}) ? 'del' : (kinds.indexOf('edit') >= 0 && kinds.indexOf('save') < 0 && kinds.indexOf('del') < 0 ? 'edit' : kinds[kinds.length-1] || 'save');
+    var t = TXT[k]; if (n > 1) t += ' (' + n + ' คำสั่ง)';
+    pillTxt.textContent = t;
+    bar.classList.toggle('del', k === 'del'); pill.classList.toggle('del', k === 'del');
+  }
+  function start(k){
+    n++; kinds.push(k); clearTimeout(hideT);
+    if (n === 1) showT = setTimeout(function(){ if (!n || !mk()) return; render(); bar.classList.add('on'); pill.classList.add('on'); shownAt = Date.now(); }, 150);   // งานเร็วมาก ไม่ต้องกะพริบ
+    else if (bar && bar.classList.contains('on')) render();
+  }
+  function end(k){
+    n = Math.max(0, n - 1); var i = kinds.indexOf(k); if (i >= 0) kinds.splice(i, 1);
+    if (n > 0) { render(); return; }
+    clearTimeout(showT);
+    if (!bar || !bar.classList.contains('on')) return;
+    hideT = setTimeout(function(){ bar.classList.remove('on'); pill.classList.remove('on'); }, Math.max(0, 450 - (Date.now() - shownAt)));
+  }
+  window.fetch = function(input, init){
+    var u = typeof input === 'string' ? input : (input && input.url) || '';
+    if (!isGAS(u)) return prev.apply(this, arguments);
+    var method = String((init && init.method) || (input && input.method) || 'GET').toUpperCase();
+    var a = actionOf(u, init);
+    var isWrite = a ? (WRITE.test(a) && !SKIP.test(a)) : (method === 'POST' && !!(init && typeof init.body === 'string') && !/"action"\s*:\s*"(get|list|auth(Check|Login))/i.test(init.body));
+    if (!isWrite) return prev.apply(this, arguments);
+    var k = kind(a), p;
+    start(k);
+    try { p = prev.apply(this, arguments); } catch (e) { end(k); throw e; }
+    return Promise.resolve(p).then(function(r){ end(k); return r; }, function(e){ end(k); throw e; });
+  };
+})();
+</script>
 </body>
 </html>
