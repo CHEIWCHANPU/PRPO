@@ -11825,7 +11825,8 @@ async function deleteCerItem(rowIndex) {
  if (!json.success) { restore(); showResultModal('ลบใน Sheet ไม่สำเร็จ', 'error', json.error || ''); }
  else {
  try { localStorage.setItem(cfg.lsKey, JSON.stringify(mode === 'die' ? cerDieData : cerData)); } catch (e) {}
- showResultModal('ลบบริษัทสำเร็จ', 'success', cerPopupSub(tName, 'ลบออกจาก Google Sheet แล้ว'));
+ try { if (tName && window.CCIPCerFiles) window.CCIPCerFiles.purge(tName, mode === 'die').catch(() => {}); } catch (e) {}   // ลบไฟล์ใบรับรองใน Drive ของบริษัทนี้ด้วย
+ showResultModal('ลบบริษัทสำเร็จ', 'success', cerPopupSub(tName, 'ลบออกจาก Google Sheet แล้ว · ไฟล์ใบรับรองใน Drive ย้ายไปถังขยะ'));
  }
  } catch (e) {
  showToast('ซิงค์ Sheet ไม่สำเร็จ: ' + e.message, 'error');
@@ -22586,6 +22587,20 @@ function endTour() {
     /* MAKER DIE เก็บไฟล์แยกจาก Component โดยต่อท้ายชื่อบริษัทด้วย " (DIE)" — ใช้คีย์นี้กับ Drive/Sheet ฝั่งเซิร์ฟเวอร์ */
     key(company) { const c = String(company || '').trim(); return (typeof cerMode !== 'undefined' && cerMode === 'die') ? c + ' (DIE)' : c; },
     find(company, cert) { const k = this.k(this.key(company)); return this.list.find(f => this.k(f.company) === k && f.cert === cert); },
+    /* ลบบริษัทแล้ว → ลบไฟล์ใบรับรองของบริษัทนั้นใน Drive (ลงถังขยะ กู้คืนได้ 30 วัน) + แถวในชีต CER FILES / CER FILES DIE
+       เรียกครบทั้ง 3 ใบ (เซิร์ฟเวอร์ข้ามให้เองถ้าไม่มีไฟล์) ไม่พึ่งรายการในเครื่องที่อาจยังไม่โหลด */
+    async purge(company, die) {
+      const name = String(company || '').trim(); if (!name || !url()) return 0;
+      const key = name + (die ? ' (DIE)' : ''), kk = this.k(key);
+      let n = 0;
+      for (const cert of Object.keys(this.TYPES)) {
+        try { await api.post({ action: 'removeCerFile', company: key, cert }); n++; } catch (e) {}
+      }
+      this.list = this.list.filter(f => this.k(f.company) !== kk);
+      try { localStorage.setItem(this.KEY, JSON.stringify(this.list)); } catch (e) {}
+      try { this.decorate(); } catch (e) {}
+      return n;
+    },
     async load() {
       try { const c = JSON.parse(localStorage.getItem(this.KEY) || 'null'); if (Array.isArray(c) && !this.list.length) { this.list = c; this.decorate(); } } catch (e) {}
       if (!url()) return;
