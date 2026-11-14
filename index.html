@@ -18,7 +18,7 @@
    ══════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
-  var DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbxGqLFU6cltVxCZbBi-ryj2MuJTsarqDq2dkLL6ysm3e3YjhMxKvu9jn4fXSimM8cehjw/exec';
+  var DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbxJrjtHhcT8Ar7pzmE2jZKMX-dKl75BnLeNerPAZZVINHd85K7_Fn3AigKg5733TjOdtA/exec';
   var nativeFetch = window.fetch.bind(window);
   var inflight = new Map();
   var READ_TIMEOUT = 25000, WRITE_TIMEOUT = 90000;
@@ -9113,7 +9113,7 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
  จะเปิดไฟล์นี้ที่เครื่องไหน/เบราว์เซอร์ไหน ก็จะเชื่อมต่อและ
  โหลดข้อมูลได้ทันที โดยไม่ต้องตั้งค่าใหม่ทุกครั้ง
 ══════════════════════════════════════════════════════ */
-const DEFAULT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxGqLFU6cltVxCZbBi-ryj2MuJTsarqDq2dkLL6ysm3e3YjhMxKvu9jn4fXSimM8cehjw/exec';
+const DEFAULT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxJrjtHhcT8Ar7pzmE2jZKMX-dKl75BnLeNerPAZZVINHd85K7_Fn3AigKg5733TjOdtA/exec';
 const DEFAULT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1TaZlcjm9u1D3m-sBW5sTD1df1GIPXlrMHv_A5755bU8/edit?gid=789432946#gid=789432946';
 
 /* ── AUTO-HEAL WEB APP URL ──────────────────────────────────
@@ -9133,7 +9133,7 @@ const DEFAULT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1TaZlcjm9u1D3m
  } catch (e) {}
 })();
 
-let WEB_APP_URL = localStorage.getItem('prpo_url') || (DEFAULT_WEB_APP_URL.startsWith('วาง_') ? '' : DEFAULT_WEB_APP_URL);
+let WEB_APP_URL = (function(){ var u = localStorage.getItem('prpo_url') || ''; if (u.indexOf('AKfycbxGqLFU6cl') >= 0) { try { localStorage.removeItem('prpo_url'); } catch (e) {} u = ''; } return u; })() || (DEFAULT_WEB_APP_URL.startsWith('วาง_') ? '' : DEFAULT_WEB_APP_URL);
 let suppliers = [];
 let historyLog = JSON.parse(localStorage.getItem('prpo_history') || '[]');
 let starredItems = JSON.parse(localStorage.getItem('prpo_starred') || '[]');
@@ -18569,7 +18569,7 @@ const PR_MONTHS_TH = ['มกราคม','กุมภาพันธ์','ม
 const PR_DAYS_SHORT = ['อา','จ','อ','พ','พฤ','ศ','ส'];
 const PR_DAYS_FULL = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'];
 
-const PAYROLL_API_URL_FALLBACK = 'https://script.google.com/macros/s/AKfycbxGqLFU6cltVxCZbBi-ryj2MuJTsarqDq2dkLL6ysm3e3YjhMxKvu9jn4fXSimM8cehjw/exec';
+const PAYROLL_API_URL_FALLBACK = 'https://script.google.com/macros/s/AKfycbxJrjtHhcT8Ar7pzmE2jZKMX-dKl75BnLeNerPAZZVINHd85K7_Fn3AigKg5733TjOdtA/exec';
 /* FIX: ใช้ลิงก์ Apps Script เดียวกับที่ตั้งค่าไว้ในระบบ (WEB_APP_URL / ตั้งค่า URL ของแอป) แทนลิงก์ที่ฝังตายตัว
  เพราะหลัง deploy ใหม่ ลิงก์ที่ฝังไว้อาจใช้ไม่ได้ (404) ขณะที่ส่วนอื่นของระบบใช้ลิงก์ที่ตั้งไว้ได้ปกติ */
 function prPayrollUrl(){ return (typeof WEB_APP_URL === 'string' && WEB_APP_URL) ? WEB_APP_URL : PAYROLL_API_URL_FALLBACK; }
