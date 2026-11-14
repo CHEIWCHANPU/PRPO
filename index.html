@@ -9624,7 +9624,7 @@ function openCommandPalette() {
  document.getElementById('cmdkOverlay').classList.add('show');
  const input = document.getElementById('cmdkInput');
  input.value = '';
- cmdkFiltered = CMDK_ITEMS.slice();
+ cmdkFiltered = CMDK_ITEMS.filter(it => cmdkAllowed(it.key));
  cmdkActiveIdx = 0;
  cmdkRenderList();
  setTimeout(() => input.focus(), 30);
@@ -9655,12 +9655,19 @@ function cmdkSearchData(q) {
  record: s.r
  }));
 }
+function cmdkAllowed(key) {   // สิทธิ์เมนู: ไม่มีสิทธิ์ = ไม่แสดงในช่องค้นหา
+ try {
+  const P = window.CCIPPerms; if (!P) return true;
+  const set = P.allowedSet(); if (!set) return true;
+  const g = P.pageGroup(key); return !g || set.has(g);
+ } catch (e) { return true; }
+}
 function cmdkFilter() {
  const q = document.getElementById('cmdkInput').value.trim().toLowerCase();
- const navMatches = !q ? CMDK_ITEMS.slice() : CMDK_ITEMS.filter(it =>
+ const navMatches = (!q ? CMDK_ITEMS.slice() : CMDK_ITEMS.filter(it =>
  it.label.toLowerCase().includes(q) || it.group.toLowerCase().includes(q) || it.key.toLowerCase().includes(q)
- );
- const dataMatches = cmdkSearchData(q);
+ )).filter(it => cmdkAllowed(it.key));
+ const dataMatches = cmdkAllowed('list') ? cmdkSearchData(q) : [];
  cmdkFiltered = q ? [...dataMatches, ...navMatches] : navMatches;
  cmdkActiveIdx = 0;
  cmdkRenderList();
@@ -9692,6 +9699,7 @@ function cmdkSelect(i) {
  if (!item) return;
  closeCommandPalette();
  if (item.type === 'data') {
+ if (!cmdkAllowed('list')) return;
  showPage('list', document.getElementById('nav-list'));
  setTimeout(() => openDetail(item.record), 60);
  return;
