@@ -11352,28 +11352,8 @@ async function fetchCerFromSheet() {
 // ── MAKER DIE: โหลด/ซิงค์ (แยก action ออกจาก Component เพื่อไม่ให้ข้อมูลสองชุดปนกัน) ──
 /* ข้อมูล MAKER DIE ที่ค้างอยู่ในเครื่องนี้ (เคยกรอกตอนเซิร์ฟเวอร์ยังไม่รองรับ) → ส่งขึ้น Google Sheet */
 function cerCheckUnsyncedDie() {
- let n = 0; try { n = (JSON.parse(localStorage.getItem('cer_die_unsynced') || '[]') || []).length; } catch (e) {}
- const box = document.getElementById('cerFetchError'), txt = document.getElementById('cerFetchErrorText');
- if (!n || cerMode !== 'die' || !box || !txt) return;
- txt.innerHTML = 'พบข้อมูล MAKER DIE ที่ค้างอยู่ในเครื่องนี้ ' + n + ' รายการ ยังไม่ได้อยู่ใน Google Sheet <button class="btn btn-primary" id="cerPushDieBtn" onclick="cerPushUnsyncedDie()" style="margin-left:8px">⬆ ส่งขึ้น Sheet</button>';
- box.style.display = 'block';
-}
-async function cerPushUnsyncedDie() {
- let rows = []; try { rows = JSON.parse(localStorage.getItem('cer_die_unsynced') || '[]') || []; } catch (e) {}
- if (!rows.length) return;
- const btn = document.getElementById('cerPushDieBtn'); if (btn) { btn.disabled = true; btn.textContent = 'กำลังส่ง...'; }
- try {
-  const res = await fetch(WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'bulkImportCerDie', rows: rows }) });
-  const json = await res.json();
-  if (!json.success) throw new Error(json.error || 'เซิร์ฟเวอร์ไม่รองรับ bulkImportCerDie');
-  localStorage.removeItem('cer_die_unsynced');
-  document.getElementById('cerFetchError').style.display = 'none';
-  showResultModal('ส่งข้อมูลสำเร็จ', 'success', 'ส่ง ' + json.imported + ' รายการ (MAKER DIE)');
-  await fetchCerDieFromSheet(true);
- } catch (e) {
-  if (btn) { btn.disabled = false; btn.textContent = '⬆ ส่งขึ้น Sheet'; }
-  showResultModal('ส่งไม่สำเร็จ', 'error', e.message);
- }
+ /* ยกเลิกแถบ "พบข้อมูล MAKER DIE ที่ค้างอยู่ในเครื่องนี้" แล้ว — ล้างข้อมูลค้างเก่าทิ้ง ไม่แสดงอีก */
+ try { localStorage.removeItem('cer_die_unsynced'); } catch (e) {}
 }
 async function fetchCerDieFromSheet(silent = false) {
  try {
@@ -11400,7 +11380,7 @@ async function fetchCerDieFromSheet(silent = false) {
  cerDieData = json.data;
  cerDieLoaded = true;
  cerDieLoadedTime = Date.now();
- if (!unchanged) { try { const prev = localStorage.getItem(CER_MODES.die.lsKey); if (prev && prev !== '[]' && json.data.length === 0) localStorage.setItem('cer_die_unsynced', prev); localStorage.setItem(CER_MODES.die.lsKey, raw); } catch (e) {} }
+ if (!unchanged) { try { localStorage.setItem(CER_MODES.die.lsKey, raw); } catch (e) {} }
  if (cerMode === 'die') document.getElementById('cerFetchError').style.display = 'none'; cerCheckUnsyncedDie();
  if (!unchanged && document.getElementById('cerTableBody')) renderCerTable();
  else cerUpdateModeCounts();
@@ -22594,7 +22574,7 @@ function endTour() {
       const key = name + (die ? ' (DIE)' : ''), kk = this.k(key);
       let n = 0;
       for (const cert of Object.keys(this.TYPES)) {
-        try { await api.post({ action: 'removeCerFile', company: key, cert }); n++; } catch (e) {}
+        try { await api.post({ action: 'removeCerFile', company: key, cert, _quiet: 1 }); n++; } catch (e) {}
       }
       this.list = this.list.filter(f => this.k(f.company) !== kk);
       try { localStorage.setItem(this.KEY, JSON.stringify(this.list)); } catch (e) {}
@@ -27219,7 +27199,7 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
   function isGAS(u){ return /script\.google(usercontent)?\.com/.test(u); }
   function actionOf(u, init){
     var m = /[?&]action=([^&#]+)/.exec(u); if (m) return decodeURIComponent(m[1]);
-    try { if (init && typeof init.body === 'string') { var j = JSON.parse(init.body); if (j && j.action) return String(j.action); } } catch (e) {}
+    try { if (init && typeof init.body === 'string') { var j = JSON.parse(init.body); if (j && j._quiet) return ''; if (j && j.action) return String(j.action); } } catch (e) {}
     return '';
   }
   function kind(a){
@@ -27269,6 +27249,8 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
     if (!isGAS(u)) return prev.apply(this, arguments);
     var method = String((init && init.method) || (input && input.method) || 'GET').toUpperCase();
     var a = actionOf(u, init);
+    var quiet = false; try { quiet = !!(init && typeof init.body === 'string' && /"_quiet"\s*:\s*1/.test(init.body)); } catch (e) {}
+    if (quiet) return prev.apply(this, arguments);
     var isWrite = a ? (WRITE.test(a) && !SKIP.test(a)) : (method === 'POST' && !!(init && typeof init.body === 'string') && !/"action"\s*:\s*"(get|list|auth(Check|Login))/i.test(init.body));
     if (!isWrite) return prev.apply(this, arguments);
     var k = kind(a), p;
