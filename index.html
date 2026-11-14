@@ -21775,6 +21775,7 @@ function endTour() {
             const j = await CCIPAuth.api('authUpdateProfile', prof);
             if (newPw) { await CCIPAuth.api('authChangePassword', { oldPassword: oldPw, newPassword: newPw }); try { const u = CCIPAuth.user(); if (u && window.CCIPFastLogin) CCIPFastLogin.forget(u.id); } catch (e) {} }
             CCIPAuth.update(j.user); this.fromAccount(j.user);
+            try { window.CCIPPerms && CCIPPerms.syncAllowed(); } catch (e) {}
             el._busy = false; closeModal();
             toast(newPw ? 'บันทึกโปรไฟล์และเปลี่ยนรหัสผ่านแล้ว' : 'บันทึกโปรไฟล์แล้ว', 'success');
           } catch (err) { el._busy = false; setBusy(btn, false); $('#pfErr').textContent = err.message; }
@@ -21812,7 +21813,14 @@ function endTour() {
       (remember ? sessionStorage : localStorage).removeItem(this.KEY);
       try { if (window.CCIPPerms) setTimeout(() => CCIPPerms.apply(), 0); } catch (e) {}   // ใช้สิทธิ์เมนูทันทีที่ข้อมูลผู้ใช้เปลี่ยน
     },
-    update(user) { const a = this.get(); if (!a) return; a.user = user; this.save(a, !!localStorage.getItem(this.KEY)); },
+    update(user) {
+      const a = this.get(); if (!a) return;
+      const prevAllowed = a.user && a.user.allowed;
+      a.user = (user && !Array.isArray(user.allowed) && Array.isArray(prevAllowed))
+        ? Object.assign({}, user, { allowed: prevAllowed })   // เซิร์ฟเวอร์ไม่ได้ส่ง allowed มา → คงสิทธิ์เดิมไว้ ไม่ให้เมนูโผล่หมด
+        : user;
+      this.save(a, !!localStorage.getItem(this.KEY));
+    },
     clear() { localStorage.removeItem(this.KEY); sessionStorage.removeItem(this.KEY); },
     token() { const a = this.get(); return a && a.token; },
     user() { const a = this.get(); return a && a.user; },
