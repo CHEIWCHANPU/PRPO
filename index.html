@@ -27186,62 +27186,70 @@ html.mkm-lock,html.mkm-lock body{overflow:hidden !important}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init); else init();
 })();
 </script>
-<!-- ═══ แถบโหลดตอนบันทึก / แก้ไข / ลบ ข้อมูลลง Sheet (ครอบ fetch ทุกคำสั่งเขียน) ═══ -->
+<!-- ═══ Popup โหลดตอนเพิ่ม / บันทึก / แก้ไข / ลบ ข้อมูลลง Sheet (ครอบ fetch ทุกคำสั่งเขียน) ═══ -->
 <style id="wrbar-css">
-#wrBar{position:fixed;top:0;left:0;right:0;height:3px;z-index:2147482000;pointer-events:none;opacity:0;transition:opacity .2s;overflow:hidden;background:rgba(127,127,127,.15)}
-#wrBar.on{opacity:1}
-#wrBar::before{content:"";position:absolute;top:0;bottom:0;width:40%;border-radius:3px;background:linear-gradient(90deg,transparent,var(--accent,#3E5A82),var(--live,#2dd4bf),transparent);animation:wrSlide 1.1s ease-in-out infinite}
-#wrBar.del::before{background:linear-gradient(90deg,transparent,#ef4444,#f59e0b,transparent)}
-@keyframes wrSlide{0%{left:-40%}100%{left:100%}}
-#wrPill{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);z-index:2147482001;display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:999px;font:600 13px/1.2 inherit;font-family:inherit;color:var(--text,#e8ecf2);background:var(--surface,#12151B);border:1px solid var(--border,rgba(127,127,127,.3));box-shadow:0 8px 28px rgba(0,0,0,.28);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
-#wrPill.on{opacity:1;transform:translate(-50%,0)}
-#wrPill i{width:16px;height:16px;border-radius:50%;border:2.5px solid rgba(127,127,127,.35);border-top-color:var(--accent,#3E5A82);animation:wrSpin .7s linear infinite;flex:none}
-#wrPill.del i{border-top-color:#ef4444}
-#wrPill small{font-weight:500;opacity:.65}
+#wrPop{position:fixed;inset:0;z-index:2147482500;display:grid;place-items:center;padding:1rem;background:rgba(6,12,24,.5);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .18s ease}
+#wrPop.on{opacity:1;pointer-events:all;cursor:progress}
+#wrPop .wr-box{width:min(320px,100%);padding:1.6rem 1.4rem 1.3rem;text-align:center;background:var(--surface,#12151B);color:var(--text,#e8ecf2);border:1px solid var(--border,rgba(127,127,127,.3));border-radius:16px;box-shadow:0 30px 70px -20px rgba(0,0,0,.55);transform:translateY(8px) scale(.98);transition:transform .22s cubic-bezier(.2,.8,.2,1)}
+#wrPop.on .wr-box{transform:none}
+#wrPop .wr-ring{width:46px;height:46px;margin:0 auto 14px;border-radius:50%;border:4px solid rgba(127,127,127,.22);border-top-color:var(--accent,#3E5A82);animation:wrSpin .75s linear infinite}
+#wrPop.del .wr-ring{border-top-color:#ef4444}
+#wrPop h3{margin:0 0 4px;font-size:1rem;font-weight:700}
+#wrPop p{margin:0;font-size:.8rem;opacity:.65;line-height:1.5}
+#wrPop .wr-bar{height:4px;margin-top:16px;border-radius:4px;overflow:hidden;background:rgba(127,127,127,.18);position:relative}
+#wrPop .wr-bar::before{content:"";position:absolute;top:0;bottom:0;width:40%;border-radius:4px;background:linear-gradient(90deg,transparent,var(--accent,#3E5A82),var(--live,#2dd4bf),transparent);animation:wrSlide 1.1s ease-in-out infinite}
+#wrPop.del .wr-bar::before{background:linear-gradient(90deg,transparent,#ef4444,#f59e0b,transparent)}
 @keyframes wrSpin{to{transform:rotate(360deg)}}
-@media (prefers-reduced-motion:reduce){#wrBar::before{animation-duration:2.4s}#wrPill i{animation-duration:1.6s}}
+@keyframes wrSlide{0%{left:-40%}100%{left:100%}}
+@media (prefers-reduced-motion:reduce){#wrPop .wr-ring{animation-duration:1.8s}#wrPop .wr-bar::before{animation-duration:2.4s}}
 </style>
 <script id="wrbar-js">
 (function(){
   if (window.__wrBar) return; window.__wrBar = 1;
   var prev = window.fetch; if (typeof prev !== 'function') return;
-  // คำสั่งที่ไม่ต้องขึ้นแถบ: งานเบื้องหลัง / อ่านอย่างเดียว / มีหน้าต่างอัปโหลดของตัวเองอยู่แล้ว
+  // คำสั่งที่ไม่ต้องขึ้น popup: งานเบื้องหลัง / อ่านอย่างเดียว / มีหน้าต่างอัปโหลดของตัวเองอยู่แล้ว
   var SKIP = /^(get|list|fetch|load|read|check|ping|addLog$|authCheck|authLogin|authRegister|addIsoDoc$|addManual$|uploadFile$|uploadCerFile$|uploadMeetingImage$)/i;
-  var WRITE = /^(add|save|update|delete|remove|set|create|upload|import|sync|write|append|clear|rename|move|toggle|approve|reject|reset|auth(UpdateProfile|ChangePassword))/i;
+  var WRITE = /^(add|save|update|delete|del|remove|set|create|upload|import|bulkImport|sync|write|append|clear|rename|move|toggle|approve|reject|reset|edit|auth(UpdateProfile|ChangePassword))/i;
   function isGAS(u){ return /script\.google(usercontent)?\.com/.test(u); }
   function actionOf(u, init){
     var m = /[?&]action=([^&#]+)/.exec(u); if (m) return decodeURIComponent(m[1]);
     try { if (init && typeof init.body === 'string') { var j = JSON.parse(init.body); if (j && j.action) return String(j.action); } } catch (e) {}
     return '';
   }
-  function kind(a){ return /^(delete|remove|clear)/i.test(a) ? 'del' : /^(update|rename|move|toggle|approve|reject|authUpdate|authChange)/i.test(a) ? 'edit' : 'save'; }
-  var TXT = { save: 'กำลังบันทึกลง Sheet…', edit: 'กำลังบันทึกการแก้ไข…', del: 'กำลังลบรายการ…' };
-  var bar, pill, pillTxt, n = 0, kinds = [], showT = null, hideT = null, shownAt = 0;
+  function kind(a){
+    if (/^(delete|del[A-Z]|remove|clear)/.test(a)) return 'del';
+    if (/^(update|edit|rename|move|toggle|approve|reject|authUpdate|authChange)/i.test(a)) return 'edit';
+    if (/^(add|create|append|import|bulkImport)/i.test(a)) return 'add';
+    return 'save';
+  }
+  var TXT = { add: 'กำลังเพิ่มรายการ', save: 'กำลังบันทึกรายการ', edit: 'กำลังแก้ไขรายการ', del: 'กำลังลบรายการ' };
+  var pop, title, sub, n = 0, kinds = [], showT = null, hideT = null, shownAt = 0;
   function mk(){
-    if (bar || !document.body) return !!bar;
-    bar = document.createElement('div'); bar.id = 'wrBar'; bar.setAttribute('role','progressbar'); bar.setAttribute('aria-label','กำลังบันทึกข้อมูล'); bar.setAttribute('aria-hidden','true');
-    pill = document.createElement('div'); pill.id = 'wrPill'; pill.setAttribute('role','status'); pill.setAttribute('aria-live','polite');
-    pill.innerHTML = '<i></i><span></span><small>อย่าปิดหน้านี้</small>'; pillTxt = pill.querySelector('span');
-    document.body.appendChild(bar); document.body.appendChild(pill); return true;
+    if (pop || !document.body) return !!pop;
+    pop = document.createElement('div'); pop.id = 'wrPop'; pop.setAttribute('role','alertdialog'); pop.setAttribute('aria-live','assertive'); pop.setAttribute('aria-busy','true');
+    pop.innerHTML = '<div class="wr-box"><div class="wr-ring"></div><h3></h3><p></p><div class="wr-bar"></div></div>';
+    title = pop.querySelector('h3'); sub = pop.querySelector('p');
+    document.body.appendChild(pop); return true;
   }
   function render(){
     if (!mk()) return;
-    var k = kinds.indexOf('del') >= 0 && kinds.every(function(x){return x==='del';}) ? 'del' : (kinds.indexOf('edit') >= 0 && kinds.indexOf('save') < 0 && kinds.indexOf('del') < 0 ? 'edit' : kinds[kinds.length-1] || 'save');
-    var t = TXT[k]; if (n > 1) t += ' (' + n + ' คำสั่ง)';
-    pillTxt.textContent = t;
-    bar.classList.toggle('del', k === 'del'); pill.classList.toggle('del', k === 'del');
+    var k = kinds[kinds.length-1] || 'save';
+    if (kinds.length && kinds.every(function(x){return x==='del';})) k = 'del';
+    title.textContent = TXT[k] + (n > 1 ? ' (' + n + ' คำสั่ง)' : '') + '…';
+    sub.textContent = 'กำลังส่งข้อมูลไป Google Sheet กรุณารอสักครู่ อย่าปิดหน้านี้';
+    pop.classList.toggle('del', k === 'del');
   }
   function start(k){
     n++; kinds.push(k); clearTimeout(hideT);
-    if (n === 1) showT = setTimeout(function(){ if (!n || !mk()) return; render(); bar.classList.add('on'); pill.classList.add('on'); shownAt = Date.now(); }, 150);   // งานเร็วมาก ไม่ต้องกะพริบ
-    else if (bar && bar.classList.contains('on')) render();
+    if (n === 1) showT = setTimeout(function(){ if (!n || !mk()) return; render(); pop.classList.add('on'); shownAt = Date.now(); }, 150);   // งานเร็วมาก ไม่ต้องกะพริบ
+    else if (pop && pop.classList.contains('on')) render();
   }
   function end(k){
     n = Math.max(0, n - 1); var i = kinds.indexOf(k); if (i >= 0) kinds.splice(i, 1);
     if (n > 0) { render(); return; }
     clearTimeout(showT);
-    if (!bar || !bar.classList.contains('on')) return;
-    hideT = setTimeout(function(){ bar.classList.remove('on'); pill.classList.remove('on'); }, Math.max(0, 450 - (Date.now() - shownAt)));
+    if (!pop || !pop.classList.contains('on')) return;
+    hideT = setTimeout(function(){ pop.classList.remove('on'); }, Math.max(0, 450 - (Date.now() - shownAt)));
   }
   window.fetch = function(input, init){
     var u = typeof input === 'string' ? input : (input && input.url) || '';
