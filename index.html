@@ -14304,6 +14304,41 @@ function mapIsoRow(o) {
  };
 }
 
+/* อ่านรายการเอกสาร ISO จาก Google Sheet โดยตรง (ชีต ISO_DOCS) — ถ้าอ่านไม่ได้ค่อยถอยไปเรียก Apps Script */
+const ISO_SHEET_ID = '1TaZlcjm9u1D3m-sBW5sTD1df1GIPXlrMHv_A5755bU8';
+const ISO_SHEET_NAME = 'ISO_DOCS';
+function isoGvizDate_(v) {
+  const m = /^Date\((\d+),(\d+),(\d+)(?:,(\d+),(\d+),(\d+))?/.exec(String(v));
+  return m ? new Date(+m[1], +m[2], +m[3], +(m[4]||0), +(m[5]||0), +(m[6]||0)).toISOString() : v;
+}
+async function isoReadSheetDirect_() {
+  const url = 'https://docs.google.com/spreadsheets/d/' + ISO_SHEET_ID + '/gviz/tq?tqx=out:json&headers=1&sheet=' + encodeURIComponent(ISO_SHEET_NAME) + '&_=' + Date.now();
+  const res = await fetch(url);
+  const txt = await res.text();
+  const a = txt.indexOf('{'), b = txt.lastIndexOf('}');
+  if (a < 0 || b < 0) throw new Error('อ่านชีตไม่ได้ (ตรวจว่าแชร์ชีตเป็น Anyone with the link)');
+  const j = JSON.parse(txt.slice(a, b + 1));
+  if (j.status === 'error') throw new Error((j.errors && j.errors[0] && (j.errors[0].detailed_message || j.errors[0].message)) || 'อ่านชีตไม่ได้');
+  const cols = j.table.cols.map(c => (c.label || '').trim());
+  const data = (j.table.rows || []).map(r => {
+    const o = {};
+    cols.forEach((h, i) => {
+      const c = r.c && r.c[i];
+      let v = c ? (c.v === null || c.v === undefined ? '' : c.v) : '';
+      if (c && typeof c.v === 'string' && /^Date\(/.test(c.v)) v = isoGvizDate_(c.v);
+      if (h) o[h] = v;
+    });
+    return o;
+  }).filter(o => o['ID'] !== '' && o['ID'] !== undefined && o['สถานะ'] !== 'ยกเลิก');
+  return { success: true, data: data.reverse() };
+}
+async function isoFetchList_() {
+  try { return await isoReadSheetDirect_(); }
+  catch (e) { console.warn('ISO direct sheet read failed, fallback to Apps Script:', e); }
+  const res = await fetch(WEB_APP_URL + '?action=getIsoDocs');
+  return await res.json();
+}
+
 async function loadIsoDocsFromServer() {
  const grid = document.getElementById('isoGrid');
  if (!grid) return;
@@ -14314,8 +14349,7 @@ async function loadIsoDocsFromServer() {
  }
  grid.innerHTML = '<div style="color:var(--muted);font-size: 0.892rem;padding:2rem 0;text-align:center;grid-column:1/-1"><span class="spinner" style="width:14px;height:14px;border-width:2px"></span> กำลังโหลดเอกสาร ISO...</div>';
  try {
- let res = await fetch(WEB_APP_URL + '?action=getIsoDocs');
-  let json = await res.json();
+ let json = await isoFetchList_();
   /* แก้อัตโนมัติ: URL เก่าที่เก็บในเครื่อง (Unknown action) -> ลอง URL เริ่มต้นในไฟล์ */
   if (!json.success && /unknown action/i.test(json.error || '') && /^https?:/.test(DEFAULT_WEB_APP_URL) && WEB_APP_URL !== DEFAULT_WEB_APP_URL) {
   try {
