@@ -8784,6 +8784,7 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
     <div class="gx-toolbar">
       <label class="gx-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <input id="gwSearch" type="search" placeholder="ค้นหาทุกคอลัมน์: Part No, Part Name, Spec…" oninput="GoWork.page=1;GoWork.render()" aria-label="ค้นหางาน GO WORK"></label>
+      <select id="gwYear" class="gx-select" onchange="GoWork.page=1;GoWork.render()" aria-label="กรองปี"></select>
       <select id="gwModel" class="gx-select" onchange="GoWork.page=1;GoWork.render()" aria-label="กรอง Model"></select>
       <select id="gwMaker" class="gx-select" onchange="GoWork.page=1;GoWork.render()" aria-label="กรอง Maker"></select>
       <select id="gwWork" class="gx-select" onchange="GoWork.page=1;GoWork.render()" aria-label="กรอง Work"></select>
@@ -8805,12 +8806,12 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
     <section class="gx-hero gd-hero">
       <div class="gx-hero-text">
         <h1>Dashboard GO WORK</h1>
-        <p>เปรียบเทียบผลงานรายปี — จำนวนงาน GO, VOLUME, มูลค่า, กำไร และ Margin แยกตาม Maker ประเภทงาน และเดือน พร้อมสรุปวิเคราะห์อัตโนมัติ</p>
+        <p>สรุปงาน GO รายปี — Model, ลูกค้า, Maker ใหม่ และกำไรรวมของปีที่เลือก (นับเฉพาะ Machine / Surface treatment / Buff / Press part) · เลือกเทียบกับปีอื่นได้ถ้าต้องการ</p>
       </div>
       <div class="gd-controls">
         <label>ปีที่ดู<select id="gdYear" onchange="GWDash.year=+this.value;GWDash.base=null;GWDash.render()"></select></label>
         <span class="gd-vs">เทียบ</span>
-        <label>ปีเปรียบเทียบ<select id="gdBase" onchange="GWDash.base=+this.value||null;GWDash.render()"></select></label>
+        <label>เทียบกับ (ไม่บังคับ)<select id="gdBase" onchange="GWDash.base=+this.value||null;GWDash.render()"></select></label>
       </div>
     </section>
     <div class="gd-bar">
@@ -8832,6 +8833,15 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
         <button data-b="year" onclick="GWDash.basis='year';GWDash.year=null;GWDash.base=null;GWDash.render()">คอลัมน์ YEAR</button>
       </div>
     </div>
+    <details class="gd-works" id="gdWorks"><summary id="gdWorksSum"></summary><div id="gdWorksBody"></div></details>
+    <style>
+      .gd-works{margin:0 0 .9rem;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.55rem .9rem;font-size:.8rem}
+      .gd-works summary{cursor:pointer;font-weight:600}
+      .gd-wk{display:inline-flex;align-items:center;gap:.35rem;margin:.45rem 1rem 0 0}
+      .gd-scroll{max-height:380px;overflow:auto}
+      .gd-new{font-size:.68rem;font-weight:600;color:#2F8F6E;border:1px solid currentColor;border-radius:6px;padding:0 .3rem;margin-left:.3rem}
+      @media (min-width:1101px){.gd-kpis{grid-template-columns:repeat(5,minmax(0,1fr))}}
+    </style>
     <div id="gdBody"><div class="gx-skel tall"></div></div>
   </div>
 
@@ -20431,6 +20441,17 @@ function endTour() {
     active() { return $('#page-gowork') && $('#page-gowork').classList.contains('active'); },
     open() { this.render(); this.load(); },
     save() { this._raw = JSON.stringify(this.rows); localStorage.setItem(GW_KEY, this._raw); },
+    yearOf(r) {
+      const fix = y => (y > 2400 ? y - 543 : y), d = parseDMY(r.goDate);
+      if (d) return fix(d.getFullYear());
+      const n = numOf(r.year); return n && n > 1990 ? fix(Math.round(n)) : null;
+    },
+    fillYear() {
+      const el = $('#gwYear'); if (!el) return;
+      const cur = el.value, ys = [...new Set(this.rows.map(r => this.yearOf(r)).filter(Boolean))].sort((a, b) => b - a);
+      el.innerHTML = '<option value="">ทุกปี</option>' + ys.map(y => `<option value="${y}">ปี ${y + 543}</option>`).join('');
+      el.value = ys.map(String).includes(cur) ? cur : '';
+    },
     fillSelect(id, key, label) {
       const el = $(id); if (!el) return;
       const cur = el.value;
@@ -20440,8 +20461,8 @@ function endTour() {
     },
     filtered() {
       const q = ($('#gwSearch') && $('#gwSearch').value || '').trim().toLowerCase();
-      const f = { model: $('#gwModel'), maker: $('#gwMaker'), work: $('#gwWork') };
-      let list = this.rows.filter(r =>
+      const f = { model: $('#gwModel'), maker: $('#gwMaker'), work: $('#gwWork') }, yv = ($('#gwYear') || {}).value;
+      let list = this.rows.filter(r => (!yv || this.yearOf(r) === +yv) &&
         Object.entries(f).every(([k, el]) => !el || !el.value || String(r[k] || '').trim() === el.value) &&
         (!q || this.cols().some(([k]) => String(r[k] || '').toLowerCase().includes(q))));
       const { col, dir } = this.sort, k = dir === 'asc' ? 1 : -1;
@@ -20461,6 +20482,7 @@ function endTour() {
     },
     render(errMsg) {
       const body = $('#gwBody'); if (!body) return;
+      this.fillYear();
       this.fillSelect('#gwModel', 'model', 'ทุก Model');
       
       this.fillSelect('#gwMaker', 'maker', 'ทุก Maker');
@@ -20812,6 +20834,27 @@ function endTour() {
     COLORS: ['#2E5395', '#2F8F6E', '#C9A227', '#B0673A', '#1E3A8A', '#3F7D53', '#A6443C', '#8A94A6'],
     active() { return $('#page-gwdash') && $('#page-gwdash').classList.contains('active'); },
     open() { this.render(); GoWork.load(); },
+    sel: null, _sl: false,
+    works() { return [...new Set(GoWork.rows.map(r => String(r.work || '').trim() || '(ไม่ระบุ)'))].sort((a, b) => a.localeCompare(b, 'th', { numeric: true })); },
+    okWork(w) {
+      if (!this._sl) { this._sl = true; try { const s = JSON.parse(localStorage.getItem('ccip_gwdash_works') || 'null'); if (Array.isArray(s)) this.sel = new Set(s); } catch (e) {} }
+      return this.sel ? this.sel.has(w) : /machin|m\/c|surface|buff|press/i.test(w) && !/ผิวชุบ|plating|ชุบ/i.test(w);
+    },
+    setWork(w, on) {
+      const s = new Set(this.works().filter(x => this.okWork(x))); on ? s.add(w) : s.delete(w); this.sel = s;
+      try { localStorage.setItem('ccip_gwdash_works', JSON.stringify([...s])); } catch (e) {}
+      this.render();
+    },
+    resetWorks() { this.sel = null; try { localStorage.removeItem('ccip_gwdash_works'); } catch (e) {} this.render(); },
+    renderWorks() {
+      const box = $('#gdWorksBody'); if (!box) return;
+      const ws = this.works();
+      $('#gdWorksSum').textContent = `ประเภทงานที่นับ (WORK): ${ws.filter(w => this.okWork(w)).length} จาก ${ws.length} ประเภท — คลิกเพื่อเลือก/ตัดออก`;
+      box.innerHTML = ws.map(w => `<label class="gd-wk"><input type="checkbox" data-w="${esc(w)}" ${this.okWork(w) ? 'checked' : ''} onchange="GWDash.setWork(this.dataset.w,this.checked)">${esc(w)}</label>`).join('') + (ws.length ? ' <button class="gx-btn ghost" onclick="GWDash.resetWorks()">คืนค่าเริ่มต้น</button>' : '');
+    },
+    tbl(head, rows) {
+      return `<div class="gx-table-scroll gd-scroll"><table class="gx-table gd-table"><thead><tr>${head.map((h, i) => `<th class="${i ? 'gw-al-r' : ''}">${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map((c, i) => `<td class="${i ? 'gw-al-r' : ''}">${c}</td>`).join('')}</tr>`).join('') || `<tr><td colspan="${head.length}" class="gw-al-c">ไม่มีข้อมูล</td></tr>`}</tbody></table></div>`;
+    },
     yearOf(r) {
       const fix = y => (y > 2400 ? y - 543 : y);
       const fromGo = () => { const d = parseDMY(r.goDate); return d ? fix(d.getFullYear()) : null; };
@@ -20824,13 +20867,14 @@ function endTour() {
         const vol = numOf(r.volume) || 0, cp = numOf(r.customer), mp = numOf(r.custMaker);
         const priced = cp != null && mp != null;
         return {
-          y: this.yearOf(r), m: d ? d.getMonth() : null, volume: vol, priced,
+          y: this.yearOf(r), m: d ? d.getMonth() : null, ts: d ? d.getTime() : null, volume: vol, priced,
+          cus: String(r.cusCode || '').trim(), ok: this.okWork(String(r.work || '').trim() || '(ไม่ระบุ)'),
           sales: cp != null ? cp * vol : 0, cost: mp != null ? mp * vol : 0,
           profit: priced ? (cp - mp) * vol : 0, salesP: priced ? cp * vol : 0,
           maker: String(r.maker || '').trim() || '(ไม่ระบุ)', work: String(r.work || '').trim() || '(ไม่ระบุ)',
           model: String(r.model || '').trim(), cpc: /NON/i.test(r.cpc || '') ? 'NON CPS' : (String(r.cpc || '').trim() ? 'CPC / CPS' : '(ไม่ระบุ)')
         };
-      }).filter(x => x.y);
+      }).filter(x => x.y && x.ok);
     },
     val(list, metric) {
       metric = metric || this.metric;
@@ -20842,7 +20886,7 @@ function endTour() {
       return {
         count: list.length, volume: this.val(list, 'volume'), sales: this.val(list, 'sales'), cost: this.val(list, 'cost'),
         profit, margin: salesP ? profit / salesP * 100 : null,
-        makers: new Set(list.map(x => x.maker)).size, models: new Set(list.map(x => x.model).filter(Boolean)).size,
+        makers: new Set(list.map(x => x.maker)).size, custs: new Set(list.map(x => x.cus).filter(Boolean)).size, models: new Set(list.map(x => x.model).filter(Boolean)).size,
         priced: list.filter(x => x.priced).length
       };
     },
@@ -20871,21 +20915,22 @@ function endTour() {
     setMetric(m) { this.metric = m; this.render(); },
     render() {
       const host = $('#gdBody'); if (!host) return;
+      this.renderWorks();
       const all = this.prep();
       const years = [...new Set(all.map(x => x.y))].sort((a, b) => a - b);
       const yearSel = $('#gdYear'), baseSel = $('#gdBase');
       if (!years.length) {
         Object.keys(this.charts).forEach(k => this.kill(k));
         yearSel.innerHTML = ''; baseSel.innerHTML = '';
-        host.innerHTML = `<div class="gx-empty"><strong>${GoWork.rows.length ? 'ยังหาปีของรายการไม่ได้' : (GoWork.loaded ? 'ยังไม่มีข้อมูล GO WORK' : 'กำลังโหลดข้อมูล…')}</strong>
+        host.innerHTML = `<div class="gx-empty"><strong>${GoWork.rows.length ? 'ไม่พบรายการที่นับ (เช็ควันที่ GO / ปี และ "ประเภทงานที่นับ" ด้านบน)' : (GoWork.loaded ? 'ยังไม่มีข้อมูล GO WORK' : 'กำลังโหลดข้อมูล…')}</strong>
           <span>${GoWork.rows.length ? 'ต้องมีวันที่ในคอลัมน์ GO หรือปีในคอลัมน์ YEAR' : 'นำเข้าไฟล์ Excel หลักในหน้า รายการ GO WORK ก่อน แล้ว Dashboard จะคำนวณให้อัตโนมัติ'}</span>
           ${GoWork.loaded && !GoWork.rows.length ? `<button class="gx-btn primary" onclick="showPage('gowork', document.getElementById('nav-gowork'));setTimeout(()=>GoWork.openImport(),100)">นำเข้า Excel</button>` : ''}</div>`;
         return;
       }
       if (!this.year || !years.includes(this.year)) { const now = new Date().getFullYear(); this.year = years.includes(now) ? now : years[years.length - 1]; }
-      if (this.base == null || this.base >= this.year || !years.includes(this.base)) this.base = years.filter(y => y < this.year).pop() || null;
+      if (this.base != null && (this.base >= this.year || !years.includes(this.base))) this.base = null;
       yearSel.innerHTML = years.slice().reverse().map(y => `<option value="${y}"${y === this.year ? ' selected' : ''}>${y + 543} (${y})</option>`).join('');
-      baseSel.innerHTML = years.filter(y => y < this.year).reverse().map(y => `<option value="${y}"${y === this.base ? ' selected' : ''}>${y + 543}</option>`).join('') || '<option value="">— ไม่มีปีก่อนหน้า —</option>';
+      baseSel.innerHTML = years.filter(y => y < this.year).reverse().map(y => `<option value="${y}"${y === this.base ? ' selected' : ''}>${y + 543}</option>`).join('') ; baseSel.innerHTML = `<option value=""${this.base ? '' : ' selected'}>ไม่เทียบ (ดูปีเดียว)</option>` + baseSel.innerHTML;
       document.querySelectorAll('#gdMetric button').forEach(b => b.classList.toggle('on', b.dataset.m === this.metric));
       document.querySelectorAll('#gdBasis button').forEach(b => b.classList.toggle('on', b.dataset.b === this.basis));
 
@@ -20903,6 +20948,9 @@ function endTour() {
       const sc = this.sum(cur), sp = B ? this.sum(prev) : null;
       const yTH = y => y + 543;
 
+      const firstY = new Map(); all.forEach(x => { if (x.maker !== '(ไม่ระบุ)' && !(firstY.get(x.maker) <= x.y)) firstY.set(x.maker, x.y); });
+      const newMkOf = y => [...new Set(all.filter(x => x.y === y && firstY.get(x.maker) === y).map(x => x.maker))];
+      const newMk = Y === years[0] ? [] : newMkOf(Y);
       /* ── KPI ── */
       const kpis = [
         ['จำนวนรายการ GO', sc.count, sp && sp.count, 'count'],
@@ -20912,7 +20960,9 @@ function endTour() {
         ['กำไรขั้นต้น', sc.profit, sp && sp.profit, 'profit'],
         ['Margin', sc.margin, sp && sp.margin, 'margin'],
         ['Maker ที่ใช้', sc.makers, sp && sp.makers, 'count'],
-        ['Model', sc.models, sp && sp.models, 'count']
+        ['Model', sc.models, sp && sp.models, 'count'],
+        ['ลูกค้า (CUS)', sc.custs, sp && sp.custs, 'count'],
+        ['Maker ใหม่', newMk.length, B && B !== years[0] ? newMkOf(B).length : null, 'count']
       ];
       const kpiHtml = kpis.map(([l, v, p, t]) => {
         const d = this.delta(v, B ? p : null, t === 'margin');
@@ -20942,6 +20992,23 @@ function endTour() {
         const newModels = [...new Set(cur.map(x => x.model).filter(m => m && !oldModels.has(m)))];
         if (newModels.length) ins.push(['info', `Model ใหม่ในปี ${yTH(Y)}: <b>${newModels.length}</b> รุ่น — ${newModels.slice(0, 5).map(esc).join(', ')}${newModels.length > 5 ? ' …' : ''}`]);
       }
+      if (!B) {
+        ins.push(['info', `ปี ${yTH(Y)}${period}: GO <b>${sc.count.toLocaleString('th-TH')}</b> รายการ · <b>${sc.models}</b> Model · <b>${sc.custs}</b> ลูกค้า · <b>${sc.makers}</b> Maker`]);
+        if (sc.priced) ins.push([sc.profit >= 0 ? 'up' : 'down', `กำไรขั้นต้นรวมทั้งระบบ <b>${this.fmt(sc.profit, 'profit')}</b>${sc.margin != null ? ` · Margin เฉลี่ย <b>${sc.margin.toFixed(1)}%</b>` : ''} (มูลค่าขาย ${this.fmt(sc.sales, 'sales')} · ต้นทุน Maker ${this.fmt(sc.cost, 'cost')})`]);
+        if (Y !== years[0]) { const oM = new Set(all.filter(x => x.y < Y).map(x => x.model)); const nm = [...new Set(cur.map(x => x.model).filter(m => m && !oM.has(m)))]; if (nm.length) ins.push(['info', `Model ใหม่ปีนี้: <b>${nm.length}</b> รุ่น — ${nm.slice(0, 5).map(esc).join(', ')}${nm.length > 5 ? ' …' : ''}`]); }
+      }
+      if (Y !== years[0]) ins.push([newMk.length ? 'up' : 'info', newMk.length ? `Maker ใหม่ที่เริ่ม GO ปีนี้: <b>${newMk.length}</b> ราย — ${newMk.slice(0, 6).map(esc).join(', ')}${newMk.length > 6 ? ' …' : ''}` : 'ปีนี้ไม่มี Maker ใหม่ที่เพิ่งเริ่ม GO']);
+      const grp = key => { const m = new Map(); cur.forEach(x => { const k = x[key]; if (k) (m.get(k) || m.set(k, []).get(k)).push(x); }); return m; };
+      const row = (k, l, extra) => { const s = this.sum(l); return [esc(k) + (extra || ''), s.count.toLocaleString('th-TH'), this.fmt(s.volume, 'volume'), this.fmt(s.sales, 'sales'), this.fmt(s.profit, 'profit'), s.margin == null ? '—' : s.margin.toFixed(1) + '%']; };
+      const byCnt = (a, b) => b[1].length - a[1].length;
+      const oldMd = new Set(all.filter(x => x.y < Y).map(x => x.model));
+      const modelRows = [...grp('model')].sort(byCnt).map(([k, l]) => row(k, l, Y !== years[0] && !oldMd.has(k) ? ' <span class="gd-new">ใหม่</span>' : ''));
+      const custRows = [...grp('cus')].sort(byCnt).map(([k, l]) => { const r = row(k, l); r.splice(1, 0, new Set(l.map(x => x.model).filter(Boolean)).size); return r; });
+      const mkRows = newMk.map(k => cur.filter(x => x.maker === k)).sort((a, b) => b.length - a.length).map(l => { const r = row(l[0].maker, l), t = Math.min(...l.map(x => x.ts).filter(Boolean)); r.splice(1, 0, isFinite(t) ? new Date(t).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'); return r; });
+      const H = ['รายการ', 'VOLUME', 'มูลค่าขาย', 'กำไรขั้นต้น', 'Margin'];
+      const listsHtml = `<section class="gd-card"><header><h3>Model ที่ GO ปี ${yTH(Y)}: ${modelRows.length} รุ่น</h3><span>เรียงตามจำนวนรายการ</span></header>${this.tbl(['Model', ...H], modelRows)}</section>
+        <section class="gd-card"><header><h3>ลูกค้าที่มีงาน GO: ${custRows.length} ราย</h3><span>ตามรหัส CUS</span></header>${this.tbl(['ลูกค้า (CUS)', 'Model', ...H], custRows)}</section>
+        <section class="gd-card span2"><header><h3>Maker ใหม่ที่เริ่ม GO ปี ${yTH(Y)}: ${mkRows.length} ราย</h3><span>${Y === years[0] ? 'ปีแรกในข้อมูล — ยังไม่มีปีก่อนให้เทียบ' : 'ไม่เคยมีงาน GO ในปีก่อน ๆ (เฉพาะประเภทงานที่นับ)'}</span></header>${this.tbl(['Maker', 'GO ครั้งแรก', ...H], mkRows)}</section>`;
       const works = new Map(); cur.forEach(x => works.set(x.work, (works.get(x.work) || 0) + this.val([x])));
       const topWork = [...works].sort((a, b) => b[1] - a[1])[0];
       const totalM = this.val(cur);
@@ -20967,6 +21034,7 @@ function endTour() {
         <section class="gd-card gd-insights"><header><h3>สรุปวิเคราะห์ ปี ${yTH(Y)}${B ? ` เทียบ ${yTH(B)}` : ''}${period}</h3><span>วัดด้วย: ${ML}</span></header>
           <ul>${ins.map(([t, h]) => `<li class="${t}"><i></i><span>${h}</span></li>`).join('') || '<li class="info"><i></i><span>ยังมีข้อมูลไม่พอสำหรับการวิเคราะห์</span></li>'}</ul></section>
         <div class="gd-grid">
+          ${listsHtml}
           <section class="gd-card span2"><header><h3>${ML}รายเดือน: ${yTH(Y)} เทียบ ${B ? yTH(B) : '—'}</h3><span>ใช้เดือนจากวันที่ GO</span></header><div class="gd-chart tall"><canvas id="gdMonthly"></canvas></div></section>
           <section class="gd-card span2"><header><h3>สรุปรายปี: ${ML} และ Margin %</h3><span>ทุกปีที่มีข้อมูล</span></header><div class="gd-chart"><canvas id="gdYearly"></canvas></div></section>
           <section class="gd-card"><header><h3>Top 10 Maker ตาม${ML}</h3><span>${yTH(Y)}${B ? ` เทียบ ${yTH(B)}` : ''}${period}</span></header><div class="gd-chart tall"><canvas id="gdMaker"></canvas></div></section>
