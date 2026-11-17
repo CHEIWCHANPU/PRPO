@@ -9008,6 +9008,9 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
       .ex-cmp{font-style:normal;font-size:.74rem;color:var(--muted);margin-top:.2rem}.ex-cmp i{font-style:normal}.ex-d.up2{color:var(--ex-dn)}.ex-d.down2{color:var(--ex-up)}
       html body #page-gwdash .ex-table tbody tr{position:static;cursor:default}
       .ex-scroll{overflow-x:auto}
+      .ex-new{font-size:.66rem;font-weight:700;color:#2F8F6E;border:1px solid currentColor;border-radius:6px;padding:0 .3rem}
+      .ex-newgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem}.ex-newgrid h4{margin:0 0 .4rem;font-size:.9rem}
+      @media (max-width:1100px){.ex-newgrid{grid-template-columns:1fr}}
       .ex-d{font-weight:700;white-space:nowrap}.ex-d.up{color:var(--ex-up)}.ex-d.down{color:var(--ex-dn)}
       .ex-chip{display:inline-block;margin:0 .25rem .25rem 0;padding:.08rem .5rem;border-radius:6px;background:var(--surface2);border:1px solid var(--border);font-size:.75rem;white-space:nowrap}
       .ex-chip.c{background:rgba(46,83,149,.12);border-color:rgba(46,83,149,.35)}.ex-chip.m em{font-style:normal;margin-left:.35rem;font-weight:700;color:var(--ex-a)}
@@ -21124,7 +21127,7 @@ function endTour() {
           const a = list[k], b = list[k + 1];
           if (!a.canc || a.mkPrice == null || b.mkPrice == null || !(a.mkPrice > 0)) continue;
           if (Math.abs(b.mkPrice - a.mkPrice) < 1e-6) continue;
-          ev.push({ maker: b.maker, partNo: b.partNo, partName: b.partName || a.partName, model: b.model, cus: b.cus, work: b.work, from: a.mkPrice, to: b.mkPrice,
+          ev.push({ maker: b.maker, partNo: b.partNo, partName: b.partName || a.partName, model: b.model, cus: b.cus, work: b.work, cps: b.cpc !== '(ไม่ระบุ)' ? b.cpc : a.cpc, from: a.mkPrice, to: b.mkPrice,
             pct: (b.mkPrice - a.mkPrice) / a.mkPrice * 100, y: b.y || a.y, ts: b.ts || a.ts, rev: b.rev, volume: b.volume, viaCancel: true });
         }
       });
@@ -21361,7 +21364,7 @@ function endTour() {
         </div>
         ${this.card('สรุปตาม Maker', null, this.tbl(['Maker', 'ครั้งที่ปรับ', 'ขึ้น', 'ลด', 'ชิ้นงาน', '% เฉลี่ย', '% สูงสุด'], byMk.map(x => [`<b>${esc(x.m)}</b>`, this.n(x.n), this.n(x.up), this.n(x.dn), this.n(x.parts), `<span class="ex-d ${x.avg >= 0 ? 'up' : 'down'}">${x.avg >= 0 ? '+' : ''}${x.avg.toFixed(1)}%</span>`, `${x.max >= 0 ? '+' : ''}${x.max.toFixed(1)}%`]), 'ex-left'), 'ex-wide')}
         ${this.card('รายละเอียดการปรับราคา', `<label class="ex-inl">เลือก Maker <select onchange="GWDash.setMaker(this.value)"><option value="all">ทั้งหมด (${mkList.length})</option>${mkList.map(m => `<option value="${esc(m)}"${this.mkSel === m ? ' selected' : ''}>${esc(m)}</option>`).join('')}</select></label>`,
-          this.tbl(['วันที่ GO', 'Maker', 'Part No.', 'Part Name', 'Model', 'Work', 'ราคาเดิม', 'ราคาใหม่', '% เปลี่ยน'], shown.slice(0, 300).map(e => [dt(e.ts), `<b>${esc(e.maker)}</b>`, esc(e.partNo), esc(e.partName), esc(e.model), esc(e.work), fp(e.from), fp(e.to), `<span class="ex-d ${e.pct >= 0 ? 'up' : 'down'}">${e.pct >= 0 ? '▲ +' : '▼ '}${e.pct.toFixed(1)}%</span>`]), 'ex-left') + `<div class="ex-foot">แสดง ${Math.min(shown.length, 300).toLocaleString('th-TH')} จาก ${shown.length.toLocaleString('th-TH')} รายการ</div>`, 'ex-wide')}`;
+          this.tbl(['วันที่ GO', 'Maker', 'Part No.', 'Part Name', 'Model', 'CPS', 'Work', 'ราคาเดิม', 'ราคาใหม่', '% เปลี่ยน'], shown.slice(0, 300).map(e => [dt(e.ts), `<b>${esc(e.maker)}</b>`, esc(e.partNo), esc(e.partName), esc(e.model), e.cps === '(ไม่ระบุ)' ? '—' : `<span class="ex-chip ${e.cps === 'NON CPS' ? '' : 'c'}">${e.cps === 'NON CPS' ? 'NON CPS' : 'CPS'}</span>`, esc(e.work), fp(e.from), fp(e.to), `<span class="ex-d ${e.pct >= 0 ? 'up' : 'down'}">${e.pct >= 0 ? '▲ +' : '▼ '}${e.pct.toFixed(1)}%</span>`]), 'ex-left') + `<div class="ex-foot">แสดง ${Math.min(shown.length, 300).toLocaleString('th-TH')} จาก ${shown.length.toLocaleString('th-TH')} รายการ</div>`, 'ex-wide')}`;
     }
   };
   document.addEventListener('keydown', e => GWDash.keys(e));
