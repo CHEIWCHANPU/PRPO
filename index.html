@@ -5755,6 +5755,22 @@ html body .gw-table tbody tr.gw-pl-ccir > td.gw-place { background: #CC99FF !imp
 /* REMARK มีคำว่า ยกเลิก / CANCEL → ทั้งแถวสีเหลือง (ช่อง PLACE ยังคงสีของ Place) */
 html body .gw-table tbody tr.gw-cancel > td { background: #FFF200 !important; color: #3d3600; }
 html body .gw-table tbody tr.gw-cancel:hover > td { background: #FFE600 !important; }
+.gd-exec { border-top: 4px solid var(--accent) !important; padding-top: 1.2rem !important; }
+.gd-exec-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; flex-wrap: wrap; padding-bottom: .9rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border2); }
+.gd-exec-head small { display: block; font-size: .72rem; letter-spacing: .14em; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+.gd-exec-head h2 { margin: .25rem 0 0; font-size: 1.55rem; line-height: 1.3; }
+.gd-exec-head > span { font-size: .8rem; color: var(--muted); }
+.gd-lead { font-size: 1.12rem; line-height: 1.85; margin: .2rem 0 1.2rem; }
+.gd-lead b { color: var(--accent); }
+.gd-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: .8rem; margin-bottom: 1.3rem; }
+.gd-tile { padding: .9rem 1rem; border-radius: 12px; background: var(--surface2); border: 1px solid var(--border2); border-left: 4px solid var(--accent); }
+.gd-tile span { display: block; font-size: .74rem; font-weight: 700; color: var(--muted); }
+.gd-tile b { display: block; font-size: 1.4rem; margin: .25rem 0; line-height: 1.25; overflow-wrap: anywhere; }
+.gd-tile small { font-size: .78rem; color: var(--muted); }
+.gd-sec { margin: 1.8rem 0 .7rem; font-size: .78rem; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); font-weight: 800; display: flex; align-items: center; gap: .7rem; }
+.gd-sec::after { content: ""; flex: 1; height: 1px; background: var(--border2); }
+html body .gd-kpi b { font-size: 1.75rem; letter-spacing: -.01em; }
+html body .gd-card > header h3 { font-size: 1rem; }
 .gd-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: .45rem; vertical-align: middle; }
 .gd-brief-p { margin: .3rem 0 1rem; font-size: 1rem; line-height: 1.85; color: var(--text); }
 .gd-brief-p b { color: var(--accent); }
@@ -21080,8 +21096,21 @@ function endTour() {
       const noPlace = cur.filter(x => x.place === '(ไม่ระบุ)').length;
       if (noPlace) watch.push(['info', `มี ${noPlace.toLocaleString('th-TH')} รายการที่ยังไม่ระบุ PLACE`]);
       if (!watch.length) watch.push(['up', 'ไม่พบประเด็นผิดปกติในข้อมูลที่เลือก']);
-      const briefHtml = `<section class="gd-card gd-insights gd-brief"><header><h3>สรุปภาพรวม (อ่านง่าย)</h3><span>สรุปจากข้อมูลที่เลือกด้านบน</span></header>
-          <p class="gd-brief-p">${briefParts.join(' · ')}</p><h4 class="gd-sub">ประเด็นที่ควรดู</h4>
+      const tile = (l, v, sub, col) => `<div class="gd-tile"${col ? ` style="border-left-color:${col}"` : ''}><span>${l}</span><b>${v}</b><small>${sub || '&nbsp;'}</small></div>`;
+      const asOf = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
+      const lead = `ปี ${yTH(Y)}${period} บริษัทมีงาน GO <b>${sc.count.toLocaleString('th-TH')}</b> รายการ รวม <b>${this.fmt(sc.volume, 'volume')}</b> ชิ้น${B ? ` <span class="gd-delta ${dCnt.cls}">${dCnt.txt}</span> เมื่อเทียบกับปี ${yTH(B)}` : ''}${sc.priced ? ` · มูลค่าขาย <b>${this.fmt(sc.sales, 'sales')}</b> กำไรขั้นต้น <b>${this.fmt(sc.profit, 'profit')}</b>${sc.margin != null ? ` (Margin ${sc.margin.toFixed(1)}%)` : ''}` : ''}`;
+      const briefHtml = `<section class="gd-card gd-insights gd-exec">
+          <div class="gd-exec-head"><div><small>Executive Summary</small><h2>รายงานผู้บริหาร · งาน GO WORK ประจำปี ${yTH(Y)}</h2></div><span>ข้อมูล ณ ${asOf}${period ? ' · ช่วง' + period.replace(/[()]/g, '') : ''}</span></div>
+          <p class="gd-lead">${lead}</p>
+          <div class="gd-tiles">
+            ${tile('PLACE ผลิตหลัก', tp ? esc(tp[0]) : '—', tp ? `${pct(tp[1].length, cur.length)} ของรายการ` : '', tp ? plColor(tp[0]) : '')}
+            ${tile('ประเภทงานหลัก', topWork ? esc(topWork[0]) : '—', topWork && totalM ? `${(topWork[1] / totalM * 100).toFixed(1)}% ของ${ML}` : '')}
+            ${tile('Maker รายใหญ่สุด', mkSorted.length ? esc(mkSorted[0][0]) : '—', mkSorted.length ? `${pct(mkSorted[0][1], totalM)} · Top 5 รวม ${top5Pct.toFixed(1)}%` : '')}
+            ${tile('ลูกค้าที่ GO (รหัส CUS)', `${cusGroups.length} ราย`, cusGroups.slice(0, 4).map(([k, l]) => `${esc(k)} ${l.length.toLocaleString('th-TH')}`).join(' · '))}
+            ${tile('เดือนที่มีงานสูงสุด', months[peak] > 0 ? MONTHS[peak] : '—', months[peak] > 0 ? `${this.fmt(months[peak], M)} (${ML})` : '')}
+            ${tile('งานลอกผิวชุบ (แยกจากสรุป)', `${stripCur.length.toLocaleString('th-TH')} รายการ`, B ? `ปี ${yTH(B)}${period}: ${stripPrev.length.toLocaleString('th-TH')} รายการ` : '')}
+          </div>
+          <h4 class="gd-sub">ประเด็นที่ผู้บริหารควรทราบ</h4>
           <ul>${watch.map(([t, h]) => `<li class="${t}"><i></i><span>${h}</span></li>`).join('')}</ul></section>`;
       const placeCards = `<section class="gd-card"><header><h3>สรุปตาม PLACE (สถานที่ผลิต)</h3><span>ปี ${yTH(Y)}${period}</span></header>${this.tbl(['PLACE', 'รายการ', 'สัดส่วน', 'VOLUME', 'มูลค่าขาย', 'กำไรขั้นต้น', 'Margin'], placeRows)}</section>
           <section class="gd-card"><header><h3>สัดส่วนตาม PLACE</h3><span>${ML}</span></header><div class="gd-chart"><canvas id="gdPlace"></canvas></div></section>
@@ -21101,8 +21130,9 @@ function endTour() {
       }).join('');
 
       host.innerHTML = `
-        <div class="gd-kpis">${kpiHtml}</div>
         ${briefHtml}
+        <h2 class="gd-sec">ตัวชี้วัดหลัก</h2><div class="gd-kpis">${kpiHtml}</div>
+        <h2 class="gd-sec">วิเคราะห์เชิงลึก</h2>
         <section class="gd-card gd-insights"><header><h3>สรุปวิเคราะห์ ปี ${yTH(Y)}${B ? ` เทียบ ${yTH(B)}` : ''}${period}</h3><span>วัดด้วย: ${ML}</span></header>
           <ul>${ins.map(([t, h]) => `<li class="${t}"><i></i><span>${h}</span></li>`).join('') || '<li class="info"><i></i><span>ยังมีข้อมูลไม่พอสำหรับการวิเคราะห์</span></li>'}</ul></section>
         <div class="gd-grid">
