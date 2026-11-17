@@ -8968,45 +8968,58 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
 
   <!-- ═══════════ DASHBOARD GO WORK ═══════════ -->
   <div class="page" id="page-gwdash">
-    <section class="gx-hero gd-hero">
-      <div class="gx-hero-text">
+    <section class="ex-hero">
+      <div>
         <h1>Dashboard GO WORK</h1>
-        <p>สรุปงาน GO รายปี — Model, ลูกค้า, Maker ใหม่ และกำไรรวมของปีที่เลือก (นับเฉพาะ Machine / Surface treatment / Buff / Press part) · เลือกเทียบกับปีอื่นได้ถ้าต้องการ</p>
-      </div>
-      <div class="gd-controls">
-        <label>ปีที่ดู<select id="gdYear" onchange="GWDash.year=+this.value;GWDash.base=null;GWDash.render()"></select></label>
-        <span class="gd-vs">เทียบ</span>
-        <label>เทียบกับ (ไม่บังคับ)<select id="gdBase" onchange="GWDash.base=+this.value||null;GWDash.render()"></select></label>
+        <p>สรุปงาน GO สำหรับผู้บริหาร — จำนวนงานรายปี · Model / ลูกค้า / ประเภทงาน · Model แยกตามลูกค้า · Maker ที่ปรับราคา</p>
       </div>
     </section>
-    <div class="gd-bar">
-      <div class="gd-seg" id="gdMetric" role="group" aria-label="วัดด้วย">
-        <span>วัดด้วย</span>
-        <button data-m="count" onclick="GWDash.setMetric('count')">จำนวนรายการ</button>
-        <button data-m="volume" onclick="GWDash.setMetric('volume')">VOLUME</button>
-        <button data-m="sales" onclick="GWDash.setMetric('sales')">มูลค่าขาย</button>
-        <button data-m="profit" onclick="GWDash.setMetric('profit')">กำไรขั้นต้น</button>
-      </div>
-      <div class="gd-seg" id="gdYtd" role="group" aria-label="ช่วงเวลาที่เทียบ" hidden>
-        <span>ปีปัจจุบันเทียบกับ</span>
-        <button data-y="1" onclick="GWDash.ytd=true;GWDash.render()">ช่วงเดือนเดียวกัน</button>
-        <button data-y="0" onclick="GWDash.ytd=false;GWDash.render()">ทั้งปีของปีก่อน</button>
-      </div>
-      <div class="gd-seg" id="gdBasis" role="group" aria-label="นับปีจาก">
-        <span>นับปีจาก</span>
-        <button data-b="go" onclick="GWDash.basis='go';GWDash.year=null;GWDash.base=null;GWDash.render()">วันที่ GO</button>
-        <button data-b="year" onclick="GWDash.basis='year';GWDash.year=null;GWDash.base=null;GWDash.render()">คอลัมน์ YEAR</button>
-      </div>
-    </div>
-    <style>
-      .gd-works{margin:0 0 .9rem;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.55rem .9rem;font-size:.8rem}
-      .gd-works summary{cursor:pointer;font-weight:600}
-      .gd-wk{display:inline-flex;align-items:center;gap:.35rem;margin:.45rem 1rem 0 0}
-      .gd-scroll{max-height:380px;overflow:auto}
-      .gd-new{font-size:.68rem;font-weight:600;color:#2F8F6E;border:1px solid currentColor;border-radius:6px;padding:0 .3rem;margin-left:.3rem}
-      @media (min-width:1101px){.gd-kpis{grid-template-columns:repeat(5,minmax(0,1fr))}}
-    </style>
+    <div class="ex-bar" id="gdBar"></div>
     <div id="gdBody"><div class="gx-skel tall"></div></div>
+    <style>
+      #page-gwdash{--ex-a:#2E5395;--ex-up:#A6443C;--ex-dn:#2F8F6E}
+      .ex-hero{padding:.4rem 0 .9rem}.ex-hero h1{margin:0;font-size:1.6rem;letter-spacing:.2px}.ex-hero p{margin:.25rem 0 0;color:var(--muted);font-size:.9rem}
+      .ex-bar{display:flex;flex-wrap:wrap;gap:.7rem 1.2rem;align-items:center;justify-content:space-between;margin-bottom:1rem;position:sticky;top:0;z-index:5;background:var(--bg);padding:.5rem 0}
+      .ex-tabs{display:flex;gap:.35rem;flex-wrap:wrap}
+      .ex-tabs button{display:inline-flex;align-items:center;gap:.5rem;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:999px;padding:.45rem .95rem;font-size:.85rem;font-weight:600;cursor:pointer}
+      .ex-tabs button i{font-style:normal;display:inline-grid;place-items:center;width:1.3rem;height:1.3rem;border-radius:50%;background:var(--surface2);font-size:.72rem}
+      .ex-tabs button.on{background:var(--ex-a);border-color:var(--ex-a);color:#fff}.ex-tabs button.on i{background:rgba(255,255,255,.22)}
+      .ex-filters{display:flex;gap:.6rem;flex-wrap:wrap;align-items:flex-end}
+      .ex-filters label,.ex-inl{display:flex;flex-direction:column;gap:.15rem;font-size:.7rem;color:var(--muted)}
+      .ex-inl{flex-direction:row;align-items:center;gap:.5rem;font-size:.8rem}
+      .ex-filters select,.ex-inl select,.ex-search{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:8px;padding:.4rem .55rem;font-size:.85rem}
+      .ex-btn{border:0;background:#C9A227;color:#1a1400;font-weight:700;border-radius:8px;padding:.5rem .9rem;cursor:pointer;font-size:.85rem}
+      .ex-slide-title{display:flex;align-items:baseline;gap:.8rem;flex-wrap:wrap;margin:.2rem 0 .8rem}.ex-slide-title h2{margin:0;font-size:1.25rem}.ex-slide-title span{color:var(--muted);font-size:.85rem}
+      .ex-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.8rem;margin-bottom:1rem}.ex-kpis.k3{grid-template-columns:repeat(3,minmax(0,1fr))}
+      .ex-kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.9rem 1rem;box-shadow:var(--shadow-card);display:flex;flex-direction:column;gap:.15rem;border-top:3px solid var(--border)}
+      .ex-kpi span{font-size:.78rem;color:var(--muted);font-weight:600}.ex-kpi b{font-size:2rem;line-height:1.1;font-variant-numeric:tabular-nums}.ex-kpi small{color:var(--muted);font-size:.75rem;min-height:1em}
+      .ex-kpi.primary{border-top-color:var(--ex-a)}.ex-kpi.bad{border-top-color:var(--ex-up)}.ex-kpi.bad b{color:var(--ex-up)}.ex-kpi.good{border-top-color:var(--ex-dn)}.ex-kpi.good b{color:var(--ex-dn)}
+      .ex-grid{display:grid;gap:1rem;margin-bottom:1rem}.ex-grid.g2{grid-template-columns:repeat(2,minmax(0,1fr))}.ex-grid.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+      .ex-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem 1.1rem;box-shadow:var(--shadow-card);min-width:0;margin-bottom:0}.ex-wide{margin-bottom:1rem}
+      .ex-card header{margin-bottom:.6rem}.ex-card h3{margin:0;font-size:1rem}.ex-card header p{margin:.15rem 0 0;color:var(--muted);font-size:.78rem}
+      .ex-chart{position:relative;height:300px}.ex-chart.tall{height:420px}
+      .ex-ins{margin:0;padding-left:1.1rem;display:grid;gap:.4rem;font-size:.95rem;line-height:1.5}
+      .ex-scroll{max-height:460px;overflow:auto;border-radius:8px}
+      .ex-table{width:100%;border-collapse:collapse;font-size:.84rem;font-variant-numeric:tabular-nums}
+      .ex-table th{position:sticky;top:0;background:var(--surface2);color:var(--muted);font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.3px;padding:.5rem .6rem;text-align:left;white-space:nowrap}
+      .ex-table td{padding:.45rem .6rem;border-top:1px solid var(--border2);vertical-align:top}.ex-table .r{text-align:right}.ex-table.ex-left td:not(:first-child){text-align:left}.ex-table.ex-left th{text-align:left}
+      .ex-table.ex-left td.r{text-align:left}
+      .ex-heat td{text-align:center;padding:.4rem .5rem;min-width:46px}.ex-heat td:first-child{text-align:left;white-space:nowrap}.ex-heat td.z{color:var(--border)}.ex-heat th.r{text-align:center}
+      .ex-d{font-weight:700;white-space:nowrap}.ex-d.up{color:var(--ex-up)}.ex-d.down{color:var(--ex-dn)}
+      .ex-chip{display:inline-block;margin:0 .25rem .25rem 0;padding:.08rem .5rem;border-radius:6px;background:var(--surface2);border:1px solid var(--border);font-size:.75rem;white-space:nowrap}
+      .ex-chip.c{background:rgba(46,83,149,.12);border-color:rgba(46,83,149,.35)}.ex-chip.m em{font-style:normal;margin-left:.35rem;font-weight:700;color:var(--ex-a)}
+      .ex-search{width:100%;max-width:340px;margin-bottom:.7rem}.ex-foot,.ex-note{color:var(--muted);font-size:.78rem;margin-top:.5rem}
+      .ex-cus-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7rem}
+      .ex-cus{border:1px solid var(--border);border-radius:10px;padding:.55rem .8rem;background:var(--surface2)}.ex-cus summary{cursor:pointer;display:flex;justify-content:space-between;gap:1rem;align-items:center}
+      .ex-cus summary span{color:var(--muted);font-size:.78rem}.ex-chips{margin-top:.5rem}.ex-works{display:block;color:var(--muted);margin-top:.2rem}
+      @media (max-width:1100px){.ex-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.ex-grid.g2,.ex-grid.g3,.ex-cus-grid{grid-template-columns:1fr}}
+      /* โหมดนำเสนอ */
+      #page-gwdash.ex-present{position:fixed;inset:0;z-index:9999;background:var(--bg);overflow:auto;padding:1.4rem 2.2rem;font-size:1.12rem}
+      #page-gwdash.ex-present .ex-hero{padding-top:0}#page-gwdash.ex-present .ex-hero h1{font-size:2rem}
+      #page-gwdash.ex-present .ex-kpi b{font-size:2.8rem}#page-gwdash.ex-present .ex-chart{height:340px}#page-gwdash.ex-present .ex-chart.tall{height:460px}
+      #page-gwdash.ex-present .ex-ins{font-size:1.15rem}#page-gwdash.ex-present .ex-slide-title h2{font-size:1.7rem}#page-gwdash.ex-present .ex-table{font-size:.95rem}
+      @media print{.ex-bar{display:none}#page-gwdash .ex-card{break-inside:avoid}}
+    </style>
   </div>
 
   <!-- ═══════════ SUMMARY MEETING ═══════════ -->
@@ -20993,33 +21006,34 @@ function endTour() {
     }
   };
 
-  /* ══════════════════════ DASHBOARD GO WORK (เปรียบเทียบรายปี + วิเคราะห์) ══════════════════════ */
+  /* ══════════════════════ DASHBOARD GO WORK v3 — มุมมองผู้บริหาร (รายปี · Model/ลูกค้า · Maker ปรับราคา) ══════════════════════ */
   const GWDash = {
-    charts: {}, year: null, base: null, basis: 'go', metric: 'count', ytd: true,
-    METRICS: { count: 'จำนวนรายการ', volume: 'VOLUME', sales: 'มูลค่าขาย', profit: 'กำไรขั้นต้น' },
-    COLORS: ['#2E5395', '#2F8F6E', '#C9A227', '#B0673A', '#1E3A8A', '#3F7D53', '#A6443C', '#8A94A6'],
+    charts: {}, tab: 'overview', year: 'all', work: 'all', basis: 'go', present: false, mkSel: 'all', q: '',
+    PAL: ['#2E5395', '#2F8F6E', '#C9A227', '#B0673A', '#7A4FA3', '#2A9DB5', '#A6443C', '#8A94A6', '#3F7D53', '#D17B9B'],
+    TABS: [['overview', 'ภาพรวมรายปี'], ['model', 'Model / ลูกค้า / ประเภทงาน'], ['matrix', 'Model แยกตามลูกค้า'], ['price', 'Maker ปรับราคา']],
     active() { return $('#page-gwdash') && $('#page-gwdash').classList.contains('active'); },
     open() { this.render(); GoWork.load(); },
-    sel: null, _sl: false,
-    works() { return [...new Set(GoWork.rows.map(r => String(r.work || '').trim() || '(ไม่ระบุ)'))].sort((a, b) => a.localeCompare(b, 'th', { numeric: true })); },
-    okWork(w) {
-      if (!this._sl) { this._sl = true; try { const s = JSON.parse(localStorage.getItem('ccip_gwdash_works') || 'null'); if (Array.isArray(s)) this.sel = new Set(s); } catch (e) {} }
-      return this.sel ? this.sel.has(w) : /machin|m\/c|surface|buff|press/i.test(w) && !/ผิวชุบ|plating|ชุบ/i.test(w);
-    },
-    setWork(w, on) {
-      const s = new Set(this.works().filter(x => this.okWork(x))); on ? s.add(w) : s.delete(w); this.sel = s;
-      try { localStorage.setItem('ccip_gwdash_works', JSON.stringify([...s])); } catch (e) {}
+    setTab(t) { this.tab = t; this.render(); const p = $('#page-gwdash'); if (p) p.scrollTop = 0; },
+    setYear(v) { this.year = v === 'all' ? 'all' : +v; this.mkSel = 'all'; this.render(); },
+    setWork(v) { this.work = v; this.mkSel = 'all'; this.render(); },
+    setBasis(b) { this.basis = b; this.year = 'all'; this.render(); },
+    setMaker(v) { this.mkSel = v; this.render(); },
+    setQ(v) { this.q = v; this.renderModelTable(); },
+    togglePresent(on) {
+      this.present = on == null ? !this.present : !!on;
+      const p = $('#page-gwdash'); if (!p) return;
+      p.classList.toggle('ex-present', this.present);
+      document.body.classList.toggle('ex-presenting', this.present);
+      if (this.present) { try { document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); } catch (e) {} }
+      else { try { document.fullscreenElement && document.exitFullscreen(); } catch (e) {} }
       this.render();
     },
-    resetWorks() { this.sel = null; try { localStorage.removeItem('ccip_gwdash_works'); } catch (e) {} this.render(); },
-    renderWorks() {
-      const box = $('#gdWorksBody'); if (!box) return;
-      const ws = this.works();
-      $('#gdWorksSum').textContent = `ประเภทงานที่นับ (WORK): ${ws.filter(w => this.okWork(w)).length} จาก ${ws.length} ประเภท — คลิกเพื่อเลือก/ตัดออก`;
-      box.innerHTML = ws.map(w => `<label class="gd-wk"><input type="checkbox" data-w="${esc(w)}" ${this.okWork(w) ? 'checked' : ''} onchange="GWDash.setWork(this.dataset.w,this.checked)">${esc(w)}</label>`).join('') + (ws.length ? ' <button class="gx-btn ghost" onclick="GWDash.resetWorks()">คืนค่าเริ่มต้น</button>' : '');
-    },
-    tbl(head, rows) {
-      return `<div class="gx-table-scroll gd-scroll"><table class="gx-table gd-table"><thead><tr>${head.map((h, i) => `<th class="${i ? 'gw-al-r' : ''}">${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map((c, i) => `<td class="${i ? 'gw-al-r' : ''}">${c}</td>`).join('')}</tr>`).join('') || `<tr><td colspan="${head.length}" class="gw-al-c">ไม่มีข้อมูล</td></tr>`}</tbody></table></div>`;
+    keys(e) {
+      if (!this.present || !this.active()) return;
+      const i = this.TABS.findIndex(t => t[0] === this.tab);
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') { this.setTab(this.TABS[Math.min(i + 1, this.TABS.length - 1)][0]); e.preventDefault(); }
+      else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { this.setTab(this.TABS[Math.max(i - 1, 0)][0]); e.preventDefault(); }
+      else if (e.key === 'Escape') this.togglePresent(false);
     },
     yearOf(r) {
       const fix = y => (y > 2400 ? y - 543 : y);
@@ -21027,388 +21041,294 @@ function endTour() {
       const fromCol = () => { const n = numOf(r.year); return n && n > 1990 ? fix(Math.round(n)) : null; };
       return this.basis === 'go' ? (fromGo() || fromCol()) : (fromCol() || fromGo());
     },
+    /* ข้อมูลทั้งหมด (ไม่รวมรายการที่ REMARK = ยกเลิก GO) พร้อมนับรายการยกเลิกแยก */
     prep() {
-      return GoWork.rows.filter(r => !gwIsCancel(r) && !gwIsStrip(r)).map(r => {   // ตัดรายการที่ REMARK = ยกเลิก GO ออกจากการสรุป
+      const out = [], cancelled = [];
+      GoWork.rows.forEach((r, i) => {
         const d = parseDMY(r.goDate);
-        const vol = numOf(r.volume) || 0, cp = numOf(r.customer), mp = numOf(r.custMaker);
-        const priced = cp != null && mp != null;
-        return {
-          y: this.yearOf(r), m: d ? d.getMonth() : null, ts: d ? d.getTime() : null, volume: vol, priced,
-          cus: gwCusPrefix(r.cusCode), ok: this.okWork(String(r.work || '').trim() || '(ไม่ระบุ)'),
-          sales: cp != null ? cp * vol : 0, cost: mp != null ? mp * vol : 0,
-          profit: priced ? (cp - mp) * vol : 0, salesP: priced ? cp * vol : 0,
-          maker: String(r.maker || '').trim() || '(ไม่ระบุ)', work: String(r.work || '').trim() || '(ไม่ระบุ)',
-          place: (() => { const v = String(r.place || '').trim().toUpperCase().replace(/\s+/g, ''); return !v || v === '-' ? '(ไม่ระบุ)' : v; })(), partNo: String(r.partNo || '').trim(), partName: String(r.partName || '').trim(),
-          model: String(r.model || '').trim(), cpc: /NON/i.test(r.cpc || '') ? 'NON CPS' : (String(r.cpc || '').trim() ? 'CPC / CPS' : '(ไม่ระบุ)')
+        const clean = v => { const s = String(v == null ? '' : v).trim(); return !s || s === '-' ? '' : s; };
+        const x = {
+          i, y: this.yearOf(r), m: d ? d.getMonth() : null, ts: d ? d.getTime() : null,
+          model: clean(r.model).toUpperCase() || '(ไม่ระบุ)', cus: gwCusPrefix(r.cusCode) || '(ไม่ระบุ)',
+          maker: clean(r.maker) || '(ไม่ระบุ)', work: clean(r.work) || '(ไม่ระบุ)',
+          partNo: clean(r.partNo), partName: clean(r.partName), rev: clean(r.rev),
+          place: clean(r.place).toUpperCase().replace(/\s+/g, '') || '(ไม่ระบุ)',
+          volume: numOf(r.volume) || 0, mkPrice: numOf(r.custMaker), cusPrice: numOf(r.customer),
+          cpc: /NON/i.test(r.cpc || '') ? 'NON CPS' : (clean(r.cpc) ? 'CPC / CPS' : '(ไม่ระบุ)')
         };
-      }).filter(x => x.y && x.ok);
+        (gwIsCancel(r) ? cancelled : out).push(x);
+      });
+      return { all: out.filter(x => x.y), cancelled: cancelled.filter(x => x.y), noYear: out.filter(x => !x.y).length };
     },
-    val(list, metric) {
-      metric = metric || this.metric;
-      if (metric === 'count') return list.length;
-      return list.reduce((s, x) => s + (x[metric] || 0), 0);
-    },
-    sum(list) {
-      const salesP = list.reduce((s, x) => s + x.salesP, 0), profit = list.reduce((s, x) => s + x.profit, 0);
-      return {
-        count: list.length, volume: this.val(list, 'volume'), sales: this.val(list, 'sales'), cost: this.val(list, 'cost'),
-        profit, margin: salesP ? profit / salesP * 100 : null,
-        makers: new Set(list.map(x => x.maker)).size, custs: new Set(list.map(x => x.cus).filter(Boolean)).size, models: new Set(list.map(x => x.model).filter(Boolean)).size,
-        priced: list.filter(x => x.priced).length
-      };
-    },
-    fmt(v, metric) {
-      if (v == null || isNaN(v)) return '—';
-      if (metric === 'sales' || metric === 'profit' || metric === 'cost') {
-        const a = Math.abs(v);
-        return (v < 0 ? '-' : '') + '฿' + (a >= 1e6 ? (a / 1e6).toFixed(a >= 1e8 ? 0 : 2) + 'M' : a >= 1e4 ? (a / 1e3).toFixed(1) + 'K' : a.toLocaleString('th-TH', { maximumFractionDigits: 0 }));
-      }
-      return Math.round(v).toLocaleString('th-TH');
-    },
-    delta(cur, prev, pp) {
-      if (cur == null || prev == null) return { txt: 'ไม่มีข้อมูลปีเทียบ', cls: 'flat' };
-      if (pp) { const d = cur - prev; return { txt: `${d >= 0 ? '▲' : '▼'} ${Math.abs(d).toFixed(1)} จุด`, cls: Math.abs(d) < 0.05 ? 'flat' : d > 0 ? 'up' : 'down' }; }
-      if (!prev) return { txt: cur ? 'ใหม่ (ปีเทียบ = 0)' : '—', cls: cur ? 'up' : 'flat' };
-      const p = (cur - prev) / Math.abs(prev) * 100;
-      return { txt: `${p >= 0 ? '▲' : '▼'} ${Math.abs(p).toFixed(1)}%`, cls: Math.abs(p) < 0.05 ? 'flat' : p > 0 ? 'up' : 'down' };
-    },
+    n(v) { return Math.round(v).toLocaleString('th-TH'); },
+    pct(a, b) { return b ? (a / b * 100).toFixed(1) + '%' : '—'; },
+    /* ── Chart helpers ── */
+    css(v) { return getComputedStyle(document.body).getPropertyValue(v).trim(); },
     kill(id) { if (this.charts[id]) { this.charts[id].destroy(); delete this.charts[id]; } },
+    killAll() { Object.keys(this.charts).forEach(k => this.kill(k)); },
     chart(id, cfg) {
       this.kill(id);
       const c = document.getElementById(id); if (!c || typeof Chart === 'undefined') return;
-      cfg.options = Object.assign({ responsive: true, maintainAspectRatio: false }, cfg.options);
+      const tx = this.css('--chart-text') || '#56677F', grid = this.css('--border2') || 'rgba(128,128,128,.2)';
+      const big = this.present ? 1.25 : 1;
+      cfg.options = Object.assign({ responsive: true, maintainAspectRatio: false, animation: { duration: 500 } }, cfg.options);
+      const o = cfg.options; o.plugins = o.plugins || {};
+      o.plugins.legend = Object.assign({ labels: { color: tx, boxWidth: 12, boxHeight: 12, font: { size: 12 * big } } }, o.plugins.legend);
+      if (o.scales) Object.values(o.scales).forEach(s => { s.ticks = Object.assign({ color: tx, font: { size: 12 * big } }, s.ticks); s.grid = Object.assign({ color: grid }, s.grid); });
       this.charts[id] = new Chart(c, cfg);
     },
-    setMetric(m) { this.metric = m; this.render(); },
+    /* ตัวเลขบนแท่งกราฟ */
+    valLabels: {
+      id: 'exVal',
+      afterDatasetsDraw(chart, _a, opt) {
+        if (!opt || opt.off) return;
+        const { ctx } = chart; ctx.save();
+        ctx.fillStyle = opt.color || '#56677F'; ctx.font = `600 ${opt.size || 12}px sans-serif`;
+        chart.data.datasets.forEach((ds, di) => {
+          if (opt.only != null && di !== opt.only) return;
+          const meta = chart.getDatasetMeta(di); if (meta.hidden) return;
+          meta.data.forEach((el, i) => {
+            const v = ds.data[i]; if (!v) return;
+            const p = el.tooltipPosition();
+            if (chart.options.indexAxis === 'y') { ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(Number(v).toLocaleString('th-TH'), el.x + 6, p.y); }
+            else { ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillText(Number(v).toLocaleString('th-TH'), p.x, el.y - 4); }
+          });
+        });
+        ctx.restore();
+      }
+    },
+    vl(only) { return { exVal: { color: this.css('--text'), size: this.present ? 15 : 12, only } }; },
+    tbl(head, rows, cls) {
+      return `<div class="ex-scroll"><table class="ex-table ${cls || ''}"><thead><tr>${head.map((h, i) => `<th class="${i ? 'r' : ''}">${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map((c, i) => `<td class="${i ? 'r' : ''}">${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+    },
+    group(list, key) { const m = new Map(); list.forEach(x => { const k = typeof key === 'function' ? key(x) : x[key]; if (!m.has(k)) m.set(k, []); m.get(k).push(x); }); return m; },
+    uniq(list, key) { return new Set(list.map(x => x[key]).filter(v => v && v !== '(ไม่ระบุ)')); },
+    kpi(label, val, sub, tone) { return `<div class="ex-kpi ${tone || ''}"><span>${label}</span><b>${val}</b>${sub ? `<small>${sub}</small>` : ''}</div>`; },
+    card(title, sub, body, cls) { return `<section class="ex-card ${cls || ''}"><header><h3>${title}</h3>${sub ? `<p>${sub}</p>` : ''}</header>${body}</section>`; },
+
+    /* ── ตรวจจับ Maker ปรับราคา: รายการเดียวกัน (Maker + Part No + Work) ที่ราคา Maker เปลี่ยนระหว่าง GO ครั้งก่อนกับครั้งถัดไป ── */
+    priceChanges(all) {
+      const g = this.group(all.filter(x => x.partNo && x.maker !== '(ไม่ระบุ)' && x.mkPrice != null && x.mkPrice > 0), x => [x.maker, x.partNo.toUpperCase(), x.work].join('|'));
+      const ev = [];
+      g.forEach(list => {
+        list.sort((a, b) => (a.ts == null ? 1e15 : a.ts) - (b.ts == null ? 1e15 : b.ts) || a.i - b.i);
+        for (let k = 1; k < list.length; k++) {
+          const a = list[k - 1], b = list[k];
+          if (Math.abs(b.mkPrice - a.mkPrice) < 1e-6) continue;
+          ev.push({ maker: b.maker, partNo: b.partNo, partName: b.partName || a.partName, model: b.model, cus: b.cus, work: b.work, from: a.mkPrice, to: b.mkPrice,
+            pct: (b.mkPrice - a.mkPrice) / a.mkPrice * 100, y: b.y, ts: b.ts, rev: b.rev, revFrom: a.rev, volume: b.volume });
+        }
+      });
+      return ev;
+    },
+
     render() {
       const host = $('#gdBody'); if (!host) return;
-      this.renderWorks();
-      const all = this.prep();
-      const years = [...new Set(all.map(x => x.y))].sort((a, b) => a - b);
-      const yearSel = $('#gdYear'), baseSel = $('#gdBase');
-      if (!years.length) {
-        Object.keys(this.charts).forEach(k => this.kill(k));
-        yearSel.innerHTML = ''; baseSel.innerHTML = '';
-        host.innerHTML = `<div class="gx-empty"><strong>${GoWork.rows.length ? 'ไม่พบรายการที่นับ (เช็ควันที่ GO / ปี)' : (GoWork.loaded ? 'ยังไม่มีข้อมูล GO WORK' : 'กำลังโหลดข้อมูล…')}</strong>
-          <span>${GoWork.rows.length ? 'ต้องมีวันที่ในคอลัมน์ GO หรือปีในคอลัมน์ YEAR' : 'นำเข้าไฟล์ Excel หลักในหน้า รายการ GO WORK ก่อน แล้ว Dashboard จะคำนวณให้อัตโนมัติ'}</span>
-          ${GoWork.loaded && !GoWork.rows.length ? `<button class="gx-btn primary" onclick="showPage('gowork', document.getElementById('nav-gowork'));setTimeout(()=>GoWork.openImport(),100)">นำเข้า Excel</button>` : ''}</div>`;
+      const P = this.prep();
+      const years = [...new Set(P.all.map(x => x.y))].sort((a, b) => a - b);
+      const works = [...new Set(P.all.map(x => x.work))].sort((a, b) => a.localeCompare(b, 'th', { numeric: true }));
+      /* แถบควบคุม */
+      const bar = $('#gdBar');
+      if (bar) {
+        bar.innerHTML = `
+          <div class="ex-tabs" role="tablist">${this.TABS.map(([k, l], i) => `<button role="tab" class="${this.tab === k ? 'on' : ''}" onclick="GWDash.setTab('${k}')"><i>${i + 1}</i>${l}</button>`).join('')}</div>
+          <div class="ex-filters">
+            <label>ปี<select onchange="GWDash.setYear(this.value)"><option value="all">ทุกปี</option>${years.slice().reverse().map(y => `<option value="${y}"${this.year === y ? ' selected' : ''}>${y + 543}</option>`).join('')}</select></label>
+            <label>ประเภทงาน<select onchange="GWDash.setWork(this.value)"><option value="all">ทั้งหมด</option>${works.map(w => `<option value="${esc(w)}"${this.work === w ? ' selected' : ''}>${esc(w)}</option>`).join('')}</select></label>
+            <label>นับปีจาก<select onchange="GWDash.setBasis(this.value)"><option value="go"${this.basis === 'go' ? ' selected' : ''}>วันที่ GO</option><option value="year"${this.basis === 'year' ? ' selected' : ''}>คอลัมน์ YEAR</option></select></label>
+            <button class="ex-btn" onclick="GWDash.togglePresent()">${this.present ? '✕ ออกจากโหมดนำเสนอ (Esc)' : '▶ โหมดนำเสนอ'}</button>
+          </div>`;
+      }
+      this.killAll();
+      if (!P.all.length) {
+        host.innerHTML = `<div class="gx-empty"><strong>${GoWork.rows.length ? 'ไม่พบรายการที่นับได้ (เช็ควันที่ GO / ปี)' : (GoWork.loaded ? 'ยังไม่มีข้อมูล GO WORK' : 'กำลังโหลดข้อมูล GO WORK…')}</strong>
+          <span>${GoWork.rows.length ? 'ต้องมีวันที่ในคอลัมน์ GO หรือปีในคอลัมน์ YEAR' : 'นำเข้าไฟล์ Excel หลักในหน้า รายการ GO WORK'}</span></div>`;
         return;
       }
-      if (!this.year || !years.includes(this.year)) { const now = new Date().getFullYear(); this.year = years.includes(now) ? now : years[years.length - 1]; }
-      if (this.base != null && (this.base >= this.year || !years.includes(this.base))) this.base = null;
-      yearSel.innerHTML = years.slice().reverse().map(y => `<option value="${y}"${y === this.year ? ' selected' : ''}>${y + 543} (${y})</option>`).join('');
-      baseSel.innerHTML = years.filter(y => y < this.year).reverse().map(y => `<option value="${y}"${y === this.base ? ' selected' : ''}>${y + 543}</option>`).join('') ; baseSel.innerHTML = `<option value=""${this.base ? '' : ' selected'}>ไม่เทียบ (ดูปีเดียว)</option>` + baseSel.innerHTML;
-      document.querySelectorAll('#gdMetric button').forEach(b => b.classList.toggle('on', b.dataset.m === this.metric));
-      document.querySelectorAll('#gdBasis button').forEach(b => b.classList.toggle('on', b.dataset.b === this.basis));
+      const wf = this.work === 'all' ? (x => true) : (x => x.work === this.work);
+      const all = P.all.filter(wf), cancelled = P.cancelled.filter(wf);
+      const sel = this.year === 'all' ? all : all.filter(x => x.y === this.year);
+      const ylabel = this.year === 'all' ? `ทุกปี (${years[0] + 543}–${years[years.length - 1] + 543})` : `ปี ${this.year + 543}`;
+      const ctx = { P, all, cancelled, sel, years, ylabel };
+      const fn = { overview: 'tabOverview', model: 'tabModel', matrix: 'tabMatrix', price: 'tabPrice' }[this.tab];
+      host.innerHTML = `<div class="ex-slide-title"><h2>${this.TABS.find(t => t[0] === this.tab)[1]}</h2><span>${ylabel}${this.work !== 'all' ? ' · ' + esc(this.work) : ''}${P.noYear ? ` · ไม่นับ ${P.noYear} รายการที่ไม่มีปี/วันที่ GO` : ''}</span></div>` + this[fn](ctx);
+      this.afterRender(ctx);
+    },
+    afterRender(c) { if (this._post) { const f = this._post; this._post = null; f(); } },
 
-      const Y = this.year, B = this.base, M = this.metric, ML = this.METRICS[M];
-      // ปีปัจจุบันยังไม่จบ → เทียบกับช่วงเดือนเดียวกันของปีก่อน (ม.ค. ถึงเดือนล่าสุด) เพื่อความยุติธรรม
-      const isCurYear = Y === new Date().getFullYear(), lastM = new Date().getMonth();
-      const ytdOn = this.ytd && isCurYear && B;
-      const cur = all.filter(x => x.y === Y);
-      const prevFull = B ? all.filter(x => x.y === B) : [];
-      const prev = ytdOn ? prevFull.filter(x => x.m == null || x.m <= lastM) : prevFull;
-      const MS_ = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-      const period = ytdOn ? ` (ม.ค.–${MS_[lastM]})` : '';
-      const ytdBox = $('#gdYtd');
-      if (ytdBox) { ytdBox.hidden = !(isCurYear && B); ytdBox.querySelectorAll('button').forEach(b => b.classList.toggle('on', (b.dataset.y === '1') === !!this.ytd)); }
-      const sc = this.sum(cur), sp = B ? this.sum(prev) : null;
-      const yTH = y => y + 543;
-
-      const firstY = new Map(); all.forEach(x => { if (x.maker !== '(ไม่ระบุ)' && !(firstY.get(x.maker) <= x.y)) firstY.set(x.maker, x.y); });
-      const newMkOf = y => [...new Set(all.filter(x => x.y === y && firstY.get(x.maker) === y).map(x => x.maker))];
-      const newMk = Y === years[0] ? [] : newMkOf(Y);
-      /* ── KPI ── */
-      const kpis = [
-        ['จำนวนรายการ GO', sc.count, sp && sp.count, 'count'],
-        ['VOLUME รวม', sc.volume, sp && sp.volume, 'volume'],
-        ['มูลค่าขาย', sc.sales, sp && sp.sales, 'sales'],
-        ['ต้นทุน Maker', sc.cost, sp && sp.cost, 'cost'],
-        ['กำไรขั้นต้น', sc.profit, sp && sp.profit, 'profit'],
-        ['Margin', sc.margin, sp && sp.margin, 'margin'],
-        ['Maker ที่ใช้', sc.makers, sp && sp.makers, 'count'],
-        ['Model', sc.models, sp && sp.models, 'count'],
-        ['ลูกค้า (CUS)', sc.custs, sp && sp.custs, 'count'],
-        ['Maker ใหม่', newMk.length, B && B !== years[0] ? newMkOf(B).length : null, 'count']
-      ];
-      const kpiArr = kpis.map(([l, v, p, t]) => {
-        const d = this.delta(v, B ? p : null, t === 'margin');
-        const shown = t === 'margin' ? (v == null ? '—' : v.toFixed(1) + '%') : this.fmt(v, t);
-        const was = !B ? '' : t === 'margin' ? (p == null ? '—' : p.toFixed(1) + '%') : this.fmt(p, t);
-        const cls = t === 'cost' && d.cls !== 'flat' ? 'neutral' : d.cls;
-        return `<div class="gd-kpi"><span class="gd-kpi-l">${l}</span><b>${shown}</b>
-          <span class="gd-delta ${cls}">${B ? d.txt : '—'}</span>${B ? `<small>ปี ${yTH(B)}${period}: ${was}</small>` : ''}</div>`;
+    /* ═════════ 1) ภาพรวมรายปี ═════════ */
+    tabOverview(c) {
+      const { all, cancelled, years } = c;
+      const byY = this.group(all, 'y'), cancY = this.group(cancelled, 'y');
+      const rows = years.map((y, i) => {
+        const l = byY.get(y) || [], prev = i ? (byY.get(years[i - 1]) || []).length : null;
+        return { y, n: l.length, models: this.uniq(l, 'model').size, cus: this.uniq(l, 'cus').size, makers: this.uniq(l, 'maker').size, vol: l.reduce((s, x) => s + x.volume, 0), canc: (cancY.get(y) || []).length, d: prev == null ? null : (prev ? (l.length - prev) / prev * 100 : null) };
       });
-      const kpiHtml = kpiArr.join('');
-
-      /* ── วิเคราะห์อัตโนมัติ ── */
+      const total = all.length, best = rows.reduce((a, b) => (b.n > a.n ? b : a), rows[0]);
+      const last = rows[rows.length - 1], prevR = rows[rows.length - 2];
+      const wk = [...this.group(all, 'work')].sort((a, b) => b[1].length - a[1].length);
+      const wkKeys = wk.map(x => x[0]);
       const ins = [];
-      if (B) {
-        const d = sc.count - sp.count, p = sp.count ? d / sp.count * 100 : null;
-        ins.push([d >= 0 ? 'up' : 'down', `ปี ${yTH(Y)}${period} มีงาน GO <b>${sc.count.toLocaleString('th-TH')}</b> รายการ ${d >= 0 ? 'เพิ่มขึ้น' : 'ลดลง'} <b>${Math.abs(d).toLocaleString('th-TH')}</b> รายการ${p != null ? ` (${Math.abs(p).toFixed(1)}%)` : ''} จากช่วงเดียวกันของปี ${yTH(B)}`.replace('จากช่วงเดียวกันของปี', period ? 'จากช่วงเดียวกันของปี' : 'จากปี')]);
-        if (sc.margin != null && sp.margin != null) {
-          const dm = sc.margin - sp.margin;
-          ins.push([dm >= 0 ? 'up' : 'down', `Margin เฉลี่ย <b>${sc.margin.toFixed(1)}%</b> ${Math.abs(dm) < 0.05 ? 'เท่ากับปีก่อน' : `${dm > 0 ? 'ดีขึ้น' : 'ลดลง'} ${Math.abs(dm).toFixed(1)} จุด`} (ปีก่อน ${sp.margin.toFixed(1)}%)`]);
-        }
-        const byMaker = (list) => { const m = new Map(); list.forEach(x => m.set(x.maker, (m.get(x.maker) || 0) + this.val([x]))); return m; };
-        const mc = byMaker(cur), mp = byMaker(prev);
-        const diffs = [...new Set([...mc.keys(), ...mp.keys()])].map(k => [k, (mc.get(k) || 0) - (mp.get(k) || 0)]).sort((a, b) => b[1] - a[1]);
-        if (diffs.length && diffs[0][1] > 0) ins.push(['up', `Maker ที่${ML}เพิ่มขึ้นมากที่สุด: <b>${esc(diffs[0][0])}</b> (+${this.fmt(diffs[0][1], M)})`]);
-        const last = diffs[diffs.length - 1];
-        if (last && last[1] < 0) ins.push(['down', `Maker ที่${ML}ลดลงมากที่สุด: <b>${esc(last[0])}</b> (${this.fmt(last[1], M)})`]);
-        const oldModels = new Set(all.filter(x => x.y < Y).map(x => x.model));
-        const newModels = [...new Set(cur.map(x => x.model).filter(m => m && !oldModels.has(m)))];
-        if (newModels.length) ins.push(['info', `Model ใหม่ในปี ${yTH(Y)}: <b>${newModels.length}</b> รุ่น — ${newModels.slice(0, 5).map(esc).join(', ')}${newModels.length > 5 ? ' …' : ''}`]);
-      }
-      if (!B) {
-        ins.push(['info', `ปี ${yTH(Y)}${period}: GO <b>${sc.count.toLocaleString('th-TH')}</b> รายการ · <b>${sc.models}</b> Model · <b>${sc.custs}</b> ลูกค้า · <b>${sc.makers}</b> Maker`]);
-        if (sc.priced) ins.push([sc.profit >= 0 ? 'up' : 'down', `กำไรขั้นต้นรวมทั้งระบบ <b>${this.fmt(sc.profit, 'profit')}</b>${sc.margin != null ? ` · Margin เฉลี่ย <b>${sc.margin.toFixed(1)}%</b>` : ''} (มูลค่าขาย ${this.fmt(sc.sales, 'sales')} · ต้นทุน Maker ${this.fmt(sc.cost, 'cost')})`]);
-        if (Y !== years[0]) { const oM = new Set(all.filter(x => x.y < Y).map(x => x.model)); const nm = [...new Set(cur.map(x => x.model).filter(m => m && !oM.has(m)))]; if (nm.length) ins.push(['info', `Model ใหม่ปีนี้: <b>${nm.length}</b> รุ่น — ${nm.slice(0, 5).map(esc).join(', ')}${nm.length > 5 ? ' …' : ''}`]); }
-      }
-      if (Y !== years[0]) ins.push([newMk.length ? 'up' : 'info', newMk.length ? `Maker ใหม่ที่เริ่ม GO ปีนี้: <b>${newMk.length}</b> ราย — ${newMk.slice(0, 6).map(esc).join(', ')}${newMk.length > 6 ? ' …' : ''}` : 'ปีนี้ไม่มี Maker ใหม่ที่เพิ่งเริ่ม GO']);
-      const grp = key => { const m = new Map(); cur.forEach(x => { const k = x[key]; if (k) (m.get(k) || m.set(k, []).get(k)).push(x); }); return m; };
-      const row = (k, l, extra) => { const s = this.sum(l); return [esc(k) + (extra || ''), s.count.toLocaleString('th-TH'), this.fmt(s.volume, 'volume'), this.fmt(s.sales, 'sales'), this.fmt(s.profit, 'profit'), s.margin == null ? '—' : s.margin.toFixed(1) + '%']; };
-      const byCnt = (a, b) => b[1].length - a[1].length;
-      const oldMd = new Set(all.filter(x => x.y < Y).map(x => x.model));
-      const modelRows = [...grp('model')].sort(byCnt).map(([k, l]) => row(k, l, Y !== years[0] && !oldMd.has(k) ? ' <span class="gd-new">ใหม่</span>' : ''));
-      const custRows = [...grp('cus')].sort(byCnt).map(([k, l]) => { const r = row(k, l); r.splice(1, 0, new Set(l.map(x => x.model).filter(Boolean)).size); return r; });
-      const mkRows = newMk.map(k => cur.filter(x => x.maker === k)).sort((a, b) => b.length - a.length).map(l => { const r = row(l[0].maker, l), t = Math.min(...l.map(x => x.ts).filter(Boolean)); r.splice(1, 0, isFinite(t) ? new Date(t).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'); return r; });
-      const H = ['รายการ', 'VOLUME', 'มูลค่าขาย', 'กำไรขั้นต้น', 'Margin'];
-      const listsHtml = `<section class="gd-card"><header><h3>Model ที่ GO ปี ${yTH(Y)}: ${modelRows.length} รุ่น</h3><span>เรียงตามจำนวนรายการ</span></header>${this.tbl(['Model', ...H], modelRows)}</section>
-        <section class="gd-card"><header><h3>ลูกค้าที่มีงาน GO: ${custRows.length} ราย</h3><span>นับตามรหัส CUS (ตัวอักษรหน้ารหัส เช่น KMT, THM)</span></header>${this.tbl(['รหัส CUS', 'Model', ...H], custRows)}</section>
-        <section class="gd-card span2"><header><h3>Maker ใหม่ที่เริ่ม GO ปี ${yTH(Y)}: ${mkRows.length} ราย</h3><span>${Y === years[0] ? 'ปีแรกในข้อมูล — ยังไม่มีปีก่อนให้เทียบ' : 'ไม่เคยมีงาน GO ในปีก่อน ๆ (เฉพาะประเภทงานที่นับ)'}</span></header>${this.tbl(['Maker', 'GO ครั้งแรก', ...H], mkRows)}</section>`;
-      const works = new Map(); cur.forEach(x => works.set(x.work, (works.get(x.work) || 0) + this.val([x])));
-      const topWork = [...works].sort((a, b) => b[1] - a[1])[0];
-      const totalM = this.val(cur);
-      if (topWork && totalM) ins.push(['info', `งานที่มีสัดส่วนมากที่สุด (${ML}): <b>${esc(topWork[0])}</b> ${(topWork[1] / totalM * 100).toFixed(1)}%`]);
-      const months = Array.from({ length: 12 }, (_, i) => this.val(cur.filter(x => x.m === i)));
-      const peak = months.indexOf(Math.max(...months));
-      if (months[peak] > 0) ins.push(['info', `เดือนที่${ML}สูงสุด: <b>${MONTHS[peak]}</b> (${this.fmt(months[peak], M)})`]);
-      if (cur.length && sc.priced < cur.length) ins.push(['warn', `มีราคาครบทั้งราคาลูกค้าและราคา Maker ${sc.priced.toLocaleString('th-TH')} จาก ${cur.length.toLocaleString('th-TH')} รายการ (${(sc.priced / cur.length * 100).toFixed(0)}%) — มูลค่า/กำไรคำนวณจากรายการที่มีราคา`]);
+      ins.push(`รวมทั้งหมด <b>${this.n(total)}</b> รายการ GO ในช่วง ${years.length} ปี (${years[0] + 543}–${years[years.length - 1] + 543}) จาก <b>${this.uniq(all, 'model').size}</b> Model · <b>${this.uniq(all, 'cus').size}</b> ลูกค้า · <b>${this.uniq(all, 'maker').size}</b> Maker`);
+      ins.push(`ปีที่มีงาน GO มากที่สุดคือ <b>${best.y + 543}</b> จำนวน ${this.n(best.n)} รายการ`);
+      if (prevR) ins.push(`ปี ${last.y + 543} มี ${this.n(last.n)} รายการ ${last.d == null ? '' : `(${last.d >= 0 ? 'เพิ่มขึ้น' : 'ลดลง'} ${Math.abs(last.d).toFixed(1)}% จากปี ${prevR.y + 543})`}${last.y === new Date().getFullYear() ? ' — ปีนี้ยังไม่จบ' : ''}`);
+      if (wk[0]) ins.push(`ประเภทงานหลัก: <b>${esc(wk[0][0])}</b> ${this.pct(wk[0][1].length, total)} ของงานทั้งหมด`);
+      if (cancelled.length) ins.push(`มีรายการ <b>ยกเลิก GO</b> ${this.n(cancelled.length)} รายการ (ไม่นับรวมในตัวเลขข้างต้น)`);
+      this._post = () => {
+        const labels = rows.map(r => r.y + 543);
+        this.chart('exYear', { type: 'bar', plugins: [this.valLabels], data: { labels, datasets: [{ label: 'รายการ GO', data: rows.map(r => r.n), backgroundColor: rows.map(r => (this.year !== 'all' && r.y === this.year) ? '#C9A227' : '#2E5395'), borderRadius: 6, maxBarThickness: 56 }] },
+          options: { plugins: Object.assign({ legend: { display: false } }, this.vl()), scales: { y: { beginAtZero: true, grace: '12%' }, x: { grid: { display: false } } } } });
+        this.chart('exWorkYear', { type: 'bar', data: { labels, datasets: wkKeys.slice(0, 8).map((w, i) => ({ label: w, data: rows.map(r => ((byY.get(r.y) || []).filter(x => x.work === w)).length), backgroundColor: this.PAL[i % this.PAL.length], maxBarThickness: 56 })) },
+          options: { plugins: { legend: { position: 'bottom' } }, scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, beginAtZero: true } } } });
+        this.chart('exEntity', { type: 'line', data: { labels, datasets: [['Model', 'models', '#2F8F6E'], ['ลูกค้า', 'cus', '#B0673A'], ['Maker', 'makers', '#7A4FA3']].map(([l, k, col]) => ({ label: l, data: rows.map(r => r[k]), borderColor: col, backgroundColor: col, tension: .3, pointRadius: 4 })) },
+          options: { plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true, grace: '10%' }, x: { grid: { display: false } } } } });
+      };
+      return `
+        <div class="ex-kpis">
+          ${this.kpi('งาน GO ทั้งหมด', this.n(total), 'รายการ (ไม่รวมยกเลิก)', 'primary')}
+          ${this.kpi('จำนวนปี', years.length, `${years[0] + 543} – ${years[years.length - 1] + 543}`)}
+          ${this.kpi('Model', this.n(this.uniq(all, 'model').size), 'ไม่ซ้ำกัน')}
+          ${this.kpi('ลูกค้า', this.n(this.uniq(all, 'cus').size), 'ไม่ซ้ำกัน')}
+          ${this.kpi('Maker', this.n(this.uniq(all, 'maker').size), 'ไม่ซ้ำกัน')}
+        </div>
+        ${this.card('สรุปสำหรับผู้บริหาร', null, `<ul class="ex-ins">${ins.map(t => `<li>${t}</li>`).join('')}</ul>`, 'ex-wide')}
+        <div class="ex-grid g2">
+          ${this.card('งาน GO แต่ละปี (รายการ)', 'แท่งสีทองคือปีที่เลือกในตัวกรอง', '<div class="ex-chart"><canvas id="exYear"></canvas></div>')}
+          ${this.card('สัดส่วนประเภทงานในแต่ละปี', 'แยกตามคอลัมน์ WORK', '<div class="ex-chart"><canvas id="exWorkYear"></canvas></div>')}
+        </div>
+        <div class="ex-grid g2">
+          ${this.card('ตารางสรุปรายปี', 'เทียบ % กับปีก่อนหน้า', this.tbl(['ปี', 'รายการ GO', '% เทียบปีก่อน', 'Model', 'ลูกค้า', 'Maker', 'VOLUME', 'ยกเลิก'], rows.slice().reverse().map(r => [`<b>${r.y + 543}</b>`, `<b>${this.n(r.n)}</b>`, r.d == null ? '—' : `<span class="ex-d ${r.d >= 0 ? 'up' : 'down'}">${r.d >= 0 ? '▲' : '▼'} ${Math.abs(r.d).toFixed(1)}%</span>`, this.n(r.models), this.n(r.cus), this.n(r.makers), this.n(r.vol), r.canc ? this.n(r.canc) : '—'])))}
+          ${this.card('จำนวน Model / ลูกค้า / Maker รายปี', 'ความกว้างของฐานงานในแต่ละปี', '<div class="ex-chart"><canvas id="exEntity"></canvas></div>')}
+        </div>`;
+    },
 
-      /* ── สรุปตาม PLACE / ไตรมาส / ยกเลิก GO / Top ชิ้นงาน / สรุปอ่านง่าย ── */
-      const PLC = { CCIS: '#00B0F0', CNN: '#00B050', CCIR: '#CC99FF', CCI: '#2E5395', CVS: '#FF9933' };
-      const plColor = p => PLC[String(p || '').toUpperCase().replace(/\s+/g, '')] || '#8A94A6';
-      const chip = p => `<span class="gd-dot" style="background:${plColor(p)}"></span>${esc(p || '—')}`;
-      const pct = (n, d) => d ? (n / d * 100).toFixed(1) + '%' : '—';
-      const tblA = (head, rows, al) => `<div class="gx-table-scroll gd-scroll"><table class="gx-table gd-table"><thead><tr>${head.map((h, i) => `<th class="gw-al-${al[i]}">${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map((c, i) => `<td class="gw-al-${al[i]}">${c}</td>`).join('')}</tr>`).join('') || `<tr><td colspan="${head.length}" class="gw-al-c">ไม่มีรายการ</td></tr>`}</tbody></table></div>`;
-      const placeGroups = [...grp('place')].sort(byCnt);
-      const placeKeys = placeGroups.map(x => x[0]);
-      const placeRows = placeGroups.map(([k, l]) => { const s2 = this.sum(l); return [chip(k), s2.count.toLocaleString('th-TH'), pct(s2.count, cur.length), this.fmt(s2.volume, 'volume'), this.fmt(s2.sales, 'sales'), this.fmt(s2.profit, 'profit'), s2.margin == null ? '—' : s2.margin.toFixed(1) + '%']; });
-      const qOf = list => [0, 1, 2, 3].map(q => list.filter(x => x.m != null && Math.floor(x.m / 3) === q));
-      const QN = ['Q1 (ม.ค.–มี.ค.)', 'Q2 (เม.ย.–มิ.ย.)', 'Q3 (ก.ค.–ก.ย.)', 'Q4 (ต.ค.–ธ.ค.)'];
-      const qC = qOf(cur), qP = B ? qOf(prev) : null;
-      const qRows = qC.map((l, i) => { const s2 = this.sum(l); const r2 = [QN[i], s2.count.toLocaleString('th-TH'), this.fmt(s2.volume, 'volume'), this.fmt(s2.sales, 'sales'), this.fmt(s2.profit, 'profit')]; if (B) { const d2 = this.delta(s2.count, qP[i].length); r2.push(`<span class="gd-delta ${d2.cls}">${d2.txt}</span>`); } return r2; });
-      const pm = new Map();
-      cur.forEach(x => { if (!x.partNo) return; if (!pm.has(x.partNo)) pm.set(x.partNo, { no: x.partNo, name: x.partName, maker: x.maker, place: x.place, list: [] }); pm.get(x.partNo).list.push(x); });
-      const topParts = [...pm.values()].sort((a, b) => this.val(b.list) - this.val(a.list)).slice(0, 10);
-      const partRows = topParts.map((p, i) => [i + 1, `<b>${esc(p.no)}</b>`, esc(p.name), esc(p.maker), chip(p.place), p.list.length.toLocaleString('th-TH'), this.fmt(this.val(p.list, 'volume'), 'volume'), this.fmt(this.val(p.list), M)]);
-      const mkMap = new Map(); cur.forEach(x => mkMap.set(x.maker, (mkMap.get(x.maker) || 0) + this.val([x])));
-      const mkSorted = [...mkMap].filter(x => x[0] !== '(ไม่ระบุ)').sort((a, b) => b[1] - a[1]);
-      const top5Pct = totalM ? mkSorted.slice(0, 5).reduce((a, x) => a + x[1], 0) / totalM * 100 : 0;
-      const tp = placeGroups[0], dCnt = B ? this.delta(sc.count, sp.count) : null;
-      const cusGroups = [...grp('cus')].sort(byCnt);
-      const stripAll = GoWork.rows.filter(r => gwIsStrip(r) && !gwIsCancel(r)).map(r => { const d = parseDMY(r.goDate); return { y: this.yearOf(r), m: d ? d.getMonth() : null, volume: numOf(r.volume) || 0, cus: gwCusPrefix(r.cusCode) || '(ไม่ระบุ)', place: String(r.place || '').trim().toUpperCase().replace(/\s+/g, '').replace(/^-$/, '') || '(ไม่ระบุ)' }; }).filter(x => x.y);
-      const stripCur = stripAll.filter(x => x.y === Y);
-      const stripPrevFull = B ? stripAll.filter(x => x.y === B) : [];
-      const stripPrev = ytdOn ? stripPrevFull.filter(x => x.m == null || x.m <= lastM) : stripPrevFull;
-      const stripVol = l => l.reduce((a, x) => a + x.volume, 0);
-      const stripDelta = B ? this.delta(stripCur.length, stripPrev.length) : null;
-      const stripBy = key => { const m = new Map(); stripCur.forEach(x => { if (!m.has(x[key])) m.set(x[key], []); m.get(x[key]).push(x); }); return [...m].sort((a, b) => b[1].length - a[1].length); };
-      const stripCus = stripBy('cus'), stripPl = stripBy('place');
-      const stripMonth = l => Array.from({ length: 12 }, (_, i) => l.filter(x => x.m === i).length);
-      const stripCards = `<section class="gd-card span2 gd-strip-card"><header><h3>งานลอกผิวชุบ ปี ${yTH(Y)}: ${stripCur.length.toLocaleString('th-TH')} รายการ</h3><span>แยกออกจากสรุปหลัก · ไม่รวมงานที่ยกเลิก GO</span></header>
-          <div class="gd-strip-stats"><div><b>${stripCur.length.toLocaleString('th-TH')}</b><span>รายการลอกผิวชุบ${period}</span></div><div><b>${this.fmt(stripVol(stripCur), 'volume')}</b><span>VOLUME รวม</span></div><div><b>${stripCus.length}</b><span>ลูกค้า (รหัส CUS)</span></div>${B ? `<div><b><span class="gd-delta ${stripDelta.cls}">${stripDelta.txt}</span></b><span>เทียบปี ${yTH(B)}${period}: ${stripPrev.length.toLocaleString('th-TH')} รายการ</span></div>` : ''}</div>
-          <div class="gd-chart"><canvas id="gdStrip"></canvas></div>
-          <div class="gd-strip-tbls">${this.tbl(['รหัส CUS', 'รายการ', 'VOLUME'], stripCus.slice(0, 10).map(([k, l]) => [esc(k), l.length.toLocaleString('th-TH'), this.fmt(stripVol(l), 'volume')]))}${this.tbl(['PLACE', 'รายการ', 'VOLUME'], stripPl.map(([k, l]) => [chip(k), l.length.toLocaleString('th-TH'), this.fmt(stripVol(l), 'volume')]))}</div></section>`;
-      const briefParts = [
-        `ปี ${yTH(Y)}${period} มีงาน GO <b>${sc.count.toLocaleString('th-TH')}</b> รายการ รวม VOLUME <b>${this.fmt(sc.volume, 'volume')}</b> ชิ้น${B ? ` (${dCnt.txt.replace('ไม่มีข้อมูลปีเทียบ', 'ไม่มีข้อมูลปีเทียบ')} เมื่อเทียบกับปี ${yTH(B)})` : ''}`,
-        tp ? `ผลิตที่ <b>${esc(tp[0])}</b> มากที่สุด (${pct(tp[1].length, cur.length)} ของรายการ)` : '',
-        topWork ? `ประเภทงานหลักคือ <b>${esc(topWork[0])}</b> (${totalM ? (topWork[1] / totalM * 100).toFixed(1) : 0}%)` : '',
-        mkSorted.length ? `Maker รายใหญ่สุดคือ <b>${esc(mkSorted[0][0])}</b> (${pct(mkSorted[0][1], totalM)}) และ Top 5 Maker รวมกัน ${top5Pct.toFixed(1)}%` : '',
-        cusGroups.length ? `มีลูกค้าที่ GO <b>${cusGroups.length}</b> ราย (ตามรหัส CUS): ${cusGroups.slice(0, 6).map(([k, l]) => `<b>${esc(k)}</b> ${l.length.toLocaleString('th-TH')}`).join(', ')}${cusGroups.length > 6 ? ' …' : ''}` : '',
-        months[peak] > 0 ? `เดือนที่มีงานสูงสุดคือ <b>${MONTHS[peak]}</b>` : '',
-        sc.priced ? `กำไรขั้นต้นรวม <b>${this.fmt(sc.profit, 'profit')}</b>${sc.margin != null ? ` (Margin ${sc.margin.toFixed(1)}%)` : ''}` : ''
-      ].filter(Boolean);
-      const watch = [];
-      if (B && dCnt && dCnt.cls === 'down') watch.push(['down', `จำนวนรายการ GO ${dCnt.txt} เมื่อเทียบกับปี ${yTH(B)}${period}`]);
-      if (mkSorted.length > 5 && top5Pct >= 60) watch.push(['warn', `งานกระจุกตัวที่ Top 5 Maker ถึง <b>${top5Pct.toFixed(0)}%</b> — ควรดูความเสี่ยงพึ่งพา Maker`]);
-      if (cur.length && sc.priced < cur.length * 0.9) watch.push(['warn', `ข้อมูลราคาไม่ครบ ${(cur.length - sc.priced).toLocaleString('th-TH')} รายการ — มูลค่าและกำไรอาจต่ำกว่าความจริง`]);
-      const noPlace = cur.filter(x => x.place === '(ไม่ระบุ)').length;
-      if (noPlace) watch.push(['info', `มี ${noPlace.toLocaleString('th-TH')} รายการที่ยังไม่ระบุ PLACE`]);
-      if (!watch.length) watch.push(['up', 'ไม่พบประเด็นผิดปกติในข้อมูลที่เลือก']);
-      const asOf = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
-      /* ── สรุปสไลด์ล้ำ ๆ: Heatmap + Donut ── */
-      const SLC = ['#3b82f6', '#06b6d4', '#8b5cf6', '#22c55e', '#f59e0b', '#ec4899', '#14b8a6', '#6366f1', '#f97316', '#84cc16', '#0ea5e9', '#a855f7'];
-      const byCus = new Map(); cur.forEach(x => { const k = x.cus || '(ไม่ระบุ)'; (byCus.get(k) || byCus.set(k, []).get(k)).push(x); });
-      const cusList = [...byCus.keys()].sort((a, b) => byCus.get(b).length - byCus.get(a).length || a.localeCompare(b));
-      const DET = ['COMPONENT', 'SURFACE TREATMENT', 'HEAT TREATMENT', 'BUFF'];
-      const detOf = w => /surface|ผิว|ชุบ/i.test(w) ? 'SURFACE TREATMENT' : /heat|อบ/i.test(w) ? 'HEAT TREATMENT' : /buff|ขัด/i.test(w) ? 'BUFF' : 'COMPONENT';
-      const nModels = new Set(cur.map(x => x.model).filter(Boolean)).size, nParts = new Set(cur.map(x => x.partNo).filter(Boolean)).size;
-      const L = n => n.toLocaleString('th-TH');
-      const hd = (no, t, sub) => `<header class="gs-h"><i>${no}</i><div><h3>${t}</h3>${sub ? `<small>${sub}</small>` : ''}</div></header>`;
-      const stat = (v, l) => `<div><b>${v}</b><span>${l}</span></div>`;
-      const hc = (v, mx, cls) => v ? `<td class="gs-c ${cls || ''}" style="--h:${Math.round(12 + Math.min(1, v / (mx || 1)) * 58)}%">${v}</td>` : '<td class="gs-c gs-z">–</td>';
-      /* 01: DETAIL × ลูกค้า */
-      const detCnt = DET.map(d => cur.filter(x => detOf(x.work) === d).length);
-      const m1 = DET.map(d => cusList.map(c => byCus.get(c).filter(x => detOf(x.work) === d).length));
-      const mx1 = Math.max(1, ...m1.flat()), mxT1 = Math.max(1, ...detCnt);
-      const slide1 = `<section class="gs-slide">${hd('01', `GO ${L(nModels)} MODEL · ${L(nParts)} PART`, 'จำนวนรายการ แยกประเภทงาน (DETAIL) ตามลูกค้า')}
-          <div class="gs-body gs-two"><div class="gs-stats">${stat(L(cur.length), 'ITEM ทั้งหมด')}${stat(L(nModels), 'MODEL')}${stat(L(nParts), 'PART')}${stat(cusList.length, 'ลูกค้า')}</div>
-          <div class="gs-scroll"><table class="gs-t"><thead><tr><th>DETAIL</th>${cusList.map(c => `<th>${esc(c)}</th>`).join('')}<th class="gs-l">รวม</th></tr></thead><tbody>
-          ${DET.map((d, i) => `<tr><th class="gs-rh">${d}</th>${m1[i].map(v => hc(v, mx1)).join('')}<td class="gs-bt"><b>${detCnt[i]}</b><i style="width:${(detCnt[i] / mxT1 * 100).toFixed(0)}%"></i></td></tr>`).join('')}
-          <tr class="gs-sum"><th class="gs-rh">รวม</th>${cusList.map(c => `<td>${byCus.get(c).length}</td>`).join('')}<td class="gs-tot">${L(cur.length)}</td></tr></tbody></table></div>
-          <div class="gs-pie"><h4>สัดส่วนประเภทงาน</h4><div class="gd-chart"><canvas id="gsDetail"></canvas></div></div></div></section>`;
-      /* 02: MODEL ตามลูกค้า */
-      const mdlOf = c => [...new Set(byCus.get(c).map(x => x.model).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'th', { numeric: true }));
-      const mdlCnt = cusList.map(c => mdlOf(c).length), mdlSum = mdlCnt.reduce((a, b) => a + b, 0);
-      const slide2 = `<section class="gs-slide">${hd('02', `${L(nModels)} MODEL แยกตามลูกค้า`, 'รุ่นที่มีงาน GO ของแต่ละลูกค้า')}
-          <div class="gs-body gs-two"><div class="gs-cards">${cusList.map((c, i) => `<div class="gs-cus" style="--cc:${SLC[i % SLC.length]}"><div class="gs-cn"><b>${esc(c)}</b><span>${mdlCnt[i]} MODEL · ${byCus.get(c).length} ITEM</span></div><div class="gs-models">${mdlOf(c).map(m => `<span>${esc(m)}</span>`).join('') || '<em>—</em>'}</div></div>`).join('')}</div>
-          <div class="gs-pie"><h4>สัดส่วน MODEL ต่อลูกค้า</h4><div class="gd-chart"><canvas id="gsModel"></canvas></div></div></div></section>`;
-      /* 03: WORK × ลูกค้า (NON / CPS) */
-      const isCps = x => x.cpc === 'CPC / CPS';
-      const wList = [...new Set(cur.map(x => x.work))].sort((a, b) => cur.filter(x => x.work === b).length - cur.filter(x => x.work === a).length);
-      const pc = list => [list.filter(x => !isCps(x)).length, list.filter(isCps).length];
-      const tAll = pc(cur), cpsPct = cur.length ? tAll[1] / cur.length * 100 : 0;
-      const m3 = wList.map(w => { const wl = cur.filter(x => x.work === w); return { w, t: pc(wl), cells: cusList.map(c => pc(wl.filter(x => (x.cus || '(ไม่ระบุ)') === c))) }; });
-      const mx3 = Math.max(1, ...m3.flatMap(r => r.cells.flat()));
-      const cpsBy = new Map(); cur.filter(isCps).forEach(x => { if (!cpsBy.has(x.work)) cpsBy.set(x.work, new Set()); cpsBy.get(x.work).add(x.maker); });
-      const slide3 = `<section class="gs-slide">${hd('03', 'งานแยกตาม WORK · NON / CPS', 'NON = ไม่ปรับราคา · CPS = มีการปรับราคา')}
-          <div class="gs-body"><div class="gs-stats">${stat(L(tAll[0]), 'NON CPS')}${stat(L(tAll[1]), 'CPS')}${stat(cpsPct.toFixed(1) + '%', 'สัดส่วน CPS')}${stat(wList.length, 'ประเภท WORK')}</div>
-          <div class="gs-scroll"><table class="gs-t"><thead><tr><th rowspan="2">WORK</th>${cusList.map(c => `<th colspan="2">${esc(c)}</th>`).join('')}<th rowspan="2" class="gs-l">สัดส่วน CPS</th></tr>
-          <tr>${cusList.map(() => '<th class="gs-sm">NON</th><th class="gs-sm">CPS</th>').join('')}</tr></thead><tbody>
-          ${m3.map(r => { const p = r.t[0] + r.t[1] ? r.t[1] / (r.t[0] + r.t[1]) * 100 : 0; return `<tr><th class="gs-rh">${esc(r.w)}</th>${r.cells.map(p2 => hc(p2[0], mx3) + hc(p2[1], mx3, 'gs-cps')).join('')}<td class="gs-bt cps"><b>${p.toFixed(0)}%</b><i style="width:${p.toFixed(0)}%"></i></td></tr>`; }).join('')}
-          <tr class="gs-sum"><th class="gs-rh">รวม</th>${cusList.map(c => { const p = pc(byCus.get(c)); return `<td>${p[0] || '–'}</td><td>${p[1] || '–'}</td>`; }).join('')}<td class="gs-tot">${L(cur.length)} ITEM</td></tr></tbody></table></div>
-          <div class="gs-notes"><div class="n1"><b class="gs-g">NON PRICE</b><p>ไม่มีการปรับราคา (NO PRICE ADJUSTMENT)</p></div>
-          <div class="n2"><b class="gs-g">CPS PRICE · Maker ที่มีการปรับราคา</b>${cpsBy.size ? [...cpsBy].map(([w, ms]) => `<h5>${esc(w)}</h5><ul>${[...ms].map(m => `<li>${esc(m)}</li>`).join('')}</ul>`).join('') : '<p>ไม่มีรายการ CPS</p>'}</div></div></div></section>`;
-      const briefHtml = `<div class="gs-wrap">
-          <header class="gs-head"><div><small><i class="gs-live"></i>EXECUTIVE SUMMARY · GO WORK</small><h2>สรุปงาน GO WORK ประจำปี ${yTH(Y)}${period}</h2></div><span>ข้อมูล ณ ${asOf}${B ? ` · เทียบปี ${yTH(B)}: ${sp.count.toLocaleString('th-TH')} รายการ` : ''}</span></header>
-          ${slide1}${slide2}${slide3}
-          <div class="gx-watch"><h4>ประเด็นที่ผู้บริหารควรทราบ</h4><div>${watch.map(([t, h]) => `<div class="gx-w ${t}"><i></i><span>${h}</span></div>`).join('')}</div></div></div>`;
-      const pcTbl = `<section class="gd-card"><header><h3>สรุปตาม PLACE (สถานที่ผลิต)</h3><span>ปี ${yTH(Y)}${period}</span></header>${this.tbl(['PLACE', 'รายการ', 'สัดส่วน', 'VOLUME', 'มูลค่าขาย', 'กำไรขั้นต้น', 'Margin'], placeRows)}</section>`;
-      const pcPie = `<section class="gd-card"><header><h3>สัดส่วนตาม PLACE</h3><span>${ML}</span></header><div class="gd-chart"><canvas id="gdPlace"></canvas></div></section>`;
-      const pcMonth = `<section class="gd-card span2"><header><h3>${ML}รายเดือน แยกตาม PLACE</h3><span>สีเดียวกับหน้ารายการ: CCIS ฟ้า · CNN เขียว · CCIR ม่วง</span></header><div class="gd-chart tall"><canvas id="gdPlaceMonth"></canvas></div></section>`;
-      const pcQtr = `<section class="gd-card span2"><header><h3>สรุปรายไตรมาส</h3><span>${B ? `เทียบจำนวนรายการกับปี ${yTH(B)}${period}` : 'ปี ' + yTH(Y)}</span></header>${this.tbl(['ไตรมาส', 'รายการ', 'VOLUME', 'มูลค่าขาย', 'กำไรขั้นต้น'].concat(B ? ['เทียบปีก่อน'] : []), qRows)}</section>`;
+    /* ═════════ 2) Model / ลูกค้า / ประเภทงาน ═════════ */
+    tabModel(c) {
+      const { sel } = c;
+      const byM = [...this.group(sel, 'model')].filter(x => x[0] !== '(ไม่ระบุ)').sort((a, b) => b[1].length - a[1].length);
+      const byC = [...this.group(sel, 'cus')].sort((a, b) => b[1].length - a[1].length);
+      const byW = [...this.group(sel, 'work')].sort((a, b) => b[1].length - a[1].length);
+      this._models = byM.map(([m, l]) => ({
+        m, n: l.length, vol: l.reduce((s, x) => s + x.volume, 0),
+        cus: [...this.uniq(l, 'cus')].sort(), works: [...this.group(l, 'work')].sort((a, b) => b[1].length - a[1].length).map(x => [x[0], x[1].length]),
+        makers: this.uniq(l, 'maker').size, yrs: [...new Set(l.map(x => x.y + 543))].sort()
+      }));
+      this._post = () => {
+        const top = byM.slice(0, 15);
+        this.chart('exTopModel', { type: 'bar', plugins: [this.valLabels], data: { labels: top.map(x => x[0]), datasets: [{ data: top.map(x => x[1].length), backgroundColor: '#2E5395', borderRadius: 4, maxBarThickness: 22 }] },
+          options: { indexAxis: 'y', plugins: Object.assign({ legend: { display: false } }, this.vl()), scales: { x: { beginAtZero: true, grace: '10%' }, y: { grid: { display: false } } } } });
+        this.chart('exCus', { type: 'bar', plugins: [this.valLabels], data: { labels: byC.slice(0, 15).map(x => x[0]), datasets: [{ data: byC.slice(0, 15).map(x => x[1].length), backgroundColor: '#2F8F6E', borderRadius: 4, maxBarThickness: 22 }] },
+          options: { indexAxis: 'y', plugins: Object.assign({ legend: { display: false } }, this.vl()), scales: { x: { beginAtZero: true, grace: '10%' }, y: { grid: { display: false } } } } });
+        this.chart('exWork', { type: 'doughnut', data: { labels: byW.map(x => `${x[0]} · ${x[1].length}`), datasets: [{ data: byW.map(x => x[1].length), backgroundColor: byW.map((_, i) => this.PAL[i % this.PAL.length]), borderWidth: 0 }] },
+          options: { cutout: '58%', plugins: { legend: { position: 'right' } } } });
+        this.renderModelTable();
+      };
+      return `
+        <div class="ex-kpis k3">
+          ${this.kpi('Model', this.n(byM.length), 'ในช่วงที่เลือก', 'primary')}
+          ${this.kpi('ลูกค้า', this.n(byC.filter(x => x[0] !== '(ไม่ระบุ)').length), 'ไม่ซ้ำกัน')}
+          ${this.kpi('ประเภทงาน', this.n(byW.length), byW[0] ? `หลัก: ${esc(byW[0][0])}` : '')}
+        </div>
+        <div class="ex-grid g3">
+          ${this.card('Top 15 Model (จำนวน GO)', null, '<div class="ex-chart tall"><canvas id="exTopModel"></canvas></div>')}
+          ${this.card('Top 15 ลูกค้า (จำนวน GO)', null, '<div class="ex-chart tall"><canvas id="exCus"></canvas></div>')}
+          ${this.card('ประเภทงาน', 'สัดส่วนตามคอลัมน์ WORK', '<div class="ex-chart tall"><canvas id="exWork"></canvas></div>')}
+        </div>
+        ${this.card('รายการ Model ทั้งหมด', 'Model ใดอยู่ลูกค้าไหน · ทำงานประเภทอะไร', `<input class="ex-search" type="search" placeholder="ค้นหา Model / ลูกค้า / ประเภทงาน" value="${esc(this.q)}" oninput="GWDash.setQ(this.value)"><div id="exModelTbl"></div>`, 'ex-wide')}`;
+    },
+    renderModelTable() {
+      const box = $('#exModelTbl'); if (!box) return;
+      const q = this.q.trim().toUpperCase();
+      const rows = (this._models || []).filter(r => !q || (r.m + ' ' + r.cus.join(' ') + ' ' + r.works.map(w => w[0]).join(' ')).toUpperCase().includes(q));
+      const chip = (t, k) => `<span class="ex-chip ${k || ''}">${esc(t)}</span>`;
+      box.innerHTML = this.tbl(['Model', 'ลูกค้า', 'ประเภทงาน', 'รายการ GO', 'Maker', 'VOLUME', 'ปี'],
+        rows.slice(0, 300).map(r => [`<b>${esc(r.m)}</b>`, r.cus.map(c => chip(c, 'c')).join('') || '—', r.works.map(w => chip(`${w[0]} (${w[1]})`)).join(''), `<b>${this.n(r.n)}</b>`, this.n(r.makers), this.n(r.vol), r.yrs.join(', ')]), 'ex-left') +
+        `<div class="ex-foot">แสดง ${Math.min(rows.length, 300).toLocaleString('th-TH')} จาก ${rows.length.toLocaleString('th-TH')} Model</div>`;
+    },
 
-      const tailCards = stripCards;
-
-      /* ── ตารางสรุปรายปี ── */
-      const yearRows = years.slice().reverse().map((y, i, arr) => {
-        const s = this.sum(all.filter(x => x.y === y)), py = arr[i + 1], ps = py ? this.sum(all.filter(x => x.y === py)) : null;
-        const d = ps ? this.delta(s.count, ps.count) : null;
-        return `<tr class="${y === Y ? 'on' : ''}"><td class="gw-al-c"><b>${yTH(y)}</b> <small>${y}</small></td>
-          <td class="gw-al-r">${s.count.toLocaleString('th-TH')}</td><td class="gw-al-r">${d ? `<span class="gd-delta ${d.cls}">${d.txt}</span>` : '—'}</td>
-          <td class="gw-al-r">${this.fmt(s.volume, 'volume')}</td><td class="gw-al-r">${this.fmt(s.sales, 'sales')}</td><td class="gw-al-r">${this.fmt(s.cost, 'cost')}</td>
-          <td class="gw-al-r">${this.fmt(s.profit, 'profit')}</td><td class="gw-al-r">${s.margin == null ? '—' : s.margin.toFixed(1) + '%'}</td>
-          <td class="gw-al-r">${s.makers}</td><td class="gw-al-r">${s.models}</td></tr>`;
+    /* ═════════ 3) Model แยกตามลูกค้า ═════════ */
+    tabMatrix(c) {
+      const { sel } = c;
+      const byC = [...this.group(sel, 'cus')].sort((a, b) => b[1].length - a[1].length);
+      const cusList = byC.map(x => x[0]);
+      const chip = (t, n) => `<span class="ex-chip m">${esc(t)}<em>${n}</em></span>`;
+      const cards = byC.map(([cus, l]) => {
+        const ms = [...this.group(l, 'model')].filter(x => x[0] !== '(ไม่ระบุ)').sort((a, b) => b[1].length - a[1].length);
+        const ws = [...this.uniq(l, 'work')];
+        return `<details class="ex-cus" ${byC.length <= 8 || ms.length <= 12 ? 'open' : ''}><summary><b>${esc(cus)}</b><span>${ms.length} Model · ${this.n(l.length)} GO</span></summary>
+          <div class="ex-chips">${ms.map(([m, x]) => chip(m, x.length)).join('') || '<small>ไม่ระบุ Model</small>'}</div>
+          <small class="ex-works">งาน: ${ws.map(esc).join(' · ') || '—'}</small></details>`;
       }).join('');
-
-      const sec = (n, t, d) => `<h2 class="gd-sec"><i>${n}</i><b>${t}</b>${d ? `<small>${d}</small>` : ''}</h2>`;
-      const hero = [0, 1, 2, 4].map(i => kpiArr[i]).join(''), rest = [3, 5, 6, 7, 8, 9].map(i => kpiArr[i]).join('');
-      const yearTbl = `<section class="gd-card"><header><h3>ตารางสรุปแต่ละปี</h3><span>มูลค่า = ราคา × VOLUME</span></header>
-          <div class="gx-table-scroll"><table class="gx-table gd-table"><thead><tr><th class="gw-al-c">ปี</th><th class="gw-al-r">รายการ</th><th class="gw-al-r">เทียบปีก่อน</th><th class="gw-al-r">VOLUME</th>
-          <th class="gw-al-r">มูลค่าขาย</th><th class="gw-al-r">ต้นทุน Maker</th><th class="gw-al-r">กำไรขั้นต้น</th><th class="gw-al-r">Margin</th><th class="gw-al-r">Maker</th><th class="gw-al-r">Model</th></tr></thead>
-          <tbody>${yearRows}</tbody></table></div></section>`;
-      const notes = `<section class="gd-card gd-notes"><header><h3>หลักเกณฑ์การจัดทำรายงาน</h3><span>เพื่อให้ทุกฝ่ายอ่านตัวเลขตรงกัน</span></header><ol>
-          <li><b>การนับปี/เดือน:</b> นับตาม${this.basis === 'go' ? 'วันที่ GO' : 'คอลัมน์ YEAR'}${isCurYear ? ' · ปีปัจจุบันเทียบกับช่วงเดือนเดียวกันของปีก่อน เพื่อความยุติธรรม' : ''}</li>
-          <li><b>รายการที่นับ:</b> 1 รายการ = 1 แถวใน GO WORK · ไม่รวมงานที่ REMARK ระบุ “ยกเลิก / CANCEL”</li>
-          <li><b>งานลอกผิวชุบ:</b> แยกรายงานต่างหาก ไม่รวมในตัวเลขสรุปหลัก</li>
-          <li><b>ลูกค้า:</b> นับจากตัวอักษรหน้ารหัส CUS เช่น KMT, THM, IMCT, IGCE (หนึ่งรหัส = หนึ่งลูกค้า)</li>
-          <li><b>มูลค่า / กำไร:</b> มูลค่าขาย = ราคาลูกค้า × VOLUME · ต้นทุน = ราคา Maker × VOLUME · กำไรขั้นต้น = ส่วนต่าง · คำนวณเฉพาะรายการที่มีราคาครบ (${sc.priced.toLocaleString('th-TH')} จาก ${sc.count.toLocaleString('th-TH')} รายการ)</li>
-          <li><b>Maker ใหม่:</b> Maker ที่เริ่มมีงาน GO ในปีนี้และไม่เคยมีในปีก่อน ๆ</li></ol></section>`;
-      host.innerHTML = `
-        ${briefHtml}
-        ${sec('01', 'ผลงานภาพรวม', 'ตัวชี้วัดหลักของปี' + (B ? ' เทียบปี ' + yTH(B) : ''))}
-        <div class="gd-kpis gd-hero">${hero}</div>
-        <div class="gd-kpis gd-kpis-sm">${rest}</div>
-        ${sec('02', 'บทวิเคราะห์', 'ข้อสังเกตที่ระบบสรุปให้อัตโนมัติ วัดด้วย: ' + ML)}
-        <section class="gd-card gd-insights"><ul>${ins.map(([t, h]) => `<li class="${t}"><i></i><span>${h}</span></li>`).join('') || '<li class="info"><i></i><span>ยังมีข้อมูลไม่พอสำหรับการวิเคราะห์</span></li>'}</ul></section>
-        ${sec('03', 'แนวโน้ม', 'รายเดือน · สะสม · รายไตรมาส · รายปี')}
-        <div class="gd-grid">
-          <section class="gd-card span2"><header><h3>${ML}รายเดือน: ${yTH(Y)} เทียบ ${B ? yTH(B) : '—'}</h3><span>ใช้เดือนจากวันที่ GO</span></header><div class="gd-chart tall"><canvas id="gdMonthly"></canvas></div></section>
-          <section class="gd-card"><header><h3>${ML}สะสมทั้งปี</h3><span>เดือนต่อเดือน</span></header><div class="gd-chart"><canvas id="gdCum"></canvas></div></section>
-          ${pcQtr}
-          <section class="gd-card span2"><header><h3>สรุปรายปี: ${ML} และ Margin %</h3><span>ทุกปีที่มีข้อมูล</span></header><div class="gd-chart"><canvas id="gdYearly"></canvas></div></section>
+      /* Heatmap: Model × ลูกค้า */
+      const topC = cusList.filter(x => x !== '(ไม่ระบุ)').slice(0, 12);
+      const mAgg = [...this.group(sel, 'model')].filter(x => x[0] !== '(ไม่ระบุ)').sort((a, b) => b[1].length - a[1].length).slice(0, 30);
+      let mx = 0; const cell = (m, cu) => { const n = m.filter(x => x.cus === cu).length; mx = Math.max(mx, n); return n; };
+      const grid = mAgg.map(([m, l]) => [m, topC.map(cu => cell(l, cu))]);
+      const heat = n => { if (!n) return '<td class="z">·</td>'; const a = .15 + .85 * (n / (mx || 1)); return `<td style="background:rgba(46,83,149,${a.toFixed(2)});color:${a > .55 ? '#fff' : 'inherit'}"><b>${n}</b></td>`; };
+      const multi = [...this.group(sel.filter(x => x.model !== '(ไม่ระบุ)'), 'model')].map(([m, l]) => [m, [...this.uniq(l, 'cus')]]).filter(x => x[1].length > 1);
+      return `
+        <div class="ex-kpis k3">
+          ${this.kpi('ลูกค้า', this.n(topC.length + (cusList.includes('(ไม่ระบุ)') ? 0 : 0)), 'ที่มีงาน GO', 'primary')}
+          ${this.kpi('Model', this.n(this.uniq(sel, 'model').size), 'ทั้งหมดในช่วงที่เลือก')}
+          ${this.kpi('Model ที่อยู่หลายลูกค้า', this.n(multi.length), multi.slice(0, 3).map(x => esc(x[0])).join(', '))}
         </div>
-        ${sec('04', 'โครงสร้างงาน', 'ตาม PLACE · ประเภทงาน · Maker · CPC')}
-        <div class="gd-grid">
-          ${pcTbl}${pcPie}${pcMonth}
-          <section class="gd-card"><header><h3>ประเภทงาน (WORK) ตาม${ML}</h3><span>${yTH(Y)}${B ? ` เทียบ ${yTH(B)}` : ''}${period}</span></header><div class="gd-chart tall"><canvas id="gdWork"></canvas></div></section>
-          <section class="gd-card"><header><h3>Top 10 Maker ตาม${ML}</h3><span>${yTH(Y)}${B ? ` เทียบ ${yTH(B)}` : ''}${period}</span></header><div class="gd-chart tall"><canvas id="gdMaker"></canvas></div></section>
-          <section class="gd-card"><header><h3>สัดส่วน CPC / NON CPS</h3><span>ปี ${yTH(Y)} · ${ML}</span></header><div class="gd-chart"><canvas id="gdCpc"></canvas></div></section>
+        ${this.card('Heatmap: Model × ลูกค้า', `Top ${mAgg.length} Model × Top ${topC.length} ลูกค้า · ตัวเลข = จำนวนรายการ GO`, `<div class="ex-scroll"><table class="ex-table ex-heat"><thead><tr><th>Model</th>${topC.map(x => `<th class="r">${esc(x)}</th>`).join('')}</tr></thead><tbody>${grid.map(([m, row]) => `<tr><td><b>${esc(m)}</b></td>${row.map(heat).join('')}</tr>`).join('')}</tbody></table></div>`, 'ex-wide')}
+        ${this.card('Model ในแต่ละกลุ่มลูกค้า', 'กดที่ชื่อลูกค้าเพื่อเปิด/ปิดรายการ Model (ตัวเลขข้างชื่อ = จำนวน GO)', `<div class="ex-cus-grid">${cards}</div>`, 'ex-wide')}`;
+    },
+
+    /* ═════════ 4) Maker ปรับราคา ═════════ */
+    tabPrice(c) {
+      const { all, years } = c;
+      const evAll = this.priceChanges(all);
+      const ev = this.year === 'all' ? evAll : evAll.filter(e => e.y === this.year);
+      const mkList = [...new Set(ev.map(e => e.maker))].sort();
+      if (this.mkSel !== 'all' && !mkList.includes(this.mkSel)) this.mkSel = 'all';
+      const byMk = [...this.group(ev, 'maker')].map(([m, l]) => ({ m, n: l.length, up: l.filter(x => x.pct > 0).length, dn: l.filter(x => x.pct < 0).length, avg: l.reduce((s, x) => s + x.pct, 0) / l.length, parts: new Set(l.map(x => x.partNo)).size, max: Math.max(...l.map(x => x.pct)) })).sort((a, b) => b.n - a.n);
+      const ups = ev.filter(x => x.pct > 0), dns = ev.filter(x => x.pct < 0);
+      const avgUp = ups.length ? ups.reduce((s, x) => s + x.pct, 0) / ups.length : 0;
+      const byYr = years.map(y => evAll.filter(e => e.y === y));
+      const shown = (this.mkSel === 'all' ? ev : ev.filter(e => e.maker === this.mkSel)).slice().sort((a, b) => (b.ts || 0) - (a.ts || 0) || Math.abs(b.pct) - Math.abs(a.pct));
+      const fp = v => v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+      const dt = ts => ts ? new Date(ts).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '—';
+      const ins = [];
+      if (ev.length) {
+        ins.push(`พบการปรับราคาจาก <b>${byMk.length}</b> Maker รวม <b>${this.n(ev.length)}</b> ครั้ง (<b>${this.n(new Set(ev.map(e => e.maker + e.partNo)).size)}</b> ชิ้นงาน) — ขึ้นราคา ${this.n(ups.length)} ครั้ง · ลดราคา ${this.n(dns.length)} ครั้ง`);
+        if (ups.length) ins.push(`ขึ้นราคาเฉลี่ย <b>+${avgUp.toFixed(1)}%</b> ต่อครั้ง`);
+        const top = byMk[0]; ins.push(`Maker ที่ปรับราคาบ่อยที่สุด: <b>${esc(top.m)}</b> (${top.n} ครั้ง, ${top.parts} ชิ้นงาน)`);
+        const big = ev.slice().sort((a, b) => b.pct - a.pct)[0]; if (big.pct > 0) ins.push(`ขึ้นสูงสุด <b>+${big.pct.toFixed(1)}%</b> — ${esc(big.maker)} · ${esc(big.partNo)} (${fp(big.from)} → ${fp(big.to)})`);
+      }
+      this._post = () => {
+        const mk = byMk.slice(0, 15);
+        this.chart('exMkCnt', { type: 'bar', data: { labels: mk.map(x => x.m), datasets: [{ label: 'ขึ้นราคา', data: mk.map(x => x.up), backgroundColor: '#A6443C', maxBarThickness: 22 }, { label: 'ลดราคา', data: mk.map(x => x.dn), backgroundColor: '#2F8F6E', maxBarThickness: 22 }] },
+          options: { indexAxis: 'y', plugins: { legend: { position: 'bottom' } }, scales: { x: { stacked: true, beginAtZero: true }, y: { stacked: true, grid: { display: false } } } } });
+        const ma = byMk.slice().sort((a, b) => b.avg - a.avg).slice(0, 15);
+        this.chart('exMkAvg', { type: 'bar', data: { labels: ma.map(x => x.m), datasets: [{ label: '% เฉลี่ย', data: ma.map(x => +x.avg.toFixed(2)), backgroundColor: ma.map(x => x.avg >= 0 ? '#A6443C' : '#2F8F6E'), borderRadius: 4, maxBarThickness: 22 }] },
+          options: { indexAxis: 'y', plugins: { legend: { display: false }, tooltip: { callbacks: { label: t => `${t.raw > 0 ? '+' : ''}${t.raw}%` } } }, scales: { x: { ticks: { callback: v => v + '%' } }, y: { grid: { display: false } } } } });
+        this.chart('exMkYear', { type: 'bar', data: { labels: years.map(y => y + 543), datasets: [{ label: 'ขึ้นราคา', data: byYr.map(l => l.filter(x => x.pct > 0).length), backgroundColor: '#A6443C', maxBarThickness: 48 }, { label: 'ลดราคา', data: byYr.map(l => l.filter(x => x.pct < 0).length), backgroundColor: '#2F8F6E', maxBarThickness: 48 }] },
+          options: { plugins: { legend: { position: 'bottom' } }, scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, beginAtZero: true } } } });
+      };
+      if (!ev.length) return `${this.card('ยังไม่พบการปรับราคา', null, `<p class="ex-note">ระบบตรวจจากรายการเดียวกัน (Maker + Part No. + Work) ที่มี GO มากกว่า 1 ครั้งและ <b>ราคา Maker</b> (คอลัมน์ MAKER กลุ่มราคา) ต่างกัน — ในช่วง/ตัวกรองที่เลือกยังไม่พบ</p>`, 'ex-wide')}`;
+      return `
+        <div class="ex-kpis">
+          ${this.kpi('Maker ที่ปรับราคา', this.n(byMk.length), `จาก ${this.n(this.uniq(this.year === 'all' ? all : all.filter(x => x.y === this.year), 'maker').size)} Maker`, 'primary')}
+          ${this.kpi('ครั้งที่ปรับ', this.n(ev.length), 'การเปลี่ยนราคา')}
+          ${this.kpi('ขึ้นราคา', this.n(ups.length), ups.length ? `เฉลี่ย +${avgUp.toFixed(1)}%` : '', 'bad')}
+          ${this.kpi('ลดราคา', this.n(dns.length), dns.length ? `เฉลี่ย ${(dns.reduce((s, x) => s + x.pct, 0) / dns.length).toFixed(1)}%` : '', 'good')}
+          ${this.kpi('ชิ้นงานที่ได้รับผล', this.n(new Set(ev.map(e => e.maker + e.partNo)).size), 'Part No. ไม่ซ้ำ')}
         </div>
-        ${sec('05', 'ลูกค้า · Model · Maker ใหม่', 'ลูกค้านับตามรหัส CUS')}
-        <div class="gd-grid">${listsHtml}</div>
-        ${sec('06', 'งานลอกผิวชุบ', 'แยกรายงานจากสรุปหลัก')}
-        <div class="gd-grid">${tailCards}</div>
-        ${sec('07', 'สรุปรายปีและหลักเกณฑ์')}
-        ${yearTbl}
-        ${notes}`;
-
-      /* ── กราฟ ── */
-      const money = ['sales', 'profit'].includes(M);
-      const tick = v => this.fmt(v, M);
-      const tipLabel = ctx => `${ctx.dataset.label}: ${money ? '฿' + Number(ctx.raw).toLocaleString('th-TH', { maximumFractionDigits: 0 }) : Number(ctx.raw).toLocaleString('th-TH')}`;
-      const monthOf = list => Array.from({ length: 12 }, (_, i) => this.val(list.filter(x => x.m === i)));
-      const mC = monthOf(cur), mP = B ? monthOf(prevFull) : null;
-      const MS = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-      const legend = { display: true, position: 'top', align: 'end' };
-      this.chart('gdMonthly', { type: 'bar', data: { labels: MS, datasets: [
-          ...(B ? [{ label: `ปี ${yTH(B)}`, data: mP, backgroundColor: '#8A94A6', maxBarThickness: 22 }] : []),
-          { label: `ปี ${yTH(Y)}`, data: mC, backgroundColor: '#2E5395', maxBarThickness: 22 }] },
-        options: { plugins: { legend, tooltip: { callbacks: { label: tipLabel } } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { callback: tick } } } } });
-
-      const ys = years.map(y => all.filter(x => x.y === y));
-      this.chart('gdYearly', { type: 'bar', data: { labels: years.map(y => yTH(y)), datasets: [
-          { type: 'bar', label: ML, data: ys.map(l => this.val(l)), backgroundColor: years.map(y => y === Y ? '#2E5395' : '#8A94A6'), yAxisID: 'y', maxBarThickness: 48, order: 2 },
-          { type: 'line', label: 'Margin %', data: ys.map(l => { const s = this.sum(l); return s.margin == null ? null : +s.margin.toFixed(2); }), borderColor: '#C9A227', yAxisID: 'y1', order: 1, spanGaps: true }] },
-        options: { plugins: { legend, tooltip: { callbacks: { label: ctx => ctx.dataset.yAxisID === 'y1' ? `Margin: ${ctx.raw}%` : tipLabel(ctx) } } },
-          scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { callback: tick } }, y1: { position: 'right', grid: { display: false }, ticks: { callback: v => v + '%' } } } } });
-
-      const group = (list, key) => { const m = new Map(); list.forEach(x => m.set(x[key], (m.get(x[key]) || 0) + this.val([x]))); return m; };
-      const gC = group(cur, 'maker'), gP = group(prev, 'maker');
-      const topMakers = [...gC].sort((a, b) => b[1] - a[1]).slice(0, 10).map(x => x[0]);
-      this.chart('gdMaker', { type: 'bar', data: { labels: topMakers, datasets: [
-          { label: `ปี ${yTH(Y)}`, data: topMakers.map(k => gC.get(k) || 0), backgroundColor: '#2E5395', maxBarThickness: 14 },
-          ...(B ? [{ label: `ปี ${yTH(B)}`, data: topMakers.map(k => gP.get(k) || 0), backgroundColor: '#8A94A6', maxBarThickness: 14 }] : [])] },
-        options: { indexAxis: 'y', plugins: { legend, tooltip: { callbacks: { label: tipLabel } } }, scales: { x: { beginAtZero: true, ticks: { callback: tick } }, y: { grid: { display: false } } } } });
-
-      const wC = group(cur, 'work'), wP = group(prev, 'work');
-      const topWorks = [...wC].sort((a, b) => b[1] - a[1]).slice(0, 8).map(x => x[0]);
-      this.chart('gdWork', { type: 'bar', data: { labels: topWorks, datasets: [
-          { label: `ปี ${yTH(Y)}`, data: topWorks.map(k => wC.get(k) || 0), backgroundColor: '#2F8F6E', maxBarThickness: 14 },
-          ...(B ? [{ label: `ปี ${yTH(B)}`, data: topWorks.map(k => wP.get(k) || 0), backgroundColor: '#8A94A6', maxBarThickness: 14 }] : [])] },
-        options: { indexAxis: 'y', plugins: { legend, tooltip: { callbacks: { label: tipLabel } } }, scales: { x: { beginAtZero: true, ticks: { callback: tick } }, y: { grid: { display: false } } } } });
-
-      const cC = group(cur, 'cpc'), cLabels = [...cC.keys()];
-      const cTotal = [...cC.values()].reduce((a, b) => a + b, 0);
-      this.chart('gdCpc', { type: 'doughnut', data: { labels: cLabels, datasets: [{ data: cLabels.map(k => cC.get(k)), backgroundColor: cLabels.map(k => k === 'CPC / CPS' ? '#2E5395' : k === 'NON CPS' ? '#2F8F6E' : '#8A94A6') }] },
-        options: { plugins: { legend: { display: true, position: 'right' }, centerText: { text: this.fmt(cTotal, M), label: ML },
-          tooltip: { callbacks: { label: ctx => `${ctx.label}: ${tick(ctx.raw)} (${cTotal ? (ctx.raw / cTotal * 100).toFixed(1) : 0}%)` } } } } });
-
-      const cum = arr => { let s = 0; return arr.map(v => (s += v)); };
-      const nowM = new Date().getFullYear() === Y ? new Date().getMonth() : 11;
-      this.chart('gdCum', { type: 'line', data: { labels: MS, datasets: [
-          { label: `ปี ${yTH(Y)}`, data: cum(mC).map((v, i) => i <= nowM ? v : null), borderColor: '#2E5395', fill: true, backgroundColor: 'rgba(46,83,149,0.08)' },
-          ...(B ? [{ label: `ปี ${yTH(B)}`, data: cum(mP), borderColor: '#8A94A6', borderDash: [5, 4] }] : [])] },
-        options: { plugins: { legend, tooltip: { callbacks: { label: tipLabel } } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { callback: tick } } } } });
-
-      const donut = (lbl, n) => ({ plugins: { legend: { display: true, position: 'right', labels: { boxWidth: 12, usePointStyle: true } }, centerText: { text: String(n), label: lbl }, tooltip: { callbacks: { label: ctx => ctx.label } } }, cutout: '62%' });
-      { const d = DET.map((n, i) => [n, detCnt[i]]).filter(x => x[1]); const t = d.reduce((q, x) => q + x[1], 0) || 1;
-        this.chart('gsDetail', { type: 'doughnut', data: { labels: d.map(x => `${x[0]} · ${x[1]} (${(x[1] / t * 100).toFixed(0)}%)`), datasets: [{ data: d.map(x => x[1]), backgroundColor: SLC, borderWidth: 2 }] }, options: donut('ITEM', cur.length) }); }
-      { const d = cusList.map((n, i) => [n, mdlCnt[i]]).filter(x => x[1]);
-        this.chart('gsModel', { type: 'doughnut', data: { labels: d.map(x => `${x[0]} · ${x[1]} (${(x[1] / (mdlSum || 1) * 100).toFixed(0)}%)`), datasets: [{ data: d.map(x => x[1]), backgroundColor: SLC, borderWidth: 2 }] }, options: donut('MODEL', mdlSum) }); }
-      this.chart('gdStrip', { type: 'bar', data: { labels: MS, datasets: [
-          ...(B ? [{ label: `ปี ${yTH(B)}`, data: stripMonth(stripPrevFull), backgroundColor: '#8A94A6', maxBarThickness: 22 }] : []),
-          { label: `ปี ${yTH(Y)}`, data: stripMonth(stripCur), backgroundColor: '#B0673A', maxBarThickness: 22 }] },
-        options: { plugins: { legend, tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${Number(ctx.raw).toLocaleString('th-TH')} รายการ` } } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { precision: 0 } } } } });
-      this.chart('gdPlace', { type: 'doughnut', data: { labels: placeKeys, datasets: [{ data: placeGroups.map(x => this.val(x[1])), backgroundColor: placeKeys.map(plColor) }] },
-        options: { plugins: { legend: { display: true, position: 'right' }, centerText: { text: this.fmt(totalM, M), label: ML },
-          tooltip: { callbacks: { label: ctx => `${ctx.label}: ${tick(ctx.raw)} (${totalM ? (ctx.raw / totalM * 100).toFixed(1) : 0}%)` } } } } });
-      this.chart('gdPlaceMonth', { type: 'bar', data: { labels: MS, datasets: placeKeys.map(p => ({ label: p, data: Array.from({ length: 12 }, (_, i) => this.val(cur.filter(x => x.place === p && x.m === i))), backgroundColor: plColor(p), stack: 'p', maxBarThickness: 34 })) },
-        options: { plugins: { legend, tooltip: { callbacks: { label: tipLabel } } }, scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, beginAtZero: true, ticks: { callback: tick } } } } });
+        ${this.card('สรุปสำหรับผู้บริหาร', 'วิธีตรวจ: เทียบราคา Maker ของ Part เดียวกัน (Maker + Part No. + Work) ระหว่าง GO ครั้งก่อนกับครั้งถัดไป', `<ul class="ex-ins">${ins.map(t => `<li>${t}</li>`).join('')}</ul>`, 'ex-wide')}
+        <div class="ex-grid g3">
+          ${this.card('จำนวนครั้งที่ปรับราคา ต่อ Maker', 'Top 15', '<div class="ex-chart tall"><canvas id="exMkCnt"></canvas></div>')}
+          ${this.card('% ปรับราคาเฉลี่ย ต่อ Maker', 'แดง = ขึ้น · เขียว = ลด', '<div class="ex-chart tall"><canvas id="exMkAvg"></canvas></div>')}
+          ${this.card('การปรับราคารายปี', 'ทุกปีที่มีข้อมูล', '<div class="ex-chart tall"><canvas id="exMkYear"></canvas></div>')}
+        </div>
+        ${this.card('สรุปตาม Maker', null, this.tbl(['Maker', 'ครั้งที่ปรับ', 'ขึ้น', 'ลด', 'ชิ้นงาน', '% เฉลี่ย', '% สูงสุด'], byMk.map(x => [`<b>${esc(x.m)}</b>`, this.n(x.n), this.n(x.up), this.n(x.dn), this.n(x.parts), `<span class="ex-d ${x.avg >= 0 ? 'up' : 'down'}">${x.avg >= 0 ? '+' : ''}${x.avg.toFixed(1)}%</span>`, `${x.max >= 0 ? '+' : ''}${x.max.toFixed(1)}%`]), 'ex-left'), 'ex-wide')}
+        ${this.card('รายละเอียดการปรับราคา', `<label class="ex-inl">เลือก Maker <select onchange="GWDash.setMaker(this.value)"><option value="all">ทั้งหมด (${mkList.length})</option>${mkList.map(m => `<option value="${esc(m)}"${this.mkSel === m ? ' selected' : ''}>${esc(m)}</option>`).join('')}</select></label>`,
+          this.tbl(['วันที่ GO', 'Maker', 'Part No.', 'Part Name', 'Model', 'Work', 'ราคาเดิม', 'ราคาใหม่', '% เปลี่ยน'], shown.slice(0, 300).map(e => [dt(e.ts), `<b>${esc(e.maker)}</b>`, esc(e.partNo), esc(e.partName), esc(e.model), esc(e.work), fp(e.from), fp(e.to), `<span class="ex-d ${e.pct >= 0 ? 'up' : 'down'}">${e.pct >= 0 ? '▲ +' : '▼ '}${e.pct.toFixed(1)}%</span>`]), 'ex-left') + `<div class="ex-foot">แสดง ${Math.min(shown.length, 300).toLocaleString('th-TH')} จาก ${shown.length.toLocaleString('th-TH')} รายการ</div>`, 'ex-wide')}`;
     }
   };
+  document.addEventListener('keydown', e => GWDash.keys(e));
+  document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && GWDash.present) GWDash.togglePresent(false); });
 
   /* ══════════════════════ SUMMARY MEETING ══════════════════════ */
   const MT_KEY = 'ccip_meeting_cache';
