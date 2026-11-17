@@ -5742,6 +5742,16 @@ html body .gw-table tbody tr:nth-child(even) td.sticky-no { background: color-mi
 html body .gw-table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 7%, var(--surface)) !important; }
 html body .gw-table td .gx-code, html body .gw-table td .gx-tag, html body .gw-table td .gw-cpc { max-width: 100%; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
 html body .gw-table td .gx-tag { display: inline-block; }
+/* ไฮไลท์แถวตาม PLACE: CCIS = ฟ้า · CNN = เขียว · CCIR = ม่วง (สีเดียวกับไฟล์ Excel) */
+html body .gw-table tbody tr.gw-pl-ccis > td { background: color-mix(in srgb, #00B0F0 16%, var(--surface)) !important; }
+html body .gw-table tbody tr.gw-pl-cnn > td { background: color-mix(in srgb, #00B050 16%, var(--surface)) !important; }
+html body .gw-table tbody tr.gw-pl-ccir > td { background: color-mix(in srgb, #CC99FF 24%, var(--surface)) !important; }
+html body .gw-table tbody tr.gw-pl-ccis:hover > td { background: color-mix(in srgb, #00B0F0 28%, var(--surface)) !important; }
+html body .gw-table tbody tr.gw-pl-cnn:hover > td { background: color-mix(in srgb, #00B050 28%, var(--surface)) !important; }
+html body .gw-table tbody tr.gw-pl-ccir:hover > td { background: color-mix(in srgb, #CC99FF 38%, var(--surface)) !important; }
+html body .gw-table tbody tr.gw-pl-ccis > td.gw-place { background: #00B0F0 !important; color: #00293a; font-weight: 700; }
+html body .gw-table tbody tr.gw-pl-cnn > td.gw-place { background: #00B050 !important; color: #00220f; font-weight: 700; }
+html body .gw-table tbody tr.gw-pl-ccir > td.gw-place { background: #CC99FF !important; color: #2a0f45; font-weight: 700; }
 html body .gw-table .gw-rev { font-weight: 600; font-family: var(--mono); font-size: .78rem; }
 html body .gw-table td.act, html body .gw-table th.act { border-right: none; text-align: center; padding: 0 .3rem !important; }
 
@@ -20306,15 +20316,16 @@ function endTour() {
     ['custMaker', 'MAKER', 'cust'], ['cusCode', 'รหัส CUS', 'cust'],
     ['partName', 'PART NAME', 'part'], ['partNo', 'PART NO.', 'part'], ['rev', 'REV.', 'part'],
     ['maker', 'MAKER', 'prod'], ['goDate', 'GO', 'prod'], ['volume', 'VOLUME', 'prod'], ['year', 'YEAR', 'prod'],
-    ['place', 'PLACE', 'prod'], ['work', 'WORK', 'prod'], ['specPlating', 'SPEC ชุบ', 'prod'], ['specMat', "SPEC MAT'L", 'prod']
+    ['place', 'PLACE', 'prod'], ['work', 'WORK', 'prod'], ['specPlating', 'SPEC ชุบ', 'prod'], ['specMat', "SPEC MAT'L", 'prod'], ['remark', 'REMARK', 'prod']
   ];
   // ความกว้าง (px) และการจัดแนวของแต่ละคอลัมน์: l = ชิดซ้าย (ข้อความ), r = ชิดขวา (ตัวเลข), c = กึ่งกลาง (รหัสสั้น)
   const GW_COL = {
     no: [68, 'r'], model: [150, 'l'], cpc: [128, 'c'], customer: [100, 'r'], custMaker: [96, 'r'], cusCode: [130, 'l'],
     partName: [230, 'l'], partNo: [190, 'l'], rev: [120, 'c'], maker: [140, 'l'], goDate: [104, 'c'], volume: [104, 'r'],
-    year: [72, 'c'], place: [96, 'c'], work: [150, 'l'], specPlating: [240, 'l'], specMat: [200, 'l']
+    year: [72, 'c'], place: [96, 'c'], work: [150, 'l'], specPlating: [240, 'l'], specMat: [200, 'l'], remark: [240, 'l']
   };
   const fmtPrice = v => { const n = numOf(v); return n == null || !/^[\d,.\s]+$/.test(String(v).trim()) ? esc(v) : n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 }); };
+  const gwPlaceCls = p => { const v = String(p || '').toUpperCase().replace(/\s+/g, ''); return v === 'CCIR' ? 'ccir' : v === 'CCIS' ? 'ccis' : v === 'CNN' ? 'cnn' : 'none'; };
   const GW_GROUPS = { cust: 'Model / ราคา', part: 'ชิ้นงาน', prod: 'การผลิต / Process' };
   const GW_FORM_LABEL = { customer: 'CUSTOMER (ราคาลูกค้า)', custMaker: 'MAKER (ราคา Maker)', maker: 'MAKER (ผู้ผลิต)' };
   // คีย์ระบุ "รายการเดียวกัน" สำหรับอัปเดตจาก Excel — ไม่รวมค่าที่เปลี่ยนได้ (ราคา, VOLUME, GO, YEAR)
@@ -20345,6 +20356,7 @@ function endTour() {
     if (h === 'WORK' || h === 'PROCESSWORK' || h === 'PROCESS') return 'work';
     if (h.includes('SPEC') && (h.includes('ชุบ') || h.includes('PLAT'))) return 'specPlating';
     if (h.includes('SPEC') && h.includes('MAT')) return 'specMat';
+    if (h.startsWith('REMARK') || h === 'หมายเหตุ') return 'remark';
     return null;
   }
   function cellText(c) {
@@ -20507,9 +20519,9 @@ function endTour() {
           <span>${this.rows.length ? 'ลองล้างคำค้นหรือเปลี่ยนตัวกรอง' : 'นำเข้าไฟล์ Excel หลักทีเดียวได้ทั้งหมด หรือเพิ่มทีละรายการ'}</span>
           ${this.rows.length ? '' : '<div class="gw-empty-actions"><button class="gx-btn primary" onclick="GoWork.openImport()">นำเข้า Excel</button><button class="gx-btn ghost" onclick="GoWork.openForm()">เพิ่มทีละรายการ</button></div>'}</div></td></tr>`;
       } else {
-        body.innerHTML = slice.map(r => `<tr>${COLS.map(([k]) => {
+        body.innerHTML = slice.map(r => `<tr class="gw-pl-${gwPlaceCls(r.place)}">${COLS.map(([k]) => {
           const v = r[k] == null ? '' : String(r[k]);
-          const cls = `gw-al-${GW_COL[k][1]}${k === 'no' ? ' sticky-no' : ''}`;
+          const cls = `gw-al-${GW_COL[k][1]}${k === 'no' ? ' sticky-no' : ''}${k === 'place' ? ' gw-place' : ''}`;
           const tip = v.length > 14 ? ` title="${esc(v)}"` : '';
           let html;
           if (k === 'partNo') html = v ? `<span class="gx-code">${esc(v)}</span>` : '';
@@ -20552,7 +20564,7 @@ function endTour() {
         body: `<form class="gx-form gw-form" id="gwForm" novalidate>
           <fieldset><legend>ข้อมูลลูกค้า</legend><div class="gw-grid">${['no', 'model', 'cpc', 'customer', 'custMaker', 'cusCode'].map(k => field(k)).join('')}</div></fieldset>
           <fieldset><legend>ชิ้นงาน</legend><div class="gw-grid">${field('partName', 'span2')}${field('partNo')}${field('rev')}</div></fieldset>
-          <fieldset><legend>การผลิต / Process</legend><div class="gw-grid">${['maker', 'goDate', 'volume', 'year', 'place', 'work'].map(k => field(k)).join('')}${field('specPlating', 'span2')}${field('specMat')}</div></fieldset>
+          <fieldset><legend>การผลิต / Process</legend><div class="gw-grid">${['maker', 'goDate', 'volume', 'year', 'place', 'work'].map(k => field(k)).join('')}${field('specPlating', 'span2')}${field('specMat')}${field('remark', 'span2')}</div></fieldset>
           ${GW_FIELDS.map(([k]) => `<datalist id="gwl-${k}">${k === 'partNo' ? '' : opts(k)}</datalist>`).join('')}
           <p class="gx-form-err" id="gwErr" role="alert"></p>
         </form>`,
@@ -20803,7 +20815,7 @@ function endTour() {
         const v = r[k]; return ['volume', 'year', 'no'].includes(k) && numOf(v) != null && /^[\d,.\s]+$/.test(String(v)) ? numOf(v) : (v || '');
       })));
       const ws = XLSX.utils.aoa_to_sheet(aoa), wb = XLSX.utils.book_new();
-      ws['!cols'] = EX.map(([k]) => ({ wch: ['partName', 'specPlating', 'specMat'].includes(k) ? 26 : ['partNo', 'customer', 'maker', 'work'].includes(k) ? 18 : 10 }));
+      ws['!cols'] = EX.map(([k]) => ({ wch: ['partName', 'specPlating', 'specMat', 'remark'].includes(k) ? 26 : ['partNo', 'customer', 'maker', 'work'].includes(k) ? 18 : 10 }));
       XLSX.utils.book_append_sheet(wb, ws, 'GO WORK');
       XLSX.writeFile(wb, `GO_WORK_${todayISO()}.xlsx`);
     }
