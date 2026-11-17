@@ -8999,12 +8999,15 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
       .ex-card header{margin-bottom:.6rem}.ex-card h3{margin:0;font-size:1rem}.ex-card header p{margin:.15rem 0 0;color:var(--muted);font-size:.78rem}
       .ex-chart{position:relative;height:300px}.ex-chart.tall{height:420px}
       .ex-ins{margin:0;padding-left:1.1rem;display:grid;gap:.4rem;font-size:.95rem;line-height:1.5}
-      .ex-scroll{max-height:460px;overflow:auto;border-radius:8px}
+      .ex-scroll{max-height:460px;overflow:auto;border-radius:8px;position:relative;isolation:isolate}
       .ex-table{width:100%;border-collapse:collapse;font-size:.84rem;font-variant-numeric:tabular-nums}
-      .ex-table th{position:sticky;top:0;background:var(--surface2);color:var(--muted);font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.3px;padding:.5rem .6rem;text-align:left;white-space:nowrap}
+      .ex-table th{position:static;background:var(--surface2) !important;box-shadow:0 1px 0 var(--border);color:var(--muted);font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.3px;padding:.5rem .6rem;text-align:left;white-space:nowrap}
       .ex-table td{padding:.45rem .6rem;border-top:1px solid var(--border2);vertical-align:top}.ex-table .r{text-align:right}.ex-table.ex-left td:not(:first-child){text-align:left}.ex-table.ex-left th{text-align:left}
       .ex-table.ex-left td.r{text-align:left}
       .ex-heat td{text-align:center;padding:.4rem .5rem;min-width:46px}.ex-heat td:first-child{text-align:left;white-space:nowrap}.ex-heat td.z{color:var(--border)}.ex-heat th.r{text-align:center}
+      .ex-cmp{font-style:normal;font-size:.74rem;color:var(--muted);margin-top:.2rem}.ex-cmp i{font-style:normal}.ex-d.up2{color:var(--ex-dn)}.ex-d.down2{color:var(--ex-up)}
+      html body #page-gwdash .ex-table tbody tr{position:static;cursor:default}
+      .ex-scroll{overflow-x:auto}
       .ex-d{font-weight:700;white-space:nowrap}.ex-d.up{color:var(--ex-up)}.ex-d.down{color:var(--ex-dn)}
       .ex-chip{display:inline-block;margin:0 .25rem .25rem 0;padding:.08rem .5rem;border-radius:6px;background:var(--surface2);border:1px solid var(--border);font-size:.75rem;white-space:nowrap}
       .ex-chip.c{background:rgba(46,83,149,.12);border-color:rgba(46,83,149,.35)}.ex-chip.m em{font-style:normal;margin-left:.35rem;font-weight:700;color:var(--ex-a)}
@@ -21008,15 +21011,16 @@ function endTour() {
 
   /* ══════════════════════ DASHBOARD GO WORK v3 — มุมมองผู้บริหาร (รายปี · Model/ลูกค้า · Maker ปรับราคา) ══════════════════════ */
   const GWDash = {
-    charts: {}, tab: 'overview', year: 'all', work: 'all', basis: 'go', present: false, mkSel: 'all', q: '',
+    charts: {}, tab: 'overview', year: 'all', base: null, work: 'all', basis: 'go', present: false, mkSel: 'all', q: '',
     PAL: ['#2E5395', '#2F8F6E', '#C9A227', '#B0673A', '#7A4FA3', '#2A9DB5', '#A6443C', '#8A94A6', '#3F7D53', '#D17B9B'],
     TABS: [['overview', 'ภาพรวมรายปี'], ['model', 'Model / ลูกค้า / ประเภทงาน'], ['matrix', 'Model แยกตามลูกค้า'], ['price', 'Maker ปรับราคา']],
     active() { return $('#page-gwdash') && $('#page-gwdash').classList.contains('active'); },
     open() { this.render(); GoWork.load(); },
     setTab(t) { this.tab = t; this.render(); const p = $('#page-gwdash'); if (p) p.scrollTop = 0; },
-    setYear(v) { this.year = v === 'all' ? 'all' : +v; this.mkSel = 'all'; this.render(); },
+    setYear(v) { this.year = v === 'all' ? 'all' : +v; if (this.base === this.year) this.base = null; this.mkSel = 'all'; this.render(); },
+    setBase(v) { this.base = v === '' ? null : +v; this.render(); },
     setWork(v) { this.work = v; this.mkSel = 'all'; this.render(); },
-    setBasis(b) { this.basis = b; this.year = 'all'; this.render(); },
+    setBasis(b) { this.basis = b; this.year = 'all'; this.base = null; this.render(); },
     setMaker(v) { this.mkSel = v; this.render(); },
     setQ(v) { this.q = v; this.renderModelTable(); },
     togglePresent(on) {
@@ -21104,7 +21108,9 @@ function endTour() {
     },
     group(list, key) { const m = new Map(); list.forEach(x => { const k = typeof key === 'function' ? key(x) : x[key]; if (!m.has(k)) m.set(k, []); m.get(k).push(x); }); return m; },
     uniq(list, key) { return new Set(list.map(x => x[key]).filter(v => v && v !== '(ไม่ระบุ)')); },
-    kpi(label, val, sub, tone) { return `<div class="ex-kpi ${tone || ''}"><span>${label}</span><b>${val}</b>${sub ? `<small>${sub}</small>` : ''}</div>`; },
+    kpi(label, val, sub, tone, cmp) { return `<div class="ex-kpi ${tone || ''}"><span>${label}</span><b>${val}</b>${sub ? `<small>${sub}</small>` : ''}${cmp ? `<em class="ex-cmp">${cmp}</em>` : ''}</div>`; },
+    dl(a, b) { if (b == null) return ''; if (!b) return a ? '<span class="ex-d up">ใหม่</span>' : '—'; const p = (a - b) / Math.abs(b) * 100; return `<span class="ex-d ${p >= 0 ? 'up2' : 'down2'}">${p >= 0 ? '▲' : '▼'} ${Math.abs(p).toFixed(1)}%</span>`; },
+    cmpTxt(a, b) { return this.bs ? `${this.dl(a, b)} <i>เทียบปี ${this.base + 543}: ${this.n(b)}</i>` : ''; },
     card(title, sub, body, cls) { return `<section class="ex-card ${cls || ''}"><header><h3>${title}</h3>${sub ? `<p>${sub}</p>` : ''}</header>${body}</section>`; },
 
     /* ── ตรวจจับ Maker ปรับราคา: รายการเดียวกัน (Maker + Part No + Work) ที่ราคา Maker เปลี่ยนระหว่าง GO ครั้งก่อนกับครั้งถัดไป ── */
@@ -21135,6 +21141,7 @@ function endTour() {
           <div class="ex-tabs" role="tablist">${this.TABS.map(([k, l], i) => `<button role="tab" class="${this.tab === k ? 'on' : ''}" onclick="GWDash.setTab('${k}')"><i>${i + 1}</i>${l}</button>`).join('')}</div>
           <div class="ex-filters">
             <label>ปี<select onchange="GWDash.setYear(this.value)"><option value="all">ทุกปี</option>${years.slice().reverse().map(y => `<option value="${y}"${this.year === y ? ' selected' : ''}>${y + 543}</option>`).join('')}</select></label>
+            <label>เปรียบเทียบกับ<select onchange="GWDash.setBase(this.value)" ${this.year === 'all' ? 'disabled' : ''}><option value="">ไม่เทียบ</option>${years.filter(y => y !== this.year).reverse().map(y => `<option value="${y}"${this.base === y ? ' selected' : ''}>${y + 543}</option>`).join('')}</select></label>
             <label>ประเภทงาน<select onchange="GWDash.setWork(this.value)"><option value="all">ทั้งหมด</option>${works.map(w => `<option value="${esc(w)}"${this.work === w ? ' selected' : ''}>${esc(w)}</option>`).join('')}</select></label>
             <label>นับปีจาก<select onchange="GWDash.setBasis(this.value)"><option value="go"${this.basis === 'go' ? ' selected' : ''}>วันที่ GO</option><option value="year"${this.basis === 'year' ? ' selected' : ''}>คอลัมน์ YEAR</option></select></label>
             <button class="ex-btn" onclick="GWDash.togglePresent()">${this.present ? '✕ ออกจากโหมดนำเสนอ (Esc)' : '▶ โหมดนำเสนอ'}</button>
@@ -21150,16 +21157,18 @@ function endTour() {
       const all = P.all.filter(wf), cancelled = P.cancelled.filter(wf);
       const sel = this.year === 'all' ? all : all.filter(x => x.y === this.year);
       const ylabel = this.year === 'all' ? `ทุกปี (${years[0] + 543}–${years[years.length - 1] + 543})` : `ปี ${this.year + 543}`;
-      const ctx = { P, all, cancelled, sel, years, ylabel };
+      if (this.base != null && (this.year === 'all' || !years.includes(this.base))) this.base = null;
+      this.bs = this.base != null ? all.filter(x => x.y === this.base) : null;
+      const ctx = { P, all, cancelled, sel, years, ylabel, bs: this.bs };
       const fn = { overview: 'tabOverview', model: 'tabModel', matrix: 'tabMatrix', price: 'tabPrice' }[this.tab];
-      host.innerHTML = `<div class="ex-slide-title"><h2>${this.TABS.find(t => t[0] === this.tab)[1]}</h2><span>${ylabel}${this.work !== 'all' ? ' · ' + esc(this.work) : ''}${P.noYear ? ` · ไม่นับ ${P.noYear} รายการที่ไม่มีปี/วันที่ GO` : ''}</span></div>` + this[fn](ctx);
+      host.innerHTML = `<div class="ex-slide-title"><h2>${this.TABS.find(t => t[0] === this.tab)[1]}</h2><span>${ylabel}${this.bs ? ` เทียบกับปี ${this.base + 543}` : ''}${this.work !== 'all' ? ' · ' + esc(this.work) : ''}${P.noYear ? ` · ไม่นับ ${P.noYear} รายการที่ไม่มีปี/วันที่ GO` : ''}</span></div>` + this[fn](ctx);
       this.afterRender(ctx);
     },
     afterRender(c) { if (this._post) { const f = this._post; this._post = null; f(); } },
 
     /* ═════════ 1) ภาพรวมรายปี ═════════ */
     tabOverview(c) {
-      const { all, cancelled, years, sel } = c;
+      const { all, cancelled, years, sel, bs } = c;
       const byY = this.group(all, 'y'), cancY = this.group(cancelled, 'y');
       const rows = years.map((y, i) => {
         const l = byY.get(y) || [], prev = i ? (byY.get(years[i - 1]) || []).length : null;
@@ -21176,9 +21185,25 @@ function endTour() {
       if (wk[0]) ins.push(`ประเภทงานหลัก: <b>${esc(wk[0][0])}</b> ${this.pct(wk[0][1].length, sel.length)} ของงานทั้งหมด`);
       const cn = this.year === 'all' ? cancelled.length : cancelled.filter(x => x.y === this.year).length;
       if (cn) ins.push(`มีรายการ <b>ยกเลิก GO</b> ${this.n(cn)} รายการ (ไม่นับรวมในตัวเลขข้างต้น)`);
+      let cmpCard = '';
+      if (bs) {
+        const f = (l, k) => k === 'n' ? l.length : k === 'vol' ? l.reduce((a, x) => a + x.volume, 0) : this.uniq(l, k).size;
+        const mr = [['รายการ GO', 'n'], ['Model', 'model'], ['ลูกค้า', 'cus'], ['Maker', 'maker'], ['VOLUME', 'vol']];
+        const wA = this.group(sel, 'work'), wB = this.group(bs, 'work');
+        const wKeys = [...new Set([...wA.keys(), ...wB.keys()])].sort((a, b) => ((wA.get(b) || []).length + (wB.get(b) || []).length) - ((wA.get(a) || []).length + (wB.get(a) || []).length));
+        const newM = [...this.uniq(sel, 'model')].filter(m => !this.uniq(bs, 'model').has(m)), goneM = [...this.uniq(bs, 'model')].filter(m => !this.uniq(sel, 'model').has(m));
+        const newK = [...this.uniq(sel, 'maker')].filter(m => !this.uniq(bs, 'maker').has(m)), newC = [...this.uniq(sel, 'cus')].filter(m => !this.uniq(bs, 'cus').has(m));
+        ins.push(`เทียบปี ${this.year + 543} กับ ${this.base + 543}: งาน GO ${sel.length >= bs.length ? 'เพิ่มขึ้น' : 'ลดลง'} <b>${this.n(Math.abs(sel.length - bs.length))}</b> รายการ · Model ใหม่ <b>${newM.length}</b> · Model ที่ไม่มี GO ในปีนี้ <b>${goneM.length}</b> · Maker ใหม่ <b>${newK.length}</b> · ลูกค้าใหม่ <b>${newC.length}</b>`);
+        this._wk = wKeys.slice(0, 10).map(w => [w, (wB.get(w) || []).length, (wA.get(w) || []).length]);
+        cmpCard = `<div class="ex-grid g2">${this.card(`เปรียบเทียบปี ${this.year + 543} กับ ${this.base + 543}`, 'ตัวเลขหลัก', this.tbl(['ตัวชี้วัด', `ปี ${this.base + 543}`, `ปี ${this.year + 543}`, 'เปลี่ยนแปลง'], mr.map(([l, k]) => { const a = f(sel, k), b = f(bs, k); return [`<b>${l}</b>`, this.n(b), `<b>${this.n(a)}</b>`, this.dl(a, b)]; })) +
+          `<p class="ex-note">Model ใหม่: ${newM.slice(0, 12).map(esc).join(', ') || '—'}${newM.length > 12 ? ' …' : ''}<br>Maker ใหม่: ${newK.slice(0, 12).map(esc).join(', ') || '—'}${newK.length > 12 ? ' …' : ''}</p>`)}
+          ${this.card('เปรียบเทียบตามประเภทงาน', `จำนวน GO · ปี ${this.base + 543} vs ${this.year + 543}`, '<div class="ex-chart"><canvas id="exCmpWork"></canvas></div>')}</div>`;
+      }
       this._post = () => {
+        if (this._wk && bs) { this.chart('exCmpWork', { type: 'bar', plugins: [this.valLabels], data: { labels: this._wk.map(x => x[0]), datasets: [{ label: `ปี ${this.base + 543}`, data: this._wk.map(x => x[1]), backgroundColor: '#8A94A6', maxBarThickness: 30 }, { label: `ปี ${this.year + 543}`, data: this._wk.map(x => x[2]), backgroundColor: '#C9A227', maxBarThickness: 30 }] },
+          options: { plugins: Object.assign({ legend: { position: 'bottom' } }, this.vl()), scales: { y: { beginAtZero: true, grace: '12%' }, x: { grid: { display: false } } } } }); }
         const labels = rows.map(r => r.y + 543);
-        this.chart('exYear', { type: 'bar', plugins: [this.valLabels], data: { labels, datasets: [{ label: 'รายการ GO', data: rows.map(r => r.n), backgroundColor: rows.map(r => (this.year !== 'all' && r.y === this.year) ? '#C9A227' : '#2E5395'), borderRadius: 6, maxBarThickness: 56 }] },
+        this.chart('exYear', { type: 'bar', plugins: [this.valLabels], data: { labels, datasets: [{ label: 'รายการ GO', data: rows.map(r => r.n), backgroundColor: rows.map(r => (this.year !== 'all' && r.y === this.year) ? '#C9A227' : (this.base != null && r.y === this.base) ? '#8A94A6' : '#2E5395'), borderRadius: 6, maxBarThickness: 56 }] },
           options: { plugins: Object.assign({ legend: { display: false } }, this.vl()), scales: { y: { beginAtZero: true, grace: '12%' }, x: { grid: { display: false } } } } });
         this.chart('exWorkYear', { type: 'bar', data: { labels, datasets: wkKeys.slice(0, 8).map((w, i) => ({ label: w, data: rows.map(r => ((byY.get(r.y) || []).filter(x => x.work === w)).length), backgroundColor: this.PAL[i % this.PAL.length], maxBarThickness: 56 })) },
           options: { plugins: { legend: { position: 'bottom' } }, scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, beginAtZero: true } } } });
@@ -21187,15 +21212,16 @@ function endTour() {
       };
       return `
         <div class="ex-kpis">
-          ${this.kpi('งาน GO ทั้งหมด', this.n(sel.length), this.year === 'all' ? 'รายการ (ไม่รวมยกเลิก/ลอกผิวชุบ) · ทุกปี' : `รายการ · ปี ${this.year + 543}`, 'primary')}
+          ${this.kpi('งาน GO ทั้งหมด', this.n(sel.length), this.year === 'all' ? 'รายการ (ไม่รวมยกเลิก/ลอกผิวชุบ) · ทุกปี' : `รายการ · ปี ${this.year + 543}`, 'primary', bs && this.cmpTxt(sel.length, bs.length))}
           ${this.kpi(this.year === 'all' ? 'จำนวนปี' : 'ยกเลิก GO', this.year === 'all' ? years.length : this.n(cancelled.filter(x => x.y === this.year).length), this.year === 'all' ? `${years[0] + 543} – ${years[years.length - 1] + 543}` : 'รายการที่ไม่นับรวม')}
-          ${this.kpi('Model', this.n(this.uniq(sel, 'model').size), 'ไม่ซ้ำกัน')}
-          ${this.kpi('ลูกค้า', this.n(this.uniq(sel, 'cus').size), 'ไม่ซ้ำกัน')}
-          ${this.kpi('Maker', this.n(this.uniq(sel, 'maker').size), 'ไม่ซ้ำกัน')}
+          ${this.kpi('Model', this.n(this.uniq(sel, 'model').size), 'ไม่ซ้ำกัน', '', bs && this.cmpTxt(this.uniq(sel, 'model').size, this.uniq(bs, 'model').size))}
+          ${this.kpi('ลูกค้า', this.n(this.uniq(sel, 'cus').size), 'ไม่ซ้ำกัน', '', bs && this.cmpTxt(this.uniq(sel, 'cus').size, this.uniq(bs, 'cus').size))}
+          ${this.kpi('Maker', this.n(this.uniq(sel, 'maker').size), 'ไม่ซ้ำกัน', '', bs && this.cmpTxt(this.uniq(sel, 'maker').size, this.uniq(bs, 'maker').size))}
         </div>
         ${this.card('สรุปสำหรับผู้บริหาร', null, `<ul class="ex-ins">${ins.map(t => `<li>${t}</li>`).join('')}</ul>`, 'ex-wide')}
+        ${cmpCard}
         <div class="ex-grid g2">
-          ${this.card('งาน GO แต่ละปี (รายการ)', 'แท่งสีทองคือปีที่เลือกในตัวกรอง', '<div class="ex-chart"><canvas id="exYear"></canvas></div>')}
+          ${this.card('งาน GO แต่ละปี (รายการ)', 'สีทอง = ปีที่เลือก · สีเทา = ปีที่เปรียบเทียบ', '<div class="ex-chart"><canvas id="exYear"></canvas></div>')}
           ${this.card('สัดส่วนประเภทงานในแต่ละปี', 'แยกตามคอลัมน์ WORK', '<div class="ex-chart"><canvas id="exWorkYear"></canvas></div>')}
         </div>
         <div class="ex-grid g2">
@@ -21206,30 +21232,34 @@ function endTour() {
 
     /* ═════════ 2) Model / ลูกค้า / ประเภทงาน ═════════ */
     tabModel(c) {
-      const { sel } = c;
+      const { sel, bs } = c;
       const byM = [...this.group(sel, 'model')].filter(x => x[0] !== '(ไม่ระบุ)').sort((a, b) => b[1].length - a[1].length);
       const byC = [...this.group(sel, 'cus')].sort((a, b) => b[1].length - a[1].length);
       const byW = [...this.group(sel, 'work')].sort((a, b) => b[1].length - a[1].length);
+      const bM = bs ? this.group(bs, 'model') : null, bC = bs ? this.group(bs, 'cus') : null;
+      this._bs = !!bs;
       this._models = byM.map(([m, l]) => ({
-        m, n: l.length, vol: l.reduce((s, x) => s + x.volume, 0),
+        m, n: l.length, b: bM ? (bM.get(m) || []).length : null, vol: l.reduce((s, x) => s + x.volume, 0),
         cus: [...this.uniq(l, 'cus')].sort(), works: [...this.group(l, 'work')].sort((a, b) => b[1].length - a[1].length).map(x => [x[0], x[1].length]),
         makers: this.uniq(l, 'maker').size, yrs: [...new Set(l.map(x => x.y + 543))].sort()
       }));
       this._post = () => {
-        const top = byM.slice(0, 15);
-        this.chart('exTopModel', { type: 'bar', plugins: [this.valLabels], data: { labels: top.map(x => x[0]), datasets: [{ data: top.map(x => x[1].length), backgroundColor: '#2E5395', borderRadius: 4, maxBarThickness: 22 }] },
-          options: { indexAxis: 'y', plugins: Object.assign({ legend: { display: false } }, this.vl()), scales: { x: { beginAtZero: true, grace: '10%' }, y: { grid: { display: false } } } } });
-        this.chart('exCus', { type: 'bar', plugins: [this.valLabels], data: { labels: byC.slice(0, 15).map(x => x[0]), datasets: [{ data: byC.slice(0, 15).map(x => x[1].length), backgroundColor: '#2F8F6E', borderRadius: 4, maxBarThickness: 22 }] },
-          options: { indexAxis: 'y', plugins: Object.assign({ legend: { display: false } }, this.vl()), scales: { x: { beginAtZero: true, grace: '10%' }, y: { grid: { display: false } } } } });
+        const top = byM.slice(0, 15), topC = byC.slice(0, 15);
+        const ds = (lst, g, col) => [...(bs ? [{ label: `ปี ${this.base + 543}`, data: lst.map(x => (g.get(x[0]) || []).length), backgroundColor: '#8A94A6', borderRadius: 4, maxBarThickness: 16 }] : []), { label: bs ? `ปี ${this.year + 543}` : 'GO', data: lst.map(x => x[1].length), backgroundColor: bs ? '#C9A227' : col, borderRadius: 4, maxBarThickness: bs ? 16 : 22 }];
+        const lg = bs ? { position: 'bottom' } : { display: false };
+        this.chart('exTopModel', { type: 'bar', plugins: [this.valLabels], data: { labels: top.map(x => x[0]), datasets: ds(top, bM, '#2E5395') },
+          options: { indexAxis: 'y', plugins: Object.assign({ legend: lg }, this.vl()), scales: { x: { beginAtZero: true, grace: '10%' }, y: { grid: { display: false } } } } });
+        this.chart('exCus', { type: 'bar', plugins: [this.valLabels], data: { labels: topC.map(x => x[0]), datasets: ds(topC, bC, '#2F8F6E') },
+          options: { indexAxis: 'y', plugins: Object.assign({ legend: lg }, this.vl()), scales: { x: { beginAtZero: true, grace: '10%' }, y: { grid: { display: false } } } } });
         this.chart('exWork', { type: 'doughnut', data: { labels: byW.map(x => `${x[0]} · ${x[1].length}`), datasets: [{ data: byW.map(x => x[1].length), backgroundColor: byW.map((_, i) => this.PAL[i % this.PAL.length]), borderWidth: 0 }] },
           options: { cutout: '58%', plugins: { legend: { position: 'right' } } } });
         this.renderModelTable();
       };
       return `
         <div class="ex-kpis k3">
-          ${this.kpi('Model', this.n(byM.length), 'ในช่วงที่เลือก', 'primary')}
-          ${this.kpi('ลูกค้า', this.n(byC.filter(x => x[0] !== '(ไม่ระบุ)').length), 'ไม่ซ้ำกัน')}
-          ${this.kpi('ประเภทงาน', this.n(byW.length), byW[0] ? `หลัก: ${esc(byW[0][0])}` : '')}
+          ${this.kpi('Model', this.n(byM.length), 'ในช่วงที่เลือก', 'primary', bs && this.cmpTxt(byM.length, this.uniq(bs, 'model').size))}
+          ${this.kpi('ลูกค้า', this.n(byC.filter(x => x[0] !== '(ไม่ระบุ)').length), 'ไม่ซ้ำกัน', '', bs && this.cmpTxt(this.uniq(sel, 'cus').size, this.uniq(bs, 'cus').size))}
+          ${this.kpi('ประเภทงาน', this.n(byW.length), byW[0] ? `หลัก: ${esc(byW[0][0])}` : '', '', bs && this.cmpTxt(byW.length, this.uniq(bs, 'work').size))}
         </div>
         <div class="ex-grid g3">
           ${this.card('Top 15 Model (จำนวน GO)', null, '<div class="ex-chart tall"><canvas id="exTopModel"></canvas></div>')}
@@ -21243,21 +21273,23 @@ function endTour() {
       const q = this.q.trim().toUpperCase();
       const rows = (this._models || []).filter(r => !q || (r.m + ' ' + r.cus.join(' ') + ' ' + r.works.map(w => w[0]).join(' ')).toUpperCase().includes(q));
       const chip = (t, k) => `<span class="ex-chip ${k || ''}">${esc(t)}</span>`;
-      box.innerHTML = this.tbl(['Model', 'ลูกค้า', 'ประเภทงาน', 'รายการ GO', 'Maker', 'VOLUME', 'ปี'],
-        rows.slice(0, 300).map(r => [`<b>${esc(r.m)}</b>`, r.cus.map(c => chip(c, 'c')).join('') || '—', r.works.map(w => chip(`${w[0]} (${w[1]})`)).join(''), `<b>${this.n(r.n)}</b>`, this.n(r.makers), this.n(r.vol), r.yrs.join(', ')]), 'ex-left') +
+      const bsOn = this._bs;
+      box.innerHTML = this.tbl(['Model', 'ลูกค้า', 'ประเภทงาน', 'รายการ GO', ...(bsOn ? ['GO ปีเทียบ', 'เปลี่ยน'] : []), 'Maker', 'VOLUME', 'ปี'],
+        rows.slice(0, 300).map(r => [`<b>${esc(r.m)}</b>`, r.cus.map(c => chip(c, 'c')).join('') || '—', r.works.map(w => chip(`${w[0]} (${w[1]})`)).join(''), `<b>${this.n(r.n)}</b>`, ...(bsOn ? [this.n(r.b || 0), r.b ? this.dl(r.n, r.b) : '<span class="ex-d up">ใหม่</span>'] : []), this.n(r.makers), this.n(r.vol), r.yrs.join(', ')]), 'ex-left') +
         `<div class="ex-foot">แสดง ${Math.min(rows.length, 300).toLocaleString('th-TH')} จาก ${rows.length.toLocaleString('th-TH')} Model</div>`;
     },
 
     /* ═════════ 3) Model แยกตามลูกค้า ═════════ */
     tabMatrix(c) {
-      const { sel } = c;
+      const { sel, bs } = c;
+      const bCus = bs ? this.group(bs, 'cus') : null;
       const byC = [...this.group(sel, 'cus')].sort((a, b) => b[1].length - a[1].length);
       const cusList = byC.map(x => x[0]);
       const chip = (t, n) => `<span class="ex-chip m">${esc(t)}<em>${n}</em></span>`;
       const cards = byC.map(([cus, l]) => {
         const ms = [...this.group(l, 'model')].filter(x => x[0] !== '(ไม่ระบุ)').sort((a, b) => b[1].length - a[1].length);
         const ws = [...this.uniq(l, 'work')];
-        return `<details class="ex-cus" ${byC.length <= 8 || ms.length <= 12 ? 'open' : ''}><summary><b>${esc(cus)}</b><span>${ms.length} Model · ${this.n(l.length)} GO</span></summary>
+        return `<details class="ex-cus" ${byC.length <= 8 || ms.length <= 12 ? 'open' : ''}><summary><b>${esc(cus)}</b><span>${ms.length} Model · ${this.n(l.length)} GO${bCus ? ` · ปี ${this.base + 543}: ${this.n((bCus.get(cus) || []).length)} ${this.dl(l.length, (bCus.get(cus) || []).length)}` : ''}</span></summary>
           <div class="ex-chips">${ms.map(([m, x]) => chip(m, x.length)).join('') || '<small>ไม่ระบุ Model</small>'}</div>
           <small class="ex-works">งาน: ${ws.map(esc).join(' · ') || '—'}</small></details>`;
       }).join('');
@@ -21280,9 +21312,10 @@ function endTour() {
 
     /* ═════════ 4) Maker ปรับราคา ═════════ */
     tabPrice(c) {
-      const { all, years } = c;
+      const { all, years, bs } = c;
       const evAll = this.priceChanges(all);
       const ev = this.year === 'all' ? evAll : evAll.filter(e => e.y === this.year);
+      const evB = bs ? evAll.filter(e => e.y === this.base) : null;
       const mkList = [...new Set(ev.map(e => e.maker))].sort();
       if (this.mkSel !== 'all' && !mkList.includes(this.mkSel)) this.mkSel = 'all';
       const byMk = [...this.group(ev, 'maker')].map(([m, l]) => ({ m, n: l.length, up: l.filter(x => x.pct > 0).length, dn: l.filter(x => x.pct < 0).length, avg: l.reduce((s, x) => s + x.pct, 0) / l.length, parts: new Set(l.map(x => x.partNo)).size, max: Math.max(...l.map(x => x.pct)) })).sort((a, b) => b.n - a.n);
@@ -21313,7 +21346,7 @@ function endTour() {
       return `
         <div class="ex-kpis">
           ${this.kpi('Maker ที่ปรับราคา', this.n(byMk.length), `จาก ${this.n(this.uniq(this.year === 'all' ? all : all.filter(x => x.y === this.year), 'maker').size)} Maker`, 'primary')}
-          ${this.kpi('ครั้งที่ปรับ', this.n(ev.length), 'การเปลี่ยนราคา')}
+          ${this.kpi('ครั้งที่ปรับ', this.n(ev.length), 'การเปลี่ยนราคา', '', evB && this.cmpTxt(ev.length, evB.length))}
           ${this.kpi('ขึ้นราคา', this.n(ups.length), ups.length ? `เฉลี่ย +${avgUp.toFixed(1)}%` : '', 'bad')}
           ${this.kpi('ลดราคา', this.n(dns.length), dns.length ? `เฉลี่ย ${(dns.reduce((s, x) => s + x.pct, 0) / dns.length).toFixed(1)}%` : '', 'good')}
           ${this.kpi('ชิ้นงานที่ได้รับผล', this.n(new Set(ev.map(e => e.maker + e.partNo)).size), 'Part No. ไม่ซ้ำ')}
