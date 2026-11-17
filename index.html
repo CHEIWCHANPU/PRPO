@@ -6436,9 +6436,6 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
  <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><span class="nav-text" data-i18n="nav_todo">To-Do งานประจำวัน</span>
  <span class="nav-badge" id="todoNavBadge" style="display:none">0</span>
  </button>
- <button class="nav-item" id="nav-exec" onclick="showPage('exec',this)" data-tour="nav-exec">
- <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-4-4L3 17"/></svg></span><span class="nav-text" data-i18n="nav_exec">ภาพรวม KPI</span>
- </button>
  <button class="nav-item" id="nav-payroll" onclick="showPage('payroll',this)">
  <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14.01"/><line x1="12" y1="14" x2="12" y2="14.01"/></svg></span><span class="nav-text" data-i18n="nav_payroll">ลงเวลาทำงาน</span>
  </button>
@@ -9611,7 +9608,6 @@ document.addEventListener('keydown', (e) => {
 /* ── COMMAND PALETTE (Ctrl+K / Cmd+K) ── */
 const CMDK_ITEMS = [
  { key: 'home', label: 'หน้าหลัก', group: 'เมนูหลัก', icon: '<svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-5h4v5a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1V10"/></svg>' },
- { key: 'exec', label: 'ภาพรวม KPI', group: 'เมนูหลัก', icon: '<svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-4-4L3 17"/></svg>' },
  { key: 'payroll', label: 'ลงเวลาทำงาน', group: 'เมนูหลัก', icon: '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' },
  { key: 'dashboard', label: 'Dashboard', group: 'ติดตาม PART PR', icon: '<svg viewBox="0 0 24 24"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>' },
  { key: 'list', label: 'รายการทั้งหมด', group: 'ติดตาม PART PR', icon: '<svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>' },
@@ -19984,12 +19980,6 @@ async function bcDelete(rowIndex, idx, event) {
 ══════════════════════════════════════════════ */
 const TOUR_STEPS = [
  {
- target: 'nav-exec',
- title: 'ภาพรวม KPI',
- body: 'หน้านี้รวม KPI สำคัญ กราฟสถานะงาน และ AI Insight สรุปสถานการณ์ทั้งหมดในที่เดียว เปิดดูตอน Presentation ได้เลย',
- position: 'right'
- },
- {
  target: 'nav-home',
  title: 'หน้าหลัก — Daily Briefing',
  body: 'ระบบสรุปงานที่ต้องติดตามวันนี้ให้อัตโนมัติ แสดงงานที่เลยกำหนด ครบกำหนดวันนี้ และใกล้ครบกำหนดใน 3 วัน',
@@ -22172,7 +22162,7 @@ function endTour() {
       costsaving: ['COST SAVING', 'COST SAVING'], iso: ['เอกสาร ISO', 'ISO'], cer: ['ติดตามใบ CER', 'ใบ CER'],
       modeltracker: ['แผนการผลิต MODEL', 'MODEL'], workplan: ['ตารางแผนงานข้างนอก', 'แผนงาน'], manual: ['คู่มือการทำงาน', 'คู่มือ'],
       other: ['ข้อมูล MAKER', 'MAKER'], manage: ['จัดการ (Sync / History / ตั้งค่า)', 'จัดการ'],
-      pcmp: ['E-FORM สรุปราคา', 'สรุปราคา'], qcmp: ['Quotation Comparison', 'เทียบราคา'], rvcmp: ['ปรับราคา เก่า-ใหม่', 'ปรับราคา']
+      pcmp: ['E-FORM สรุปราคา', 'สรุปราคา'], rvcmp: ['เปรียบเทียบ & ปรับราคา', 'เปรียบเทียบ/ปรับราคา']
     },
     data: null,
     groups() {   // อ่านหมวดจากเมนูด้านซ้ายจริง → ตรงกับที่เห็นเสมอ
@@ -24667,6 +24657,7 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
 })();
 </script>
 
+
 <!-- ═══ E-FORM · QUOTATION COMPARISON (เปรียบเทียบใบเสนอราคา MAKER) ═══ -->
 <style id="qcmp-css">
 #page-qcmp{--qc-ink:var(--text,#0F172A);--qc-sub:var(--muted,#64748B);--qc-card:var(--surface,#fff);--qc-line:var(--border,#E3E7EE);--qc-blu:#2563EB}
@@ -25226,17 +25217,14 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
     const page = document.createElement('div'); page.className = 'page'; page.id = 'page-qcmp';
     (home.parentNode || main).appendChild(page);
     const ico = '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="8" height="16" rx="1.5"/><rect x="13" y="4" width="8" height="16" rx="1.5"/><path d="M5.5 9h3M5.5 13h3M15.5 9h3M15.5 13h3"/></svg>';
-    const grp = document.createElement('div'); grp.className = 'nav-group'; grp.id = 'navGroup-qcmp';
-    grp.innerHTML = `<div class="nav-label" onclick="toggleNavGroup('qcmp')"><span class="nav-label-text"><span class="nav-label-icon">${ico}</span><span data-i18n="group_qcmp">Quotation Comparison</span></span><span class="nav-label-chevron">▾</span></div>
-      <div class="nav-group-items"><button class="nav-item" id="nav-qcmp" onclick="showPage('qcmp',this)"><span class="nav-icon">${ico}</span><span class="nav-text" data-i18n="nav_qcmp">เปรียบเทียบใบเสนอราคา</span></button></div>`;
-    const anchor = document.getElementById('navGroup-pcmp') || document.getElementById('navGroup-rfq');
-    if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(grp, anchor.nextSibling);
-    else { const nav = document.querySelector('.nav-section'); if (nav) nav.appendChild(grp); }
+    const qbtn = document.createElement('button'); qbtn.className = 'nav-item'; qbtn.id = 'nav-qcmp'; qbtn.setAttribute('onclick', "showPage('qcmp',this)");
+    qbtn.innerHTML = `<span class="nav-icon">${ico}</span><span class="nav-text" data-i18n="nav_qcmp">เปรียบเทียบใบเสนอราคา</span>`;
+    window.__qcmpNavBtn = qbtn;   /* ถูกนำไปวางในกลุ่มเดียวกับ 'ปรับราคา เก่า-ใหม่' (ดู rvcmp install) */
     try {
       Object.assign(PAGE_TITLES.th, {qcmp:'Quotation Comparison · เปรียบเทียบใบเสนอราคา MAKER'}); Object.assign(PAGE_TITLES.en, {qcmp:'Quotation Comparison'});
       Object.assign(I18N.th, {group_qcmp:'Quotation Comparison', nav_qcmp:'เปรียบเทียบใบเสนอราคา'}); Object.assign(I18N.en, {group_qcmp:'Quotation Comparison', nav_qcmp:'Compare Quotations'});
     } catch (e) {}
-    try { CMDK_ITEMS.push({key:'qcmp', label:'Quotation Comparison · เปรียบเทียบใบเสนอราคา', group:'Quotation Comparison', icon:ico}); } catch (e) {}
+    try { CMDK_ITEMS.push({key:'qcmp', label:'Quotation Comparison · เปรียบเทียบใบเสนอราคา', group:'เปรียบเทียบ & ปรับราคา', icon:ico}); } catch (e) {}
     const prev = window.showPage;
     window.showPage = function(name, btn){
       if (name === 'qcmp') { const r = prev.call(this, name, btn || document.getElementById('nav-qcmp')); Q.open(); return r; }
@@ -25246,7 +25234,6 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install); else install();
 })();
 </script>
-
 
 <!-- ═══ E-FORM · PRICE REVISION (ปรับราคา เก่า-ใหม่ เทียบราคาลูกค้า) ═══ -->
 <style id="rvcmp-css">
@@ -25854,16 +25841,17 @@ body.dark-theme #page-home.dsx-home,body.dark-theme #briefingPanel.dsx{ --dx-red
     (home.parentNode || main).appendChild(page);
     const ico = '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="8" height="16" rx="1.5"/><rect x="13" y="4" width="8" height="16" rx="1.5"/><path d="M5.5 9h3M5.5 13h3M15.5 9h3M15.5 13h3"/></svg>';
     const grp = document.createElement('div'); grp.className = 'nav-group'; grp.id = 'navGroup-rvcmp';
-    grp.innerHTML = `<div class="nav-label" onclick="toggleNavGroup('rvcmp')"><span class="nav-label-text"><span class="nav-label-icon">${ico}</span><span data-i18n="group_rvcmp">ปรับราคา เก่า-ใหม่</span></span><span class="nav-label-chevron">▾</span></div>
+    grp.innerHTML = `<div class="nav-label" onclick="toggleNavGroup('rvcmp')"><span class="nav-label-text"><span class="nav-label-icon">${ico}</span><span data-i18n="group_rvcmp">เปรียบเทียบ & ปรับราคา</span></span><span class="nav-label-chevron">▾</span></div>
       <div class="nav-group-items"><button class="nav-item" id="nav-rvcmp" onclick="showPage('rvcmp',this)"><span class="nav-icon">${ico}</span><span class="nav-text" data-i18n="nav_rvcmp">ปรับราคา เก่า - ใหม่</span></button></div>`;
-    const anchor = document.getElementById('navGroup-qcmp') || document.getElementById('navGroup-pcmp') || document.getElementById('navGroup-rfq');
+    try { const qb = window.__qcmpNavBtn, box = grp.querySelector('.nav-group-items'); if (qb && box) box.insertBefore(qb, box.firstChild); } catch (e) {}
+    const anchor = document.getElementById('navGroup-pcmp') || document.getElementById('navGroup-rfq');
     if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(grp, anchor.nextSibling);
     else { const nav = document.querySelector('.nav-section'); if (nav) nav.appendChild(grp); }
     try {
       Object.assign(PAGE_TITLES.th, {rvcmp:'Price Revision · ปรับราคา เก่า-ใหม่'}); Object.assign(PAGE_TITLES.en, {rvcmp:'Price Revision (Old vs New)'});
-      Object.assign(I18N.th, {group_rvcmp:'ปรับราคา เก่า-ใหม่', nav_rvcmp:'ปรับราคา เก่า - ใหม่'}); Object.assign(I18N.en, {group_rvcmp:'Price Revision', nav_rvcmp:'Price Revision (Old vs New)'});
+      Object.assign(I18N.th, {group_rvcmp:'เปรียบเทียบ & ปรับราคา', nav_rvcmp:'ปรับราคา เก่า - ใหม่'}); Object.assign(I18N.en, {group_rvcmp:'Compare & Price Revision', nav_rvcmp:'Price Revision (Old vs New)'});
     } catch (e) {}
-    try { CMDK_ITEMS.push({key:'rvcmp', label:'Price Revision · ปรับราคา เก่า-ใหม่', group:'ปรับราคา เก่า-ใหม่', icon:ico}); } catch (e) {}
+    try { CMDK_ITEMS.push({key:'rvcmp', label:'Price Revision · ปรับราคา เก่า-ใหม่', group:'เปรียบเทียบ & ปรับราคา', icon:ico}); } catch (e) {}
     const prev = window.showPage;
     window.showPage = function(name, btn){
       if (name === 'rvcmp') { const r = prev.call(this, name, btn || document.getElementById('nav-rvcmp')); Q.open(); return r; }
