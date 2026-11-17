@@ -5752,6 +5752,19 @@ html body .gw-table tbody tr.gw-pl-ccir:hover > td { background: color-mix(in sr
 html body .gw-table tbody tr.gw-pl-ccis > td.gw-place { background: #00B0F0 !important; color: #00293a; font-weight: 700; }
 html body .gw-table tbody tr.gw-pl-cnn > td.gw-place { background: #00B050 !important; color: #00220f; font-weight: 700; }
 html body .gw-table tbody tr.gw-pl-ccir > td.gw-place { background: #CC99FF !important; color: #2a0f45; font-weight: 700; }
+/* REMARK มีคำว่า ยกเลิก / CANCEL → ทั้งแถวสีเหลือง (ช่อง PLACE ยังคงสีของ Place) */
+html body .gw-table tbody tr.gw-cancel > td { background: #FFF200 !important; color: #3d3600; }
+html body .gw-table tbody tr.gw-cancel:hover > td { background: #FFE600 !important; }
+.gd-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: .45rem; vertical-align: middle; }
+.gd-brief-p { margin: .3rem 0 1rem; font-size: 1rem; line-height: 1.85; color: var(--text); }
+.gd-brief-p b { color: var(--accent); }
+.gd-sub { margin: .4rem 0 .5rem; font-size: .8rem; font-weight: 700; color: var(--muted); letter-spacing: .02em; }
+.gd-strip-stats { display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.gd-strip-stats > div { flex: 1 1 150px; padding: .75rem 1rem; border-radius: 10px; background: var(--surface2); }
+.gd-strip-stats b { display: block; font-size: 1.5rem; line-height: 1.3; }
+.gd-strip-stats > div > span { font-size: .78rem; color: var(--muted); }
+.gd-strip-tbls { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-top: 1rem; }
+.gd-cancel-card tbody td { background: color-mix(in srgb, #FFF200 14%, var(--surface)); }
 html body .gw-table .gw-rev { font-weight: 600; font-family: var(--mono); font-size: .78rem; }
 html body .gw-table td.act, html body .gw-table th.act { border-right: none; text-align: center; padding: 0 .3rem !important; }
 
@@ -20325,6 +20338,9 @@ function endTour() {
     year: [72, 'c'], place: [96, 'c'], work: [150, 'l'], specPlating: [240, 'l'], specMat: [200, 'l'], remark: [240, 'l']
   };
   const fmtPrice = v => { const n = numOf(v); return n == null || !/^[\d,.\s]+$/.test(String(v).trim()) ? esc(v) : n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 }); };
+  const gwIsStrip = r => /ลอกผิวชุบ/.test(String(r.work || ''));
+  const gwCusPrefix = c => { const m = String(c || '').match(/[A-Za-z]{2,}/); const v = m ? m[0].toUpperCase() : ''; return /^(NOTE|SAMMARY|SUMMARY|TOTAL)$/.test(v) ? '' : v; };
+  const gwIsCancel = r => /ยกเลิก|cancel/i.test(String(r.remark || ''));
   const gwPlaceCls = p => { const v = String(p || '').toUpperCase().replace(/\s+/g, ''); return v === 'CCIR' ? 'ccir' : v === 'CCIS' ? 'ccis' : v === 'CNN' ? 'cnn' : 'none'; };
   const GW_GROUPS = { cust: 'Model / ราคา', part: 'ชิ้นงาน', prod: 'การผลิต / Process' };
   const GW_FORM_LABEL = { customer: 'CUSTOMER (ราคาลูกค้า)', custMaker: 'MAKER (ราคา Maker)', maker: 'MAKER (ผู้ผลิต)' };
@@ -20519,7 +20535,7 @@ function endTour() {
           <span>${this.rows.length ? 'ลองล้างคำค้นหรือเปลี่ยนตัวกรอง' : 'นำเข้าไฟล์ Excel หลักทีเดียวได้ทั้งหมด หรือเพิ่มทีละรายการ'}</span>
           ${this.rows.length ? '' : '<div class="gw-empty-actions"><button class="gx-btn primary" onclick="GoWork.openImport()">นำเข้า Excel</button><button class="gx-btn ghost" onclick="GoWork.openForm()">เพิ่มทีละรายการ</button></div>'}</div></td></tr>`;
       } else {
-        body.innerHTML = slice.map(r => `<tr class="gw-pl-${gwPlaceCls(r.place)}">${COLS.map(([k]) => {
+        body.innerHTML = slice.map(r => `<tr class="gw-pl-${gwPlaceCls(r.place)}${gwIsCancel(r) ? ' gw-cancel' : ''}">${COLS.map(([k]) => {
           const v = r[k] == null ? '' : String(r[k]);
           const cls = `gw-al-${GW_COL[k][1]}${k === 'no' ? ' sticky-no' : ''}${k === 'place' ? ' gw-place' : ''}`;
           const tip = v.length > 14 ? ` title="${esc(v)}"` : '';
@@ -20856,16 +20872,17 @@ function endTour() {
       return this.basis === 'go' ? (fromGo() || fromCol()) : (fromCol() || fromGo());
     },
     prep() {
-      return GoWork.rows.map(r => {
+      return GoWork.rows.filter(r => !gwIsCancel(r) && !gwIsStrip(r)).map(r => {   // ตัดรายการที่ REMARK = ยกเลิก GO ออกจากการสรุป
         const d = parseDMY(r.goDate);
         const vol = numOf(r.volume) || 0, cp = numOf(r.customer), mp = numOf(r.custMaker);
         const priced = cp != null && mp != null;
         return {
           y: this.yearOf(r), m: d ? d.getMonth() : null, ts: d ? d.getTime() : null, volume: vol, priced,
-          cus: String(r.cusCode || '').trim(), ok: this.okWork(String(r.work || '').trim() || '(ไม่ระบุ)'),
+          cus: gwCusPrefix(r.cusCode), ok: this.okWork(String(r.work || '').trim() || '(ไม่ระบุ)'),
           sales: cp != null ? cp * vol : 0, cost: mp != null ? mp * vol : 0,
           profit: priced ? (cp - mp) * vol : 0, salesP: priced ? cp * vol : 0,
           maker: String(r.maker || '').trim() || '(ไม่ระบุ)', work: String(r.work || '').trim() || '(ไม่ระบุ)',
+          place: (() => { const v = String(r.place || '').trim().toUpperCase().replace(/\s+/g, ''); return !v || v === '-' ? '(ไม่ระบุ)' : v; })(), partNo: String(r.partNo || '').trim(), partName: String(r.partName || '').trim(),
           model: String(r.model || '').trim(), cpc: /NON/i.test(r.cpc || '') ? 'NON CPS' : (String(r.cpc || '').trim() ? 'CPC / CPS' : '(ไม่ระบุ)')
         };
       }).filter(x => x.y && x.ok);
@@ -21001,7 +21018,7 @@ function endTour() {
       const mkRows = newMk.map(k => cur.filter(x => x.maker === k)).sort((a, b) => b.length - a.length).map(l => { const r = row(l[0].maker, l), t = Math.min(...l.map(x => x.ts).filter(Boolean)); r.splice(1, 0, isFinite(t) ? new Date(t).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'); return r; });
       const H = ['รายการ', 'VOLUME', 'มูลค่าขาย', 'กำไรขั้นต้น', 'Margin'];
       const listsHtml = `<section class="gd-card"><header><h3>Model ที่ GO ปี ${yTH(Y)}: ${modelRows.length} รุ่น</h3><span>เรียงตามจำนวนรายการ</span></header>${this.tbl(['Model', ...H], modelRows)}</section>
-        <section class="gd-card"><header><h3>ลูกค้าที่มีงาน GO: ${custRows.length} ราย</h3><span>ตามรหัส CUS</span></header>${this.tbl(['ลูกค้า (CUS)', 'Model', ...H], custRows)}</section>
+        <section class="gd-card"><header><h3>ลูกค้าที่มีงาน GO: ${custRows.length} ราย</h3><span>นับตามรหัส CUS (ตัวอักษรหน้ารหัส เช่น KMT, THM)</span></header>${this.tbl(['รหัส CUS', 'Model', ...H], custRows)}</section>
         <section class="gd-card span2"><header><h3>Maker ใหม่ที่เริ่ม GO ปี ${yTH(Y)}: ${mkRows.length} ราย</h3><span>${Y === years[0] ? 'ปีแรกในข้อมูล — ยังไม่มีปีก่อนให้เทียบ' : 'ไม่เคยมีงาน GO ในปีก่อน ๆ (เฉพาะประเภทงานที่นับ)'}</span></header>${this.tbl(['Maker', 'GO ครั้งแรก', ...H], mkRows)}</section>`;
       const works = new Map(); cur.forEach(x => works.set(x.work, (works.get(x.work) || 0) + this.val([x])));
       const topWork = [...works].sort((a, b) => b[1] - a[1])[0];
@@ -21011,6 +21028,67 @@ function endTour() {
       const peak = months.indexOf(Math.max(...months));
       if (months[peak] > 0) ins.push(['info', `เดือนที่${ML}สูงสุด: <b>${MONTHS[peak]}</b> (${this.fmt(months[peak], M)})`]);
       if (cur.length && sc.priced < cur.length) ins.push(['warn', `มีราคาครบทั้งราคาลูกค้าและราคา Maker ${sc.priced.toLocaleString('th-TH')} จาก ${cur.length.toLocaleString('th-TH')} รายการ (${(sc.priced / cur.length * 100).toFixed(0)}%) — มูลค่า/กำไรคำนวณจากรายการที่มีราคา`]);
+
+      /* ── สรุปตาม PLACE / ไตรมาส / ยกเลิก GO / Top ชิ้นงาน / สรุปอ่านง่าย ── */
+      const PLC = { CCIS: '#00B0F0', CNN: '#00B050', CCIR: '#CC99FF', CCI: '#2E5395', CVS: '#FF9933' };
+      const plColor = p => PLC[String(p || '').toUpperCase().replace(/\s+/g, '')] || '#8A94A6';
+      const chip = p => `<span class="gd-dot" style="background:${plColor(p)}"></span>${esc(p || '—')}`;
+      const pct = (n, d) => d ? (n / d * 100).toFixed(1) + '%' : '—';
+      const tblA = (head, rows, al) => `<div class="gx-table-scroll gd-scroll"><table class="gx-table gd-table"><thead><tr>${head.map((h, i) => `<th class="gw-al-${al[i]}">${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map((c, i) => `<td class="gw-al-${al[i]}">${c}</td>`).join('')}</tr>`).join('') || `<tr><td colspan="${head.length}" class="gw-al-c">ไม่มีรายการ</td></tr>`}</tbody></table></div>`;
+      const placeGroups = [...grp('place')].sort(byCnt);
+      const placeKeys = placeGroups.map(x => x[0]);
+      const placeRows = placeGroups.map(([k, l]) => { const s2 = this.sum(l); return [chip(k), s2.count.toLocaleString('th-TH'), pct(s2.count, cur.length), this.fmt(s2.volume, 'volume'), this.fmt(s2.sales, 'sales'), this.fmt(s2.profit, 'profit'), s2.margin == null ? '—' : s2.margin.toFixed(1) + '%']; });
+      const qOf = list => [0, 1, 2, 3].map(q => list.filter(x => x.m != null && Math.floor(x.m / 3) === q));
+      const QN = ['Q1 (ม.ค.–มี.ค.)', 'Q2 (เม.ย.–มิ.ย.)', 'Q3 (ก.ค.–ก.ย.)', 'Q4 (ต.ค.–ธ.ค.)'];
+      const qC = qOf(cur), qP = B ? qOf(prev) : null;
+      const qRows = qC.map((l, i) => { const s2 = this.sum(l); const r2 = [QN[i], s2.count.toLocaleString('th-TH'), this.fmt(s2.volume, 'volume'), this.fmt(s2.sales, 'sales'), this.fmt(s2.profit, 'profit')]; if (B) { const d2 = this.delta(s2.count, qP[i].length); r2.push(`<span class="gd-delta ${d2.cls}">${d2.txt}</span>`); } return r2; });
+      const pm = new Map();
+      cur.forEach(x => { if (!x.partNo) return; if (!pm.has(x.partNo)) pm.set(x.partNo, { no: x.partNo, name: x.partName, maker: x.maker, place: x.place, list: [] }); pm.get(x.partNo).list.push(x); });
+      const topParts = [...pm.values()].sort((a, b) => this.val(b.list) - this.val(a.list)).slice(0, 10);
+      const partRows = topParts.map((p, i) => [i + 1, `<b>${esc(p.no)}</b>`, esc(p.name), esc(p.maker), chip(p.place), p.list.length.toLocaleString('th-TH'), this.fmt(this.val(p.list, 'volume'), 'volume'), this.fmt(this.val(p.list), M)]);
+      const mkMap = new Map(); cur.forEach(x => mkMap.set(x.maker, (mkMap.get(x.maker) || 0) + this.val([x])));
+      const mkSorted = [...mkMap].filter(x => x[0] !== '(ไม่ระบุ)').sort((a, b) => b[1] - a[1]);
+      const top5Pct = totalM ? mkSorted.slice(0, 5).reduce((a, x) => a + x[1], 0) / totalM * 100 : 0;
+      const tp = placeGroups[0], dCnt = B ? this.delta(sc.count, sp.count) : null;
+      const cusGroups = [...grp('cus')].sort(byCnt);
+      const stripAll = GoWork.rows.filter(r => gwIsStrip(r) && !gwIsCancel(r)).map(r => { const d = parseDMY(r.goDate); return { y: this.yearOf(r), m: d ? d.getMonth() : null, volume: numOf(r.volume) || 0, cus: gwCusPrefix(r.cusCode) || '(ไม่ระบุ)', place: String(r.place || '').trim().toUpperCase().replace(/\s+/g, '').replace(/^-$/, '') || '(ไม่ระบุ)' }; }).filter(x => x.y);
+      const stripCur = stripAll.filter(x => x.y === Y);
+      const stripPrevFull = B ? stripAll.filter(x => x.y === B) : [];
+      const stripPrev = ytdOn ? stripPrevFull.filter(x => x.m == null || x.m <= lastM) : stripPrevFull;
+      const stripVol = l => l.reduce((a, x) => a + x.volume, 0);
+      const stripDelta = B ? this.delta(stripCur.length, stripPrev.length) : null;
+      const stripBy = key => { const m = new Map(); stripCur.forEach(x => { if (!m.has(x[key])) m.set(x[key], []); m.get(x[key]).push(x); }); return [...m].sort((a, b) => b[1].length - a[1].length); };
+      const stripCus = stripBy('cus'), stripPl = stripBy('place');
+      const stripMonth = l => Array.from({ length: 12 }, (_, i) => l.filter(x => x.m === i).length);
+      const stripCards = `<section class="gd-card span2 gd-strip-card"><header><h3>งานลอกผิวชุบ ปี ${yTH(Y)}: ${stripCur.length.toLocaleString('th-TH')} รายการ</h3><span>แยกออกจากสรุปหลัก · ไม่รวมงานที่ยกเลิก GO</span></header>
+          <div class="gd-strip-stats"><div><b>${stripCur.length.toLocaleString('th-TH')}</b><span>รายการลอกผิวชุบ${period}</span></div><div><b>${this.fmt(stripVol(stripCur), 'volume')}</b><span>VOLUME รวม</span></div><div><b>${stripCus.length}</b><span>ลูกค้า (รหัส CUS)</span></div>${B ? `<div><b><span class="gd-delta ${stripDelta.cls}">${stripDelta.txt}</span></b><span>เทียบปี ${yTH(B)}${period}: ${stripPrev.length.toLocaleString('th-TH')} รายการ</span></div>` : ''}</div>
+          <div class="gd-chart"><canvas id="gdStrip"></canvas></div>
+          <div class="gd-strip-tbls">${this.tbl(['รหัส CUS', 'รายการ', 'VOLUME'], stripCus.slice(0, 10).map(([k, l]) => [esc(k), l.length.toLocaleString('th-TH'), this.fmt(stripVol(l), 'volume')]))}${this.tbl(['PLACE', 'รายการ', 'VOLUME'], stripPl.map(([k, l]) => [chip(k), l.length.toLocaleString('th-TH'), this.fmt(stripVol(l), 'volume')]))}</div></section>`;
+      const briefParts = [
+        `ปี ${yTH(Y)}${period} มีงาน GO <b>${sc.count.toLocaleString('th-TH')}</b> รายการ รวม VOLUME <b>${this.fmt(sc.volume, 'volume')}</b> ชิ้น${B ? ` (${dCnt.txt.replace('ไม่มีข้อมูลปีเทียบ', 'ไม่มีข้อมูลปีเทียบ')} เมื่อเทียบกับปี ${yTH(B)})` : ''}`,
+        tp ? `ผลิตที่ <b>${esc(tp[0])}</b> มากที่สุด (${pct(tp[1].length, cur.length)} ของรายการ)` : '',
+        topWork ? `ประเภทงานหลักคือ <b>${esc(topWork[0])}</b> (${totalM ? (topWork[1] / totalM * 100).toFixed(1) : 0}%)` : '',
+        mkSorted.length ? `Maker รายใหญ่สุดคือ <b>${esc(mkSorted[0][0])}</b> (${pct(mkSorted[0][1], totalM)}) และ Top 5 Maker รวมกัน ${top5Pct.toFixed(1)}%` : '',
+        cusGroups.length ? `มีลูกค้าที่ GO <b>${cusGroups.length}</b> ราย (ตามรหัส CUS): ${cusGroups.slice(0, 6).map(([k, l]) => `<b>${esc(k)}</b> ${l.length.toLocaleString('th-TH')}`).join(', ')}${cusGroups.length > 6 ? ' …' : ''}` : '',
+        `งานลอกผิวชุบ (แยกออกจากสรุป) <b>${stripCur.length.toLocaleString('th-TH')}</b> รายการ`,
+        months[peak] > 0 ? `เดือนที่มีงานสูงสุดคือ <b>${MONTHS[peak]}</b>` : '',
+        sc.priced ? `กำไรขั้นต้นรวม <b>${this.fmt(sc.profit, 'profit')}</b>${sc.margin != null ? ` (Margin ${sc.margin.toFixed(1)}%)` : ''}` : ''
+      ].filter(Boolean);
+      const watch = [];
+      if (B && dCnt && dCnt.cls === 'down') watch.push(['down', `จำนวนรายการ GO ${dCnt.txt} เมื่อเทียบกับปี ${yTH(B)}${period}`]);
+      if (mkSorted.length > 5 && top5Pct >= 60) watch.push(['warn', `งานกระจุกตัวที่ Top 5 Maker ถึง <b>${top5Pct.toFixed(0)}%</b> — ควรดูความเสี่ยงพึ่งพา Maker`]);
+      if (cur.length && sc.priced < cur.length * 0.9) watch.push(['warn', `ข้อมูลราคาไม่ครบ ${(cur.length - sc.priced).toLocaleString('th-TH')} รายการ — มูลค่าและกำไรอาจต่ำกว่าความจริง`]);
+      const noPlace = cur.filter(x => x.place === '(ไม่ระบุ)').length;
+      if (noPlace) watch.push(['info', `มี ${noPlace.toLocaleString('th-TH')} รายการที่ยังไม่ระบุ PLACE`]);
+      if (!watch.length) watch.push(['up', 'ไม่พบประเด็นผิดปกติในข้อมูลที่เลือก']);
+      const briefHtml = `<section class="gd-card gd-insights gd-brief"><header><h3>สรุปภาพรวม (อ่านง่าย)</h3><span>สรุปจากข้อมูลที่เลือกด้านบน</span></header>
+          <p class="gd-brief-p">${briefParts.join(' · ')}</p><h4 class="gd-sub">ประเด็นที่ควรดู</h4>
+          <ul>${watch.map(([t, h]) => `<li class="${t}"><i></i><span>${h}</span></li>`).join('')}</ul></section>`;
+      const placeCards = `<section class="gd-card"><header><h3>สรุปตาม PLACE (สถานที่ผลิต)</h3><span>ปี ${yTH(Y)}${period}</span></header>${this.tbl(['PLACE', 'รายการ', 'สัดส่วน', 'VOLUME', 'มูลค่าขาย', 'กำไรขั้นต้น', 'Margin'], placeRows)}</section>
+          <section class="gd-card"><header><h3>สัดส่วนตาม PLACE</h3><span>${ML}</span></header><div class="gd-chart"><canvas id="gdPlace"></canvas></div></section>
+          <section class="gd-card span2"><header><h3>${ML}รายเดือน แยกตาม PLACE</h3><span>สีเดียวกับหน้ารายการ: CCIS ฟ้า · CNN เขียว · CCIR ม่วง</span></header><div class="gd-chart tall"><canvas id="gdPlaceMonth"></canvas></div></section>
+          <section class="gd-card span2"><header><h3>สรุปรายไตรมาส</h3><span>${B ? `เทียบจำนวนรายการกับปี ${yTH(B)}${period}` : 'ปี ' + yTH(Y)}</span></header>${this.tbl(['ไตรมาส', 'รายการ', 'VOLUME', 'มูลค่าขาย', 'กำไรขั้นต้น'].concat(B ? ['เทียบปีก่อน'] : []), qRows)}</section>`;
+      const tailCards = stripCards + `<section class="gd-card span2"><header><h3>Top 10 ชิ้นงาน ตาม${ML}</h3><span>ปี ${yTH(Y)}${period}</span></header>${tblA(['#', 'PART NO.', 'PART NAME', 'MAKER', 'PLACE', 'รายการ', 'VOLUME', ML], partRows, ['c', 'l', 'l', 'l', 'l', 'r', 'r', 'r'])}</section>`;
 
       /* ── ตารางสรุปรายปี ── */
       const yearRows = years.slice().reverse().map((y, i, arr) => {
@@ -21025,16 +21103,19 @@ function endTour() {
 
       host.innerHTML = `
         <div class="gd-kpis">${kpiHtml}</div>
+        ${briefHtml}
         <section class="gd-card gd-insights"><header><h3>สรุปวิเคราะห์ ปี ${yTH(Y)}${B ? ` เทียบ ${yTH(B)}` : ''}${period}</h3><span>วัดด้วย: ${ML}</span></header>
           <ul>${ins.map(([t, h]) => `<li class="${t}"><i></i><span>${h}</span></li>`).join('') || '<li class="info"><i></i><span>ยังมีข้อมูลไม่พอสำหรับการวิเคราะห์</span></li>'}</ul></section>
         <div class="gd-grid">
           ${listsHtml}
           <section class="gd-card span2"><header><h3>${ML}รายเดือน: ${yTH(Y)} เทียบ ${B ? yTH(B) : '—'}</h3><span>ใช้เดือนจากวันที่ GO</span></header><div class="gd-chart tall"><canvas id="gdMonthly"></canvas></div></section>
+          ${placeCards}
           <section class="gd-card span2"><header><h3>สรุปรายปี: ${ML} และ Margin %</h3><span>ทุกปีที่มีข้อมูล</span></header><div class="gd-chart"><canvas id="gdYearly"></canvas></div></section>
           <section class="gd-card"><header><h3>Top 10 Maker ตาม${ML}</h3><span>${yTH(Y)}${B ? ` เทียบ ${yTH(B)}` : ''}${period}</span></header><div class="gd-chart tall"><canvas id="gdMaker"></canvas></div></section>
           <section class="gd-card"><header><h3>ประเภทงาน (WORK) ตาม${ML}</h3><span>${yTH(Y)}${B ? ` เทียบ ${yTH(B)}` : ''}${period}</span></header><div class="gd-chart tall"><canvas id="gdWork"></canvas></div></section>
           <section class="gd-card"><header><h3>สัดส่วน CPC / NON CPS</h3><span>ปี ${yTH(Y)} · ${ML}</span></header><div class="gd-chart"><canvas id="gdCpc"></canvas></div></section>
           <section class="gd-card"><header><h3>${ML}สะสมทั้งปี</h3><span>เดือนต่อเดือน</span></header><div class="gd-chart"><canvas id="gdCum"></canvas></div></section>
+          ${tailCards}
         </div>
         <section class="gd-card"><header><h3>ตารางสรุปแต่ละปี</h3><span>มูลค่า = ราคา × VOLUME</span></header>
           <div class="gx-table-scroll"><table class="gx-table gd-table"><thead><tr><th class="gw-al-c">ปี</th><th class="gw-al-r">รายการ</th><th class="gw-al-r">เทียบปีก่อน</th><th class="gw-al-r">VOLUME</th>
@@ -21088,6 +21169,16 @@ function endTour() {
           { label: `ปี ${yTH(Y)}`, data: cum(mC).map((v, i) => i <= nowM ? v : null), borderColor: '#2E5395', fill: true, backgroundColor: 'rgba(46,83,149,0.08)' },
           ...(B ? [{ label: `ปี ${yTH(B)}`, data: cum(mP), borderColor: '#8A94A6', borderDash: [5, 4] }] : [])] },
         options: { plugins: { legend, tooltip: { callbacks: { label: tipLabel } } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { callback: tick } } } } });
+
+      this.chart('gdStrip', { type: 'bar', data: { labels: MS, datasets: [
+          ...(B ? [{ label: `ปี ${yTH(B)}`, data: stripMonth(stripPrevFull), backgroundColor: '#8A94A6', maxBarThickness: 22 }] : []),
+          { label: `ปี ${yTH(Y)}`, data: stripMonth(stripCur), backgroundColor: '#B0673A', maxBarThickness: 22 }] },
+        options: { plugins: { legend, tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${Number(ctx.raw).toLocaleString('th-TH')} รายการ` } } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { precision: 0 } } } } });
+      this.chart('gdPlace', { type: 'doughnut', data: { labels: placeKeys, datasets: [{ data: placeGroups.map(x => this.val(x[1])), backgroundColor: placeKeys.map(plColor) }] },
+        options: { plugins: { legend: { display: true, position: 'right' }, centerText: { text: this.fmt(totalM, M), label: ML },
+          tooltip: { callbacks: { label: ctx => `${ctx.label}: ${tick(ctx.raw)} (${totalM ? (ctx.raw / totalM * 100).toFixed(1) : 0}%)` } } } } });
+      this.chart('gdPlaceMonth', { type: 'bar', data: { labels: MS, datasets: placeKeys.map(p => ({ label: p, data: Array.from({ length: 12 }, (_, i) => this.val(cur.filter(x => x.place === p && x.m === i))), backgroundColor: plColor(p), stack: 'p', maxBarThickness: 34 })) },
+        options: { plugins: { legend, tooltip: { callbacks: { label: tipLabel } } }, scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, beginAtZero: true, ticks: { callback: tick } } } } });
     }
   };
 
