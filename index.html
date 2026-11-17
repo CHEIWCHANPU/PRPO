@@ -8845,7 +8845,6 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
         <button data-b="year" onclick="GWDash.basis='year';GWDash.year=null;GWDash.base=null;GWDash.render()">คอลัมน์ YEAR</button>
       </div>
     </div>
-    <details class="gd-works" id="gdWorks"><summary id="gdWorksSum"></summary><div id="gdWorksBody"></div></details>
     <style>
       .gd-works{margin:0 0 .9rem;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.55rem .9rem;font-size:.8rem}
       .gd-works summary{cursor:pointer;font-weight:600}
@@ -20933,7 +20932,7 @@ function endTour() {
       if (!years.length) {
         Object.keys(this.charts).forEach(k => this.kill(k));
         yearSel.innerHTML = ''; baseSel.innerHTML = '';
-        host.innerHTML = `<div class="gx-empty"><strong>${GoWork.rows.length ? 'ไม่พบรายการที่นับ (เช็ควันที่ GO / ปี และ "ประเภทงานที่นับ" ด้านบน)' : (GoWork.loaded ? 'ยังไม่มีข้อมูล GO WORK' : 'กำลังโหลดข้อมูล…')}</strong>
+        host.innerHTML = `<div class="gx-empty"><strong>${GoWork.rows.length ? 'ไม่พบรายการที่นับ (เช็ควันที่ GO / ปี)' : (GoWork.loaded ? 'ยังไม่มีข้อมูล GO WORK' : 'กำลังโหลดข้อมูล…')}</strong>
           <span>${GoWork.rows.length ? 'ต้องมีวันที่ในคอลัมน์ GO หรือปีในคอลัมน์ YEAR' : 'นำเข้าไฟล์ Excel หลักในหน้า รายการ GO WORK ก่อน แล้ว Dashboard จะคำนวณให้อัตโนมัติ'}</span>
           ${GoWork.loaded && !GoWork.rows.length ? `<button class="gx-btn primary" onclick="showPage('gowork', document.getElementById('nav-gowork'));setTimeout(()=>GoWork.openImport(),100)">นำเข้า Excel</button>` : ''}</div>`;
         return;
