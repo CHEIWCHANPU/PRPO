@@ -21141,7 +21141,8 @@ function endTour() {
       const host = $('#gdBody'); if (!host) return;
       const P = this.prep();
       const years = [...new Set(P.all.map(x => x.y))].sort((a, b) => a - b);
-      const works = [...new Set(P.all.map(x => x.work))].sort((a, b) => a.localeCompare(b, 'th', { numeric: true }));
+      const works = [...new Set(P.all.filter(x => this.year === 'all' || x.y === this.year).map(x => x.work))].sort((a, b) => a.localeCompare(b, 'th', { numeric: true }));
+      if (this.work !== 'all' && !works.includes(this.work)) this.work = 'all';   // ปีที่เลือกไม่มีงานนี้ → กลับเป็น "ทั้งหมด"
       /* แถบควบคุม */
       const bar = $('#gdBar');
       if (bar) {
