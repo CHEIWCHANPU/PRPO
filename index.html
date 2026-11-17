@@ -5788,6 +5788,95 @@ html body .gd-kpis-sm { margin-top: .8rem; }
 .gd-brief-p { margin: .3rem 0 1rem; font-size: 1rem; line-height: 1.85; color: var(--text); }
 .gd-brief-p b { color: var(--accent); }
 .gd-sub { margin: .4rem 0 .5rem; font-size: .8rem; font-weight: 700; color: var(--muted); letter-spacing: .02em; }
+/* ════════ EXECUTIVE SUMMARY 4.0 ════════ */
+.gd-x { position: relative; isolation: isolate; overflow: hidden; border-radius: 22px; padding: 1.6rem 1.6rem 1.4rem; color: #e6f0ff; margin-bottom: 1rem;
+  background: radial-gradient(900px 380px at 6% -10%, rgba(34,211,238,.17), transparent 60%), radial-gradient(700px 360px at 100% 0%, rgba(139,92,246,.2), transparent 60%), linear-gradient(160deg, #050b1a 0%, #0a1730 55%, #071a2e 100%);
+  border: 1px solid rgba(120,180,255,.2); box-shadow: 0 24px 50px -24px rgba(5,12,30,.75), inset 0 1px 0 rgba(255,255,255,.07); }
+.gd-x::before { content: ""; position: absolute; inset: 0; z-index: -1; opacity: .55; pointer-events: none;
+  background-image: linear-gradient(rgba(120,180,255,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(120,180,255,.07) 1px, transparent 1px); background-size: 34px 34px;
+  -webkit-mask-image: radial-gradient(ellipse at 25% 0%, #000 0%, transparent 78%); mask-image: radial-gradient(ellipse at 25% 0%, #000 0%, transparent 78%); }
+.gd-x::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; pointer-events: none; background: linear-gradient(90deg, transparent, #22d3ee, #8b5cf6, transparent) no-repeat; background-size: 40% 100%; animation: gxScan 6s linear infinite; }
+@keyframes gxScan { from { background-position: -50% 0; } to { background-position: 150% 0; } }
+@keyframes gxPulse { 0% { transform: scale(.6); opacity: .9; } 100% { transform: scale(2.2); opacity: 0; } }
+@keyframes gxIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.gd-x > * { animation: gxIn .55s cubic-bezier(.2,.7,.2,1) both; }
+.gd-x > *:nth-child(2) { animation-delay: .05s; } .gd-x > *:nth-child(3) { animation-delay: .1s; } .gd-x > *:nth-child(4) { animation-delay: .17s; } .gd-x > *:nth-child(5) { animation-delay: .24s; } .gd-x > *:nth-child(6) { animation-delay: .3s; }
+.gx-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; flex-wrap: wrap; }
+.gx-head small { display: flex; align-items: center; gap: .55rem; font: 700 .72rem/1 var(--mono, monospace); letter-spacing: .2em; color: #67e8f9; }
+.gx-head h2 { margin: .5rem 0 0; font-size: 1.75rem; line-height: 1.25; font-weight: 800; letter-spacing: -.01em; background: linear-gradient(90deg, #fff 30%, #a5f3fc); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.gx-live { position: relative; width: 8px; height: 8px; border-radius: 50%; background: #22d3ee; box-shadow: 0 0 10px #22d3ee; }
+.gx-live::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: #22d3ee; animation: gxPulse 1.8s ease-out infinite; }
+.gx-asof { font: 500 .76rem var(--mono, monospace); color: #9db4d6; padding: .4rem .8rem; border-radius: 999px; border: 1px solid rgba(120,180,255,.22); background: rgba(255,255,255,.04); backdrop-filter: blur(6px); }
+.gx-lead { margin: 1rem 0 1.2rem; font-size: 1.02rem; line-height: 1.9; color: #c7d7ee; }
+.gx-lead b { color: #fff; font-weight: 800; }
+.gx-chip { font-style: normal; font: 700 .76rem/1 var(--mono, monospace); padding: .28rem .55rem; border-radius: 999px; white-space: nowrap; }
+.gx-chip.up { color: #34d399; background: rgba(52,211,153,.14); box-shadow: inset 0 0 0 1px rgba(52,211,153,.3); }
+.gx-chip.down { color: #fb7185; background: rgba(251,113,133,.14); box-shadow: inset 0 0 0 1px rgba(251,113,133,.3); }
+.gx-chip.flat { color: #9db4d6; background: rgba(157,180,214,.12); box-shadow: inset 0 0 0 1px rgba(157,180,214,.25); }
+.gx-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .8rem; margin-bottom: .8rem; }
+.gx-m, .gx-card { position: relative; border-radius: 16px; background: linear-gradient(180deg, rgba(255,255,255,.065), rgba(255,255,255,.025)); border: 1px solid rgba(120,180,255,.16); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.gx-m { padding: 1rem 1.1rem .9rem; overflow: hidden; transition: transform .25s, border-color .25s, box-shadow .25s; }
+.gx-m::before { content: ""; position: absolute; left: 1rem; right: 1rem; top: 0; height: 2px; border-radius: 0 0 4px 4px; background: var(--tc, #22d3ee); box-shadow: 0 0 14px 1px var(--tc, #22d3ee); }
+.gx-m:hover { transform: translateY(-3px); border-color: var(--tc, #22d3ee); box-shadow: 0 10px 30px -12px var(--tc, #22d3ee); }
+.gx-m.t1 { --tc: #22d3ee; } .gx-m.t2 { --tc: #60a5fa; } .gx-m.t3 { --tc: #a78bfa; } .gx-m.t4 { --tc: #34d399; }
+.gx-ml { display: block; font: 600 .74rem var(--mono, monospace); letter-spacing: .06em; color: #9db4d6; }
+.gx-mv { display: block; margin: .4rem 0 .6rem; font-weight: 800; font-size: clamp(1.7rem, 2.6vw, 2.5rem); line-height: 1.1; font-family: var(--font-display, inherit); letter-spacing: -.02em; color: #fff; font-variant-numeric: tabular-nums; text-shadow: 0 0 22px color-mix(in srgb, var(--tc) 55%, transparent); }
+.gx-mf { display: flex; align-items: center; gap: .55rem; flex-wrap: wrap; min-height: 1.4rem; }
+.gx-mf small, .gx-gf small { font-size: .74rem; color: #8aa0c2; }
+.gx-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: .8rem; margin-bottom: .8rem; }
+.gx-row3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .8rem; margin-bottom: 1rem; }
+.gx-card { padding: 1rem 1.1rem; }
+.gx-ct { display: flex; justify-content: space-between; align-items: center; gap: .6rem; margin-bottom: .8rem; }
+.gx-ct > span:first-child { font: 700 .76rem var(--mono, monospace); letter-spacing: .08em; color: #9db4d6; text-transform: uppercase; }
+.gx-big { font-weight: 800; font-size: 1.4rem; font-family: var(--font-display, inherit); color: #fff; text-shadow: 0 0 16px rgba(34,211,238,.5); }
+.gx-key { display: flex; align-items: center; gap: .4rem; font: 600 .72rem var(--mono, monospace); color: #9db4d6; }
+.gx-key i { width: 16px; height: 3px; border-radius: 2px; background: linear-gradient(90deg, #22d3ee, #a78bfa); display: inline-block; margin-left: .4rem; }
+.gx-key i.p { background: none; border-top: 2px dashed #64748b; height: 0; }
+.gx-spark { width: 100%; height: 160px; display: block; overflow: visible; }
+.gx-grid line { stroke: rgba(120,180,255,.12); stroke-dasharray: 3 5; }
+.gx-line { fill: none; stroke: url(#gxL); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 2400; stroke-dashoffset: 2400; animation: gxDraw 1.6s .25s ease forwards; vector-effect: non-scaling-stroke; }
+.gx-prev { fill: none; stroke: #64748b; stroke-width: 2; stroke-dasharray: 5 6; vector-effect: non-scaling-stroke; opacity: .9; }
+@keyframes gxDraw { to { stroke-dashoffset: 0; } }
+.gx-peak { fill: #fff; stroke: #22d3ee; stroke-width: 2.5; } .gx-ping { fill: rgba(34,211,238,.35); transform-box: fill-box; transform-origin: center; animation: gxPulse 2s ease-out infinite; }
+.gx-months { display: flex; justify-content: space-between; margin-top: .3rem; font: 500 .68rem var(--mono, monospace); color: #6f86a8; }
+.gx-months .on { color: #67e8f9; font-weight: 800; }
+.gx-gauge { display: flex; flex-direction: column; }
+.gx-ringbox { position: relative; width: 168px; max-width: 100%; margin: .1rem auto .5rem; aspect-ratio: 1; }
+.gx-ring { width: 100%; height: 100%; transform: rotate(-90deg); filter: drop-shadow(0 0 10px rgba(34,211,238,.45)); }
+.gx-rt { fill: none; stroke: rgba(255,255,255,.08); stroke-width: 9; }
+.gx-rv { fill: none; stroke: url(#gxR); stroke-width: 9; stroke-linecap: round; animation: gxRing 1.4s .2s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes gxRing { from { stroke-dasharray: 0 400; } }
+.gx-rc { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.gx-rc b { font-weight: 800; font-size: 1.9rem; font-family: var(--font-display, inherit); color: #fff; letter-spacing: -.02em; }
+.gx-rc small { font-size: .68rem; color: #8aa0c2; }
+.gx-gf { display: flex; justify-content: center; align-items: center; gap: .5rem; flex-wrap: wrap; margin-top: auto; text-align: center; }
+.gx-seg { display: flex; height: 12px; border-radius: 999px; overflow: hidden; gap: 2px; margin-bottom: .8rem; box-shadow: 0 0 18px -4px rgba(34,211,238,.5); }
+.gx-seg i { min-width: 4px; }
+.gx-leg, .gx-mk, .gx-facts { list-style: none; margin: 0; padding: 0; }
+.gx-leg li { display: flex; align-items: center; font-size: .84rem; padding: .22rem 0; color: #c7d7ee; }
+.gx-leg li b { margin-left: auto; font: 700 .8rem var(--mono, monospace); color: #fff; }
+.gx-mk li { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) 3.6rem; align-items: center; gap: .6rem; padding: .3rem 0; font-size: .84rem; color: #c7d7ee; }
+.gx-mk-n { display: flex; align-items: center; gap: .5rem; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.gx-mk-n em { font: 700 .68rem var(--mono, monospace); width: 1.3rem; height: 1.3rem; display: inline-grid; place-items: center; border-radius: 6px; background: rgba(34,211,238,.14); color: #67e8f9; font-style: normal; flex: none; }
+.gx-mk-b { height: 6px; border-radius: 99px; background: rgba(255,255,255,.07); overflow: hidden; }
+.gx-mk-b i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, #22d3ee, #a78bfa); box-shadow: 0 0 10px #22d3ee; animation: gxBar 1s .3s cubic-bezier(.2,.7,.2,1) both; transform-origin: left; }
+@keyframes gxBar { from { transform: scaleX(0); } }
+.gx-mk li b { font: 700 .8rem var(--mono, monospace); color: #fff; text-align: right; }
+.gx-facts li { display: grid; gap: .1rem; padding: .5rem 0; border-bottom: 1px dashed rgba(120,180,255,.14); }
+.gx-facts li:last-child { border-bottom: 0; }
+.gx-facts span { font-size: .72rem; color: #8aa0c2; }
+.gx-facts b { font-size: 1.12rem; color: #fff; overflow-wrap: anywhere; }
+.gx-facts small { font-size: .74rem; color: #8aa0c2; }
+.gx-none { color: #6f86a8; }
+.gx-watch h4 { margin: 0 0 .6rem; font: 700 .74rem var(--mono, monospace); letter-spacing: .14em; color: #9db4d6; text-transform: uppercase; }
+.gx-watch > div { display: flex; flex-wrap: wrap; gap: .6rem; }
+.gx-w { display: flex; align-items: center; gap: .6rem; padding: .6rem .9rem; border-radius: 12px; font-size: .86rem; line-height: 1.5; color: #dbe7fa; background: rgba(255,255,255,.045); border: 1px solid rgba(120,180,255,.16); }
+.gx-w i { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--wc, #60a5fa); box-shadow: 0 0 10px var(--wc, #60a5fa); }
+.gx-w.up { --wc: #34d399; } .gx-w.down { --wc: #fb7185; } .gx-w.warn { --wc: #fbbf24; } .gx-w.info { --wc: #60a5fa; }
+.gx-w b { color: #fff; }
+@media (max-width: 980px) { .gx-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .gx-row, .gx-row3 { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .gd-x { padding: 1.1rem; border-radius: 16px; } .gx-head h2 { font-size: 1.4rem; } .gx-metrics { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .gd-x *, .gd-x::after, .gd-x > * { animation: none !important; } .gx-line { stroke-dashoffset: 0; } }
 .gd-strip-stats { display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: 1rem; }
 .gd-strip-stats > div { flex: 1 1 150px; padding: .75rem 1rem; border-radius: 10px; background: var(--surface2); }
 .gd-strip-stats b { display: block; font-size: 1.5rem; line-height: 1.3; }
@@ -21103,7 +21192,6 @@ function endTour() {
         topWork ? `ประเภทงานหลักคือ <b>${esc(topWork[0])}</b> (${totalM ? (topWork[1] / totalM * 100).toFixed(1) : 0}%)` : '',
         mkSorted.length ? `Maker รายใหญ่สุดคือ <b>${esc(mkSorted[0][0])}</b> (${pct(mkSorted[0][1], totalM)}) และ Top 5 Maker รวมกัน ${top5Pct.toFixed(1)}%` : '',
         cusGroups.length ? `มีลูกค้าที่ GO <b>${cusGroups.length}</b> ราย (ตามรหัส CUS): ${cusGroups.slice(0, 6).map(([k, l]) => `<b>${esc(k)}</b> ${l.length.toLocaleString('th-TH')}`).join(', ')}${cusGroups.length > 6 ? ' …' : ''}` : '',
-        `งานลอกผิวชุบ (แยกออกจากสรุป) <b>${stripCur.length.toLocaleString('th-TH')}</b> รายการ`,
         months[peak] > 0 ? `เดือนที่มีงานสูงสุดคือ <b>${MONTHS[peak]}</b>` : '',
         sc.priced ? `กำไรขั้นต้นรวม <b>${this.fmt(sc.profit, 'profit')}</b>${sc.margin != null ? ` (Margin ${sc.margin.toFixed(1)}%)` : ''}` : ''
       ].filter(Boolean);
@@ -21114,22 +21202,70 @@ function endTour() {
       const noPlace = cur.filter(x => x.place === '(ไม่ระบุ)').length;
       if (noPlace) watch.push(['info', `มี ${noPlace.toLocaleString('th-TH')} รายการที่ยังไม่ระบุ PLACE`]);
       if (!watch.length) watch.push(['up', 'ไม่พบประเด็นผิดปกติในข้อมูลที่เลือก']);
-      const tile = (l, v, sub, col) => `<div class="gd-tile"${col ? ` style="border-left-color:${col}"` : ''}><span>${l}</span><b>${v}</b><small>${sub || '&nbsp;'}</small></div>`;
       const asOf = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
-      const lead = `ปี ${yTH(Y)}${period} บริษัทมีงาน GO <b>${sc.count.toLocaleString('th-TH')}</b> รายการ รวม <b>${this.fmt(sc.volume, 'volume')}</b> ชิ้น${B ? ` <span class="gd-delta ${dCnt.cls}">${dCnt.txt}</span> เมื่อเทียบกับปี ${yTH(B)}` : ''}${sc.priced ? ` · มูลค่าขาย <b>${this.fmt(sc.sales, 'sales')}</b> กำไรขั้นต้น <b>${this.fmt(sc.profit, 'profit')}</b>${sc.margin != null ? ` (Margin ${sc.margin.toFixed(1)}%)` : ''}` : ''}`;
-      const briefHtml = `<section class="gd-card gd-insights gd-exec">
-          <div class="gd-exec-head"><div><small>Executive Summary</small><h2>รายงานผู้บริหาร · งาน GO WORK ประจำปี ${yTH(Y)}</h2></div><span>ข้อมูล ณ ${asOf}${period ? ' · ช่วง' + period.replace(/[()]/g, '') : ''}</span></div>
-          <p class="gd-lead">${lead}</p>
-          <div class="gd-tiles">
-            ${tile('PLACE ผลิตหลัก', tp ? esc(tp[0]) : '—', tp ? `${pct(tp[1].length, cur.length)} ของรายการ` : '', tp ? plColor(tp[0]) : '')}
-            ${tile('ประเภทงานหลัก', topWork ? esc(topWork[0]) : '—', topWork && totalM ? `${(topWork[1] / totalM * 100).toFixed(1)}% ของ${ML}` : '')}
-            ${tile('Maker รายใหญ่สุด', mkSorted.length ? esc(mkSorted[0][0]) : '—', mkSorted.length ? `${pct(mkSorted[0][1], totalM)} · Top 5 รวม ${top5Pct.toFixed(1)}%` : '')}
-            ${tile('ลูกค้าที่ GO (รหัส CUS)', `${cusGroups.length} ราย`, cusGroups.slice(0, 4).map(([k, l]) => `${esc(k)} ${l.length.toLocaleString('th-TH')}`).join(' · '))}
-            ${tile('เดือนที่มีงานสูงสุด', months[peak] > 0 ? MONTHS[peak] : '—', months[peak] > 0 ? `${this.fmt(months[peak], M)} (${ML})` : '')}
-            ${tile('งานลอกผิวชุบ (แยกจากสรุป)', `${stripCur.length.toLocaleString('th-TH')} รายการ`, B ? `ปี ${yTH(B)}${period}: ${stripPrev.length.toLocaleString('th-TH')} รายการ` : '')}
+      /* ── EXECUTIVE SUMMARY 4.0 (ไม่รวมงานลอกผิวชุบ) ── */
+      const dKey = c => c === 'up' ? 'up' : c === 'down' ? 'down' : 'flat';
+      const dChip = (a, b, isM) => { if (!B || b == null || a == null) return ''; const d = this.delta(a, b, isM); return `<em class="gx-chip ${dKey(d.cls)}">${d.txt}</em>`; };
+      const was = (v, t) => B && sp ? `<small>ปี ${yTH(B)}${period}: ${this.fmt(v, t)}</small>` : '<small>&nbsp;</small>';
+      const mCell = (lab, val, chipH, sub, tone) => `<div class="gx-m ${tone}"><span class="gx-ml">${lab}</span><b class="gx-mv" data-cu>${val}</b><div class="gx-mf">${chipH}${sub}</div></div>`;
+      const nPts = ytdOn ? lastM + 1 : 12;
+      const sparkPrev = B ? Array.from({ length: 12 }, (_, i) => this.val(prevFull.filter(x => x.m === i))) : [];
+      const curArr = months.slice(0, nPts);
+      const vmax = Math.max(1, ...curArr, ...sparkPrev);
+      const SW = 640, SH = 160, PX = 14, PY = 18;
+      const sx = i => PX + i * (SW - 2 * PX) / 11;
+      const sy = v => SH - PY - (v / vmax) * (SH - 2 * PY);
+      const smooth = arr => { const p = arr.map((v, i) => [sx(i), sy(v)]); let d = `M${p[0][0].toFixed(1)},${p[0][1].toFixed(1)}`; for (let i = 0; i < p.length - 1; i++) { const xm = ((p[i][0] + p[i + 1][0]) / 2).toFixed(1); d += ` C${xm},${p[i][1].toFixed(1)} ${xm},${p[i + 1][1].toFixed(1)} ${p[i + 1][0].toFixed(1)},${p[i + 1][1].toFixed(1)}`; } return d; };
+      const areaD = smooth(curArr) + ` L${sx(curArr.length - 1).toFixed(1)},${SH - PY} L${sx(0).toFixed(1)},${SH - PY} Z`;
+      const peakOk = months[peak] > 0 && peak < nPts;
+      const gridY = [0.25, 0.5, 0.75, 1].map(f => `<line x1="${PX}" x2="${SW - PX}" y1="${(SH - PY - f * (SH - 2 * PY)).toFixed(1)}" y2="${(SH - PY - f * (SH - 2 * PY)).toFixed(1)}"/>`).join('');
+      const spark = `<svg viewBox="0 0 ${SW} ${SH}" preserveAspectRatio="none" class="gx-spark" role="img" aria-label="แนวโน้มรายเดือน">
+          <defs><linearGradient id="gxA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22d3ee" stop-opacity=".45"/><stop offset="1" stop-color="#22d3ee" stop-opacity="0"/></linearGradient>
+          <linearGradient id="gxL" x1="0" x2="1"><stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#a78bfa"/></linearGradient>
+          <filter id="gxG" x="-10%" y="-30%" width="120%" height="160%"><feGaussianBlur stdDeviation="3.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+          <g class="gx-grid">${gridY}</g>
+          ${B ? `<path d="${smooth(sparkPrev)}" class="gx-prev"/>` : ''}
+          <path d="${areaD}" fill="url(#gxA)"/>
+          <path d="${smooth(curArr)}" class="gx-line" filter="url(#gxG)"/>
+          ${peakOk ? `<circle cx="${sx(peak).toFixed(1)}" cy="${sy(months[peak]).toFixed(1)}" r="9" class="gx-ping"/><circle cx="${sx(peak).toFixed(1)}" cy="${sy(months[peak]).toFixed(1)}" r="4.5" class="gx-peak"/>` : ''}
+        </svg>`;
+      const spLab = `<div class="gx-months">${MS_.map((m, i) => `<span${i === peak && peakOk ? ' class="on"' : ''}>${m}</span>`).join('')}</div>`;
+      const mg = sc.margin == null ? 0 : Math.max(0, Math.min(100, sc.margin)), RC = 2 * Math.PI * 46;
+      const ring = `<svg viewBox="0 0 120 120" class="gx-ring"><defs><linearGradient id="gxR" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#a78bfa"/></linearGradient></defs>
+          <circle cx="60" cy="60" r="46" class="gx-rt"/><circle cx="60" cy="60" r="46" class="gx-rv" style="stroke-dasharray:${(mg / 100 * RC).toFixed(1)} ${RC.toFixed(1)}"/></svg>`;
+      const placeBar = placeGroups.length ? `<div class="gx-seg">${placeGroups.map(([k, l]) => `<i style="flex:${l.length};background:${plColor(k)}" title="${esc(k)} ${l.length}"></i>`).join('')}</div>
+          <ul class="gx-leg">${placeGroups.slice(0, 5).map(([k, l]) => `<li><span class="gd-dot" style="background:${plColor(k)}"></span>${esc(k)}<b>${pct(l.length, cur.length)}</b></li>`).join('')}</ul>` : '<p class="gx-none">—</p>';
+      const mkTop = mkSorted.slice(0, 5), mkMax = mkTop.length ? mkTop[0][1] || 1 : 1;
+      const mkBars = mkTop.length ? mkTop.map(([k, v], i) => `<li><span class="gx-mk-n"><em>${i + 1}</em>${esc(k)}</span><span class="gx-mk-b"><i style="width:${Math.max(3, v / mkMax * 100).toFixed(1)}%"></i></span><b>${pct(v, totalM)}</b></li>`).join('') : '<li class="gx-none">—</li>';
+      const fact = (l, v, s) => `<li><span>${l}</span><b>${v}</b>${s ? `<small>${s}</small>` : ''}</li>`;
+      const facts = [
+        fact('ประเภทงานหลัก', topWork ? esc(topWork[0]) : '—', topWork && totalM ? `${(topWork[1] / totalM * 100).toFixed(1)}% ของ${ML}` : ''),
+        fact('ลูกค้าที่ GO (รหัส CUS)', `${cusGroups.length} ราย`, cusGroups.slice(0, 4).map(([k, l]) => `${esc(k)} ${l.length.toLocaleString('th-TH')}`).join(' · ')),
+        fact('เดือนที่มีงานสูงสุด', peakOk ? MONTHS[peak] : '—', peakOk ? `${this.fmt(months[peak], M)} (${ML})` : ''),
+        Y !== years[0] ? fact('Maker ใหม่ปีนี้', `${newMk.length} ราย`, newMk.slice(0, 3).map(esc).join(' · ')) : ''
+      ].join('');
+      const lead = `ปี ${yTH(Y)}${period} บริษัทมีงาน GO <b>${sc.count.toLocaleString('th-TH')}</b> รายการ รวม <b>${this.fmt(sc.volume, 'volume')}</b> ชิ้น${B ? ` ${dChip(sc.count, sp.count)} เมื่อเทียบกับปี ${yTH(B)}` : ''}`;
+      const briefHtml = `<section class="gd-x">
+          <header class="gx-head"><div><small><i class="gx-live"></i>EXECUTIVE SUMMARY · GO WORK</small><h2>สรุปผู้บริหารประจำปี ${yTH(Y)}</h2></div><span class="gx-asof">ข้อมูล ณ ${asOf}${period ? ' · ช่วง' + period.replace(/[()]/g, '') : ''}</span></header>
+          <p class="gx-lead">${lead}</p>
+          <div class="gx-metrics">
+            ${mCell('จำนวนรายการ GO', sc.count.toLocaleString('th-TH'), dChip(sc.count, sp && sp.count), was(sp && sp.count, 'count'), 't1')}
+            ${mCell('VOLUME รวม', this.fmt(sc.volume, 'volume'), dChip(sc.volume, sp && sp.volume), was(sp && sp.volume, 'volume'), 't2')}
+            ${mCell('มูลค่าขาย', this.fmt(sc.sales, 'sales'), dChip(sc.sales, sp && sp.sales), was(sp && sp.sales, 'sales'), 't3')}
+            ${mCell('กำไรขั้นต้น', this.fmt(sc.profit, 'profit'), dChip(sc.profit, sp && sp.profit), was(sp && sp.profit, 'profit'), 't4')}
           </div>
-          <h4 class="gd-sub">ประเด็นที่ผู้บริหารควรทราบ</h4>
-          <ul>${watch.map(([t, h]) => `<li class="${t}"><i></i><span>${h}</span></li>`).join('')}</ul></section>`;
+          <div class="gx-row">
+            <div class="gx-card gx-trend"><div class="gx-ct"><span>แนวโน้มรายเดือน · ${ML}</span><span class="gx-key"><i></i>${yTH(Y)}${B ? `<i class="p"></i>${yTH(B)}` : ''}</span></div>${spark}${spLab}</div>
+            <div class="gx-card gx-gauge"><div class="gx-ct"><span>Margin เฉลี่ย</span></div><div class="gx-ringbox">${ring}<div class="gx-rc"><b data-cu>${sc.margin == null ? '—' : sc.margin.toFixed(1) + '%'}</b><small>กำไรขั้นต้น / ขาย</small></div></div>
+              <div class="gx-gf">${B && sp && sp.margin != null && sc.margin != null ? dChip(sc.margin, sp.margin, true) + `<small>ปี ${yTH(B)}: ${sp.margin.toFixed(1)}%</small>` : `<small>${sc.priced.toLocaleString('th-TH')} จาก ${sc.count.toLocaleString('th-TH')} รายการมีราคาครบ</small>`}</div></div>
+          </div>
+          <div class="gx-row3">
+            <div class="gx-card"><div class="gx-ct"><span>PLACE ผลิตหลัก</span><b class="gx-big">${tp ? esc(tp[0]) : '—'}</b></div>${placeBar}</div>
+            <div class="gx-card"><div class="gx-ct"><span>Maker รายใหญ่ · Top 5 รวม ${top5Pct.toFixed(1)}%</span></div><ul class="gx-mk">${mkBars}</ul></div>
+            <div class="gx-card"><div class="gx-ct"><span>ข้อมูลเด่นของปี</span></div><ul class="gx-facts">${facts}</ul></div>
+          </div>
+          <div class="gx-watch"><h4>ประเด็นที่ผู้บริหารควรทราบ</h4><div>${watch.map(([t, h]) => `<div class="gx-w ${t}"><i></i><span>${h}</span></div>`).join('')}</div></div>
+        </section>`;
       const pcTbl = `<section class="gd-card"><header><h3>สรุปตาม PLACE (สถานที่ผลิต)</h3><span>ปี ${yTH(Y)}${period}</span></header>${this.tbl(['PLACE', 'รายการ', 'สัดส่วน', 'VOLUME', 'มูลค่าขาย', 'กำไรขั้นต้น', 'Margin'], placeRows)}</section>`;
       const pcPie = `<section class="gd-card"><header><h3>สัดส่วนตาม PLACE</h3><span>${ML}</span></header><div class="gd-chart"><canvas id="gdPlace"></canvas></div></section>`;
       const pcMonth = `<section class="gd-card span2"><header><h3>${ML}รายเดือน แยกตาม PLACE</h3><span>สีเดียวกับหน้ารายการ: CCIS ฟ้า · CNN เขียว · CCIR ม่วง</span></header><div class="gd-chart tall"><canvas id="gdPlaceMonth"></canvas></div></section>`;
@@ -21189,6 +21325,18 @@ function endTour() {
         ${sec('07', 'สรุปรายปีและหลักเกณฑ์')}
         ${yearTbl}
         ${notes}`;
+      /* นับเลขขึ้น (Executive Summary) */
+      if (!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+        host.querySelectorAll('.gd-x [data-cu]').forEach(el => {
+          const txt = el.textContent, mm = txt.match(/\d[\d,]*\.?\d*/);
+          if (!mm) return;
+          const target = parseFloat(mm[0].replace(/,/g, ''));
+          if (!isFinite(target) || target === 0) return;
+          const dec = (mm[0].split('.')[1] || '').length, pre = txt.slice(0, mm.index), post = txt.slice(mm.index + mm[0].length), t0 = performance.now(), dur = 900;
+          const step = now => { const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = k < 1 ? pre + (target * e).toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec }) + post : txt; if (k < 1) requestAnimationFrame(step); };
+          requestAnimationFrame(step);
+        });
+      }
 
       /* ── กราฟ ── */
       const money = ['sales', 'profit'].includes(M);
