@@ -5788,40 +5788,60 @@ html body .gd-kpis-sm { margin-top: .8rem; }
 .gd-brief-p { margin: .3rem 0 1rem; font-size: 1rem; line-height: 1.85; color: var(--text); }
 .gd-brief-p b { color: var(--accent); }
 .gd-sub { margin: .4rem 0 .5rem; font-size: .8rem; font-weight: 700; color: var(--muted); letter-spacing: .02em; }
-/* ════════ สรุปแบบสไลด์ (ตารางหัวเขียว + กราฟวงกลม) ════════ */
-.gs-wrap { display: grid; gap: 1.1rem; margin-bottom: 1rem; }
-.gs-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
-.gs-head h2 { margin: 0; font-size: 1.4rem; font-weight: 800; color: var(--text); }
-.gs-head span { font-size: .8rem; color: var(--muted); }
-.gs-slide { background: #fff; color: #111; border: 1px solid var(--border2); border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
-.gs-bar { display: flex; align-items: stretch; gap: .5rem; padding: .8rem .8rem 0; }
-.gs-bar b { flex: none; min-width: 90px; display: grid; place-items: center; background: #DD7F46; color: #111; font-size: 1.25rem; font-weight: 800; }
-.gs-bar h3 { flex: 1; margin: 0; padding: .65rem 1rem; background: #95B3D7; color: #111; font-size: 1.2rem; font-weight: 800; }
-.gs-body { padding: .9rem .8rem 1rem; }
-.gs-scroll { overflow-x: auto; }
-.gs-t { width: 100%; border-collapse: collapse; font-size: .9rem; }
-.gs-t th, .gs-t td { border: 1px solid #222; padding: .42rem .6rem; text-align: center; color: #111; background: #fff; }
-.gs-t thead th { background: #00B050; font-weight: 800; }
-.gs-t thead th.gs-sm { font-size: .68rem; padding: .2rem .3rem; }
-.gs-t .gs-rh { background: #00B050; text-align: left; font-weight: 800; font-size: .82rem; white-space: nowrap; }
-.gs-t td { font-weight: 600; font-variant-numeric: tabular-nums; }
-.gs-t .gs-z { color: #888; font-weight: 500; }
-.gs-t .gs-tot { font-weight: 800; background: #f1f5ea; }
-.gs-t .gs-sum td, .gs-t .gs-sum th { border-top: 2px solid #222; }
-.gs-t .gs-foot th { background: #fff; font-size: 1.05rem; font-weight: 800; }
-.gs-t .gs-foot td { font-size: 1.15rem; font-weight: 800; }
-.gs-models { text-align: left !important; }
-.gs-models span { display: inline-block; margin: .15rem .25rem .15rem 0; padding: .1rem .5rem; border: 1px solid #888; border-radius: 3px; font-size: .8rem; font-weight: 600; }
-.gs-pie { margin-top: 1rem; }
-.gs-pie h4 { margin: 0 0 .3rem; text-align: center; font-size: 1rem; font-weight: 800; color: #111; }
-.gs-pie .gd-chart { height: 260px; }
-.gs-notes { display: grid; grid-template-columns: 1fr auto 1.4fr; gap: 1rem; margin-top: 1rem; font-size: .88rem; }
-.gs-g { color: #00A040; font-size: 1.05rem; font-weight: 800; display: block; margin-bottom: .3rem; }
-.gs-notes p, .gs-notes li { margin: .1rem 0; list-style: none; }
-.gs-notes ul { margin: 0 0 .4rem; padding: 0; }
-.gs-notes h5 { margin: .4rem 0 .1rem; font-size: .9rem; font-weight: 800; }
-.gs-vl { border-left: 2px dashed #8a8fb0; }
-@media (max-width: 700px) { .gs-notes { grid-template-columns: 1fr; } .gs-vl { display: none; } .gs-bar b { min-width: 60px; } .gs-bar h3 { font-size: 1rem; } }
+/* ════════ สรุปสไลด์ ล้ำ ๆ (Heatmap + Donut) ════════ */
+.gs-wrap { display: grid; gap: 1.2rem; margin-bottom: 1rem; }
+.gs-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; flex-wrap: wrap; }
+.gs-head small { display: flex; align-items: center; gap: .5rem; font: 700 .72rem var(--mono, monospace); letter-spacing: .18em; color: #06b6d4; }
+.gs-live { width: 8px; height: 8px; border-radius: 50%; background: #06b6d4; box-shadow: 0 0 10px #06b6d4; display: inline-block; }
+.gs-head h2 { margin: .35rem 0 0; font-size: 1.55rem; font-weight: 800; color: var(--text); }
+.gs-head > span { font-size: .8rem; color: var(--muted); }
+.gs-slide { position: relative; overflow: hidden; border-radius: 18px; background: var(--surface); color: var(--text); border: 1px solid var(--border2); box-shadow: 0 10px 30px -18px rgba(37,99,235,.45); }
+.gs-slide::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: linear-gradient(90deg, #3b82f6, #06b6d4, #8b5cf6); }
+.gs-slide::after { content: ""; position: absolute; right: -80px; top: -80px; width: 260px; height: 260px; border-radius: 50%; background: radial-gradient(circle, rgba(99,102,241,.14), transparent 70%); pointer-events: none; }
+.gs-h { position: relative; z-index: 1; display: flex; align-items: center; gap: .9rem; padding: 1.1rem 1.2rem .3rem; }
+.gs-h i { font-style: normal; font: 800 .95rem var(--mono, monospace); padding: .55rem .75rem; border-radius: 12px; color: #fff; background: linear-gradient(135deg, #3b82f6, #8b5cf6); box-shadow: 0 8px 20px -8px #6366f1; }
+.gs-h h3 { margin: 0; font-size: 1.2rem; font-weight: 800; }
+.gs-h small { color: var(--muted); font-size: .8rem; }
+.gs-body { position: relative; z-index: 1; padding: .8rem 1.2rem 1.2rem; display: grid; gap: 1rem; }
+.gs-two { grid-template-columns: minmax(0, 1.8fr) minmax(250px, 1fr); align-items: start; }
+.gs-stats { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: .7rem; }
+.gs-stats div { flex: 1 1 130px; padding: .7rem 1rem; border-radius: 14px; background: var(--surface2); border: 1px solid var(--border2); }
+.gs-stats b { display: block; font-size: 1.9rem; line-height: 1.15; font-weight: 800; background: linear-gradient(90deg, #3b82f6, #06b6d4); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.gs-stats span { font-size: .76rem; color: var(--muted); font-weight: 600; }
+.gs-scroll { overflow-x: auto; padding-bottom: .2rem; }
+.gs-t { width: 100%; border-collapse: separate; border-spacing: 4px; font-size: .95rem; }
+.gs-t th { padding: .5rem .6rem; text-align: center; font: 700 .76rem var(--mono, monospace); letter-spacing: .06em; color: var(--muted); text-transform: uppercase; }
+.gs-t th.gs-sm { font-size: .64rem; padding: .1rem; color: var(--muted); opacity: .8; }
+.gs-t th.gs-l { text-align: left; }
+.gs-t .gs-rh { text-align: left; color: var(--text); font: 700 .8rem var(--font-body, inherit); letter-spacing: 0; text-transform: none; white-space: nowrap; padding-right: .8rem; }
+.gs-c { text-align: center; border-radius: 8px; padding: .55rem .4rem; font-weight: 700; font-size: 1.02rem; font-variant-numeric: tabular-nums; background: color-mix(in srgb, #3b82f6 var(--h, 0%), transparent); }
+.gs-c.gs-cps { background: color-mix(in srgb, #f59e0b calc(var(--h, 0%) * 1.1), transparent); }
+.gs-c.gs-z { background: var(--surface2); color: var(--muted); opacity: .55; font-weight: 400; }
+.gs-bt { position: relative; min-width: 110px; padding: .5rem .7rem; border-radius: 8px; background: var(--surface2); }
+.gs-bt b { position: relative; z-index: 1; font-size: 1.02rem; }
+.gs-bt i { position: absolute; left: 0; bottom: 0; height: 4px; border-radius: 4px; background: linear-gradient(90deg, #3b82f6, #06b6d4); box-shadow: 0 0 10px rgba(6,182,212,.6); }
+.gs-bt.cps i { background: linear-gradient(90deg, #f59e0b, #ef4444); box-shadow: 0 0 10px rgba(245,158,11,.6); }
+.gs-sum td, .gs-sum th { padding-top: .6rem; font-weight: 700; text-align: center; color: var(--muted); }
+.gs-sum .gs-rh { text-align: left; }
+.gs-tot { font-weight: 800; color: var(--text) !important; }
+.gs-pie { padding: .8rem; border: 1px solid var(--border2); border-radius: 16px; background: var(--surface2); }
+.gs-pie h4 { margin: 0 0 .4rem; text-align: center; font: 700 .78rem var(--mono, monospace); letter-spacing: .08em; color: var(--muted); }
+.gs-pie .gd-chart { height: 280px; }
+.gs-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: .7rem; }
+.gs-cus { padding: .8rem .9rem; border-radius: 14px; background: var(--surface2); border: 1px solid var(--border2); border-top: 3px solid var(--cc); }
+.gs-cn { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem; margin-bottom: .5rem; }
+.gs-cn b { font-size: 1.15rem; font-weight: 800; color: var(--cc); }
+.gs-cn span { font-size: .72rem; color: var(--muted); }
+.gs-models span { display: inline-block; margin: .15rem .25rem .15rem 0; padding: .1rem .5rem; border-radius: 999px; font-size: .78rem; font-weight: 700; color: var(--text); background: color-mix(in srgb, var(--cc) 16%, transparent); border: 1px solid color-mix(in srgb, var(--cc) 35%, transparent); }
+.gs-notes { display: grid; grid-template-columns: 1fr 1.8fr; gap: .8rem; font-size: .88rem; }
+.gs-notes > div { padding: .8rem 1rem; border-radius: 14px; background: var(--surface2); border: 1px solid var(--border2); }
+.gs-notes .n1 { border-left: 4px solid #3b82f6; } .gs-notes .n2 { border-left: 4px solid #f59e0b; }
+.gs-g { display: block; margin-bottom: .3rem; font: 700 .78rem var(--mono, monospace); letter-spacing: .06em; color: var(--muted); }
+.gs-notes p { margin: .1rem 0; }
+.gs-notes h5 { margin: .5rem 0 .2rem; font-size: .84rem; font-weight: 800; }
+.gs-notes ul { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: .3rem; }
+.gs-notes li { padding: .1rem .55rem; border-radius: 999px; font-size: .8rem; background: var(--surface); border: 1px solid var(--border2); }
+@media (max-width: 900px) { .gs-two, .gs-notes { grid-template-columns: 1fr; } }
 /* ════════ EXECUTIVE SUMMARY (สะอาด อ่านง่าย) ════════ */
 .gd-x { border-radius: 16px; padding: 1.4rem 1.5rem 1.3rem; margin-bottom: 1rem; background: var(--surface); border: 1px solid var(--border2); border-top: 4px solid var(--accent); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.05); }
 .gx-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; flex-wrap: wrap; }
@@ -21218,47 +21238,51 @@ function endTour() {
       if (noPlace) watch.push(['info', `มี ${noPlace.toLocaleString('th-TH')} รายการที่ยังไม่ระบุ PLACE`]);
       if (!watch.length) watch.push(['up', 'ไม่พบประเด็นผิดปกติในข้อมูลที่เลือก']);
       const asOf = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
-      /* ── สรุปแบบสไลด์ (ตาราง + กราฟวงกลม) ── */
-      const SLC = ['#4F81BD', '#C0504D', '#9BBB59', '#8064A2', '#4BACC6', '#F79646', '#2C4D75', '#772C2A', '#5F7530', '#3F3151', '#31859B', '#E36C09'];
+      /* ── สรุปสไลด์ล้ำ ๆ: Heatmap + Donut ── */
+      const SLC = ['#3b82f6', '#06b6d4', '#8b5cf6', '#22c55e', '#f59e0b', '#ec4899', '#14b8a6', '#6366f1', '#f97316', '#84cc16', '#0ea5e9', '#a855f7'];
       const byCus = new Map(); cur.forEach(x => { const k = x.cus || '(ไม่ระบุ)'; (byCus.get(k) || byCus.set(k, []).get(k)).push(x); });
       const cusList = [...byCus.keys()].sort((a, b) => byCus.get(b).length - byCus.get(a).length || a.localeCompare(b));
       const DET = ['COMPONENT', 'SURFACE TREATMENT', 'HEAT TREATMENT', 'BUFF'];
       const detOf = w => /surface|ผิว|ชุบ/i.test(w) ? 'SURFACE TREATMENT' : /heat|อบ/i.test(w) ? 'HEAT TREATMENT' : /buff|ขัด/i.test(w) ? 'BUFF' : 'COMPONENT';
       const nModels = new Set(cur.map(x => x.model).filter(Boolean)).size, nParts = new Set(cur.map(x => x.partNo).filter(Boolean)).size;
       const L = n => n.toLocaleString('th-TH');
-      const bar = (no, t) => `<div class="gs-bar"><b>${no}</b><h3>${t}</h3></div>`;
-      /* สไลด์ 1: DETAIL × ลูกค้า */
+      const hd = (no, t, sub) => `<header class="gs-h"><i>${no}</i><div><h3>${t}</h3>${sub ? `<small>${sub}</small>` : ''}</div></header>`;
+      const stat = (v, l) => `<div><b>${v}</b><span>${l}</span></div>`;
+      const hc = (v, mx, cls) => v ? `<td class="gs-c ${cls || ''}" style="--h:${Math.round(12 + Math.min(1, v / (mx || 1)) * 58)}%">${v}</td>` : '<td class="gs-c gs-z">–</td>';
+      /* 01: DETAIL × ลูกค้า */
       const detCnt = DET.map(d => cur.filter(x => detOf(x.work) === d).length);
-      const s1rows = DET.map((d, i) => `<tr><th class="gs-rh">${d}</th>${cusList.map(c => { const v = byCus.get(c).filter(x => detOf(x.work) === d).length; return `<td${v ? '' : ' class="gs-z"'}>${v}</td>`; }).join('')}<td class="gs-tot">${detCnt[i]}</td></tr>`).join('');
-      const slide1 = `<section class="gs-slide">${bar('1/3', `สรุปจำนวน GO ${L(nModels)} MODEL ${L(nParts)} PART`)}
-          <div class="gs-body"><div class="gs-scroll"><table class="gs-t"><thead><tr><th>DETAIL</th>${cusList.map(c => `<th>${esc(c)}</th>`).join('')}<th>รวม</th></tr></thead><tbody>${s1rows}
-          <tr class="gs-sum"><th class="gs-rh">รวม</th>${cusList.map(c => `<td>${byCus.get(c).length}</td>`).join('')}<td class="gs-tot">${cur.length}</td></tr>
-          <tr class="gs-foot"><th>TOTAL</th><td colspan="${cusList.length + 1}">${L(cur.length)} ITEM</td></tr></tbody></table></div>
-          <div class="gs-pie"><h4>DETAIL TYPE</h4><div class="gd-chart"><canvas id="gsDetail"></canvas></div></div></div></section>`;
-      /* สไลด์ 2: MODEL ตามลูกค้า */
+      const m1 = DET.map(d => cusList.map(c => byCus.get(c).filter(x => detOf(x.work) === d).length));
+      const mx1 = Math.max(1, ...m1.flat()), mxT1 = Math.max(1, ...detCnt);
+      const slide1 = `<section class="gs-slide">${hd('01', `GO ${L(nModels)} MODEL · ${L(nParts)} PART`, 'จำนวนรายการ แยกประเภทงาน (DETAIL) ตามลูกค้า')}
+          <div class="gs-body gs-two"><div class="gs-stats">${stat(L(cur.length), 'ITEM ทั้งหมด')}${stat(L(nModels), 'MODEL')}${stat(L(nParts), 'PART')}${stat(cusList.length, 'ลูกค้า')}</div>
+          <div class="gs-scroll"><table class="gs-t"><thead><tr><th>DETAIL</th>${cusList.map(c => `<th>${esc(c)}</th>`).join('')}<th class="gs-l">รวม</th></tr></thead><tbody>
+          ${DET.map((d, i) => `<tr><th class="gs-rh">${d}</th>${m1[i].map(v => hc(v, mx1)).join('')}<td class="gs-bt"><b>${detCnt[i]}</b><i style="width:${(detCnt[i] / mxT1 * 100).toFixed(0)}%"></i></td></tr>`).join('')}
+          <tr class="gs-sum"><th class="gs-rh">รวม</th>${cusList.map(c => `<td>${byCus.get(c).length}</td>`).join('')}<td class="gs-tot">${L(cur.length)}</td></tr></tbody></table></div>
+          <div class="gs-pie"><h4>สัดส่วนประเภทงาน</h4><div class="gd-chart"><canvas id="gsDetail"></canvas></div></div></div></section>`;
+      /* 02: MODEL ตามลูกค้า */
       const mdlOf = c => [...new Set(byCus.get(c).map(x => x.model).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'th', { numeric: true }));
       const mdlCnt = cusList.map(c => mdlOf(c).length), mdlSum = mdlCnt.reduce((a, b) => a + b, 0);
-      const slide2 = `<section class="gs-slide">${bar('2/3', `สรุปจำนวน GO ${L(nModels)} MODEL แยกตามลูกค้า`)}
-          <div class="gs-body"><div class="gs-scroll"><table class="gs-t gs-m"><thead><tr><th>DETAIL</th><th>MODEL</th><th>จำนวน</th></tr></thead><tbody>${cusList.map((c, i) => `<tr><th class="gs-rh">${esc(c)}</th><td class="gs-models">${mdlOf(c).map(m => `<span>${esc(m)}</span>`).join('') || '—'}</td><td class="gs-tot">${mdlCnt[i]}</td></tr>`).join('')}
-          <tr class="gs-foot"><th>TOTAL</th><td colspan="2">${L(nModels)} MODEL</td></tr></tbody></table></div>
-          <div class="gs-pie"><h4>MODEL NAME</h4><div class="gd-chart"><canvas id="gsModel"></canvas></div></div></div></section>`;
-      /* สไลด์ 3: WORK × ลูกค้า (NON / CPS) */
+      const slide2 = `<section class="gs-slide">${hd('02', `${L(nModels)} MODEL แยกตามลูกค้า`, 'รุ่นที่มีงาน GO ของแต่ละลูกค้า')}
+          <div class="gs-body gs-two"><div class="gs-cards">${cusList.map((c, i) => `<div class="gs-cus" style="--cc:${SLC[i % SLC.length]}"><div class="gs-cn"><b>${esc(c)}</b><span>${mdlCnt[i]} MODEL · ${byCus.get(c).length} ITEM</span></div><div class="gs-models">${mdlOf(c).map(m => `<span>${esc(m)}</span>`).join('') || '<em>—</em>'}</div></div>`).join('')}</div>
+          <div class="gs-pie"><h4>สัดส่วน MODEL ต่อลูกค้า</h4><div class="gd-chart"><canvas id="gsModel"></canvas></div></div></div></section>`;
+      /* 03: WORK × ลูกค้า (NON / CPS) */
       const isCps = x => x.cpc === 'CPC / CPS';
       const wList = [...new Set(cur.map(x => x.work))].sort((a, b) => cur.filter(x => x.work === b).length - cur.filter(x => x.work === a).length);
-      const pc = (list) => [list.filter(x => !isCps(x)).length, list.filter(isCps).length];
-      const dash = v => v ? v : '-';
-      const s3rows = wList.map(w => { const wl = cur.filter(x => x.work === w); const t = pc(wl); return `<tr><th class="gs-rh">${esc(w)}</th>${cusList.map(c => { const p = pc(wl.filter(x => (x.cus || '(ไม่ระบุ)') === c)); return `<td>${dash(p[0])}</td><td>${dash(p[1])}</td>`; }).join('')}<td class="gs-tot">${dash(t[0])}</td><td class="gs-tot">${dash(t[1])}</td></tr>`; }).join('');
-      const tAll = pc(cur);
+      const pc = list => [list.filter(x => !isCps(x)).length, list.filter(isCps).length];
+      const tAll = pc(cur), cpsPct = cur.length ? tAll[1] / cur.length * 100 : 0;
+      const m3 = wList.map(w => { const wl = cur.filter(x => x.work === w); return { w, t: pc(wl), cells: cusList.map(c => pc(wl.filter(x => (x.cus || '(ไม่ระบุ)') === c))) }; });
+      const mx3 = Math.max(1, ...m3.flatMap(r => r.cells.flat()));
       const cpsBy = new Map(); cur.filter(isCps).forEach(x => { if (!cpsBy.has(x.work)) cpsBy.set(x.work, new Set()); cpsBy.get(x.work).add(x.maker); });
-      const slide3 = `<section class="gs-slide">${bar('3/3', 'สรุปงานแยกตาม WORK · NON / CPS')}
-          <div class="gs-body"><div class="gs-scroll"><table class="gs-t gs-w"><thead><tr><th rowspan="2">WORK</th>${cusList.map(c => `<th colspan="2">${esc(c)}</th>`).join('')}<th colspan="2">รวม</th></tr>
-          <tr>${[...cusList, 'รวม'].map(() => '<th class="gs-sm">NON</th><th class="gs-sm">CPS</th>').join('')}</tr></thead><tbody>${s3rows}
-          <tr class="gs-sum"><th class="gs-rh">TOTAL</th>${cusList.map(c => { const p = pc(byCus.get(c)); return `<td>${dash(p[0])}</td><td>${dash(p[1])}</td>`; }).join('')}<td class="gs-tot">${dash(tAll[0])}</td><td class="gs-tot">${dash(tAll[1])}</td></tr>
-          <tr class="gs-foot"><th>TOTAL PART</th><td colspan="${cusList.length * 2 + 2}">${L(cur.length)} ITEM</td></tr></tbody></table></div>
-          <div class="gs-notes"><div><b class="gs-g">***NON PRICE</b><p>- NO PRICE ADJUSTMENT</p></div><i class="gs-vl"></i>
-          <div><b class="gs-g">***CPS PRICE</b>${cpsBy.size ? [...cpsBy].map(([w, ms]) => `<h5>${esc(w)} :</h5><ul>${[...ms].map(m => `<li>- ${esc(m)}</li>`).join('')}</ul>`).join('') : '<p>- ไม่มีรายการ CPS</p>'}</div></div></div></section>`;
+      const slide3 = `<section class="gs-slide">${hd('03', 'งานแยกตาม WORK · NON / CPS', 'NON = ไม่ปรับราคา · CPS = มีการปรับราคา')}
+          <div class="gs-body"><div class="gs-stats">${stat(L(tAll[0]), 'NON CPS')}${stat(L(tAll[1]), 'CPS')}${stat(cpsPct.toFixed(1) + '%', 'สัดส่วน CPS')}${stat(wList.length, 'ประเภท WORK')}</div>
+          <div class="gs-scroll"><table class="gs-t"><thead><tr><th rowspan="2">WORK</th>${cusList.map(c => `<th colspan="2">${esc(c)}</th>`).join('')}<th rowspan="2" class="gs-l">สัดส่วน CPS</th></tr>
+          <tr>${cusList.map(() => '<th class="gs-sm">NON</th><th class="gs-sm">CPS</th>').join('')}</tr></thead><tbody>
+          ${m3.map(r => { const p = r.t[0] + r.t[1] ? r.t[1] / (r.t[0] + r.t[1]) * 100 : 0; return `<tr><th class="gs-rh">${esc(r.w)}</th>${r.cells.map(p2 => hc(p2[0], mx3) + hc(p2[1], mx3, 'gs-cps')).join('')}<td class="gs-bt cps"><b>${p.toFixed(0)}%</b><i style="width:${p.toFixed(0)}%"></i></td></tr>`; }).join('')}
+          <tr class="gs-sum"><th class="gs-rh">รวม</th>${cusList.map(c => { const p = pc(byCus.get(c)); return `<td>${p[0] || '–'}</td><td>${p[1] || '–'}</td>`; }).join('')}<td class="gs-tot">${L(cur.length)} ITEM</td></tr></tbody></table></div>
+          <div class="gs-notes"><div class="n1"><b class="gs-g">NON PRICE</b><p>ไม่มีการปรับราคา (NO PRICE ADJUSTMENT)</p></div>
+          <div class="n2"><b class="gs-g">CPS PRICE · Maker ที่มีการปรับราคา</b>${cpsBy.size ? [...cpsBy].map(([w, ms]) => `<h5>${esc(w)}</h5><ul>${[...ms].map(m => `<li>${esc(m)}</li>`).join('')}</ul>`).join('') : '<p>ไม่มีรายการ CPS</p>'}</div></div></div></section>`;
       const briefHtml = `<div class="gs-wrap">
-          <header class="gs-head"><h2>สรุปงาน GO WORK ประจำปี ${yTH(Y)}${period}</h2><span>ข้อมูล ณ ${asOf}${B ? ` · เทียบปี ${yTH(B)}: ${sp.count.toLocaleString('th-TH')} รายการ` : ''}</span></header>
+          <header class="gs-head"><div><small><i class="gs-live"></i>EXECUTIVE SUMMARY · GO WORK</small><h2>สรุปงาน GO WORK ประจำปี ${yTH(Y)}${period}</h2></div><span>ข้อมูล ณ ${asOf}${B ? ` · เทียบปี ${yTH(B)}: ${sp.count.toLocaleString('th-TH')} รายการ` : ''}</span></header>
           ${slide1}${slide2}${slide3}
           <div class="gx-watch"><h4>ประเด็นที่ผู้บริหารควรทราบ</h4><div>${watch.map(([t, h]) => `<div class="gx-w ${t}"><i></i><span>${h}</span></div>`).join('')}</div></div></div>`;
       const pcTbl = `<section class="gd-card"><header><h3>สรุปตาม PLACE (สถานที่ผลิต)</h3><span>ปี ${yTH(Y)}${period}</span></header>${this.tbl(['PLACE', 'รายการ', 'สัดส่วน', 'VOLUME', 'มูลค่าขาย', 'กำไรขั้นต้น', 'Margin'], placeRows)}</section>`;
@@ -21369,11 +21393,11 @@ function endTour() {
           ...(B ? [{ label: `ปี ${yTH(B)}`, data: cum(mP), borderColor: '#8A94A6', borderDash: [5, 4] }] : [])] },
         options: { plugins: { legend, tooltip: { callbacks: { label: tipLabel } } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { callback: tick } } } } });
 
-      const pieOpt = { plugins: { legend: { display: true, position: 'right' }, tooltip: { callbacks: { label: ctx => `${ctx.label}` } } } };
+      const donut = (lbl, n) => ({ plugins: { legend: { display: true, position: 'right', labels: { boxWidth: 12, usePointStyle: true } }, centerText: { text: String(n), label: lbl }, tooltip: { callbacks: { label: ctx => ctx.label } } }, cutout: '62%' });
       { const d = DET.map((n, i) => [n, detCnt[i]]).filter(x => x[1]); const t = d.reduce((q, x) => q + x[1], 0) || 1;
-        this.chart('gsDetail', { type: 'pie', data: { labels: d.map(x => `${x[0]} · ${x[1]} (${(x[1] / t * 100).toFixed(0)}%)`), datasets: [{ data: d.map(x => x[1]), backgroundColor: SLC }] }, options: pieOpt }); }
+        this.chart('gsDetail', { type: 'doughnut', data: { labels: d.map(x => `${x[0]} · ${x[1]} (${(x[1] / t * 100).toFixed(0)}%)`), datasets: [{ data: d.map(x => x[1]), backgroundColor: SLC, borderWidth: 2 }] }, options: donut('ITEM', cur.length) }); }
       { const d = cusList.map((n, i) => [n, mdlCnt[i]]).filter(x => x[1]);
-        this.chart('gsModel', { type: 'pie', data: { labels: d.map(x => `${x[0]} · ${x[1]} (${(x[1] / (mdlSum || 1) * 100).toFixed(0)}%)`), datasets: [{ data: d.map(x => x[1]), backgroundColor: SLC }] }, options: pieOpt }); }
+        this.chart('gsModel', { type: 'doughnut', data: { labels: d.map(x => `${x[0]} · ${x[1]} (${(x[1] / (mdlSum || 1) * 100).toFixed(0)}%)`), datasets: [{ data: d.map(x => x[1]), backgroundColor: SLC, borderWidth: 2 }] }, options: donut('MODEL', mdlSum) }); }
       this.chart('gdStrip', { type: 'bar', data: { labels: MS, datasets: [
           ...(B ? [{ label: `ปี ${yTH(B)}`, data: stripMonth(stripPrevFull), backgroundColor: '#8A94A6', maxBarThickness: 22 }] : []),
           { label: `ปี ${yTH(Y)}`, data: stripMonth(stripCur), backgroundColor: '#B0673A', maxBarThickness: 22 }] },
