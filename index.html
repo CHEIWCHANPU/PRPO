@@ -9001,12 +9001,15 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
       .ex-ins{margin:0;padding-left:1.1rem;display:grid;gap:.4rem;font-size:.95rem;line-height:1.5}
       .ex-scroll{max-height:460px;overflow:auto;border-radius:8px;position:relative;isolation:isolate}
       .ex-table{width:100%;border-collapse:collapse;font-size:.84rem;font-variant-numeric:tabular-nums}
-      .ex-table th{position:static;background:var(--surface2) !important;box-shadow:0 1px 0 var(--border);color:var(--muted);font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.3px;padding:.5rem .6rem;text-align:left;white-space:nowrap}
+      .ex-table th{position:sticky;top:0;z-index:5;background:var(--surface2) !important;box-shadow:0 1px 0 var(--border);color:var(--muted);font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.3px;padding:.5rem .6rem;text-align:left;white-space:nowrap}
       .ex-table td{padding:.45rem .6rem;border-top:1px solid var(--border2);vertical-align:top}.ex-table .r{text-align:right}.ex-table.ex-left td:not(:first-child){text-align:left}.ex-table.ex-left th{text-align:left}
       .ex-table.ex-left td.r{text-align:left}
       .ex-heat td{text-align:center;padding:.4rem .5rem;min-width:46px}.ex-heat td:first-child{text-align:left;white-space:nowrap}.ex-heat td.z{color:var(--border)}.ex-heat th.r{text-align:center}
       .ex-cmp{font-style:normal;font-size:.74rem;color:var(--muted);margin-top:.2rem}.ex-cmp i{font-style:normal}.ex-d.up2{color:var(--ex-dn)}.ex-d.down2{color:var(--ex-up)}
       html body #page-gwdash .ex-table tbody tr{position:static;cursor:default}
+      html body #page-gwdash .ex-table thead th{position:sticky;top:0;z-index:5;background:var(--surface2) !important;box-shadow:0 1px 0 var(--border)}
+      html body #page-gwdash .ex-heat tbody td:first-child{position:sticky;left:0;z-index:3;background:var(--surface) !important;box-shadow:1px 0 0 var(--border)}
+      html body #page-gwdash .ex-heat thead th:first-child{left:0;z-index:7}
       .ex-scroll{overflow-x:auto}
       .ex-new{font-size:.66rem;font-weight:700;color:#2F8F6E;border:1px solid currentColor;border-radius:6px;padding:0 .3rem}
       .ex-newgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem}.ex-newgrid h4{margin:0 0 .4rem;font-size:.9rem}
