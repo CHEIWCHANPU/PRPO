@@ -5771,6 +5771,16 @@ html body .gw-table tbody tr.gw-cancel:hover > td { background: #FFE600 !importa
 .gd-sec::after { content: ""; flex: 1; height: 1px; background: var(--border2); }
 html body .gd-kpi b { font-size: 1.75rem; letter-spacing: -.01em; }
 html body .gd-card > header h3 { font-size: 1rem; }
+.gd-sec { margin: 2rem 0 .8rem !important; font-size: .95rem !important; letter-spacing: 0 !important; text-transform: none !important; color: var(--text) !important; }
+.gd-sec i { font-style: normal; background: var(--accent); color: #fff; border-radius: 6px; padding: .12rem .5rem; font-size: .72rem; letter-spacing: .08em; }
+.gd-sec b { font-weight: 800; font-size: 1.05rem; }
+.gd-sec small { color: var(--muted); font-weight: 500; font-size: .78rem; }
+html body .gd-hero { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)) !important; }
+html body .gd-hero .gd-kpi { border-top: 4px solid var(--accent); padding-top: 1rem; }
+html body .gd-hero .gd-kpi b { font-size: 2.3rem; }
+html body .gd-kpis-sm { margin-top: .8rem; }
+.gd-notes ol { margin: 0; padding-left: 1.3rem; line-height: 1.9; font-size: .88rem; color: var(--text); }
+.gd-notes li b { color: var(--accent); }
 .gd-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: .45rem; vertical-align: middle; }
 .gd-brief-p { margin: .3rem 0 1rem; font-size: 1rem; line-height: 1.85; color: var(--text); }
 .gd-brief-p b { color: var(--accent); }
@@ -20990,14 +21000,15 @@ function endTour() {
         ['ลูกค้า (CUS)', sc.custs, sp && sp.custs, 'count'],
         ['Maker ใหม่', newMk.length, B && B !== years[0] ? newMkOf(B).length : null, 'count']
       ];
-      const kpiHtml = kpis.map(([l, v, p, t]) => {
+      const kpiArr = kpis.map(([l, v, p, t]) => {
         const d = this.delta(v, B ? p : null, t === 'margin');
         const shown = t === 'margin' ? (v == null ? '—' : v.toFixed(1) + '%') : this.fmt(v, t);
         const was = !B ? '' : t === 'margin' ? (p == null ? '—' : p.toFixed(1) + '%') : this.fmt(p, t);
         const cls = t === 'cost' && d.cls !== 'flat' ? 'neutral' : d.cls;
         return `<div class="gd-kpi"><span class="gd-kpi-l">${l}</span><b>${shown}</b>
           <span class="gd-delta ${cls}">${B ? d.txt : '—'}</span>${B ? `<small>ปี ${yTH(B)}${period}: ${was}</small>` : ''}</div>`;
-      }).join('');
+      });
+      const kpiHtml = kpiArr.join('');
 
       /* ── วิเคราะห์อัตโนมัติ ── */
       const ins = [];
@@ -21112,11 +21123,12 @@ function endTour() {
           </div>
           <h4 class="gd-sub">ประเด็นที่ผู้บริหารควรทราบ</h4>
           <ul>${watch.map(([t, h]) => `<li class="${t}"><i></i><span>${h}</span></li>`).join('')}</ul></section>`;
-      const placeCards = `<section class="gd-card"><header><h3>สรุปตาม PLACE (สถานที่ผลิต)</h3><span>ปี ${yTH(Y)}${period}</span></header>${this.tbl(['PLACE', 'รายการ', 'สัดส่วน', 'VOLUME', 'มูลค่าขาย', 'กำไรขั้นต้น', 'Margin'], placeRows)}</section>
-          <section class="gd-card"><header><h3>สัดส่วนตาม PLACE</h3><span>${ML}</span></header><div class="gd-chart"><canvas id="gdPlace"></canvas></div></section>
-          <section class="gd-card span2"><header><h3>${ML}รายเดือน แยกตาม PLACE</h3><span>สีเดียวกับหน้ารายการ: CCIS ฟ้า · CNN เขียว · CCIR ม่วง</span></header><div class="gd-chart tall"><canvas id="gdPlaceMonth"></canvas></div></section>
-          <section class="gd-card span2"><header><h3>สรุปรายไตรมาส</h3><span>${B ? `เทียบจำนวนรายการกับปี ${yTH(B)}${period}` : 'ปี ' + yTH(Y)}</span></header>${this.tbl(['ไตรมาส', 'รายการ', 'VOLUME', 'มูลค่าขาย', 'กำไรขั้นต้น'].concat(B ? ['เทียบปีก่อน'] : []), qRows)}</section>`;
-      const tailCards = stripCards + `<section class="gd-card span2"><header><h3>Top 10 ชิ้นงาน ตาม${ML}</h3><span>ปี ${yTH(Y)}${period}</span></header>${tblA(['#', 'PART NO.', 'PART NAME', 'MAKER', 'PLACE', 'รายการ', 'VOLUME', ML], partRows, ['c', 'l', 'l', 'l', 'l', 'r', 'r', 'r'])}</section>`;
+      const pcTbl = `<section class="gd-card"><header><h3>สรุปตาม PLACE (สถานที่ผลิต)</h3><span>ปี ${yTH(Y)}${period}</span></header>${this.tbl(['PLACE', 'รายการ', 'สัดส่วน', 'VOLUME', 'มูลค่าขาย', 'กำไรขั้นต้น', 'Margin'], placeRows)}</section>`;
+      const pcPie = `<section class="gd-card"><header><h3>สัดส่วนตาม PLACE</h3><span>${ML}</span></header><div class="gd-chart"><canvas id="gdPlace"></canvas></div></section>`;
+      const pcMonth = `<section class="gd-card span2"><header><h3>${ML}รายเดือน แยกตาม PLACE</h3><span>สีเดียวกับหน้ารายการ: CCIS ฟ้า · CNN เขียว · CCIR ม่วง</span></header><div class="gd-chart tall"><canvas id="gdPlaceMonth"></canvas></div></section>`;
+      const pcQtr = `<section class="gd-card span2"><header><h3>สรุปรายไตรมาส</h3><span>${B ? `เทียบจำนวนรายการกับปี ${yTH(B)}${period}` : 'ปี ' + yTH(Y)}</span></header>${this.tbl(['ไตรมาส', 'รายการ', 'VOLUME', 'มูลค่าขาย', 'กำไรขั้นต้น'].concat(B ? ['เทียบปีก่อน'] : []), qRows)}</section>`;
+
+      const tailCards = stripCards;
 
       /* ── ตารางสรุปรายปี ── */
       const yearRows = years.slice().reverse().map((y, i, arr) => {
@@ -21129,27 +21141,47 @@ function endTour() {
           <td class="gw-al-r">${s.makers}</td><td class="gw-al-r">${s.models}</td></tr>`;
       }).join('');
 
-      host.innerHTML = `
-        ${briefHtml}
-        <h2 class="gd-sec">ตัวชี้วัดหลัก</h2><div class="gd-kpis">${kpiHtml}</div>
-        <h2 class="gd-sec">วิเคราะห์เชิงลึก</h2>
-        <section class="gd-card gd-insights"><header><h3>สรุปวิเคราะห์ ปี ${yTH(Y)}${B ? ` เทียบ ${yTH(B)}` : ''}${period}</h3><span>วัดด้วย: ${ML}</span></header>
-          <ul>${ins.map(([t, h]) => `<li class="${t}"><i></i><span>${h}</span></li>`).join('') || '<li class="info"><i></i><span>ยังมีข้อมูลไม่พอสำหรับการวิเคราะห์</span></li>'}</ul></section>
-        <div class="gd-grid">
-          ${listsHtml}
-          <section class="gd-card span2"><header><h3>${ML}รายเดือน: ${yTH(Y)} เทียบ ${B ? yTH(B) : '—'}</h3><span>ใช้เดือนจากวันที่ GO</span></header><div class="gd-chart tall"><canvas id="gdMonthly"></canvas></div></section>
-          ${placeCards}
-          <section class="gd-card span2"><header><h3>สรุปรายปี: ${ML} และ Margin %</h3><span>ทุกปีที่มีข้อมูล</span></header><div class="gd-chart"><canvas id="gdYearly"></canvas></div></section>
-          <section class="gd-card"><header><h3>Top 10 Maker ตาม${ML}</h3><span>${yTH(Y)}${B ? ` เทียบ ${yTH(B)}` : ''}${period}</span></header><div class="gd-chart tall"><canvas id="gdMaker"></canvas></div></section>
-          <section class="gd-card"><header><h3>ประเภทงาน (WORK) ตาม${ML}</h3><span>${yTH(Y)}${B ? ` เทียบ ${yTH(B)}` : ''}${period}</span></header><div class="gd-chart tall"><canvas id="gdWork"></canvas></div></section>
-          <section class="gd-card"><header><h3>สัดส่วน CPC / NON CPS</h3><span>ปี ${yTH(Y)} · ${ML}</span></header><div class="gd-chart"><canvas id="gdCpc"></canvas></div></section>
-          <section class="gd-card"><header><h3>${ML}สะสมทั้งปี</h3><span>เดือนต่อเดือน</span></header><div class="gd-chart"><canvas id="gdCum"></canvas></div></section>
-          ${tailCards}
-        </div>
-        <section class="gd-card"><header><h3>ตารางสรุปแต่ละปี</h3><span>มูลค่า = ราคา × VOLUME</span></header>
+      const sec = (n, t, d) => `<h2 class="gd-sec"><i>${n}</i><b>${t}</b>${d ? `<small>${d}</small>` : ''}</h2>`;
+      const hero = [0, 1, 2, 4].map(i => kpiArr[i]).join(''), rest = [3, 5, 6, 7, 8, 9].map(i => kpiArr[i]).join('');
+      const yearTbl = `<section class="gd-card"><header><h3>ตารางสรุปแต่ละปี</h3><span>มูลค่า = ราคา × VOLUME</span></header>
           <div class="gx-table-scroll"><table class="gx-table gd-table"><thead><tr><th class="gw-al-c">ปี</th><th class="gw-al-r">รายการ</th><th class="gw-al-r">เทียบปีก่อน</th><th class="gw-al-r">VOLUME</th>
           <th class="gw-al-r">มูลค่าขาย</th><th class="gw-al-r">ต้นทุน Maker</th><th class="gw-al-r">กำไรขั้นต้น</th><th class="gw-al-r">Margin</th><th class="gw-al-r">Maker</th><th class="gw-al-r">Model</th></tr></thead>
           <tbody>${yearRows}</tbody></table></div></section>`;
+      const notes = `<section class="gd-card gd-notes"><header><h3>หลักเกณฑ์การจัดทำรายงาน</h3><span>เพื่อให้ทุกฝ่ายอ่านตัวเลขตรงกัน</span></header><ol>
+          <li><b>การนับปี/เดือน:</b> นับตาม${this.basis === 'go' ? 'วันที่ GO' : 'คอลัมน์ YEAR'}${isCurYear ? ' · ปีปัจจุบันเทียบกับช่วงเดือนเดียวกันของปีก่อน เพื่อความยุติธรรม' : ''}</li>
+          <li><b>รายการที่นับ:</b> 1 รายการ = 1 แถวใน GO WORK · ไม่รวมงานที่ REMARK ระบุ “ยกเลิก / CANCEL”</li>
+          <li><b>งานลอกผิวชุบ:</b> แยกรายงานต่างหาก ไม่รวมในตัวเลขสรุปหลัก</li>
+          <li><b>ลูกค้า:</b> นับจากตัวอักษรหน้ารหัส CUS เช่น KMT, THM, IMCT, IGCE (หนึ่งรหัส = หนึ่งลูกค้า)</li>
+          <li><b>มูลค่า / กำไร:</b> มูลค่าขาย = ราคาลูกค้า × VOLUME · ต้นทุน = ราคา Maker × VOLUME · กำไรขั้นต้น = ส่วนต่าง · คำนวณเฉพาะรายการที่มีราคาครบ (${sc.priced.toLocaleString('th-TH')} จาก ${sc.count.toLocaleString('th-TH')} รายการ)</li>
+          <li><b>Maker ใหม่:</b> Maker ที่เริ่มมีงาน GO ในปีนี้และไม่เคยมีในปีก่อน ๆ</li></ol></section>`;
+      host.innerHTML = `
+        ${briefHtml}
+        ${sec('01', 'ผลงานภาพรวม', 'ตัวชี้วัดหลักของปี' + (B ? ' เทียบปี ' + yTH(B) : ''))}
+        <div class="gd-kpis gd-hero">${hero}</div>
+        <div class="gd-kpis gd-kpis-sm">${rest}</div>
+        ${sec('02', 'บทวิเคราะห์', 'ข้อสังเกตที่ระบบสรุปให้อัตโนมัติ วัดด้วย: ' + ML)}
+        <section class="gd-card gd-insights"><ul>${ins.map(([t, h]) => `<li class="${t}"><i></i><span>${h}</span></li>`).join('') || '<li class="info"><i></i><span>ยังมีข้อมูลไม่พอสำหรับการวิเคราะห์</span></li>'}</ul></section>
+        ${sec('03', 'แนวโน้ม', 'รายเดือน · สะสม · รายไตรมาส · รายปี')}
+        <div class="gd-grid">
+          <section class="gd-card span2"><header><h3>${ML}รายเดือน: ${yTH(Y)} เทียบ ${B ? yTH(B) : '—'}</h3><span>ใช้เดือนจากวันที่ GO</span></header><div class="gd-chart tall"><canvas id="gdMonthly"></canvas></div></section>
+          <section class="gd-card"><header><h3>${ML}สะสมทั้งปี</h3><span>เดือนต่อเดือน</span></header><div class="gd-chart"><canvas id="gdCum"></canvas></div></section>
+          ${pcQtr}
+          <section class="gd-card span2"><header><h3>สรุปรายปี: ${ML} และ Margin %</h3><span>ทุกปีที่มีข้อมูล</span></header><div class="gd-chart"><canvas id="gdYearly"></canvas></div></section>
+        </div>
+        ${sec('04', 'โครงสร้างงาน', 'ตาม PLACE · ประเภทงาน · Maker · CPC')}
+        <div class="gd-grid">
+          ${pcTbl}${pcPie}${pcMonth}
+          <section class="gd-card"><header><h3>ประเภทงาน (WORK) ตาม${ML}</h3><span>${yTH(Y)}${B ? ` เทียบ ${yTH(B)}` : ''}${period}</span></header><div class="gd-chart tall"><canvas id="gdWork"></canvas></div></section>
+          <section class="gd-card"><header><h3>Top 10 Maker ตาม${ML}</h3><span>${yTH(Y)}${B ? ` เทียบ ${yTH(B)}` : ''}${period}</span></header><div class="gd-chart tall"><canvas id="gdMaker"></canvas></div></section>
+          <section class="gd-card"><header><h3>สัดส่วน CPC / NON CPS</h3><span>ปี ${yTH(Y)} · ${ML}</span></header><div class="gd-chart"><canvas id="gdCpc"></canvas></div></section>
+        </div>
+        ${sec('05', 'ลูกค้า · Model · Maker ใหม่', 'ลูกค้านับตามรหัส CUS')}
+        <div class="gd-grid">${listsHtml}</div>
+        ${sec('06', 'งานลอกผิวชุบ', 'แยกรายงานจากสรุปหลัก')}
+        <div class="gd-grid">${tailCards}</div>
+        ${sec('07', 'สรุปรายปีและหลักเกณฑ์')}
+        ${yearTbl}
+        ${notes}`;
 
       /* ── กราฟ ── */
       const money = ['sales', 'profit'].includes(M);
