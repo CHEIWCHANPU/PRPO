@@ -21158,7 +21158,7 @@ function endTour() {
 
     /* ═════════ 1) ภาพรวมรายปี ═════════ */
     tabOverview(c) {
-      const { all, cancelled, years } = c;
+      const { all, cancelled, years, sel } = c;
       const byY = this.group(all, 'y'), cancY = this.group(cancelled, 'y');
       const rows = years.map((y, i) => {
         const l = byY.get(y) || [], prev = i ? (byY.get(years[i - 1]) || []).length : null;
@@ -21166,14 +21166,15 @@ function endTour() {
       });
       const total = all.length, best = rows.reduce((a, b) => (b.n > a.n ? b : a), rows[0]);
       const last = rows[rows.length - 1], prevR = rows[rows.length - 2];
-      const wk = [...this.group(all, 'work')].sort((a, b) => b[1].length - a[1].length);
+      const wk = [...this.group(sel, 'work')].sort((a, b) => b[1].length - a[1].length);
       const wkKeys = wk.map(x => x[0]);
       const ins = [];
-      ins.push(`รวมทั้งหมด <b>${this.n(total)}</b> รายการ GO ในช่วง ${years.length} ปี (${years[0] + 543}–${years[years.length - 1] + 543}) จาก <b>${this.uniq(all, 'model').size}</b> Model · <b>${this.uniq(all, 'cus').size}</b> ลูกค้า · <b>${this.uniq(all, 'maker').size}</b> Maker`);
+      ins.push(this.year === 'all' ? `รวมทั้งหมด <b>${this.n(total)}</b> รายการ GO ในช่วง ${years.length} ปี (${years[0] + 543}–${years[years.length - 1] + 543}) จาก <b>${this.uniq(all, 'model').size}</b> Model · <b>${this.uniq(all, 'cus').size}</b> ลูกค้า · <b>${this.uniq(all, 'maker').size}</b> Maker` : `ปี <b>${this.year + 543}</b> มี <b>${this.n(sel.length)}</b> รายการ GO จาก <b>${this.uniq(sel, 'model').size}</b> Model · <b>${this.uniq(sel, 'cus').size}</b> ลูกค้า · <b>${this.uniq(sel, 'maker').size}</b> Maker`);
       ins.push(`ปีที่มีงาน GO มากที่สุดคือ <b>${best.y + 543}</b> จำนวน ${this.n(best.n)} รายการ`);
       if (prevR) ins.push(`ปี ${last.y + 543} มี ${this.n(last.n)} รายการ ${last.d == null ? '' : `(${last.d >= 0 ? 'เพิ่มขึ้น' : 'ลดลง'} ${Math.abs(last.d).toFixed(1)}% จากปี ${prevR.y + 543})`}${last.y === new Date().getFullYear() ? ' — ปีนี้ยังไม่จบ' : ''}`);
-      if (wk[0]) ins.push(`ประเภทงานหลัก: <b>${esc(wk[0][0])}</b> ${this.pct(wk[0][1].length, total)} ของงานทั้งหมด`);
-      if (cancelled.length) ins.push(`มีรายการ <b>ยกเลิก GO</b> ${this.n(cancelled.length)} รายการ (ไม่นับรวมในตัวเลขข้างต้น)`);
+      if (wk[0]) ins.push(`ประเภทงานหลัก: <b>${esc(wk[0][0])}</b> ${this.pct(wk[0][1].length, sel.length)} ของงานทั้งหมด`);
+      const cn = this.year === 'all' ? cancelled.length : cancelled.filter(x => x.y === this.year).length;
+      if (cn) ins.push(`มีรายการ <b>ยกเลิก GO</b> ${this.n(cn)} รายการ (ไม่นับรวมในตัวเลขข้างต้น)`);
       this._post = () => {
         const labels = rows.map(r => r.y + 543);
         this.chart('exYear', { type: 'bar', plugins: [this.valLabels], data: { labels, datasets: [{ label: 'รายการ GO', data: rows.map(r => r.n), backgroundColor: rows.map(r => (this.year !== 'all' && r.y === this.year) ? '#C9A227' : '#2E5395'), borderRadius: 6, maxBarThickness: 56 }] },
@@ -21185,11 +21186,11 @@ function endTour() {
       };
       return `
         <div class="ex-kpis">
-          ${this.kpi('งาน GO ทั้งหมด', this.n(total), 'รายการ (ไม่รวมยกเลิก)', 'primary')}
-          ${this.kpi('จำนวนปี', years.length, `${years[0] + 543} – ${years[years.length - 1] + 543}`)}
-          ${this.kpi('Model', this.n(this.uniq(all, 'model').size), 'ไม่ซ้ำกัน')}
-          ${this.kpi('ลูกค้า', this.n(this.uniq(all, 'cus').size), 'ไม่ซ้ำกัน')}
-          ${this.kpi('Maker', this.n(this.uniq(all, 'maker').size), 'ไม่ซ้ำกัน')}
+          ${this.kpi('งาน GO ทั้งหมด', this.n(sel.length), this.year === 'all' ? 'รายการ (ไม่รวมยกเลิก) · ทุกปี' : `รายการ · ปี ${this.year + 543}`, 'primary')}
+          ${this.kpi(this.year === 'all' ? 'จำนวนปี' : 'ยกเลิก GO', this.year === 'all' ? years.length : this.n(cancelled.filter(x => x.y === this.year).length), this.year === 'all' ? `${years[0] + 543} – ${years[years.length - 1] + 543}` : 'รายการที่ไม่นับรวม')}
+          ${this.kpi('Model', this.n(this.uniq(sel, 'model').size), 'ไม่ซ้ำกัน')}
+          ${this.kpi('ลูกค้า', this.n(this.uniq(sel, 'cus').size), 'ไม่ซ้ำกัน')}
+          ${this.kpi('Maker', this.n(this.uniq(sel, 'maker').size), 'ไม่ซ้ำกัน')}
         </div>
         ${this.card('สรุปสำหรับผู้บริหาร', null, `<ul class="ex-ins">${ins.map(t => `<li>${t}</li>`).join('')}</ul>`, 'ex-wide')}
         <div class="ex-grid g2">
