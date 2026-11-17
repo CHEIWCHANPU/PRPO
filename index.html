@@ -21045,6 +21045,7 @@ function endTour() {
     prep() {
       const out = [], cancelled = [];
       GoWork.rows.forEach((r, i) => {
+        if (gwIsStrip(r)) return;   // ไม่นับงานลอกผิวชุบ
         const d = parseDMY(r.goDate);
         const clean = v => { const s = String(v == null ? '' : v).trim(); return !s || s === '-' ? '' : s; };
         const x = {
@@ -21186,7 +21187,7 @@ function endTour() {
       };
       return `
         <div class="ex-kpis">
-          ${this.kpi('งาน GO ทั้งหมด', this.n(sel.length), this.year === 'all' ? 'รายการ (ไม่รวมยกเลิก) · ทุกปี' : `รายการ · ปี ${this.year + 543}`, 'primary')}
+          ${this.kpi('งาน GO ทั้งหมด', this.n(sel.length), this.year === 'all' ? 'รายการ (ไม่รวมยกเลิก/ลอกผิวชุบ) · ทุกปี' : `รายการ · ปี ${this.year + 543}`, 'primary')}
           ${this.kpi(this.year === 'all' ? 'จำนวนปี' : 'ยกเลิก GO', this.year === 'all' ? years.length : this.n(cancelled.filter(x => x.y === this.year).length), this.year === 'all' ? `${years[0] + 543} – ${years[years.length - 1] + 543}` : 'รายการที่ไม่นับรวม')}
           ${this.kpi('Model', this.n(this.uniq(sel, 'model').size), 'ไม่ซ้ำกัน')}
           ${this.kpi('ลูกค้า', this.n(this.uniq(sel, 'cus').size), 'ไม่ซ้ำกัน')}
