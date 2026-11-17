@@ -5781,6 +5781,9 @@ html body .gd-hero .gd-kpi b { font-size: 2.3rem; }
 html body .gd-kpis-sm { margin-top: .8rem; }
 .gd-notes ol { margin: 0; padding-left: 1.3rem; line-height: 1.9; font-size: .88rem; color: var(--text); }
 .gd-notes li b { color: var(--accent); }
+.gw-hide-cancel { display: inline-flex; align-items: center; gap: .45rem; cursor: pointer; white-space: nowrap; }
+.gw-hide-cancel input { accent-color: #d4b800; width: 1rem; height: 1rem; margin: 0; }
+.gw-hide-cancel:has(input:checked) { background: #FFF200; color: #3d3600; border-color: #d4b800; }
 .gd-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: .45rem; vertical-align: middle; }
 .gd-brief-p { margin: .3rem 0 1rem; font-size: 1rem; line-height: 1.85; color: var(--text); }
 .gd-brief-p b { color: var(--accent); }
@@ -8827,6 +8830,7 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
       <select id="gwMaker" class="gx-select" onchange="GoWork.page=1;GoWork.render()" aria-label="กรอง Maker"></select>
       <select id="gwWork" class="gx-select" onchange="GoWork.page=1;GoWork.render()" aria-label="กรอง Work"></select>
       <button class="gx-btn ghost gw-cust-btn" id="gwCustToggle" onclick="GoWork.toggleCust()" aria-pressed="false" title="ราคาลูกค้า (CUSTOMER) ซ่อนไว้เป็นค่าเริ่มต้น"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><path class="gw-eye-slash" d="M3 3l18 18"/></svg><span>แสดงราคาลูกค้า</span></button>
+      <label class="gx-btn ghost gw-hide-cancel" title="ซ่อนแถวสีเหลือง (REMARK = ยกเลิก GO) ออกจากตาราง"><input type="checkbox" id="gwHideCancel" onchange="GoWork.toggleCancel(this.checked)"><span>ซ่อนงานยกเลิก GO <b id="gwHideCancelN"></b></span></label>
       <span class="gx-spacer"></span>
       <button class="gx-btn ghost gw-clear-btn" onclick="GoWork.clearAll()" title="ลบรายการ GO WORK ทั้งหมด"><svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>ลบทั้งหมด</button>
       <button class="gx-btn ghost" onclick="GoWork.exportXlsx()">Export Excel</button>
@@ -20441,9 +20445,11 @@ function endTour() {
 
   const GoWork = {
     rows: [], loaded: false, supported: true, sort: { col: 'no', dir: 'asc' }, page: 1, per: 50,
+    hideCancel: localStorage.getItem('gw_hide_cancel') === '1',
     // ราคาลูกค้า (CUSTOMER) ซ่อนไว้เป็นค่าเริ่มต้น — กดแสดงได้ชั่วคราว ปิดเบราว์เซอร์แล้วกลับไปซ่อน
     hideCust: sessionStorage.getItem('gw_show_customer') !== '1',
     cols() { return this.hideCust ? GW_FIELDS.filter(([k]) => k !== 'customer') : GW_FIELDS; },
+    toggleCancel(on) { this.hideCancel = !!on; try { localStorage.setItem('gw_hide_cancel', on ? '1' : '0'); } catch (e) {} this.page = 1; this.render(); },
     toggleCust() {
       this.hideCust = !this.hideCust;
       sessionStorage.setItem('gw_show_customer', this.hideCust ? '0' : '1');
@@ -20497,7 +20503,7 @@ function endTour() {
     filtered() {
       const q = ($('#gwSearch') && $('#gwSearch').value || '').trim().toLowerCase();
       const f = { model: $('#gwModel'), maker: $('#gwMaker'), work: $('#gwWork') }, yv = ($('#gwYear') || {}).value;
-      let list = this.rows.filter(r => (!yv || this.yearOf(r) === +yv) &&
+      let list = this.rows.filter(r => (!yv || this.yearOf(r) === +yv) && (!this.hideCancel || !gwIsCancel(r)) &&
         Object.entries(f).every(([k, el]) => !el || !el.value || String(r[k] || '').trim() === el.value) &&
         (!q || this.cols().some(([k]) => String(r[k] || '').toLowerCase().includes(q))));
       const { col, dir } = this.sort, k = dir === 'asc' ? 1 : -1;
@@ -20530,6 +20536,7 @@ function endTour() {
 
       const groups = [];
       const COLS = this.cols();
+      const hc = $('#gwHideCancel'); if (hc) { hc.checked = this.hideCancel; const n = this.rows.filter(gwIsCancel).length; $('#gwHideCancelN').textContent = n ? '(' + n.toLocaleString('th-TH') + ')' : ''; }
       const tg = $('#gwCustToggle');
       if (tg) { tg.classList.toggle('on', !this.hideCust); tg.querySelector('span').textContent = this.hideCust ? 'แสดงราคาลูกค้า' : 'ซ่อนราคาลูกค้า'; tg.setAttribute('aria-pressed', String(!this.hideCust)); }
       COLS.forEach(([, , g]) => { const last = groups[groups.length - 1]; if (last && last.g === g) last.n++; else groups.push({ g, n: 1 }); });
