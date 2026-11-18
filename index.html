@@ -5655,7 +5655,8 @@ html body .gw-table th.gw-g-cust, html body .gw-table th.gw-g-prod { background:
 html body .gw-table th.gw-g-part { background: color-mix(in srgb, #2FBF71 18%, var(--surface2)) !important; }
 html body .gw-table th.gw-h-part { background: color-mix(in srgb, #2FBF71 8%, var(--surface2)) !important; }
 html body .gw-table td { white-space: nowrap; padding: .6rem .8rem; }
-html body .gw-table td:nth-child(7), html body .gw-table td:nth-child(16), html body .gw-table td:nth-child(17) { white-space: normal; min-width: 200px; max-width: 280px; }
+html body .gw-table td:nth-child(7) { white-space: normal; min-width: 200px; max-width: 280px; }
+html body .gw-table td:nth-child(16), html body .gw-table td:nth-child(17), html body .gw-table td:nth-child(18) { white-space: normal; min-width: 0; max-width: 150px; overflow-wrap: anywhere; }
 html body .gw-table .sticky-no { position: sticky; left: 0; z-index: 2; background: var(--surface); box-shadow: inset -1px 0 0 var(--border2); }
 html body .gw-table thead .sticky-no { z-index: 3; background: var(--surface2) !important; }
 html body .gw-table tbody tr:hover .sticky-no { background: color-mix(in srgb, var(--accent) 6%, var(--surface)) !important; }
@@ -20509,7 +20510,7 @@ function endTour() {
   const GW_COL = {
     no: [68, 'r'], model: [150, 'l'], cpc: [128, 'c'], customer: [100, 'r'], custMaker: [96, 'r'], cusCode: [130, 'l'],
     partName: [230, 'l'], partNo: [190, 'l'], rev: [120, 'c'], maker: [140, 'l'], goDate: [104, 'c'], volume: [104, 'r'],
-    year: [72, 'c'], place: [96, 'c'], work: [150, 'l'], specPlating: [240, 'l'], specMat: [200, 'l'], remark: [240, 'l']
+    year: [72, 'c'], place: [96, 'c'], work: [150, 'l'], specPlating: [130, 'l'], specMat: [110, 'l'], remark: [150, 'l']
   };
   const fmtPrice = v => { const n = numOf(v); return n == null || !/^[\d,.\s]+$/.test(String(v).trim()) ? esc(v) : n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 }); };
   const gwIsStrip = r => /ลอกผิวชุบ/.test(String(r.work || ''));
