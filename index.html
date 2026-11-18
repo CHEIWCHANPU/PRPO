@@ -21032,7 +21032,7 @@ function endTour() {
 
   /* ══════════════════════ DASHBOARD GO WORK v3 — มุมมองผู้บริหาร (รายปี · Model/ลูกค้า · Maker ปรับราคา) ══════════════════════ */
   const GWDash = {
-    charts: {}, tab: 'overview', year: 'all', base: null, work: 'all', model: 'all', basis: 'go', present: false, mkSel: 'all', q: '',
+    charts: {}, tab: 'overview', year: 'all', base: null, work: 'all', cus: 'all', model: 'all', basis: 'go', present: false, mkSel: 'all', q: '',
     PAL: ['#2E5395', '#2F8F6E', '#C9A227', '#B0673A', '#7A4FA3', '#2A9DB5', '#A6443C', '#8A94A6', '#3F7D53', '#D17B9B'],
     TABS: [['overview', 'ภาพรวมรายปี'], ['model', 'Model / ลูกค้า / ประเภทงาน'], ['matrix', 'Model แยกตามลูกค้า'], ['price', 'Maker ปรับราคา']],
     active() { return $('#page-gwdash') && $('#page-gwdash').classList.contains('active'); },
@@ -21041,6 +21041,7 @@ function endTour() {
     setYear(v) { this.year = v === 'all' ? 'all' : +v; if (this.base === this.year) this.base = null; this.mkSel = 'all'; this.render(); },
     setBase(v) { this.base = v === '' ? null : +v; this.render(); },
     setWork(v) { this.work = v; this.mkSel = 'all'; this.render(); },
+    setCus(v) { this.cus = v; this.model = 'all'; this.mkSel = 'all'; this.render(); },
     setModel(v) { this.model = v; this.mkSel = 'all'; this.render(); },
     setBasis(b) { this.basis = b; this.year = 'all'; this.base = null; this.render(); },
     setMaker(v) { this.mkSel = v; this.render(); },
@@ -21159,7 +21160,10 @@ function endTour() {
       const years = [...new Set(P.all.map(x => x.y))].sort((a, b) => a - b);
       const works = [...new Set(P.all.filter(x => this.year === 'all' || x.y === this.year).map(x => x.work))].sort((a, b) => a.localeCompare(b, 'th', { numeric: true }));
       if (this.work !== 'all' && !works.includes(this.work)) this.work = 'all';   // ปีที่เลือกไม่มีงานนี้ → กลับเป็น "ทั้งหมด"
-      const models = [...new Set(P.all.filter(x => (this.year === 'all' || x.y === this.year) && (this.work === 'all' || x.work === this.work)).map(x => x.model))].sort((a, b) => String(a).localeCompare(String(b), 'th', { numeric: true }));
+      /* ลูกค้า (ตัวอักษรนำหน้า Cus Code) — ตามปี/ประเภทงานที่เลือก แล้วกรอง Model ต่อจากลูกค้า */
+      const cuss = [...new Set(P.all.filter(x => (this.year === 'all' || x.y === this.year) && (this.work === 'all' || x.work === this.work)).map(x => x.cus))].sort((a, b) => String(a).localeCompare(String(b), 'th', { numeric: true }));
+      if (this.cus !== 'all' && !cuss.includes(this.cus)) this.cus = 'all';   // ปี/ประเภทงานที่เลือกไม่มีลูกค้านี้ → กลับเป็น "ทั้งหมด"
+      const models = [...new Set(P.all.filter(x => (this.year === 'all' || x.y === this.year) && (this.work === 'all' || x.work === this.work) && (this.cus === 'all' || x.cus === this.cus)).map(x => x.model))].sort((a, b) => String(a).localeCompare(String(b), 'th', { numeric: true }));
       if (this.model !== 'all' && !models.includes(this.model)) this.model = 'all';   // ปี/ประเภทงานที่เลือกไม่มี Model นี้ → กลับเป็น "ทั้งหมด"
       /* แถบควบคุม */
       const bar = $('#gdBar');
@@ -21170,6 +21174,7 @@ function endTour() {
             <label>ปี<select onchange="GWDash.setYear(this.value)"><option value="all">ทุกปี</option>${years.slice().reverse().map(y => `<option value="${y}"${this.year === y ? ' selected' : ''}>${y + 543}</option>`).join('')}</select></label>
             <label>เปรียบเทียบกับ<select onchange="GWDash.setBase(this.value)" ${this.year === 'all' ? 'disabled' : ''}><option value="">ไม่เทียบ</option>${years.filter(y => y !== this.year).reverse().map(y => `<option value="${y}"${this.base === y ? ' selected' : ''}>${y + 543}</option>`).join('')}</select></label>
             <label>ประเภทงาน<select onchange="GWDash.setWork(this.value)"><option value="all">ทั้งหมด</option>${works.map(w => `<option value="${esc(w)}"${this.work === w ? ' selected' : ''}>${esc(w)}</option>`).join('')}</select></label>
+            <label>ลูกค้า<select onchange="GWDash.setCus(this.value)"><option value="all">ทั้งหมด</option>${cuss.map(c => `<option value="${esc(c)}"${this.cus === c ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select></label>
             <label>Model<select onchange="GWDash.setModel(this.value)"><option value="all">ทั้งหมด</option>${models.map(m => `<option value="${esc(m)}"${this.model === m ? ' selected' : ''}>${esc(m)}</option>`).join('')}</select></label>
             <label>นับปีจาก<select onchange="GWDash.setBasis(this.value)"><option value="go"${this.basis === 'go' ? ' selected' : ''}>วันที่ GO</option><option value="year"${this.basis === 'year' ? ' selected' : ''}>คอลัมน์ YEAR</option></select></label>
             <button class="ex-btn" onclick="GWDash.togglePresent()">${this.present ? '✕ ออกจากโหมดนำเสนอ (Esc)' : '▶ โหมดนำเสนอ'}</button>
@@ -21181,7 +21186,7 @@ function endTour() {
           <span>${GoWork.rows.length ? 'ต้องมีวันที่ในคอลัมน์ GO หรือปีในคอลัมน์ YEAR' : 'นำเข้าไฟล์ Excel หลักในหน้า รายการ GO WORK'}</span></div>`;
         return;
       }
-      const wf = x => (this.work === 'all' || x.work === this.work) && (this.model === 'all' || x.model === this.model);
+      const wf = x => (this.work === 'all' || x.work === this.work) && (this.cus === 'all' || x.cus === this.cus) && (this.model === 'all' || x.model === this.model);
       const all = P.all.filter(wf), cancelled = P.cancelled.filter(wf);
       const sel = this.year === 'all' ? all : all.filter(x => x.y === this.year);
       const ylabel = this.year === 'all' ? `ทุกปี (${years[0] + 543}–${years[years.length - 1] + 543})` : `ปี ${this.year + 543}`;
@@ -21189,7 +21194,7 @@ function endTour() {
       this.bs = this.base != null ? all.filter(x => x.y === this.base) : null;
       const ctx = { P, all, cancelled, sel, years, ylabel, bs: this.bs };
       const fn = { overview: 'tabOverview', model: 'tabModel', matrix: 'tabMatrix', price: 'tabPrice' }[this.tab];
-      host.innerHTML = `<div class="ex-slide-title"><h2>${this.TABS.find(t => t[0] === this.tab)[1]}</h2><span>${ylabel}${this.bs ? ` เทียบกับปี ${this.base + 543}` : ''}${this.work !== 'all' ? ' · ' + esc(this.work) : ''}${this.model !== 'all' ? ' · Model ' + esc(this.model) : ''}${P.noYear ? ` · ไม่นับ ${P.noYear} รายการที่ไม่มีปี/วันที่ GO` : ''}</span></div>` + this[fn](ctx);
+      host.innerHTML = `<div class="ex-slide-title"><h2>${this.TABS.find(t => t[0] === this.tab)[1]}</h2><span>${ylabel}${this.bs ? ` เทียบกับปี ${this.base + 543}` : ''}${this.work !== 'all' ? ' · ' + esc(this.work) : ''}${this.cus !== 'all' ? ' · ลูกค้า ' + esc(this.cus) : ''}${this.model !== 'all' ? ' · Model ' + esc(this.model) : ''}${P.noYear ? ` · ไม่นับ ${P.noYear} รายการที่ไม่มีปี/วันที่ GO` : ''}</span></div>` + this[fn](ctx);
       this.afterRender(ctx);
     },
     afterRender(c) { if (this._post) { const f = this._post; this._post = null; f(); } },
