@@ -14359,7 +14359,7 @@ async function saveManual() {
  if (isEdit) { showResultModal('แก้ไขคู่มือสำเร็จ', 'success'); return; } // อัปเดตจอไปแล้วด้านบน แค่ยืนยันว่า sync สำเร็จ
  // เพิ่มใหม่ (มีการอัปโหลดไฟล์จริง) → ต้องรอผลอัปโหลดก่อน แล้วเติมเข้ารายการทันที ไม่ต้องโหลดทั้งชุดซ้ำ
  closeManualModal();
- manuals.unshift(mapManualRow(json.data || {
+ manuals.push(mapManualRow(json.data || {
  'ID': json.id, 'ชื่อคู่มือ': title, 'หมวดหมู่': category, 'รายละเอียด': description,
  'ชื่อไฟล์': body.fileName, 'ลิงก์ไฟล์': json.fileUrl || json.url || '', 'สถานะ': 'ใช้งาน'
  }));
@@ -14440,7 +14440,9 @@ function renderManuals() {
  onerror="this.parentElement.innerHTML='<span style=&quot;font-size:2.6rem;opacity:.5&quot;>${manualCategoryIcon(m.category)}</span>'">
  </div>`
  : '';
- return `<div class="supplier-card">
+ const no = manuals.indexOf(m) + 1;   // ลำดับตามที่บันทึกข้อมูล (คงเดิมแม้ค้นหา/กรองหมวด)
+ return `<div class="supplier-card" style="position:relative">
+ <span title="ลำดับที่ ${no}" style="position:absolute;top:.6rem;left:.6rem;z-index:2;min-width:28px;height:28px;padding:0 .45rem;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;border-radius:99px;background:var(--accent);color:#fff;font-weight:700;font-size:.8rem;line-height:1;box-shadow:0 2px 8px rgba(0,0,0,.28)">${no}</span>
  ${thumbHtml}
  <div class="supplier-header">
  <div style="display:flex;align-items:center;gap:0.7rem;min-width:0">
