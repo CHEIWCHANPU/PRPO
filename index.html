@@ -14442,7 +14442,7 @@ function renderManuals() {
  : '';
  const no = manuals.indexOf(m) + 1;   // ลำดับตามที่บันทึกข้อมูล (คงเดิมแม้ค้นหา/กรองหมวด)
  return `<div class="supplier-card" style="position:relative">
- <span title="ลำดับที่ ${no}" style="position:absolute;top:.6rem;left:.6rem;z-index:2;min-width:28px;height:28px;padding:0 .45rem;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;border-radius:99px;background:var(--accent);color:#fff;font-weight:700;font-size:.8rem;line-height:1;box-shadow:0 2px 8px rgba(0,0,0,.28)">${no}</span>
+ <input type="text" inputmode="numeric" value="${no}" maxlength="3" title="ลำดับที่ ${no} — กรอกเลขที่ต้องการแล้วกด Enter (รายการอื่นจะเลื่อนให้อัตโนมัติ)" aria-label="ลำดับคู่มือ" onclick="this.select()" onkeydown="if(event.key==='Enter'){this.blur()}else if(event.key==='Escape'){this.value='${no}';this.blur()}" onchange="setManualOrder('${m.id}', this.value)" style="position:absolute;top:.6rem;left:.6rem;z-index:2;width:36px;height:28px;padding:0;box-sizing:border-box;text-align:center;border:0;outline:0;border-radius:99px;background:var(--accent);color:#fff;font-weight:700;font-size:.8rem;box-shadow:0 2px 8px rgba(0,0,0,.28);cursor:text">
  ${thumbHtml}
  <div class="supplier-header">
  <div style="display:flex;align-items:center;gap:0.7rem;min-width:0">
@@ -14465,6 +14465,35 @@ function renderManuals() {
  </div>
  </div>`;
  }).join('');
+}
+
+/* กรอกเลขลำดับที่การ์ดคู่มือ → ย้ายไปลำดับนั้น แล้วเลื่อนรายการอื่นให้ (บันทึกลง Sheet คอลัมน์ ลำดับ) */
+async function setManualOrder(id, val) {
+ const from = manuals.findIndex(m => String(m.id) === String(id));
+ if (from < 0) return;
+ let pos = parseInt(String(val).replace(/[^\d]/g, ''), 10);
+ if (!isFinite(pos)) { renderManuals(); return; }
+ pos = Math.max(1, Math.min(manuals.length, pos));
+ if (pos - 1 === from) { renderManuals(); return; }
+ if (!WEB_APP_URL) { showToast('ยังไม่ได้ตั้งค่า Web App URL', 'error'); renderManuals(); return; }
+ const prev = manuals.slice();
+ const moved = manuals.splice(from, 1)[0];
+ manuals.splice(pos - 1, 0, moved);
+ renderManuals();
+ try {
+ const res = await fetch(WEB_APP_URL, {
+ method: 'POST',
+ headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+ body: JSON.stringify({ action: 'editManual', id, order: pos })
+ });
+ const json = await res.json();
+ if (!json.success) throw new Error(json.error || 'จัดลำดับไม่สำเร็จ');
+ showToast('ย้าย "' + (moved.title || '') + '" ไปลำดับที่ ' + pos + ' แล้ว', 'success');
+ } catch (err) {
+ manuals = prev;
+ renderManuals();
+ showResultModal('จัดลำดับไม่สำเร็จ', 'error', err.message);
+ }
 }
 
 /* ══════════════════════════════════════════════════
