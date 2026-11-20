@@ -9379,7 +9379,7 @@ let activeMonthTab = null;
 let cerData = [];
 let cerLoaded = false;
 let cerLoadedTime = 0; // เวลาที่ดึงข้อมูล CER ล่าสุดสำเร็จ — ใช้เช็คว่า cache หมดอายุหรือยัง
-let cerSortCol = 'name';
+let cerSortCol = 'id';
 let cerSortDir = 'asc';
 let cerCurrentPage = 1;
 /* ── โหมดข้อมูลหน้า CER: 'component' = MAKER Component (เดิม) · 'die' = MAKER DIE ──
@@ -11796,9 +11796,13 @@ function renderCerTable() {
  rows.sort((a,b) => {
  let va, vb;
  if (cerSortCol === 'id') {
- const na = parseFloat(a.id), nb = parseFloat(b.id);
- if (!isNaN(na) && !isNaN(nb)) { va = na; vb = nb; }
- else { va = String(a.id||'').toLowerCase(); vb = String(b.id||'').toLowerCase(); }
+ const ia = String(a.id||'').trim(), ib = String(b.id||'').trim();
+ const ma = /^([^\d]*)(\d+)/.exec(ia), mb = /^([^\d]*)(\d+)/.exec(ib);
+ if (ma && mb) {
+ const pa = ma[1].toLowerCase(), pb = mb[1].toLowerCase();
+ if (pa !== pb) { va = pa; vb = pb; }
+ else { va = parseInt(ma[2],10); vb = parseInt(mb[2],10); }
+ } else { va = ia.toLowerCase(); vb = ib.toLowerCase(); }
  } else if (cerSortCol.endsWith('Date')) {
  const toTime = s => { if (!s) return Infinity; const [d,m,y]=s.split('/').map(Number); return new Date(y,m-1,d).getTime(); };
  va = toTime(a[cerSortCol]); vb = toTime(b[cerSortCol]);
