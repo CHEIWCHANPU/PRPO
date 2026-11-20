@@ -7750,6 +7750,7 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
  <option value="danger">หมดอายุแล้ว</option>
  </select>
  <button class="btn btn-ghost" onclick="openCerUploadModal()" style="white-space:nowrap">⬆ โหลด Excel</button>
+ <button class="btn btn-ghost" onclick="exportCerExcel()" style="white-space:nowrap">⬇ Export Excel</button>
  <button class="btn btn-primary" onclick="openCerModal()" style="white-space:nowrap">+ เพิ่มบริษัท</button>
  </div>
 
@@ -11790,9 +11791,8 @@ function renderCerStats() {
  cerUpdateModeCounts();
 }
 
-function renderCerTable() {
- renderCerStats();
- let rows = getCerFiltered();
+function getCerSorted() {
+ const rows = getCerFiltered();
  rows.sort((a,b) => {
  let va, vb;
  if (cerSortCol === 'id') {
@@ -11812,6 +11812,40 @@ function renderCerTable() {
  if (va === vb) return 0;
  return cerSortDir === 'asc' ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
  });
+ return rows;
+}
+
+function cerCertLabel(dateStr, hasStr) {
+ const st = cerCertStatus(dateStr, hasStr).state;
+ return st === 'progress' ? 'กำลังติดตาม' : st === 'temp' ? 'ใบรับรองชั่วคราว' : st === 'none' ? 'ไม่มี'
+  : st === 'danger' ? 'หมดอายุ' : st === 'warn' ? 'ใกล้หมดอายุ' : 'ปกติ';
+}
+
+function exportCerExcel() {
+ if (typeof XLSX === 'undefined') { showToast('ตัวสร้างไฟล์ Excel ยังโหลดไม่เสร็จ ลองใหม่อีกครั้ง', 'error'); return; }
+ const rows = getCerSorted(); // ตามตัวกรอง/การเรียงที่เห็นอยู่ (ทุกหน้า)
+ if (!rows.length) { showToast('ไม่มีข้อมูลให้ Export', 'error'); return; }
+ const overallLabel = r => ({ danger:'หมดอายุแล้ว', warn:'ใกล้หมดอายุ', progress:'กำลังติดตาม', temp:'ใบรับรองชั่วคราว', none:'ไม่มี', partial:'ไม่ครบ' }[cerOverallStatus(r)] || 'มีครบ');
+ const aoa = [['ID','ชื่อบริษัท','ISO 9001','วันหมดอายุ ISO 9001','ISO 14001','วันหมดอายุ ISO 14001','IATF 16949','วันหมดอายุ IATF','สถานะ']];
+ rows.forEach(r => aoa.push([
+  r.id, r.name,
+  cerCertLabel(r.iso9001Date, r.iso9001Has), r.iso9001Date || '',
+  cerCertLabel(r.iso14001Date, r.iso14001Has), r.iso14001Date || '',
+  cerCertLabel(r.iatfDate, r.iatfHas), r.iatfDate || '',
+  overallLabel(r)
+ ]));
+ const ws = XLSX.utils.aoa_to_sheet(aoa);
+ ws['!cols'] = [{wch:10},{wch:34},{wch:16},{wch:20},{wch:16},{wch:20},{wch:16},{wch:20},{wch:18}];
+ const wb = XLSX.utils.book_new();
+ XLSX.utils.book_append_sheet(wb, ws, cerCfg().short);
+ const d = new Date(), pad = n => String(n).padStart(2,'0');
+ XLSX.writeFile(wb, `MAKER_${cerCfg().short}_${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}.xlsx`);
+ showToast(`Export ${rows.length} รายการแล้ว`, 'success');
+}
+
+function renderCerTable() {
+ renderCerStats();
+ let rows = getCerSorted();
 
  const total = rows.length;
  const pages = Math.ceil(total / cerPerPage) || 1;
