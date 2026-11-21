@@ -6305,6 +6305,9 @@ html body .notif-panel { background: var(--surface) !important; }
 .ug-bar { height: 5px; border-radius: 99px; background: var(--surface2); overflow: hidden; position: relative; margin-bottom: .8rem; }
 .ug-bar i { position: absolute; top: 0; bottom: 0; width: 38%; border-radius: 99px; background: linear-gradient(90deg, var(--accent), var(--live)); animation: ccipRailScan 1.2s cubic-bezier(.45,0,.25,1) infinite !important; animation-duration: 1.2s !important; animation-iteration-count: infinite !important; }
 .ug-box small { font-size: .74rem; color: var(--muted); }
+.ug-bar.det i { left: 0 !important; width: 0; animation: none !important; transform: none !important; transition: width .35s ease !important; }
+.ug-pct { font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+.ug-step { margin: 0 0 .25rem; font-size: .78rem; font-weight: 700; color: var(--accent); }
 
 /* ════════ แถบบน (Topbar) — แบบแอปองค์กร ════════ */
 html body .topbar.tb2 {
@@ -21675,7 +21678,9 @@ function endTour() {
           if (todo.length) {
             $('#mtProg').hidden = false;
             let done = 0;
+            if (window.CCIPUploadGuard) CCIPUploadGuard.batchStart(todo.length);
             for (const item of todo) {
+              if (window.CCIPUploadGuard) CCIPUploadGuard.batchAt(todo.indexOf(item) + 1);
               item.status = 'up'; drawQueue();
               $('#mtProgText').textContent = `กำลังส่งรูปเข้า Google Drive ${done + 1}/${todo.length}`;
               try {
@@ -21688,6 +21693,7 @@ function endTour() {
               $('#mtBar').style.width = Math.round((todo.indexOf(item) + 1) / todo.length * 100) + '%';
               drawQueue();
             }
+            if (window.CCIPUploadGuard) CCIPUploadGuard.batchEnd();
             const failed = files.filter(x => x.status === 'err');
             if (failed.length) {
               el._busy = false; setBusy(btn, false); drawQueue();
@@ -22870,27 +22876,63 @@ function endTour() {
      - คำขอเดียวกันที่ยังส่งอยู่ → ใช้ผลเดียวกัน, ไฟล์เดิมที่เพิ่งอัปโหลดสำเร็จภายใน 2 นาที → ไม่อัปโหลดซ้ำ */
   const UploadGuard = (() => {
     const LABEL = { addIsoDoc: 'เอกสาร ISO (PDF)', addManual: 'คู่มือการทำงาน (PDF)', uploadFile: 'ไฟล์แนบ PR/PO', uploadMeetingImage: 'รูป Summary Meeting', uploadCerFile: 'ใบรับรอง CER' };
-    const SHOW_OVERLAY = { addIsoDoc: true, addManual: true, uploadFile: true, uploadCerFile: true };      // รูป Meeting มีแถบความคืบหน้าในหน้าต่างของตัวเองอยู่แล้ว
+    const SHOW_OVERLAY = { addIsoDoc: true, addManual: true, uploadFile: true, uploadCerFile: true, uploadMeetingImage: true };      // รูป Meeting: ใช้ป๊อปอัปเดียวกัน แสดง รูปที่ n/ทั้งหมด
     const inflight = new Map(), recent = new Map();
     let el = null, timer = null, t0 = 0;
     const kb = n => n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
-    function show(meta) {
-      hide();
+    let batch = null, hideT = null, fileT0 = 0;
+    const estSec = size => 4 + (size || 0) / (120 * 1024);   // เวลาโดยประมาณ: Apps Script รับไฟล์ ~120 KB/s + overhead 4 วินาที
+    function paint() {
+      if (!el) return;
+      const sec = (Date.now() - t0) / 1000, fsec = (Date.now() - fileT0) / 1000;
+      const frac = Math.min(.95, 1 - Math.exp(-fsec / estSec(cur.size)));      // ค่อย ๆ ไต่ขึ้น ไม่เกิน 95% จนกว่าจะส่งเสร็จจริง
+      const f = cur.done ? 1 : frac;
+      const pct = Math.round((batch ? ((batch.k - 1) + f) / batch.total : f) * 100);
+      const x = document.getElementById('ugTime'), bar = el.querySelector('.ug-bar i'), pc = document.getElementById('ugPct'), sm = el.querySelector('small');
+      if (x) x.textContent = Math.round(sec) + ' วินาที';
+      if (bar) bar.style.width = pct + '%';
+      if (pc) pc.textContent = pct + '%';
+      if (sm && !cur.done && f >= .95) sm.textContent = 'ใกล้เสร็จแล้ว กำลังรอ Google Drive ตอบกลับ…';
+    }
+    let cur = { size: 0, done: false };
+    function build(meta) {
       el = document.createElement('div');
       el.className = 'ug-overlay'; el.setAttribute('role', 'alertdialog'); el.setAttribute('aria-live', 'assertive');
       el.innerHTML = `<div class="ug-box">
           <div class="ug-ring"><svg viewBox="0 0 24 24"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 20h16"/></svg></div>
           <h3>กำลังอัปโหลดเข้า Google Drive</h3>
-          <p class="ug-file">${esc(meta.name || 'ไฟล์')}</p>
-          <p class="ug-meta">${esc(LABEL[meta.action] || 'ไฟล์')}${meta.size ? ' · ' + kb(meta.size) : ''} · <span id="ugTime">0 วินาที</span></p>
-          <div class="ug-bar"><i></i></div>
+          <p class="ug-step" id="ugStep" ${batch ? '' : 'hidden'}>${batch ? 'รูปที่ ' + batch.k + '/' + batch.total : ''}</p>
+          <p class="ug-file" id="ugFile">${esc(meta.name || 'ไฟล์')}</p>
+          <p class="ug-meta"><span id="ugLabel">${esc(LABEL[meta.action] || 'ไฟล์')}${meta.size ? ' · ' + kb(meta.size) : ''}</span> · <span id="ugTime">0 วินาที</span> · <span class="ug-pct" id="ugPct">0%</span></p>
+          <div class="ug-bar det"><i></i></div>
           <small>กรุณารอสักครู่ อย่าปิดหน้านี้หรือกดอัปโหลดซ้ำ</small>
         </div>`;
       document.body.appendChild(el);
       t0 = Date.now();
-      timer = setInterval(() => { const s = Math.round((Date.now() - t0) / 1000); const x = document.getElementById('ugTime'); if (x) x.textContent = s + ' วินาที'; }, 500);
+      timer = setInterval(paint, 250);
     }
-    function hide() { clearInterval(timer); if (el) { el.remove(); el = null; } }
+    function show(meta) {
+      clearTimeout(hideT);
+      cur = { size: meta.size || 0, done: false }; fileT0 = Date.now();
+      if (el && batch) {   // อัปโหลดหลายรูป: ใช้ป๊อปอัปเดิม แค่เปลี่ยนชื่อไฟล์
+        const f = document.getElementById('ugFile'), l = document.getElementById('ugLabel'), sm = el.querySelector('small');
+        if (f) f.textContent = meta.name || 'ไฟล์';
+        if (l) l.textContent = (LABEL[meta.action] || 'ไฟล์') + (meta.size ? ' · ' + kb(meta.size) : '');
+        if (sm) sm.textContent = 'กรุณารอสักครู่ อย่าปิดหน้านี้หรือกดอัปโหลดซ้ำ';
+        paint(); return;
+      }
+      hide(); build(meta); paint();
+    }
+    function finish() { cur.done = true; paint(); clearTimeout(hideT); hideT = setTimeout(hide, 450); }   // เต็ม 100% ก่อนปิด
+    function hide() { clearInterval(timer); clearTimeout(hideT); if (el) { el.remove(); el = null; } }
+    // อัปโหลดหลายไฟล์ติดกัน (เช่น รูป Meeting): เปิดป๊อปอัปค้างไว้ตลอดทั้งชุด
+    function batchStart(total) { clearTimeout(hideT); batch = { total, k: 1 }; hide(); cur = { size: 0, done: false }; fileT0 = Date.now(); build({ name: 'กำลังเตรียมรูป…', action: 'uploadMeetingImage' }); paint(); }
+    function batchAt(k) {
+      if (!batch) return; batch.k = k; cur = { size: 0, done: false }; fileT0 = Date.now();
+      const st = document.getElementById('ugStep'); if (st) { st.hidden = false; st.textContent = 'รูปที่ ' + k + '/' + batch.total; }
+      paint();
+    }
+    function batchEnd() { if (!batch) return; batch.k = batch.total; cur.done = true; paint(); batch = null; clearTimeout(hideT); hideT = setTimeout(hide, 450); }
     function metaOf(body) {
       try {
         const o = JSON.parse(body);
@@ -22920,10 +22962,10 @@ function endTour() {
         return text;
       });
       inflight.set(meta.key, p);
-      p.finally(() => { inflight.delete(meta.key); if (SHOW_OVERLAY[meta.action]) hide(); }).catch(() => {});
+      p.finally(() => { inflight.delete(meta.key); if (SHOW_OVERLAY[meta.action]) { if (batch) { cur.done = true; paint(); } else finish(); } }).catch(() => {});
       return p.then(t => new Response(t, { status: 200, headers: { 'Content-Type': 'application/json' } }));
     };
-    return { show, hide };
+    return { show, hide, batchStart, batchAt, batchEnd };
   })();
   // ปุ่มบันทึกคู่มือ: กดซ้ำระหว่างรอผล → ไม่ทำงานซ้ำ
   if (typeof window.saveManual === 'function') {
