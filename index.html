@@ -8954,6 +8954,7 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
       <label class="gx-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <input id="gwSearch" type="search" placeholder="ค้นหาทุกคอลัมน์: Part No, Part Name, Spec…" oninput="GoWork.page=1;GoWork.render()" aria-label="ค้นหางาน GO WORK"></label>
       <select id="gwYear" class="gx-select" onchange="GoWork.page=1;GoWork.render()" aria-label="กรองปี"></select>
+      <select id="gwMonth" class="gx-select" onchange="GoWork.page=1;GoWork.render()" aria-label="กรองเดือน" title="เลือกปีก่อน แล้วเลือกเดือนได้" disabled></select>
       <select id="gwModel" class="gx-select" onchange="GoWork.page=1;GoWork.render()" aria-label="กรอง Model"></select>
       <select id="gwMaker" class="gx-select" onchange="GoWork.page=1;GoWork.render()" aria-label="กรอง Maker"></select>
       <select id="gwWork" class="gx-select" onchange="GoWork.page=1;GoWork.render()" aria-label="กรอง Work"></select>
@@ -20725,18 +20726,31 @@ function endTour() {
       el.innerHTML = '<option value="">ทุกปี</option>' + ys.map(y => `<option value="${y}">ปี ${y + 543}</option>`).join('');
       el.value = ys.map(String).includes(cur) ? cur : '';
     },
+    monthOf(r) { const d = parseDMY(r.goDate); return d ? d.getMonth() : null; },
+    fillMonth() {
+      const el = $('#gwMonth'); if (!el) return;
+      const TH = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+      const yv = ($('#gwYear') || {}).value, cur = el.value;
+      if (!yv) { el.innerHTML = '<option value="">ทุกเดือน</option>'; el.value = ''; el.disabled = true; return; }   /* ต้องเลือกปีก่อน */
+      const cnt = new Map();
+      this.rows.forEach(r => { if (this.yearOf(r) !== +yv) return; const m = this.monthOf(r); if (m != null) cnt.set(m, (cnt.get(m) || 0) + 1); });
+      const ms = [...cnt.keys()].sort((a, b) => a - b);
+      el.innerHTML = '<option value="">ทุกเดือน</option>' + ms.map(m => `<option value="${m}">${TH[m]} (${cnt.get(m).toLocaleString('th-TH')})</option>`).join('');
+      el.value = ms.map(String).includes(cur) ? cur : '';
+      el.disabled = !ms.length;
+    },
     fillSelect(id, key, label) {
       const el = $(id); if (!el) return;
       const cur = el.value;
-      const yv = ($('#gwYear') || {}).value, src = yv ? this.rows.filter(r => this.yearOf(r) === +yv) : this.rows; /* แสดงเฉพาะตัวเลือกที่มีในปีที่เลือก */
+      const yv = ($('#gwYear') || {}).value, mv = ($('#gwMonth') || {}).value, src = this.rows.filter(r => (!yv || this.yearOf(r) === +yv) && (mv === '' || mv == null || this.monthOf(r) === +mv)); /* แสดงเฉพาะตัวเลือกที่มีในปี/เดือนที่เลือก */
       const vals = [...new Set(src.map(r => String(r[key] || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'th', { numeric: true }));
       el.innerHTML = `<option value="">${label}</option>` + vals.map(v => `<option>${esc(v)}</option>`).join('');
       el.value = vals.includes(cur) ? cur : '';
     },
     filtered() {
       const q = ($('#gwSearch') && $('#gwSearch').value || '').trim().toLowerCase();
-      const f = { model: $('#gwModel'), maker: $('#gwMaker'), work: $('#gwWork') }, yv = ($('#gwYear') || {}).value;
-      let list = this.rows.filter(r => (!yv || this.yearOf(r) === +yv) && (!this.hideCancel || !gwIsCancel(r)) &&
+      const f = { model: $('#gwModel'), maker: $('#gwMaker'), work: $('#gwWork') }, yv = ($('#gwYear') || {}).value, mv = yv ? ($('#gwMonth') || {}).value : '';
+      let list = this.rows.filter(r => (!yv || this.yearOf(r) === +yv) && (mv === '' || mv == null || this.monthOf(r) === +mv) && (!this.hideCancel || !gwIsCancel(r)) &&
         Object.entries(f).every(([k, el]) => !el || !el.value || String(r[k] || '').trim() === el.value) &&
         (!q || this.cols().some(([k]) => String(r[k] || '').toLowerCase().includes(q))));
       const { col, dir } = this.sort, k = dir === 'asc' ? 1 : -1;
@@ -20757,6 +20771,7 @@ function endTour() {
     render(errMsg) {
       const body = $('#gwBody'); if (!body) return;
       this.fillYear();
+      this.fillMonth();
       this.fillSelect('#gwModel', 'model', 'ทุก Model');
       
       this.fillSelect('#gwMaker', 'maker', 'ทุก Maker');
