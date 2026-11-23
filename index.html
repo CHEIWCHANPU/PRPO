@@ -11847,6 +11847,19 @@ function exportCerExcel() {
  showToast(`Export ${rows.length} รายการแล้ว`, 'success');
 }
 
+/* ID ที่แสดงในตาราง CER: เรียงเลขใหม่ตามลำดับในชีต (001, 002, …) — ลบรายการแล้วเลขด้านล่างจะขยับขึ้นเอง · ID จริงในชีตไม่ถูกแก้ */
+function cerIdMap() { const m = new Map(); cerCur().forEach((x, i) => m.set(String(x.rowIndex), i + 1)); return m; }
+function cerShownId(r, map) {
+  const n = (map || cerIdMap()).get(String(r.rowIndex));
+  const pre = (String(r.id || '').match(/^[A-Za-z]+-/) || [cerCfg().idPrefix])[0];
+  return n ? pre + String(n).padStart(3, '0') : (r.id || '');
+}
+/* เลขถัดไปแบบนับต่อจากค่าสูงสุดที่มี (กัน ID ซ้ำหลังลบ) */
+function cerNextIdFrom(prefix, arr) {
+  let max = 0; const re = new RegExp('^' + prefix.replace(/[-\\^$*+?.()|[\]{}]/g, '\\$&') + '(\\d+)$', 'i');
+  (arr || []).forEach(r => { const m = re.exec(String(r.id || '').trim()); if (m) max = Math.max(max, parseInt(m[1], 10)); });
+  return prefix + String(max + 1).padStart(3, '0');
+}
 function renderCerTable() {
  renderCerStats();
  let rows = getCerSorted();
@@ -11855,7 +11868,7 @@ function renderCerTable() {
  const pages = Math.ceil(total / cerPerPage) || 1;
  cerCurrentPage = Math.min(cerCurrentPage, pages);
  const start = (cerCurrentPage - 1) * cerPerPage;
- const pageRows = rows.slice(start, start + cerPerPage);
+ const pageRows = rows.slice(start, start + cerPerPage); const idMap = cerIdMap();
 
  const tbody = document.getElementById('cerTableBody');
  tbody.innerHTML = pageRows.length ? pageRows.map(r => {
@@ -11868,7 +11881,7 @@ function renderCerTable() {
  : overall === 'partial' ? `<span class="badge" style="background:rgba(100,116,139,0.14);color:var(--muted);border:1px solid rgba(100,116,139,0.28)">ไม่ครบ</span>`
  : `<span class="badge badge-done">มีครบ</span>`;
  return `<tr>
- <td class="no-num">${r.id}</td>
+ <td class="no-num">${cerShownId(r, idMap)}</td>
  <td class="part-name">${r.name}</td>
  <td>${cerBadge(r.iso9001Date, r.iso9001Has)}</td>
  <td class="date-cell">${r.iso9001Date || '—'}</td>
@@ -11973,7 +11986,7 @@ async function saveCer() {
  const idx = local.findIndex(x => String(x.rowIndex) === String(rowIndex));
  if (idx >= 0) local[idx] = { ...local[idx], ...payload };
  } else {
- const newId = payload.id || (mode === 'die' ? cerNextDieId() : cfg.idPrefix + String(local.length + 1).padStart(3, '0'));
+ const newId = payload.id || (mode === 'die' ? cerNextDieId() : cerNextIdFrom(cfg.idPrefix, local));
  local.push({ ...payload, id: newId, rowIndex: 'local-' + Date.now() });
  }
  localStorage.setItem(cfg.lsKey, JSON.stringify(local));
@@ -12013,7 +12026,7 @@ async function saveCer() {
 async function deleteCerItem(rowIndex) {
  const target = cerCur().find(x => String(x.rowIndex) === String(rowIndex));
  const tName = target ? target.name : '';
- const tLabel = (target && target.id ? target.id + ' · ' : '') + tName;
+ const tLabel = (target && target.id ? cerShownId(target) + ' · ' : '') + tName;
  const confirmed = typeof window.CCIPConfirm === 'function'
  ? await window.CCIPConfirm('ลบบริษัทนี้?', (tLabel || 'รายการนี้') + ' · ' + cerCfg().label + ' จะถูกลบถาวรและกู้คืนไม่ได้', 'ลบบริษัท')
  : confirm('ต้องการลบบริษัทนี้? (' + cerCfg().label + ')');
