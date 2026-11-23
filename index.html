@@ -21287,6 +21287,27 @@ function endTour() {
     afterRender(c) { if (this._post) { const f = this._post; this._post = null; f(); } },
 
     /* ═════════ 1) ภาพรวมรายปี ═════════ */
+        /* ── สรุปประจำปี + ที่มาของตัวเลข (นับจากชีต GO WORK โดยตรง) ── */
+    yearSummary(c) {
+      const { P, years, all, cancelled } = c, raw = GoWork.rows;
+      const y = this.year === 'all' ? years[years.length - 1] : this.year;
+      const strip = raw.filter(gwIsStrip).length, canc = raw.filter(r => !gwIsStrip(r) && gwIsCancel(r)).length;
+      const cur = all.filter(x => x.y === y), cc = cancelled.filter(x => x.y === y);
+      const hasPrior = years.some(v => v < y), hist = [...P.all, ...P.cancelled].filter(x => x.y < y);
+      const fresh = k => { const seen = new Set(hist.map(x => x[k])), m = new Map(); cur.forEach(x => { if (x[k] !== '(ไม่ระบุ)' && !seen.has(x[k])) m.set(x[k], (m.get(x[k]) || 0) + 1); }); return [...m].sort((a, b) => b[1] - a[1]); };
+      const fm = hasPrior ? fresh('maker') : [], fo = hasPrior ? fresh('model') : [], fc = hasPrior ? fresh('cus') : [];
+      const chips = l => l.length ? l.map(([k, n]) => `<span class="ex-chip m">${esc(k)}<em>${n}</em></span>`).join('') : '—';
+      const grp = k => [...this.group(cur, k)].sort((a, b) => b[1].length - a[1].length);
+      const sz = (l, k) => this.uniq(l, k).size, pn = l => new Set(l.map(x => x.partNo).filter(Boolean)).size;
+      const kp = [this.kpi('งาน GO ปี ' + (y + 543), this.n(cur.length), 'รายการ (แถวในชีต)', 'primary'), this.kpi('Part No. ไม่ซ้ำ', this.n(pn(cur)), 'ชิ้นงานที่ GO'),
+        this.kpi('Maker ใหม่', hasPrior ? this.n(fm.length) : '—', hasPrior ? 'ไม่เคยมี GO ปีก่อนๆ' : 'ปีแรกในข้อมูล', 'good'), this.kpi('ยกเลิก GO ปีนี้', this.n(cc.length), 'ไม่รวมในยอดด้านซ้าย', cc.length ? 'bad' : '')];
+      const wt = this.tbl(['ประเภทงาน (WORK)', 'รายการ GO', '%', 'Part No.'], grp('work').map(([k, l]) => [esc(k), `<b>${this.n(l.length)}</b>`, this.pct(l.length, cur.length), this.n(pn(l))]));
+      const ct = this.tbl(['ลูกค้า', 'รายการ GO', '%', 'Model', 'Maker'], grp('cus').map(([k, l]) => [esc(k), `<b>${this.n(l.length)}</b>`, this.pct(l.length, cur.length), this.n(sz(l, 'model')), this.n(sz(l, 'maker'))]));
+      const nw = hasPrior ? `<div class="ex-newgrid"><div><h4>Maker ใหม่ (${fm.length})</h4>${chips(fm)}</div><div><h4>Model ใหม่ (${fo.length})</h4>${chips(fo)}</div><div><h4>ลูกค้าใหม่ (${fc.length})</h4>${chips(fc)}</div></div>` : '<p class="ex-note">ปีนี้เป็นปีแรกในข้อมูล จึงยังไม่มีปีก่อนให้เทียบ</p>';
+      const rc = this.tbl(['ที่มาของยอด (ทั้งชีต GO WORK · ทุกปี · ไม่ขึ้นกับตัวกรอง)', 'รายการ'], [['แถวทั้งหมดในชีต GO WORK', this.n(raw.length)], ['− งานลอกผิวชุบ (WORK = ลอกผิวชุบ)', this.n(strip)], ['− ยกเลิก GO (REMARK มีคำว่า ยกเลิก)', this.n(canc)], ['− ไม่มีปี/วันที่ GO', this.n(P.noYear)], ['<b>= นับเป็นงาน GO</b>', `<b>${this.n(P.all.length)}</b>`]]);
+      return this.card(`สรุปประจำปี ${y + 543} — ตรวจสอบกับระบบได้`, 'นับจากชีต GO WORK โดยตรง · ตามตัวกรองด้านบน (ประเภทงาน / ลูกค้า / Model)',
+        `<div class="ex-kpis">${kp.join('')}</div><div class="ex-grid g2">${this.card('แบ่งตามประเภทงาน', 'กี่รายการ แยกเป็นงานอะไร', wt)}${this.card('แบ่งตามลูกค้า', 'ตัวอักษรนำหน้ารหัส CUS', ct)}</div>${this.card('Maker / Model / ลูกค้าใหม่', 'ใหม่ = ไม่เคยมีงาน GO (รวมที่ยกเลิก) ในปีก่อนหน้า · ตัวเลขข้างชื่อ = จำนวนรายการ GO ปีนี้', nw, 'ex-wide')}${this.card('ที่มาของยอดรวม', 'ไล่จากแถวทั้งหมดในชีตจนเหลือยอดที่นับ', rc)}`, 'ex-wide');
+    },
     tabOverview(c) {
       const { all, cancelled, years, sel, bs } = c;
       const byY = this.group(all, 'y'), cancY = this.group(cancelled, 'y');
@@ -21337,6 +21358,7 @@ function endTour() {
           ${this.kpi('Maker', this.n(this.uniq(sel, 'maker').size), 'ไม่ซ้ำกัน', '', bs && this.cmpTxt(this.uniq(sel, 'maker').size, this.uniq(bs, 'maker').size))}
         </div>
         ${this.card('สรุปสำหรับผู้บริหาร', null, `<ul class="ex-ins">${ins.map(t => `<li>${t}</li>`).join('')}</ul>`, 'ex-wide')}
+        ${this.yearSummary(c)}
         ${cmpCard}
         <div class="ex-grid g2">
           ${this.card('งาน GO แต่ละปี (รายการ)', 'สีทอง = ปีที่เลือก · สีเทา = ปีที่เปรียบเทียบ', '<div class="ex-chart"><canvas id="exYear"></canvas></div>')}
