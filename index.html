@@ -12163,13 +12163,29 @@ function cerFindCol(headerRow, keywords, fromIndex) {
  return -1;
 }
 
-// แปลงค่า has_X (boolean True/False จาก Excel) + Year/Month/Day แยกคอลัมน์ ให้เป็น {has, date}
+// แปลง has_X (TRUE/FALSE) + Year/Month/Day แยกคอลัมน์ → { has, date, warn }
+//  • ช่องปี/เดือน/วันเป็นข้อความ ("ใบรับรองชั่วคราว" / "กำลังติดตาม") → ใช้เป็นสถานะ
+//  • มีวันที่ถูกต้องครบ → "มี" + วันหมดอายุ (วันที่มาก่อนติ๊ก — ตรงกับ cerHasValue ใน Apps Script)
+//  • ติ๊ก TRUE แต่ไม่มีวันที่ → "กำลังติดตาม"
+//  • วันที่ไม่ครบ/ผิด → ไม่นำเข้าวันที่ และแจ้งเตือนในหน้า preview
 function cerParseHasYMD(hasVal, year, month, day) {
- const hasBool = hasVal === true || String(hasVal).trim().toLowerCase() === 'true' || String(hasVal).trim() === '1';
- if (!hasBool) return { has: 'ไม่มี', date: '' };
- const y = parseInt(year, 10), m = parseInt(month, 10), d = parseInt(day, 10);
- if (!y || !m || !d) return { has: 'กำลังติดตาม', date: '' }; // มีใบรับรองแต่ยังไม่ระบุวันหมดอายุ
- return { has: 'มี', date: d + '/' + m + '/' + y };
+  const s = v => String(v == null ? '' : v).trim();
+  const hv = s(hasVal).toLowerCase();
+  const hasBool = hasVal === true || hv === 'true' || hv === '1' || hv === 'yes' || hv === 'มี';
+  const parts = [s(year), s(month), s(day)];
+  const text = parts.find(p => p && isNaN(Number(p))) || '';
+  if (text.includes('ชั่วคราว')) return { has: 'มีใบรับรองชั่วคราว', date: '', warn: '' };
+  if (text.includes('ติดตาม')) return { has: 'กำลังติดตาม', date: '', warn: '' };
+  let y = parseInt(parts[0], 10); const m = parseInt(parts[1], 10), d = parseInt(parts[2], 10);
+  if (y > 2400) y -= 543; // ปี พ.ศ. → ค.ศ.
+  const valid = y >= 1990 && y <= 2100 && m >= 1 && m <= 12 && d >= 1 && d <= 31 &&
+    (() => { const t = new Date(y, m - 1, d); return t.getFullYear() === y && t.getMonth() === m - 1 && t.getDate() === d; })();
+  if (valid) return { has: 'มี', date: d + '/' + m + '/' + y, warn: hasBool ? '' : 'ติ๊กว่า "ไม่มี" แต่มีวันที่ — นำเข้าเป็น "มี"' };
+  if (parts.some(p => p && !isNaN(Number(p)))) {
+    return { has: hasBool ? 'กำลังติดตาม' : 'ไม่มี', date: '', warn: 'วันที่ไม่ถูกต้อง (' + parts.join('/') + ') — ไม่ได้นำเข้าวันหมดอายุ' };
+  }
+  if (hasBool) return { has: 'กำลังติดตาม', date: '', warn: 'ติ๊กว่ามี แต่ไม่ระบุวันหมดอายุ — นำเข้าเป็น "กำลังติดตาม"' };
+  return { has: 'ไม่มี', date: '', warn: '' };
 }
 
 function cerParseSheet(sheetName) {
@@ -12188,24 +12204,27 @@ function cerParseSheet(sheetName) {
  const iso14001Col = cerFindCol(header, ['has_iso_14001', 'has iso 14001', 'iso14001'], iso9001Col + 1);
  const iatfCol = cerFindCol(header, ['has_iatf', 'iatf'], iso14001Col >= 0 ? iso14001Col + 1 : iso9001Col + 1);
 
- const rows = [];
- for (let i = 1; i < raw.length; i++) {
- const row = raw[i];
- if (!row) continue;
- const name = nameCol >= 0 ? String(row[nameCol] || '').trim() : '';
- if (!name) continue;
- const iso9001 = iso9001Col >= 0 ? cerParseHasYMD(row[iso9001Col], row[iso9001Col + 1], row[iso9001Col + 2], row[iso9001Col + 3]) : { has: 'ไม่มี', date: '' };
- const iso14001 = iso14001Col >= 0 ? cerParseHasYMD(row[iso14001Col], row[iso14001Col + 1], row[iso14001Col + 2], row[iso14001Col + 3]) : { has: 'ไม่มี', date: '' };
- const iatf = iatfCol >= 0 ? cerParseHasYMD(row[iatfCol], row[iatfCol + 1], row[iatfCol + 2], row[iatfCol + 3]) : { has: 'ไม่มี', date: '' };
- rows.push({
- id: '', // ให้ backend สร้าง ID รูปแบบ CC-XXX ให้เอง (คอลัมน์ id ในไฟล์นี้เป็นแค่เลขลำดับแถว ไม่ใช่รหัสบริษัทของระบบ)
- name,
- iso9001Has: iso9001.has, iso9001Date: iso9001.date,
- iso14001Has: iso14001.has, iso14001Date: iso14001.date,
- iatfHas: iatf.has, iatfDate: iatf.date,
- });
- }
- return rows;
+ const idCol = header.findIndex(h => String(h).trim().toLowerCase() === 'id');
+  const pick = (row, c) => c >= 0 ? cerParseHasYMD(row[c], row[c + 1], row[c + 2], row[c + 3]) : { has: 'ไม่มี', date: '', warn: '' };
+  const rows = [];
+  for (let i = 1; i < raw.length; i++) {
+  const row = raw[i];
+  if (!row) continue;
+  const name = nameCol >= 0 ? String(row[nameCol] || '').replace(/\s+/g, ' ').trim() : ''; // รวมช่องว่างซ้อน เช่น "จำกัด  " ให้เป็นช่องเดียว
+  if (!name) continue;
+  const a9 = pick(row, iso9001Col), a14 = pick(row, iso14001Col), aI = pick(row, iatfCol);
+  const warn = [['ISO 9001', a9], ['ISO 14001', a14], ['IATF 16949', aI]].filter(x => x[1].warn).map(x => x[0] + ': ' + x[1].warn);
+  rows.push({
+  id: '', // ให้ Apps Script (bulkImportCer) สร้าง ID รูปแบบ CC-001 ต่อจากเลขสูงสุดที่มีอยู่ — คอลัมน์ id ในไฟล์เป็นแค่เลขลำดับ
+  srcId: idCol >= 0 ? String(row[idCol] == null ? '' : row[idCol]).trim() : '', // ใช้แสดงในคำเตือนเท่านั้น ไม่ส่งไป Sheet
+  name,
+  iso9001Has: a9.has, iso9001Date: a9.date,
+  iso14001Has: a14.has, iso14001Date: a14.date,
+  iatfHas: aI.has, iatfDate: aI.date,
+  warn,
+  });
+  }
+  return rows;
  }
 
  // ── รูปแบบที่ 1 (ค่าเริ่มต้น): ชื่อบริษัท, ISO 9001, วันหมดอายุ ISO 9001, ... ── */
@@ -12259,7 +12278,10 @@ function cerUpdatePreview() {
  const tableWrap = document.getElementById('cerPreviewTableWrap');
  const tableBody = document.getElementById('cerPreviewTableBody');
  if (cerPendingImportRows.length) {
- info.innerHTML = `พบข้อมูลบริษัทที่พร้อมนำเข้า <b>${cerPendingImportRows.length}</b> รายการ จาก ${cerSelectedSheets.size} ชีตที่เลือก`;
+ const warns = cerPendingImportRows.filter(r => r.warn && r.warn.length);
+  info.innerHTML = `พบข้อมูลบริษัทที่พร้อมนำเข้า <b>${cerPendingImportRows.length}</b> รายการ จาก ${cerSelectedSheets.size} ชีตที่เลือก` +
+  (warns.length ? `<details style="margin-top:.4rem"><summary style="cursor:pointer;color:#f59e0b">⚠ มี ${warns.length} แถวที่ควรตรวจสอบ</summary><div style="max-height:140px;overflow:auto;font-size:.75rem;margin-top:.3rem;line-height:1.5">` +
+  warns.map(r => `<div>#${isoEsc(r.srcId || '-')} ${isoEsc(r.name)} — ${isoEsc(r.warn.join(' · '))}</div>`).join('') + `</div></details>` : '');
  btn.disabled = false;
  tableWrap.style.display = '';
  tableBody.innerHTML = cerPendingImportRows.slice(0, 20).map(r => `<tr>
@@ -12284,14 +12306,14 @@ async function cerImportSelected() {
  const res = await fetch(WEB_APP_URL, {
  method: 'POST',
  headers: { 'Content-Type': 'text/plain;charset=utf-8' },
- body: JSON.stringify({ action: cerCfg().bulk, rows: cerPendingImportRows })
+ body: JSON.stringify({ action: cerCfg().bulk, rows: cerPendingImportRows.map(({ warn, srcId, ...r }) => r) })
  });
  const json = await res.json();
  if (json.imported === undefined && json.success === undefined) {
  throw new Error('เซิร์ฟเวอร์ยังไม่รู้จัก action "' + cerCfg().bulk + '" — ต้องเพิ่มฟังก์ชันนี้ใน Apps Script (Router.gs) ก่อน แล้ว Deploy เป็น "New version"');
  }
  if (!json.success) throw new Error(json.error || 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุจากฝั่งเซิร์ฟเวอร์');
- showResultModal('นำเข้าข้อมูลสำเร็จ', 'success', `นำเข้า ${json.imported} รายการ (${cerCfg().label})`);
+ showResultModal('นำเข้าข้อมูลสำเร็จ', 'success', `นำเข้า ${json.imported} รายการ${json.skipped ? ' · ข้ามชื่อซ้ำที่มีอยู่แล้ว ' + json.skipped + ' รายการ' : ''} (${cerCfg().label})`);
  closeCerUploadModal();
  await loadCerPage(true);
  } catch (err) {
