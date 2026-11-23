@@ -11876,13 +11876,13 @@ function renderCerTable() {
  const tbody = document.getElementById('cerTableBody');
  tbody.innerHTML = pageRows.length ? pageRows.map(r => {
  const overall = cerOverallStatus(r);
- const overallBadge = overall === 'danger' ? `<span class="badge badge-incomplete">หมดอายุแล้ว</span>`
+ const overallBadge = overall === 'danger' ? `<span class="badge" style="background:#dc2626;color:#fff;border:1px solid #b91c1c;font-weight:700">หมดอายุแล้ว</span>`
  : overall === 'warn' ? `<span class="badge badge-progress"> ใกล้หมดอายุ</span>`
  : overall === 'progress' ? `<span class="badge" style="background:rgba(77,232,211,0.12);color:#6C88AC;border:1px solid rgba(77,232,211,0.25)">กำลังติดตาม</span>`
  : overall === 'temp' ? `<span class="badge" style="background:rgba(245,158,11,0.12);color:#f59e0b;border:1px solid rgba(245,158,11,0.25)">ใบรับรองชั่วคราว</span>`
  : overall === 'none' ? `<span class="badge" style="background:rgba(100,116,139,0.1);color:var(--muted);border:1px solid rgba(100,116,139,0.15)">— ไม่มี</span>`
- : overall === 'partial' ? `<span class="badge" style="background:rgba(100,116,139,0.14);color:var(--muted);border:1px solid rgba(100,116,139,0.28)">ไม่ครบ</span>`
- : `<span class="badge badge-done">มีครบ</span>`;
+ : overall === 'partial' ? `<span class="badge" style="background:#fff7ed;color:#c2410c;border:1px solid #fb923c;font-weight:700">ไม่ครบ</span>`
+ : `<span class="badge" style="background:#16a34a;color:#fff;border:1px solid #15803d;font-weight:700">มีครบ</span>`;
  return `<tr>
  <td class="no-num">${cerShownId(r, idMap)}</td>
  <td class="part-name">${r.name}</td>
