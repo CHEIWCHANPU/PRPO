@@ -7755,6 +7755,7 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
  <button class="btn btn-ghost" onclick="openCerUploadModal()" style="white-space:nowrap">⬆ โหลด Excel</button>
  <button class="btn btn-ghost" onclick="exportCerExcel()" style="white-space:nowrap">⬇ Export Excel</button>
  <button class="btn btn-primary" onclick="openCerModal()" style="white-space:nowrap">+ เพิ่มบริษัท</button>
+  <button class="btn btn-ghost" id="cerClearAllBtn" onclick="openCerClearModal()" style="white-space:nowrap;display:none;color:var(--danger);border-color:var(--danger)">🗑 ลบทั้งหมด</button>
  </div>
 
  <div class="table-wrap">
@@ -9394,8 +9395,8 @@ let cerDieData = [];
 let cerDieLoaded = false;
 let cerDieLoadedTime = 0;
 const CER_MODES = {
- component: { label: 'MAKER Component', short: 'Component', lsKey: 'cer_data',     get: 'getCer',    add: 'addCer',    edit: 'editCer',    del: 'delCer',    bulk: 'bulkImportCer',    idPrefix: 'CC-' },
- die:       { label: 'MAKER DIE',       short: 'DIE',       lsKey: 'cer_die_data', get: 'getCerDie', add: 'addCerDie', edit: 'editCerDie', del: 'delCerDie', bulk: 'bulkImportCerDie', idPrefix: 'CD-' }
+ component: { label: 'MAKER Component', short: 'Component', lsKey: 'cer_data',     get: 'getCer',    add: 'addCer',    edit: 'editCer',    del: 'delCer',    bulk: 'bulkImportCer', clear: 'clearCer',    idPrefix: 'CC-' },
+ die:       { label: 'MAKER DIE',       short: 'DIE',       lsKey: 'cer_die_data', get: 'getCerDie', add: 'addCerDie', edit: 'editCerDie', del: 'delCerDie', bulk: 'bulkImportCerDie', clear: 'clearCerDie', idPrefix: 'CD-' }
 };
 function cerCfg() { return CER_MODES[cerMode] || CER_MODES.component; }
 function cerCur() { return cerMode === 'die' ? cerDieData : cerData; }
@@ -11742,6 +11743,8 @@ function cerIsAdmin() { try { return !!(window.CCIPAuth && CCIPAuth.isAdmin()); 
 function cerApplyAdminUI() {
  const card = document.getElementById('cer-stat-linetest');
  if (card) card.style.display = cerIsAdmin() ? '' : 'none';
+  const clr = document.getElementById('cerClearAllBtn');
+  if (clr) clr.style.display = cerIsAdmin() ? '' : 'none';
 }
 async function testLineAlert(el) {
  if (!cerIsAdmin()) { showToast('เฉพาะผู้ดูแลระบบเท่านั้น', 'error'); cerApplyAdminUI(); return; }
@@ -11959,6 +11962,46 @@ function openCerModal(rowIndex) {
 
 function closeCerModal() {
  document.getElementById('cerModalOverlay').classList.remove('open');
+}
+
+// ── ลบรายการ CER ทั้งหมด (เฉพาะแอดมิน) — ลบเฉพาะชุดที่เลือกอยู่ (Component หรือ DIE) ──
+function openCerClearModal() {
+  if (!cerIsAdmin()) { showToast('เฉพาะผู้ดูแลระบบเท่านั้น', 'error'); cerApplyAdminUI(); return; }
+  document.getElementById('cerClearCount').textContent = cerCur().length.toLocaleString();
+  document.getElementById('cerClearLabel').textContent = cerCfg().label;
+  document.getElementById('cerClearConfirmInput').value = '';
+  document.getElementById('cerClearConfirmBtn').disabled = true;
+  document.getElementById('cerClearModalOverlay').classList.add('open');
+}
+function closeCerClearModal() { document.getElementById('cerClearModalOverlay').classList.remove('open'); }
+async function confirmCerClearAll() {
+  if (!cerIsAdmin()) { showToast('เฉพาะผู้ดูแลระบบเท่านั้น', 'error'); closeCerClearModal(); cerApplyAdminUI(); return; }
+  const cfg = cerCfg(), mode = cerMode;
+  const btn = document.getElementById('cerClearConfirmBtn');
+  btn.disabled = true; btn.textContent = 'กำลังลบ...';
+  try {
+    let deleted = cerCur().length;
+    if (WEB_APP_URL) {
+      const res = await fetch(WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: cfg.clear }) });
+      const json = await res.json();
+      if (json.success === undefined) throw new Error('เซิร์ฟเวอร์ยังไม่รู้จัก action "' + cfg.clear + '" — ต้องเพิ่มฟังก์ชันนี้ใน Apps Script และ Router แล้ว Deploy เป็น "New version"');
+      if (!json.success) throw new Error(json.error || 'ลบข้อมูลไม่สำเร็จ');
+      if (json.deleted !== undefined) deleted = json.deleted;
+    }
+    // ล้างแคชในเครื่องด้วย ไม่งั้นหน้าเว็บจะแสดงข้อมูลเก่าจาก localStorage
+    cerSetCur([]);
+    try { localStorage.removeItem(cfg.lsKey); } catch (e) {}
+    if (mode === 'component') window.__lastCerRaw = '[]';
+    closeCerClearModal();
+    renderCerTable();
+    try { cerUpdateModeCounts(); buildNotifications(); renderDailyBriefing(); } catch (e) {}
+    showResultModal('ลบรายการทั้งหมดสำเร็จ', 'success', cfg.label + ' · ลบไป ' + deleted + ' รายการ');
+  } catch (err) {
+    showResultModal('ลบรายการไม่สำเร็จ', 'error', err.message);
+  } finally {
+    btn.textContent = 'ลบทั้งหมด';
+    btn.disabled = document.getElementById('cerClearConfirmInput').value.trim() !== 'ล้างข้อมูล';
+  }
 }
 
 // ข้อความสรุปสำหรับ popup แจ้งเตือน (ชื่อบริษัท + ชุดข้อมูล)
@@ -17187,6 +17230,25 @@ function renderLeaderboard() {
  <button class="btn btn-primary" onclick="saveCer()">บันทึก</button>
  </div>
  </div>
+</div>
+
+<!-- CER: CLEAR ALL MODAL (admin only) -->
+<div class="modal-overlay" id="cerClearModalOverlay">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header">
+      <div class="modal-title" style="color:var(--danger)">⚠️ ลบรายการ CER ทั้งหมด</div>
+      <button class="modal-close" onclick="closeCerClearModal()"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:0.85rem;color:var(--text);margin-bottom:0.8rem">จะลบ <b id="cerClearCount">0</b> รายการของ <b id="cerClearLabel"></b> ออกจาก Google Sheet แบบถาวร ย้อนกลับไม่ได้</div>
+      <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.8rem">พิมพ์คำว่า <b>ล้างข้อมูล</b> เพื่อยืนยัน:</div>
+      <input type="text" class="form-input" id="cerClearConfirmInput" placeholder="พิมพ์ ล้างข้อมูล เพื่อยืนยัน" oninput="document.getElementById('cerClearConfirmBtn').disabled = this.value.trim() !== 'ล้างข้อมูล'">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeCerClearModal()">ยกเลิก</button>
+      <button class="btn btn-primary" id="cerClearConfirmBtn" onclick="confirmCerClearAll()" disabled style="background:var(--danger);border-color:var(--danger)">ลบทั้งหมด</button>
+    </div>
+  </div>
 </div>
 
 <!-- CER: UPLOAD EXCEL MODAL -->
