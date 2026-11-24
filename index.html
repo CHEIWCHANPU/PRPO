@@ -7828,7 +7828,7 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
     <button class="qv-chip" data-f="overdue" onclick="qavSetFilter('overdue',this)">เลยกำหนด</button>
     <button class="qv-chip" data-f="unset" onclick="qavSetFilter('unset',this)">ยังไม่กำหนด</button>
     <div class="search-box" style="max-width:220px;margin-left:auto"><input type="text" id="qvSearch" placeholder="ค้นหา Supplier..." oninput="qavRender()"></div>
-    <button class="btn btn-ghost" onclick="window.print()">🖨 พิมพ์</button>
+    <button class="btn btn-ghost" onclick="qavPrint()">🖨 พิมพ์</button>
     <button class="btn btn-primary" onclick="qavOpen()">+ เพิ่ม Supplier</button>
    </div>
    <div id="qvNote"></div>
@@ -15365,6 +15365,88 @@ async function qavDelete() {
   store.years[key] = (store.years[key] || []).filter(x => String(x.id) !== String(id));
   qavPersist(); qavClose(); qavRender();
   showToast('ลบออกจากแผน QAV แล้ว', 'success');
+}
+
+/* ── พิมพ์แผน QAV: สร้างเอกสารสะอาดใน iframe (ไม่พึ่ง CSS ของแอป จึงไม่ว่าง/ไม่ติดธีมมืด) ── */
+function qavPrint() {
+  const rows = qavRows();
+  if (!rows.length) { showToast('ยังไม่มีรายการในแผนปี ' + qavYear, 'info'); return; }
+  const now = new Date(), todayIso = qavIso(now);
+  const tp = now.getFullYear() === qavYear
+    ? (now.getMonth() + (now.getDate() - 1) / new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()) / 12
+    : (qavYear < now.getFullYear() ? 1 : 0);
+  const dd = (a, b) => Math.round((new Date(b) - new Date(a)) / 864e5);
+  const fd = v => { const p = v.split('-'); return (+p[2]) + ' ' + QAV_MONTHS[+p[1] - 1] + ' ' + p[0].slice(2); };
+  const COL = { done: '#2f7a57', late: '#a97a1f', overdue: '#b3392f', soon: '#2a4f86', plan: '#555', unset: '#888' };
+  const meta = (qavLoad().meta || {})[qavMetaKey()] || {};
+  const ea = v => v > 88 ? ' class="r"' : (v < 8 ? ' class="l"' : '');
+
+  const body = rows.map((r, i) => {
+    const st = qavStatus(r), c = COL[st];
+    const pa = r.plan ? qavPos(r.plan) : null, aa = r.actual ? qavPos(r.actual) : null;
+    let txt = QAV_ST[st].t, tr = '';
+    if (st === 'overdue') {
+      const n = dd(r.plan, todayIso), end = Math.max(tp * 100, pa);
+      txt = 'เลยกำหนด ' + n + ' วัน';
+      tr += '<div class="sp od" style="left:' + pa + '%;width:' + (end - pa) + '%"></div><div class="gp" style="left:' + (pa + (end - pa) / 2) + '%">+' + n + ' วัน</div>';
+    } else if (pa !== null && aa !== null) {
+      tr += '<div class="sp" style="left:' + Math.min(pa, aa) + '%;width:' + Math.abs(aa - pa) + '%;background:' + c + '"></div>';
+      if (st === 'late') txt = 'ล่าช้า ' + dd(r.plan, r.actual) + ' วัน';
+    } else if (st === 'soon' || st === 'plan') txt = 'อีก ' + dd(todayIso, r.plan) + ' วัน';
+    if (tp > 0 && tp < 1) tr += '<div class="td" style="left:' + (tp * 100) + '%"></div>';
+    if (pa !== null) tr += '<div class="dt pl" style="left:' + pa + '%;border-color:' + (st === 'overdue' ? COL.overdue : '#2a4f86') + '"><em' + ea(pa) + '><b>PLAN</b>' + fd(r.plan) + '</em></div>';
+    if (aa !== null) tr += '<div class="dt ac" style="left:' + aa + '%;background:' + c + '"><em' + ea(aa) + '><b>ACTUAL</b>' + fd(r.actual) + '</em></div>';
+    return '<tr><td class="nm"><div class="ni"><span class="no">' + String(i + 1).padStart(2, '0') + '</span><div><b>' + isoEsc(r.name) + '</b><small style="color:' + c + '">● ' + txt +
+      (r.type === 'New Supplier' ? ' <u>NEW</u>' : '') + (r.note ? ' <i>· ' + isoEsc(r.note) + '</i>' : '') + '</small></div></div></td><td class="tk">' + tr + '</td></tr>';
+  }).join('');
+
+  const html = '<!doctype html><html lang="th"><head><meta charset="utf-8"><title>QAV Master Plan ' + qavYear + '</title>' +
+  '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap">' +
+  '<style>' +
+  '@page{size:A4 landscape;margin:10mm}*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
+  'body{margin:0;font:12px/1.35 Sarabun,"Leelawadee UI",Tahoma,sans-serif;color:#111}' +
+  '.hd{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #1f3552;padding-bottom:6px;margin-bottom:8px}' +
+  '.hd small{font:700 9px Sarabun,sans-serif;letter-spacing:.14em;color:#2a4f86;text-transform:uppercase}.hd h1{margin:2px 0 0;font-size:19px;color:#1f3552}' +
+  '.mt{display:flex;gap:14px;font-size:10px;color:#555}.mt div b{display:block;color:#111;font-size:11px;min-width:70px;border-bottom:1px solid #bbb;min-height:14px}' +
+  'table{width:100%;border-collapse:collapse;table-layout:fixed}thead{display:table-header-group}tr{break-inside:avoid}' +
+  'th.nm0{width:64mm;text-align:left;font:700 9px Sarabun,sans-serif;letter-spacing:.14em;color:#555;padding:0 6px 4px;vertical-align:bottom;border-bottom:1px solid #1f3552}' +
+  'th.tk0{padding:0;border-bottom:1px solid #1f3552}.q,.m{display:grid}.q{grid-template-columns:repeat(4,1fr)}.m{grid-template-columns:repeat(12,1fr)}' +
+  '.q div{text-align:center;font:700 9px Sarabun,sans-serif;letter-spacing:.2em;background:#dfe6ef;color:#1f3552;padding:2px 0;border-left:1px solid #fff}' +
+  '.m div{text-align:center;font:700 9px Sarabun,sans-serif;color:#444;padding:3px 0;border-left:1px solid #d4d9e0}' +
+  'td{border-bottom:1px solid #e2e5ea;padding:0;height:12mm}td.nm{border-right:1px solid #e2e5ea}.ni{display:flex;gap:8px;align-items:center;padding:0 6px;height:12mm}' +
+  '.no{font:700 10px monospace;color:#888;width:16px}td.nm b{display:block;font-size:12.5px;font-weight:600}td.nm small{font-size:10px;font-weight:600}td.nm u{text-decoration:none;color:#555;border:1px solid #aaa;border-radius:3px;padding:0 3px;font-size:8px}td.nm i{color:#666;font-weight:400}' +
+  'td.tk{position:relative;background-image:linear-gradient(to right,#e2e5ea 1px,transparent 1px);background-size:calc(100%/12) 100%}' +
+  'td.tk::before{content:"";position:absolute;left:0;right:0;top:50%;border-top:1px solid #d8dce2}' +
+  '.sp{position:absolute;top:50%;height:6px;margin-top:-3px;border-radius:6px}.sp.od{background:repeating-linear-gradient(135deg,#b3392f 0 4px,#e8b4af 4px 8px)}' +
+  '.gp{position:absolute;top:50%;margin-top:8px;transform:translateX(-50%);font:700 9px monospace;color:#b3392f;white-space:nowrap}' +
+  '.td{position:absolute;top:0;bottom:0;border-left:1px dashed #2a4f86}' +
+  '.dt{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;border:2.5px solid;background:#fff;z-index:1}' +
+  '.dt.ac{width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border:0;z-index:2;box-shadow:0 0 0 2px #fff}' +
+  '.dt em{position:absolute;left:50%;transform:translateX(-50%);font:600 9px monospace;font-style:normal;white-space:nowrap;color:#111}' +
+  '.dt em b{font:800 7.5px Sarabun,sans-serif;letter-spacing:.06em;margin-right:3px;color:#555}.dt.pl em{bottom:15px}.dt.ac em{top:13px}' +
+  '.dt em.r{left:auto;right:-6px;transform:none}.dt em.l{left:-6px;transform:none}' +
+  '.lg{margin-top:8px;font-size:10px;color:#555;display:flex;gap:16px}' +
+  '.sg{break-inside:avoid;display:flex;justify-content:space-around;margin-top:10px;font-size:10px;text-align:center}.sg div{width:60mm}.sg i{display:block;border-bottom:1px solid #666;height:22px;margin-bottom:3px}' +
+  '</style></head><body>' +
+  '<div class="hd"><div><small>QAV · Supplier Development</small><h1>QAV Development Supplier MASTER PLAN ' + qavYear + '</h1></div>' +
+  '<div class="mt"><div>เลขที่เอกสาร<b>' + isoEsc(meta.doc || '') + '</b></div><div>Rev.<b>' + isoEsc(meta.rev || '') + '</b></div><div>วันที่<b>' + isoEsc(meta.date || '') + '</b></div></div></div>' +
+  '<table><thead><tr><th class="nm0">SUPPLIER</th><th class="tk0"><div class="q"><div>Q1</div><div>Q2</div><div>Q3</div><div>Q4</div></div><div class="m">' +
+  QAV_MONTHS.map(m => '<div>' + m + '</div>').join('') + '</div></th></tr></thead><tbody>' + body + '</tbody></table>' +
+  '<div class="lg"><span>○ PLAN (วันที่วางแผน)</span><span>● ACTUAL (ทำจริง)</span><span style="color:#b3392f">▨ เลยกำหนด — ยังไม่มี Actual</span><span>┆ เส้นประ = วันที่พิมพ์ (' + fd(todayIso) + ')</span></div>' +
+  '<div class="sg"><div><i></i>ผู้จัดทำ<br>' + isoEsc(meta.by || '') + '</div><div><i></i>ผู้ตรวจสอบ</div><div><i></i>ผู้อนุมัติ<br>' + isoEsc(meta.ap || '') + '</div></div>' +
+  '</body></html>';
+
+  const fr = document.createElement('iframe');
+  fr.style.cssText = 'position:fixed;left:-10000px;top:0;width:1120px;height:800px;border:0';
+  document.body.appendChild(fr);
+  const d = fr.contentDocument; d.open(); d.write(html); d.close();
+  const go = () => {
+    try { fr.contentWindow.focus(); fr.contentWindow.print(); }
+    catch (e) { showToast('เปิดหน้าต่างพิมพ์ไม่สำเร็จ', 'error'); }
+    setTimeout(() => fr.remove(), 60000);
+  };
+  const ready = (d.fonts && d.fonts.ready) ? Promise.race([d.fonts.ready, new Promise(r => setTimeout(r, 1500))]) : new Promise(r => setTimeout(r, 500));
+  ready.then(() => setTimeout(go, 150));
 }
 
 function isoCategoryIcon() { return '🛡️'; }
