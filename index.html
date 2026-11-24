@@ -7628,12 +7628,81 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
   #page-iso .iso-empty .ic{width:56px;height:56px;margin:0 auto .9rem;border-radius:14px;display:grid;place-items:center;background:var(--surface2,rgba(0,0,0,.04));color:var(--accent)}
   #page-iso .iso-empty .ic svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
   #page-iso .iso-empty b{display:block;font-size:.98rem;color:var(--text);margin-bottom:.3rem}
+  #page-iso .iso-tabs{display:inline-flex;gap:4px;padding:4px;background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:1rem}
+  #page-iso .iso-tab{border:0;background:transparent;color:var(--muted);font:600 .82rem var(--font);padding:.5rem 1.1rem;border-radius:9px;cursor:pointer;display:flex;align-items:center;gap:.45rem;transition:.2s}
+  #page-iso .iso-tab svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  #page-iso .iso-tab:hover{color:var(--text)}
+  #page-iso .iso-tab.on{color:#fff;background:linear-gradient(135deg,var(--accent),#2c4263);box-shadow:0 0 18px var(--glow-accent,rgba(62,90,130,.25))}
+  #page-iso .qv-hero{position:relative;border:1px solid var(--border);border-radius:16px;padding:1.1rem 1.3rem;margin-bottom:1rem;overflow:hidden;background:radial-gradient(900px 220px at 85% -40%,rgba(62,90,130,.35),transparent 60%),linear-gradient(180deg,rgba(255,255,255,.03),transparent),var(--surface);display:flex;align-items:center;gap:1.4rem;flex-wrap:wrap}
+  #page-iso .qv-hero::after{content:"";position:absolute;inset:0;background-image:linear-gradient(var(--border2) 1px,transparent 1px),linear-gradient(90deg,var(--border2) 1px,transparent 1px);background-size:28px 28px;mask-image:linear-gradient(90deg,transparent 40%,#000);-webkit-mask-image:linear-gradient(90deg,transparent 40%,#000);opacity:.7;pointer-events:none}
+  #page-iso .qv-ring{--p:0;position:relative;width:92px;height:92px;border-radius:50%;flex:none;background:conic-gradient(var(--success) calc(var(--p)*1%),rgba(255,255,255,.07) 0);display:grid;place-items:center;filter:drop-shadow(0 0 10px rgba(76,130,103,.35))}
+  #page-iso .qv-ring::before{content:"";position:absolute;inset:8px;border-radius:50%;background:var(--surface)}
+  #page-iso .qv-ring b{position:relative;font:700 1.3rem var(--font-display);color:var(--text)}
+  #page-iso .qv-ring small{position:relative;display:block;font:600 .55rem var(--mono);letter-spacing:.12em;color:var(--muted);text-align:center;margin-top:-.15rem}
+  #page-iso .qv-title{z-index:1;min-width:220px}
+  #page-iso .qv-title .eb{font:700 .64rem var(--mono);letter-spacing:.16em;color:var(--accent);text-transform:uppercase}
+  #page-iso .qv-title h3{margin:.25rem 0 .15rem;font:700 1.35rem var(--font-display);color:var(--text)}
+  #page-iso .qv-title p{margin:0;font-size:.8rem;color:var(--muted)}
+  #page-iso .qv-kpis{z-index:1;display:grid;grid-template-columns:repeat(4,minmax(96px,1fr));gap:.7rem;flex:1;min-width:320px}
+  #page-iso .qv-kpi{border:1px solid var(--border);border-radius:12px;padding:.65rem .8rem;background:rgba(0,0,0,.18);backdrop-filter:blur(6px)}
+  #page-iso .qv-kpi span{display:block;font:600 .62rem var(--mono);letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+  #page-iso .qv-kpi b{font:700 1.5rem var(--font-display);color:var(--kc,var(--text))}
+  #page-iso .qv-bar{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-bottom:.9rem}
+  #page-iso .qv-chip{border:1px solid var(--border);background:var(--surface);color:var(--muted);font:600 .74rem var(--font);padding:.38rem .85rem;border-radius:99px;cursor:pointer;transition:.2s}
+  #page-iso .qv-chip:hover{color:var(--text);border-color:var(--accent)}
+  #page-iso .qv-chip.on{color:#fff;border-color:var(--accent);background:rgba(62,90,130,.35)}
+  #page-iso .qv-year{display:inline-flex;align-items:center;gap:.2rem;border:1px solid var(--border);border-radius:99px;background:var(--surface);padding:.15rem}
+  #page-iso .qv-year button{border:0;background:transparent;color:var(--muted);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:1rem}
+  #page-iso .qv-year button:hover{color:var(--text);background:var(--surface2)}
+  #page-iso .qv-year b{font:700 .85rem var(--mono);color:var(--text);padding:0 .4rem}
+  #page-iso .qv-note{font-size:.76rem;color:var(--warn);background:rgba(176,138,70,.1);border:1px solid rgba(176,138,70,.28);border-radius:10px;padding:.5rem .8rem;margin-bottom:.8rem;display:flex;justify-content:space-between;gap:1rem;align-items:center}
+  #page-iso .qv-note button{background:none;border:0;color:var(--warn);cursor:pointer;font-size:1rem}
+  #page-iso .qv-scroll{overflow-x:auto;border:1px solid var(--border);border-radius:16px;background:var(--surface)}
+  #page-iso .qv-inner{--qn:250px;position:relative;min-width:980px;padding-right:26px}
+  #page-iso .qv-head,#page-iso .qv-row{display:grid;grid-template-columns:var(--qn) 1fr}
+  #page-iso .qv-head{position:sticky;top:0;z-index:3;background:var(--surface2);border-bottom:1px solid var(--border)}
+  #page-iso .qv-head .h0{padding:.7rem 1rem;font:700 .64rem var(--mono);letter-spacing:.14em;color:var(--muted)}
+  #page-iso .qv-months{display:grid;grid-template-columns:repeat(12,1fr)}
+  #page-iso .qv-months div{padding:.7rem 0;text-align:center;font:700 .68rem var(--mono);letter-spacing:.08em;color:var(--muted);border-left:1px solid var(--border2)}
+  #page-iso .qv-months div.cur{color:var(--accent);background:rgba(62,90,130,.12)}
+  #page-iso .qv-row{cursor:pointer;border-bottom:1px solid var(--border2);transition:background .2s}
+  #page-iso .qv-row:last-child{border-bottom:0}
+  #page-iso .qv-row:hover{background:rgba(62,90,130,.09)}
+  #page-iso .qv-name{display:flex;gap:.7rem;align-items:center;padding:.7rem 1rem;min-width:0}
+  #page-iso .qv-no{font:700 .7rem var(--mono);color:var(--muted);width:22px;flex:none}
+  #page-iso .qv-name b{display:block;font-size:.84rem;color:var(--text);line-height:1.25}
+  #page-iso .qv-name small{display:flex;gap:.4rem;align-items:center;margin-top:.25rem;font-size:.68rem;color:var(--muted);flex-wrap:wrap}
+  #page-iso .qv-st{font:700 .6rem var(--font);padding:.12rem .5rem;border-radius:99px;color:var(--sc);border:1px solid var(--sc);background:rgba(255,255,255,.03)}
+  #page-iso .qv-track{position:relative;height:74px;background-image:linear-gradient(to right,var(--border2) 1px,transparent 1px);background-size:calc(100%/12) 100%}
+  #page-iso .qv-link{position:absolute;top:50%;height:3px;margin-top:-1.5px;border-radius:3px;background:linear-gradient(90deg,var(--lc),var(--lc2));box-shadow:0 0 10px var(--lc)}
+  #page-iso .qv-mk{position:absolute;top:50%;width:0;height:0}
+  #page-iso .qv-mk i{position:absolute;left:-7px;top:-7px;width:14px;height:14px;transform:rotate(45deg);border-radius:3px;border:2px solid var(--mc)}
+  #page-iso .qv-mk.act i{background:var(--mc);box-shadow:0 0 14px var(--mc)}
+  #page-iso .qv-mk.plan i{background:var(--surface)}
+  #page-iso .qv-mk.pulse i{animation:qvp 1.8s infinite}
+  @keyframes qvp{0%{box-shadow:0 0 0 0 rgba(179,86,76,.6)}100%{box-shadow:0 0 0 12px rgba(179,86,76,0)}}
+  #page-iso .qv-mk span{position:absolute;left:0;transform:translateX(-50%);white-space:nowrap;font:600 .62rem var(--mono);color:var(--text);padding:.1rem .4rem;border-radius:5px;background:rgba(62,90,130,.28);border:1px solid rgba(62,90,130,.5)}
+  #page-iso .qv-mk.plan span{top:-31px}
+  #page-iso .qv-mk.act span{top:13px;background:rgba(76,130,103,.22);border-color:rgba(76,130,103,.55)}
+  #page-iso .qv-mk.act.late span{background:rgba(176,138,70,.2);border-color:rgba(176,138,70,.55)}
+  #page-iso .qv-today{position:absolute;top:0;bottom:0;left:calc(var(--qn) + (100% - var(--qn) - 26px)*var(--tp));width:0;border-left:1px dashed var(--accent);z-index:2;pointer-events:none}
+  #page-iso .qv-today em{position:absolute;top:2px;left:4px;font:700 .56rem var(--mono);letter-spacing:.1em;color:#fff;background:var(--accent);padding:.1rem .35rem;border-radius:4px;font-style:normal}
+  #page-iso .qv-legend{display:flex;gap:1.2rem;flex-wrap:wrap;padding:.7rem 1rem;border-top:1px solid var(--border);font-size:.72rem;color:var(--muted);align-items:center}
+  #page-iso .qv-legend i{display:inline-block;width:11px;height:11px;transform:rotate(45deg);border:2px solid var(--accent);border-radius:2px;vertical-align:-1px;margin-right:.4rem}
+  #page-iso .qv-legend i.f{background:var(--success);border-color:var(--success)}
+  #page-iso .qv-empty{padding:2.6rem 1rem;text-align:center;color:var(--muted);font-size:.85rem}
+  @media(max-width:720px){#page-iso .qv-kpis{grid-template-columns:repeat(2,1fr)}}
   </style>
   <div class="iso-hd"><div>
    <div class="iso-eb">Quality System · ISO Documents</div>
    <h2 data-i18n="nav_iso">เอกสาร ISO</h2>
    <div class="iso-sub" data-i18n="iso_sub">เอกสารระบบคุณภาพ ISO ของแผนกจัดซื้อ</div>
   </div></div>
+  <div class="iso-tabs" role="tablist">
+   <button class="iso-tab on" id="isoTab-docs" onclick="isoSetTab('docs')"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>เอกสารทั้งหมด</button>
+   <button class="iso-tab" id="isoTab-qav" onclick="isoSetTab('qav')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 14h4M13 14h3"/></svg>PLAN QAV</button>
+  </div>
+  <div id="isoPaneDocs">
     <div class="toolbar" style="margin-bottom:0.9rem;flex-wrap:wrap;gap:0.6rem">
    <div class="search-box" style="max-width:300px">
     <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
@@ -7643,6 +7712,33 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
    <button class="btn btn-primary" onclick="openIsoModal()">+ อัพโหลดเอกสาร ISO (PDF)</button>
   </div>
   <div id="isoGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:1rem"></div>
+  </div>
+  <div id="isoPaneQav" style="display:none">
+   <div class="qv-hero">
+    <div class="qv-ring" id="qvRing"><div><b id="qvPct">0%</b><small>DONE</small></div></div>
+    <div class="qv-title"><div class="eb">QAV · Supplier Development</div><h3>QAV MASTER PLAN <span id="qvYearTxt"></span></h3><p>แผนประเมินและพัฒนา Supplier ประจำปี — Plan เทียบ Actual</p></div>
+    <div class="qv-kpis">
+     <div class="qv-kpi"><span>Suppliers</span><b id="qvK-total">0</b></div>
+     <div class="qv-kpi" style="--kc:var(--success)"><span>Done</span><b id="qvK-done">0</b></div>
+     <div class="qv-kpi" style="--kc:var(--accent)"><span>Upcoming</span><b id="qvK-up">0</b></div>
+     <div class="qv-kpi" style="--kc:var(--danger)"><span>Overdue</span><b id="qvK-over">0</b></div>
+    </div>
+   </div>
+   <div class="qv-bar">
+    <div class="qv-year"><button onclick="qavYearStep(-1)">‹</button><b id="qvYear">2026</b><button onclick="qavYearStep(1)">›</button></div>
+    <button class="qv-chip on" data-f="all" onclick="qavSetFilter('all',this)">ทั้งหมด</button>
+    <button class="qv-chip" data-f="done" onclick="qavSetFilter('done',this)">เสร็จแล้ว</button>
+    <button class="qv-chip" data-f="plan" onclick="qavSetFilter('plan',this)">ตามแผน</button>
+    <button class="qv-chip" data-f="overdue" onclick="qavSetFilter('overdue',this)">เลยกำหนด</button>
+    <button class="qv-chip" data-f="unset" onclick="qavSetFilter('unset',this)">ยังไม่กำหนด</button>
+    <div class="search-box" style="max-width:220px;margin-left:auto"><input type="text" id="qvSearch" placeholder="ค้นหา Supplier..." oninput="qavRender()"></div>
+    <button class="btn btn-primary" onclick="qavOpen()">+ เพิ่ม Supplier</button>
+   </div>
+   <div id="qvNote"></div>
+   <div class="qv-scroll"><div class="qv-inner" id="qvInner"></div>
+    <div class="qv-legend"><span><i></i>PLAN (วันที่วางแผน)</span><span><i class="f"></i>ACTUAL (ทำจริง)</span><span style="color:var(--danger)">● เลยกำหนด — ยังไม่มี Actual</span><span>คลิกแถวเพื่อแก้ไขวันที่ Plan / Actual</span></div>
+   </div>
+  </div>
  </div>
 
  <div class="page" id="page-cer" data-cer-mode="component">
@@ -14958,6 +15054,182 @@ async function openIsoFolder(btn) {
  } finally { if (btn) btn.disabled = false; }
 }
 
+/* ══════════════════════════════════════════════════
+   PLAN QAV — แผนประเมิน/พัฒนา Supplier (Plan vs Actual) หมวดย่อยของเอกสาร ISO
+   เก็บในเครื่อง (localStorage: qav_plan_v1) — ยังไม่ผูก Google Sheet
+   ══════════════════════════════════════════════════ */
+const QAV_KEY = 'qav_plan_v1';
+const QAV_MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const QAV_SEED_2026 = [
+  ['CNN PART','Existing','2026-05-21',''],
+  ['ทริปเปิ้ลพาวเวอร์พาร์ท','Existing','2026-05-30',''],
+  ['เอนวิทย์การช่าง (ห.จ.ก.)','Existing','2026-06-21',''],
+  ['ดิเจริญยนต์','Existing','2026-07-05',''],
+  ['เจริมอวัลดิ์เมพาร์ท','Existing','2026-07-14',''],
+  ['ทรูอุสเอ็นจีเนียริ่ง จำกัด','New Supplier','2026-08-06','2026-08-06'],
+  ['จี.วี.เอส อินดัสทรี จำกัด','Existing','2026-10-31',''],
+  ['แซน วายดีท (ห้างหุ้นส่วนจำกัด)','Existing','2026-11-07',''],
+  ['39 พาร์ท แอนด์ เซอร์วิส จำกัด','Existing','',''],
+  ['โอเรียนเต็ล ไวร์เทค','Existing','2026-11-14','']
+];
+let qavYear = new Date().getFullYear();
+let qavFilter = 'all';
+let qavStore = null;
+
+function qavLoad() {
+  if (qavStore) return qavStore;
+  try { qavStore = JSON.parse(localStorage.getItem(QAV_KEY) || 'null'); } catch (e) { qavStore = null; }
+  if (!qavStore || typeof qavStore !== 'object' || !qavStore.years) {
+    qavStore = { sample: true, years: { '2026': QAV_SEED_2026.map((s, i) => ({ id: 'q' + (i + 1), name: s[0], type: s[1], plan: s[2], actual: s[3], note: '' })) } };
+    qavPersist();
+  }
+  return qavStore;
+}
+function qavPersist() { try { localStorage.setItem(QAV_KEY, JSON.stringify(qavStore)); } catch (e) {} }
+function qavRows() { return qavLoad().years[String(qavYear)] || []; }
+
+function qavIso(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function qavFmt(s) { if (!s) return ''; const p = s.split('-'); return (+p[2]) + '/' + (+p[1]) + '/' + p[0].slice(2); }
+function qavPos(s) {
+  const p = s.split('-').map(Number);
+  if (p[0] !== qavYear) return p[0] < qavYear ? 0 : 100;
+  const dim = new Date(p[0], p[1], 0).getDate();
+  return ((p[1] - 1) + (p[2] - 1) / dim) / 12 * 100;
+}
+function qavStatus(r) {
+  const today = qavIso(new Date());
+  if (r.actual) return (r.plan && r.actual > r.plan) ? 'late' : 'done';
+  if (!r.plan) return 'unset';
+  if (r.plan < today) return 'overdue';
+  const diff = (new Date(r.plan) - new Date(today)) / 864e5;
+  return diff <= 30 ? 'soon' : 'plan';
+}
+const QAV_ST = {
+  done:   { t: 'เสร็จตามแผน',  c: 'var(--success)' },
+  late:   { t: 'เสร็จล่าช้า',   c: 'var(--warn)' },
+  overdue:{ t: 'เลยกำหนด',     c: 'var(--danger)' },
+  soon:   { t: 'ใกล้ถึงกำหนด', c: 'var(--accent)' },
+  plan:   { t: 'ตามแผน',       c: 'var(--muted)' },
+  unset:  { t: 'ยังไม่กำหนด',  c: 'var(--muted)' }
+};
+
+function isoSetTab(tab) {
+  const qav = tab === 'qav';
+  document.getElementById('isoPaneDocs').style.display = qav ? 'none' : '';
+  document.getElementById('isoPaneQav').style.display = qav ? '' : 'none';
+  document.getElementById('isoTab-docs').classList.toggle('on', !qav);
+  document.getElementById('isoTab-qav').classList.toggle('on', qav);
+  if (qav) qavRender();
+}
+function qavSetFilter(f, btn) {
+  qavFilter = f;
+  document.querySelectorAll('#page-iso .qv-chip').forEach(b => b.classList.toggle('on', b === btn));
+  qavRender();
+}
+function qavYearStep(d) { qavYear += d; qavRender(); }
+
+function qavRender() {
+  const inner = document.getElementById('qvInner');
+  if (!inner) return;
+  const store = qavLoad();
+  const all = qavRows();
+  const withSt = all.map(r => ({ r, st: qavStatus(r) }));
+  const done = withSt.filter(x => x.st === 'done' || x.st === 'late').length;
+  const over = withSt.filter(x => x.st === 'overdue').length;
+  const up = withSt.filter(x => x.st === 'soon' || x.st === 'plan').length;
+  const total = all.length;
+  const pct = total ? Math.round(done / total * 100) : 0;
+  document.getElementById('qvYear').textContent = qavYear;
+  document.getElementById('qvYearTxt').textContent = qavYear;
+  document.getElementById('qvK-total').textContent = total;
+  document.getElementById('qvK-done').textContent = done;
+  document.getElementById('qvK-up').textContent = up;
+  document.getElementById('qvK-over').textContent = over;
+  document.getElementById('qvPct').textContent = pct + '%';
+  document.getElementById('qvRing').style.setProperty('--p', pct);
+  document.getElementById('qvNote').innerHTML = (store.sample && qavYear === 2026)
+    ? '<div class="qv-note"><span>⚠ ข้อมูลตั้งต้นอ่านจากรูปแผนเดิม — กรุณาตรวจชื่อ Supplier และวันที่ Plan / Actual ก่อนใช้งานจริง</span><button onclick="qavDismissSample()" title="ปิด">✕</button></div>' : '';
+
+  const q = (document.getElementById('qvSearch')?.value || '').trim().toLowerCase();
+  const list = withSt.filter(x => {
+    if (q && !(x.r.name || '').toLowerCase().includes(q)) return false;
+    if (qavFilter === 'done') return x.st === 'done' || x.st === 'late';
+    if (qavFilter === 'plan') return x.st === 'plan' || x.st === 'soon';
+    if (qavFilter === 'overdue') return x.st === 'overdue';
+    if (qavFilter === 'unset') return x.st === 'unset';
+    return true;
+  });
+
+  const now = new Date();
+  const curM = now.getFullYear() === qavYear ? now.getMonth() : -1;
+  let html = '<div class="qv-head"><div class="h0">SUPPLIER</div><div class="qv-months">' +
+    QAV_MONTHS.map((m, i) => '<div' + (i === curM ? ' class="cur"' : '') + '>' + m + '</div>').join('') + '</div></div>';
+  if (curM >= 0) {
+    const tp = (now.getMonth() + (now.getDate() - 1) / new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()) / 12;
+    html += '<div class="qv-today" style="--tp:' + tp.toFixed(4) + '"><em>วันนี้</em></div>';
+  }
+  if (!list.length) {
+    html += '<div class="qv-empty">' + (total ? 'ไม่พบรายการที่ตรงกับตัวกรอง' : 'ยังไม่มี Supplier ในแผนปี ' + qavYear + ' — กด "+ เพิ่ม Supplier"') + '</div>';
+  } else {
+    html += list.map((x, i) => {
+      const r = x.r, st = x.st, meta = QAV_ST[st];
+      const idq = isoEsc(String(r.id));
+      let track = '';
+      if (r.plan && r.actual) {
+        const a = qavPos(r.plan), b = qavPos(r.actual);
+        const lc = st === 'late' ? 'var(--warn)' : 'var(--success)';
+        track += '<div class="qv-link" style="left:' + Math.min(a, b) + '%;width:' + Math.abs(b - a) + '%;--lc:' + lc + ';--lc2:' + lc + '"></div>';
+      }
+      if (r.plan) track += '<div class="qv-mk plan' + (st === 'overdue' ? ' pulse' : '') + '" style="left:' + qavPos(r.plan) + '%;--mc:' + (st === 'overdue' ? 'var(--danger)' : 'var(--accent)') + '"><i></i><span>' + qavFmt(r.plan) + '</span></div>';
+      if (r.actual) track += '<div class="qv-mk act ' + (st === 'late' ? 'late' : '') + '" style="left:' + qavPos(r.actual) + '%;--mc:' + (st === 'late' ? 'var(--warn)' : 'var(--success)') + '"><i></i><span>' + qavFmt(r.actual) + '</span></div>';
+      return '<div class="qv-row" onclick="qavOpen(\'' + idq + '\')">' +
+        '<div class="qv-name"><span class="qv-no">' + String(i + 1).padStart(2, '0') + '</span><div><b>' + isoEsc(r.name) + '</b>' +
+        '<small><span class="qv-st" style="--sc:' + meta.c + '">' + meta.t + '</span>' + (r.type === 'New Supplier' ? '<span>NEW</span>' : '') + (r.note ? '<span>· ' + isoEsc(r.note) + '</span>' : '') + '</small></div></div>' +
+        '<div class="qv-track">' + track + '</div></div>';
+    }).join('');
+  }
+  inner.innerHTML = html;
+}
+function qavDismissSample() { qavLoad().sample = false; qavPersist(); qavRender(); }
+
+function qavOpen(id) {
+  const r = id ? qavRows().find(x => String(x.id) === String(id)) : null;
+  document.getElementById('qav-id').value = r ? r.id : '';
+  document.getElementById('qav-name').value = r ? r.name : '';
+  document.getElementById('qav-type').value = r ? (r.type || 'Existing') : 'Existing';
+  document.getElementById('qav-plan').value = r ? (r.plan || '') : '';
+  document.getElementById('qav-actual').value = r ? (r.actual || '') : '';
+  document.getElementById('qav-note').value = r ? (r.note || '') : '';
+  document.getElementById('qavModalTitle').textContent = r ? 'แก้ไขแผน QAV' : 'เพิ่ม Supplier ในแผน QAV';
+  document.getElementById('qavDelBtn').style.display = r ? '' : 'none';
+  document.getElementById('qavModalOverlay').classList.add('open');
+}
+function qavClose() { document.getElementById('qavModalOverlay').classList.remove('open'); }
+function qavSave() {
+  const name = document.getElementById('qav-name').value.trim();
+  if (!name) { showToast('กรุณากรอกชื่อ Supplier', 'error'); return; }
+  const rec = {
+    id: document.getElementById('qav-id').value || ('q' + Date.now().toString(36)),
+    name, type: document.getElementById('qav-type').value,
+    plan: document.getElementById('qav-plan').value,
+    actual: document.getElementById('qav-actual').value,
+    note: document.getElementById('qav-note').value.trim()
+  };
+  const store = qavLoad(), key = String(qavYear);
+  const rows = store.years[key] || (store.years[key] = []);
+  const i = rows.findIndex(x => String(x.id) === String(rec.id));
+  if (i >= 0) rows[i] = rec; else rows.push(rec);
+  qavPersist(); qavClose(); qavRender();
+  showToast('บันทึกแผน QAV แล้ว', 'success');
+}
+function qavDelete() {
+  const id = document.getElementById('qav-id').value;
+  if (!id || !confirm('ลบ Supplier นี้ออกจากแผน QAV?')) return;
+  const store = qavLoad(), key = String(qavYear);
+  store.years[key] = (store.years[key] || []).filter(x => String(x.id) !== String(id));
+  qavPersist(); qavClose(); qavRender();
+}
+
 function isoCategoryIcon() { return '🛡️'; }
 
 function renderIsoDocs() {
@@ -17141,6 +17413,31 @@ function renderLeaderboard() {
   <div class="modal-footer">
    <button class="btn btn-ghost" onclick="closeIsoModal()">ยกเลิก</button>
    <button class="btn btn-primary" onclick="saveIsoDoc()">บันทึก</button>
+  </div>
+ </div>
+</div>
+
+<!-- PLAN QAV: ADD/EDIT MODAL -->
+<div class="modal-overlay" id="qavModalOverlay">
+ <div class="modal" style="max-width:460px">
+  <div class="modal-header">
+   <div class="modal-title" id="qavModalTitle">เพิ่ม Supplier ในแผน QAV</div>
+   <button class="modal-close" onclick="qavClose()">✕</button>
+  </div>
+  <div class="modal-body">
+   <input type="hidden" id="qav-id">
+   <div class="form-grid">
+    <div class="form-group full"><label class="form-label">ชื่อบริษัท / ห้างหุ้นส่วน *</label><input type="text" class="form-input" id="qav-name"></div>
+    <div class="form-group full"><label class="form-label">ประเภท</label><select class="form-input" id="qav-type"><option value="Existing">Supplier เดิม</option><option value="New Supplier">New Supplier</option></select></div>
+    <div class="form-group"><label class="form-label">▽ PLAN (วันที่วางแผน)</label><input type="date" class="form-input" id="qav-plan"></div>
+    <div class="form-group"><label class="form-label">▼ ACTUAL (วันที่ทำจริง)</label><input type="date" class="form-input" id="qav-actual"></div>
+    <div class="form-group full"><label class="form-label">หมายเหตุ</label><input type="text" class="form-input" id="qav-note" placeholder="เช่น ผลคะแนน / ผู้ประเมิน / ข้อบกพร่องที่พบ"></div>
+   </div>
+  </div>
+  <div class="modal-footer">
+   <button class="btn btn-ghost" id="qavDelBtn" onclick="qavDelete()" style="margin-right:auto;color:var(--danger)">ลบ</button>
+   <button class="btn btn-ghost" onclick="qavClose()">ยกเลิก</button>
+   <button class="btn btn-primary" onclick="qavSave()">บันทึก</button>
   </div>
  </div>
 </div>
