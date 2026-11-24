@@ -7731,6 +7731,29 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
 
   #page-iso .qv-sign{display:none}
 
+  /* ── QAV timeline v2: เรียบ อ่านง่าย เห็นความล่าช้าเป็นแท่ง ── */
+  #page-iso .qv-wk{display:none}
+  #page-iso .qv-row{align-items:stretch}
+  #page-iso .qv-name{padding:.55rem 1rem}
+  #page-iso .qv-name b{font-size:.88rem;font-weight:600}
+  #page-iso .qv-name small{margin-top:.2rem;gap:.5rem}
+  #page-iso .qv-st{display:inline-flex;align-items:center;gap:.35rem;border:0;background:none;padding:0;font:600 .7rem var(--font);color:var(--sc)}
+  #page-iso .qv-st i{width:6px;height:6px;border-radius:50%;background:var(--sc)}
+  #page-iso .qv-track{height:68px;background-image:linear-gradient(to right,var(--border2) 1px,transparent 1px);background-size:calc(100%/12) 100%}
+  #page-iso .qv-track::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--border2)}
+  #page-iso .qv-past{position:absolute;top:0;bottom:0;left:var(--qn);width:calc((100% - var(--qn) - 26px)*var(--tp));background:rgba(127,127,127,.06);pointer-events:none}
+  #page-iso .qv-span{position:absolute;top:50%;height:6px;margin-top:-3px;border-radius:6px;background:var(--lc);opacity:.85}
+  #page-iso .qv-span.od{background:repeating-linear-gradient(135deg,rgba(179,86,76,.75) 0 5px,rgba(179,86,76,.28) 5px 10px);opacity:1}
+  #page-iso .qv-gap{position:absolute;top:50%;margin-top:10px;transform:translateX(-50%);font:700 .64rem var(--mono);color:var(--danger);white-space:nowrap}
+  #page-iso .qv-dot{position:absolute;top:50%;left:var(--x);width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;border:2.5px solid var(--mc);background:var(--surface);z-index:1}
+  #page-iso .qv-dot.act{background:var(--mc)}
+  #page-iso .qv-dot.pulse{animation:qvp 1.8s infinite}
+  #page-iso .qv-dot em{position:absolute;left:50%;transform:translateX(-50%);font:600 .64rem var(--mono);font-style:normal;color:var(--muted);white-space:nowrap}
+  #page-iso .qv-dot.plan em{bottom:15px}
+  #page-iso .qv-dot.act em{top:15px;color:var(--text)}
+  #page-iso .qv-legend i{transform:none;border-radius:50%;width:10px;height:10px}
+  #page-iso .qv-legend i.od{border:0;width:22px;height:6px;border-radius:6px;background:repeating-linear-gradient(135deg,rgba(179,86,76,.75) 0 5px,rgba(179,86,76,.28) 5px 10px);vertical-align:1px}
+
   @media print{
 
    body *{visibility:hidden}
@@ -7807,7 +7830,7 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
    </div>
    <div id="qvNote"></div>
    <div class="qv-scroll"><div class="qv-inner" id="qvInner"></div>
-    <div class="qv-legend"><span><i></i>PLAN (วันที่วางแผน)</span><span><i class="f"></i>ACTUAL (ทำจริง)</span><span style="color:var(--danger)">● เลยกำหนด — ยังไม่มี Actual</span><span>คลิกแถวเพื่อแก้ไขวันที่ Plan / Actual</span></div>
+    <div class="qv-legend"><span><i></i>PLAN (วันที่วางแผน)</span><span><i class="f"></i>ACTUAL (ทำจริง)</span><span style="color:var(--danger)"><i class="od"></i>เลยกำหนด — ยังไม่มี Actual</span><span>คลิกแถวเพื่อแก้ไขวันที่ Plan / Actual</span></div>
     <div class="qv-sign"><div>ผู้จัดทำ<br><i></i><small id="qvs-by"></small></div><div>ผู้ตรวจสอบ<br><i></i></div><div>ผู้อนุมัติ<br><i></i><small id="qvs-ap"></small></div></div>
    </div>
   </div>
@@ -15235,29 +15258,42 @@ function qavRender() {
 
   const now = new Date();
   const curM = now.getFullYear() === qavYear ? now.getMonth() : -1;
+  const tp = now.getFullYear() === qavYear
+    ? (now.getMonth() + (now.getDate() - 1) / new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()) / 12
+    : (qavYear < now.getFullYear() ? 1 : 0);
+  const todayIso = qavIso(now);
+  const dd = (a, b) => Math.round((new Date(b) - new Date(a)) / 864e5);
+  const fd = s => { const p = s.split('-'); return (+p[2]) + ' ' + QAV_MONTHS[+p[1] - 1] + ' ' + p[0].slice(2); };
+
   let html = '<div class="qv-head"><div class="h0">SUPPLIER</div><div class="qv-hr"><div class="qv-q"><div>Q1</div><div>Q2</div><div>Q3</div><div>Q4</div></div><div class="qv-months">' +
-    QAV_MONTHS.map((m, i) => '<div' + (i === curM ? ' class="cur"' : '') + '>' + m + '</div>').join('') + '</div><div class="qv-wk">' + Array.from({length:48}, (_, i) => '<span>w' + (i % 4 + 1) + '</span>').join('') + '</div></div></div>';
-  if (curM >= 0) {
-    const tp = (now.getMonth() + (now.getDate() - 1) / new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()) / 12;
-    html += '<div class="qv-today" style="--tp:' + tp.toFixed(4) + '"><em>วันนี้</em></div>';
-  }
+    QAV_MONTHS.map((m, i) => '<div' + (i === curM ? ' class="cur"' : '') + '>' + m + '</div>').join('') + '</div></div></div>';
+  if (tp > 0) html += '<div class="qv-past" style="--tp:' + tp.toFixed(4) + '"></div>';
+  if (curM >= 0) html += '<div class="qv-today" style="--tp:' + tp.toFixed(4) + '"><em>วันนี้</em></div>';
   if (!list.length) {
     html += '<div class="qv-empty">' + (total ? 'ไม่พบรายการที่ตรงกับตัวกรอง' : 'ยังไม่มี Supplier ในแผนปี ' + qavYear + ' — กด "+ เพิ่ม Supplier"') + '</div>';
   } else {
     html += list.map((x, i) => {
       const r = x.r, st = x.st, meta = QAV_ST[st];
       const idq = isoEsc(String(r.id));
-      let track = '';
-      if (r.plan && r.actual) {
-        const a = qavPos(r.plan), b = qavPos(r.actual);
-        const lc = st === 'late' ? 'var(--warn)' : 'var(--success)';
-        track += '<div class="qv-link" style="left:' + Math.min(a, b) + '%;width:' + Math.abs(b - a) + '%;--lc:' + lc + ';--lc2:' + lc + '"></div>';
+      const pa = r.plan ? qavPos(r.plan) : null, aa = r.actual ? qavPos(r.actual) : null;
+      let txt = meta.t, track = '';
+      if (st === 'overdue') {
+        const n = dd(r.plan, todayIso), end = Math.max(tp * 100, pa);
+        txt = 'เลยกำหนด ' + n + ' วัน';
+        track += '<div class="qv-span od" style="left:' + pa + '%;width:' + (end - pa) + '%"></div>' +
+                 '<div class="qv-gap" style="left:' + (pa + (end - pa) / 2) + '%">+' + n + ' วัน</div>';
+      } else if (pa !== null && aa !== null) {
+        const c = st === 'late' ? 'var(--warn)' : 'var(--success)';
+        track += '<div class="qv-span" style="left:' + Math.min(pa, aa) + '%;width:' + Math.abs(aa - pa) + '%;--lc:' + c + '"></div>';
+        if (st === 'late') txt = 'ล่าช้า ' + dd(r.plan, r.actual) + ' วัน';
+      } else if (st === 'soon' || st === 'plan') {
+        txt = 'อีก ' + dd(todayIso, r.plan) + ' วัน';
       }
-      if (r.plan) track += '<div class="qv-mk plan' + (st === 'overdue' ? ' pulse' : '') + '" style="left:' + qavPos(r.plan) + '%;--mc:' + (st === 'overdue' ? 'var(--danger)' : 'var(--accent)') + '"><i></i><span>' + qavFmt(r.plan) + '</span></div>';
-      if (r.actual) track += '<div class="qv-mk act ' + (st === 'late' ? 'late' : '') + '" style="left:' + qavPos(r.actual) + '%;--mc:' + (st === 'late' ? 'var(--warn)' : 'var(--success)') + '"><i></i><span>' + qavFmt(r.actual) + '</span></div>';
+      if (pa !== null) track += '<div class="qv-dot plan' + (st === 'overdue' ? ' pulse' : '') + '" style="--x:' + pa + '%;--mc:' + (st === 'overdue' ? 'var(--danger)' : 'var(--accent)') + '"><em>' + fd(r.plan) + '</em></div>';
+      if (aa !== null) track += '<div class="qv-dot act" style="--x:' + aa + '%;--mc:' + (st === 'late' ? 'var(--warn)' : 'var(--success)') + '"><em>' + fd(r.actual) + '</em></div>';
       return '<div class="qv-row" onclick="qavOpen(\'' + idq + '\')">' +
         '<div class="qv-name"><span class="qv-no">' + String(i + 1).padStart(2, '0') + '</span><div><b>' + isoEsc(r.name) + '</b>' +
-        '<small><span class="qv-st" style="--sc:' + meta.c + '">' + meta.t + '</span>' + (r.type === 'New Supplier' ? '<span>NEW</span>' : '') + (r.note ? '<span>· ' + isoEsc(r.note) + '</span>' : '') + '</small></div></div>' +
+        '<small><span class="qv-st" style="--sc:' + meta.c + '"><i></i>' + txt + '</span>' + (r.type === 'New Supplier' ? '<span>NEW</span>' : '') + (r.note ? '<span>· ' + isoEsc(r.note) + '</span>' : '') + '</small></div></div>' +
         '<div class="qv-track">' + track + '</div></div>';
     }).join('');
   }
