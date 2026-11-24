@@ -7691,7 +7691,69 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
   #page-iso .qv-legend i{display:inline-block;width:11px;height:11px;transform:rotate(45deg);border:2px solid var(--accent);border-radius:2px;vertical-align:-1px;margin-right:.4rem}
   #page-iso .qv-legend i.f{background:var(--success);border-color:var(--success)}
   #page-iso .qv-empty{padding:2.6rem 1rem;text-align:center;color:var(--muted);font-size:.85rem}
-  @media(max-width:720px){#page-iso .qv-kpis{grid-template-columns:repeat(2,1fr)}}
+
+
+  #page-iso .qv-doc{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:flex-end;padding:1rem 1.2rem;border:1px solid var(--border);border-bottom:0;border-radius:14px 14px 0 0;background:linear-gradient(180deg,rgba(62,90,130,.16),transparent),var(--surface)}
+
+  #page-iso .qv-doc .eb{font:700 .62rem var(--mono);letter-spacing:.16em;color:var(--accent);text-transform:uppercase}
+
+  #page-iso .qv-doc h3{margin:.25rem 0 0;font:700 1.25rem var(--font-display);color:var(--text)}
+
+  #page-iso .qv-meta{display:flex;gap:.6rem;flex-wrap:wrap}
+
+  #page-iso .qv-meta label{display:flex;flex-direction:column;gap:.15rem;font:600 .58rem var(--mono);letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+
+  #page-iso .qv-meta input{width:112px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font:.76rem var(--font);padding:.28rem .45rem}
+
+  #page-iso .qv-sum{display:flex;gap:1.3rem;flex-wrap:wrap;align-items:center;padding:.65rem 1.2rem;border:1px solid var(--border);border-radius:0 0 14px 14px;background:var(--surface2);margin-bottom:.9rem;font-size:.76rem;color:var(--muted)}
+
+  #page-iso .qv-sum b{color:var(--kc,var(--text));font:700 .95rem var(--font-display);margin-left:.25rem}
+
+  #page-iso .qv-prog{flex:1;min-width:120px;height:6px;border-radius:6px;background:rgba(255,255,255,.07);overflow:hidden}
+
+  #page-iso .qv-prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--success));transition:width .5s}
+
+  #page-iso .qv-q{display:grid;grid-template-columns:repeat(4,1fr)}
+
+  #page-iso .qv-q div{text-align:center;padding:.4rem 0;font:700 .62rem var(--mono);letter-spacing:.2em;color:var(--text);border-left:1px solid var(--border);background:rgba(62,90,130,.18)}
+
+  #page-iso .qv-head .h0{grid-row:span 2;display:flex;align-items:flex-end}
+
+  #page-iso .qv-hr{display:flex;flex-direction:column}
+
+  #page-iso .qv-months div{padding:.45rem 0}
+
+  #page-iso .qv-wk{display:grid;grid-template-columns:repeat(48,1fr)}
+
+  #page-iso .qv-wk span{text-align:center;font:500 .48rem var(--mono);color:var(--muted);padding:.12rem 0;border-left:1px solid var(--border2);opacity:.75}
+
+  #page-iso .qv-track{background-image:linear-gradient(to right,var(--border) 1px,transparent 1px),linear-gradient(to right,var(--border2) 1px,transparent 1px);background-size:calc(100%/12) 100%,calc(100%/48) 100%}
+
+  #page-iso .qv-sign{display:none}
+
+  @media print{
+
+   body *{visibility:hidden}
+
+   #isoPaneQav,#isoPaneQav *{visibility:visible}
+
+   #isoPaneQav{position:absolute;left:0;top:0;width:100%;color:#000}
+
+   #page-iso .qv-bar,#page-iso .qv-note,#page-iso .qv-meta input{border:0}
+
+   #page-iso .qv-bar,#page-iso .qv-note{display:none!important}
+
+   #page-iso .qv-scroll{overflow:visible}
+
+   #page-iso .qv-inner{min-width:0}
+
+   #page-iso .qv-sign{display:flex;justify-content:space-around;padding:1.2rem 1rem;border-top:1px solid var(--border);font-size:.72rem;text-align:center}
+
+   #page-iso .qv-sign i{display:block;width:150px;border-bottom:1px solid var(--muted);height:28px;margin:0 auto .2rem}
+
+   @page{size:A4 landscape;margin:10mm}
+
+  }
   </style>
   <div class="iso-hd"><div>
    <div class="iso-eb">Quality System · ISO Documents</div>
@@ -7714,15 +7776,23 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
   <div id="isoGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:1rem"></div>
   </div>
   <div id="isoPaneQav" style="display:none">
-   <div class="qv-hero">
-    <div class="qv-ring" id="qvRing"><div><b id="qvPct">0%</b><small>DONE</small></div></div>
-    <div class="qv-title"><div class="eb">QAV · Supplier Development</div><h3>QAV MASTER PLAN <span id="qvYearTxt"></span></h3><p>แผนประเมินและพัฒนา Supplier ประจำปี — Plan เทียบ Actual</p></div>
-    <div class="qv-kpis">
-     <div class="qv-kpi"><span>Suppliers</span><b id="qvK-total">0</b></div>
-     <div class="qv-kpi" style="--kc:var(--success)"><span>Done</span><b id="qvK-done">0</b></div>
-     <div class="qv-kpi" style="--kc:var(--accent)"><span>Upcoming</span><b id="qvK-up">0</b></div>
-     <div class="qv-kpi" style="--kc:var(--danger)"><span>Overdue</span><b id="qvK-over">0</b></div>
+   <div class="qv-doc">
+    <div class="qv-doc-t"><div class="eb">QAV · Supplier Development</div><h3>QAV Development Supplier MASTER PLAN <span id="qvYearTxt"></span></h3></div>
+    <div class="qv-meta">
+     <label>Doc No.<input id="qvm-doc" placeholder="FM-PU-xxx" oninput="qavMeta()"></label>
+     <label>Rev.<input id="qvm-rev" placeholder="00" oninput="qavMeta()"></label>
+     <label>วันที่ปรับปรุง<input id="qvm-date" type="date" oninput="qavMeta()"></label>
+     <label>ผู้จัดทำ<input id="qvm-by" oninput="qavMeta()"></label>
+     <label>ผู้อนุมัติ<input id="qvm-ap" oninput="qavMeta()"></label>
     </div>
+   </div>
+   <div class="qv-sum">
+    <span>Supplier ทั้งหมด <b id="qvK-total">0</b></span>
+    <span style="--kc:var(--success)">เสร็จแล้ว <b id="qvK-done">0</b></span>
+    <span style="--kc:var(--accent)">รอดำเนินการ <b id="qvK-up">0</b></span>
+    <span style="--kc:var(--danger)">เลยกำหนด <b id="qvK-over">0</b></span>
+    <span>ความคืบหน้า <b id="qvPct">0%</b></span>
+    <div class="qv-prog"><i id="qvProg"></i></div>
    </div>
    <div class="qv-bar">
     <div class="qv-year"><button onclick="qavYearStep(-1)">‹</button><b id="qvYear">2026</b><button onclick="qavYearStep(1)">›</button></div>
@@ -7732,11 +7802,13 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
     <button class="qv-chip" data-f="overdue" onclick="qavSetFilter('overdue',this)">เลยกำหนด</button>
     <button class="qv-chip" data-f="unset" onclick="qavSetFilter('unset',this)">ยังไม่กำหนด</button>
     <div class="search-box" style="max-width:220px;margin-left:auto"><input type="text" id="qvSearch" placeholder="ค้นหา Supplier..." oninput="qavRender()"></div>
+    <button class="btn btn-ghost" onclick="window.print()">🖨 พิมพ์</button>
     <button class="btn btn-primary" onclick="qavOpen()">+ เพิ่ม Supplier</button>
    </div>
    <div id="qvNote"></div>
    <div class="qv-scroll"><div class="qv-inner" id="qvInner"></div>
     <div class="qv-legend"><span><i></i>PLAN (วันที่วางแผน)</span><span><i class="f"></i>ACTUAL (ทำจริง)</span><span style="color:var(--danger)">● เลยกำหนด — ยังไม่มี Actual</span><span>คลิกแถวเพื่อแก้ไขวันที่ Plan / Actual</span></div>
+    <div class="qv-sign"><div>ผู้จัดทำ<br><i></i><small id="qvs-by"></small></div><div>ผู้ตรวจสอบ<br><i></i></div><div>ผู้อนุมัติ<br><i></i><small id="qvs-ap"></small></div></div>
    </div>
   </div>
  </div>
@@ -15146,7 +15218,8 @@ function qavRender() {
   document.getElementById('qvK-up').textContent = up;
   document.getElementById('qvK-over').textContent = over;
   document.getElementById('qvPct').textContent = pct + '%';
-  document.getElementById('qvRing').style.setProperty('--p', pct);
+  document.getElementById('qvProg').style.width = pct + '%';
+  qavMetaLoad();
   document.getElementById('qvNote').innerHTML = (store.sample && qavYear === 2026)
     ? '<div class="qv-note"><span>⚠ ข้อมูลตั้งต้นอ่านจากรูปแผนเดิม — กรุณาตรวจชื่อ Supplier และวันที่ Plan / Actual ก่อนใช้งานจริง</span><button onclick="qavDismissSample()" title="ปิด">✕</button></div>' : '';
 
@@ -15162,8 +15235,8 @@ function qavRender() {
 
   const now = new Date();
   const curM = now.getFullYear() === qavYear ? now.getMonth() : -1;
-  let html = '<div class="qv-head"><div class="h0">SUPPLIER</div><div class="qv-months">' +
-    QAV_MONTHS.map((m, i) => '<div' + (i === curM ? ' class="cur"' : '') + '>' + m + '</div>').join('') + '</div></div>';
+  let html = '<div class="qv-head"><div class="h0">SUPPLIER</div><div class="qv-hr"><div class="qv-q"><div>Q1</div><div>Q2</div><div>Q3</div><div>Q4</div></div><div class="qv-months">' +
+    QAV_MONTHS.map((m, i) => '<div' + (i === curM ? ' class="cur"' : '') + '>' + m + '</div>').join('') + '</div><div class="qv-wk">' + Array.from({length:48}, (_, i) => '<span>w' + (i % 4 + 1) + '</span>').join('') + '</div></div></div>';
   if (curM >= 0) {
     const tp = (now.getMonth() + (now.getDate() - 1) / new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()) / 12;
     html += '<div class="qv-today" style="--tp:' + tp.toFixed(4) + '"><em>วันนี้</em></div>';
@@ -15189,6 +15262,22 @@ function qavRender() {
     }).join('');
   }
   inner.innerHTML = html;
+}
+function qavMetaKey() { return 'm' + qavYear; }
+function qavMetaLoad() {
+  const m = (qavLoad().meta || {})[qavMetaKey()] || {};
+  const set = (id, v) => { const el = document.getElementById(id); if (el && document.activeElement !== el) el.value = v || ''; };
+  set('qvm-doc', m.doc); set('qvm-rev', m.rev); set('qvm-date', m.date); set('qvm-by', m.by); set('qvm-ap', m.ap);
+  document.getElementById('qvs-by').textContent = m.by || '';
+  document.getElementById('qvs-ap').textContent = m.ap || '';
+}
+function qavMeta() {
+  const s = qavLoad(); s.meta = s.meta || {};
+  const g = id => document.getElementById(id).value;
+  s.meta[qavMetaKey()] = { doc: g('qvm-doc'), rev: g('qvm-rev'), date: g('qvm-date'), by: g('qvm-by'), ap: g('qvm-ap') };
+  qavPersist();
+  document.getElementById('qvs-by').textContent = g('qvm-by');
+  document.getElementById('qvs-ap').textContent = g('qvm-ap');
 }
 function qavDismissSample() { qavLoad().sample = false; qavPersist(); qavRender(); }
 
