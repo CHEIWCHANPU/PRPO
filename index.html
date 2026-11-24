@@ -15311,12 +15311,20 @@ function qavSave() {
   qavPersist(); qavClose(); qavRender();
   showToast('บันทึกแผน QAV แล้ว', 'success');
 }
-function qavDelete() {
+async function qavDelete() {
   const id = document.getElementById('qav-id').value;
-  if (!id || !confirm('ลบ Supplier นี้ออกจากแผน QAV?')) return;
+  if (!id) return;
+  const row = qavRows().find(x => String(x.id) === String(id));
+  const nm = row ? row.name : 'รายการนี้';
+  // ใช้ popup ยืนยันกลางของระบบ (เหมือนฟังก์ชันอื่น) แทน confirm() ของเบราว์เซอร์
+  const ok = typeof window.CCIPConfirm === 'function'
+    ? await window.CCIPConfirm('ลบ Supplier ออกจากแผน QAV?', nm + ' · ปี ' + qavYear + ' จะถูกลบและกู้คืนไม่ได้', 'ลบ')
+    : confirm('ลบ Supplier นี้ออกจากแผน QAV?');
+  if (!ok) return;
   const store = qavLoad(), key = String(qavYear);
   store.years[key] = (store.years[key] || []).filter(x => String(x.id) !== String(id));
   qavPersist(); qavClose(); qavRender();
+  showToast('ลบออกจากแผน QAV แล้ว', 'success');
 }
 
 function isoCategoryIcon() { return '🛡️'; }
