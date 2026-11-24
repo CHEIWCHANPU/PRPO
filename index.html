@@ -7745,13 +7745,16 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
   #page-iso .qv-span{position:absolute;top:50%;height:6px;margin-top:-3px;border-radius:6px;background:var(--lc);opacity:.85}
   #page-iso .qv-span.od{background:repeating-linear-gradient(135deg,rgba(179,86,76,.75) 0 5px,rgba(179,86,76,.28) 5px 10px);opacity:1}
   #page-iso .qv-gap{position:absolute;top:50%;margin-top:10px;transform:translateX(-50%);font:700 .64rem var(--mono);color:var(--danger);white-space:nowrap}
-  #page-iso .qv-dot{position:absolute;top:50%;left:var(--x);width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;border:2.5px solid var(--mc);background:var(--surface);z-index:1}
-  #page-iso .qv-dot.act{background:var(--mc)}
+  #page-iso .qv-dot{position:absolute;top:50%;left:var(--x);width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;border:2.5px solid var(--mc);background:var(--surface);z-index:1}
+  #page-iso .qv-dot.act{width:10px;height:10px;margin:-5px 0 0 -5px;border:0;background:var(--mc);z-index:2;box-shadow:0 0 0 2px var(--surface)}
   #page-iso .qv-dot.pulse{animation:qvp 1.8s infinite}
-  #page-iso .qv-dot em{position:absolute;left:50%;transform:translateX(-50%);font:600 .64rem var(--mono);font-style:normal;color:var(--muted);white-space:nowrap}
-  #page-iso .qv-dot.plan em{bottom:15px}
-  #page-iso .qv-dot.act em{top:15px;color:var(--text)}
-  #page-iso .qv-legend i{transform:none;border-radius:50%;width:10px;height:10px}
+  #page-iso .qv-dot em{position:absolute;left:50%;transform:translateX(-50%);font:600 .64rem var(--mono);font-style:normal;color:var(--text);white-space:nowrap}
+  #page-iso .qv-dot em b{font-weight:800;font-size:.54rem;letter-spacing:.08em;color:var(--mc);margin-right:.3rem}
+  #page-iso .qv-dot.plan em{bottom:17px}
+  #page-iso .qv-dot.act em{top:15px}
+  #page-iso .qv-dot em.r{left:auto;right:-6px;transform:none}
+  #page-iso .qv-dot em.l{left:-6px;transform:none}
+  #page-iso .qv-legend i{transform:none;border-radius:50%;width:12px;height:12px}
   #page-iso .qv-legend i.od{border:0;width:22px;height:6px;border-radius:6px;background:repeating-linear-gradient(135deg,rgba(179,86,76,.75) 0 5px,rgba(179,86,76,.28) 5px 10px);vertical-align:1px}
 
   @media print{
@@ -15289,8 +15292,9 @@ function qavRender() {
       } else if (st === 'soon' || st === 'plan') {
         txt = 'อีก ' + dd(todayIso, r.plan) + ' วัน';
       }
-      if (pa !== null) track += '<div class="qv-dot plan' + (st === 'overdue' ? ' pulse' : '') + '" style="--x:' + pa + '%;--mc:' + (st === 'overdue' ? 'var(--danger)' : 'var(--accent)') + '"><em>' + fd(r.plan) + '</em></div>';
-      if (aa !== null) track += '<div class="qv-dot act" style="--x:' + aa + '%;--mc:' + (st === 'late' ? 'var(--warn)' : 'var(--success)') + '"><em>' + fd(r.actual) + '</em></div>';
+      const ea = v => v > 90 ? ' class="r"' : (v < 8 ? ' class="l"' : '');
+      if (pa !== null) track += '<div class="qv-dot plan' + (st === 'overdue' ? ' pulse' : '') + '" style="--x:' + pa + '%;--mc:' + (st === 'overdue' ? 'var(--danger)' : 'var(--accent)') + '"><em' + ea(pa) + '><b>PLAN</b>' + fd(r.plan) + '</em></div>';
+      if (aa !== null) track += '<div class="qv-dot act" style="--x:' + aa + '%;--mc:' + (st === 'late' ? 'var(--warn)' : 'var(--success)') + '"><em' + ea(aa) + '><b>ACTUAL</b>' + fd(r.actual) + '</em></div>';
       return '<div class="qv-row" onclick="qavOpen(\'' + idq + '\')">' +
         '<div class="qv-name"><span class="qv-no">' + String(i + 1).padStart(2, '0') + '</span><div><b>' + isoEsc(r.name) + '</b>' +
         '<small><span class="qv-st" style="--sc:' + meta.c + '"><i></i>' + txt + '</span>' + (r.type === 'New Supplier' ? '<span>NEW</span>' : '') + (r.note ? '<span>· ' + isoEsc(r.note) + '</span>' : '') + '</small></div></div>' +
