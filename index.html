@@ -15367,6 +15367,96 @@ async function qavDelete() {
   showToast('ลบออกจากแผน QAV แล้ว', 'success');
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   PLAN QAV ↔ Google Sheet  (วางต่อท้ายฟังก์ชัน qavDelete() ในไฟล์ HTML
+   คือก่อนคอมเมนต์ "พิมพ์แผน QAV" ~บรรทัด 15370)
+   - ประกาศ qavSave / qavDelete / qavMeta ใหม่ทับของเดิม (ชื่อเดิม ปุ่มเดิม)
+   - localStorage ยังเป็นแคช: ออฟไลน์/ยังไม่ตั้ง URL ก็ใช้งานได้เหมือนเดิม
+   ═══════════════════════════════════════════════════════════════ */
+async function qavApi(payload, silent) {
+  if (!WEB_APP_URL) return null;
+  try {
+    const tk = (window.CCIPAuth && CCIPAuth.token && CCIPAuth.token()) || '';
+    const res = await fetch(WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign({ token: tk }, payload)) });
+    const j = await res.json();
+    if (!j.success) throw new Error(j.error || 'บันทึกไม่สำเร็จ');
+    return j;
+  } catch (e) { if (!silent) showToast('ซิงค์ชีต QAV ไม่สำเร็จ: ' + e.message + ' (บันทึกในเครื่องไว้แล้ว)', 'error'); return null; }
+}
+
+/* ดึงจากชีต → แทนแคชของปีนั้น; ถ้าชีตว่างแต่เครื่องมีข้อมูลจริง (ไม่ใช่ตัวอย่าง) ให้ย้ายขึ้นชีตครั้งแรก */
+async function qavPull() {
+  const yr = qavYear;
+  const j = await qavApi({ action: 'qavGetPlan', year: yr }, true);
+  if (!j) return;
+  const store = qavLoad(), key = String(yr);
+  if (j.rows.length) {
+    store.years[key] = j.rows.map(r => ({ id: r.id, name: r.name, type: r.type, plan: r.plan, actual: r.actual, note: r.note }));
+    store.sample = false;
+  } else if (!store.sample && (store.years[key] || []).length) {
+    await qavApi({ action: 'qavBulkImport', year: yr, rows: store.years[key] }, true);
+  }
+  store.meta = store.meta || {};
+  if (j.meta['m' + yr]) store.meta['m' + yr] = j.meta['m' + yr];
+  qavPersist(); if (yr === qavYear) { qavRender(); qavMetaLoad(); }
+}
+
+function qavSave() {
+  const name = document.getElementById('qav-name').value.trim();
+  if (!name) { showToast('กรุณากรอกชื่อ Supplier', 'error'); return; }
+  const rec = {
+    id: document.getElementById('qav-id').value || ('q' + Date.now().toString(36)),
+    name, type: document.getElementById('qav-type').value,
+    plan: document.getElementById('qav-plan').value,
+    actual: document.getElementById('qav-actual').value,
+    note: document.getElementById('qav-note').value.trim()
+  };
+  const store = qavLoad(), key = String(qavYear);
+  const rows = store.years[key] || (store.years[key] = []);
+  const i = rows.findIndex(x => String(x.id) === String(rec.id));
+  if (i >= 0) rows[i] = rec; else rows.push(rec);
+  qavPersist(); qavClose(); qavRender();
+  showToast('บันทึกแผน QAV แล้ว', 'success');
+  qavApi(Object.assign({ action: 'qavSaveRow', year: qavYear }, rec));
+}
+
+async function qavDelete() {
+  const id = document.getElementById('qav-id').value;
+  if (!id) return;
+  const row = qavRows().find(x => String(x.id) === String(id));
+  const nm = row ? row.name : 'รายการนี้';
+  const ok = typeof window.CCIPConfirm === 'function'
+    ? await window.CCIPConfirm('ลบ Supplier ออกจากแผน QAV?', nm + ' · ปี ' + qavYear + ' จะถูกลบและกู้คืนไม่ได้', 'ลบ')
+    : confirm('ลบ Supplier นี้ออกจากแผน QAV?');
+  if (!ok) return;
+  const store = qavLoad(), key = String(qavYear);
+  store.years[key] = (store.years[key] || []).filter(x => String(x.id) !== String(id));
+  qavPersist(); qavClose(); qavRender();
+  showToast('ลบออกจากแผน QAV แล้ว', 'success');
+  qavApi({ action: 'qavDelRow', year: qavYear, id: id });
+}
+
+let _qavMetaTimer = null;
+function qavMeta() {
+  const s = qavLoad(); s.meta = s.meta || {};
+  const g = id => document.getElementById(id).value;
+  const m = { doc: g('qvm-doc'), rev: g('qvm-rev'), date: g('qvm-date'), by: g('qvm-by'), ap: g('qvm-ap') };
+  s.meta[qavMetaKey()] = m;
+  qavPersist();
+  document.getElementById('qvs-by').textContent = m.by;
+  document.getElementById('qvs-ap').textContent = m.ap;
+  clearTimeout(_qavMetaTimer);                       // หน่วง 800ms กันยิงทุกตัวอักษร
+  const yr = qavYear;
+  _qavMetaTimer = setTimeout(() => qavApi({ action: 'qavSaveMeta', year: yr, meta: m }), 800);
+}
+
+/* ดึงจากชีตเมื่อเปิดแท็บ PLAN QAV และเมื่อเปลี่ยนปี */
+(function () {
+  const _tab = window.isoSetTab, _yr = window.qavYearStep;
+  if (typeof _tab === 'function') window.isoSetTab = function (t) { const r = _tab.apply(this, arguments); if (t === 'qav') qavPull(); return r; };
+  if (typeof _yr === 'function') window.qavYearStep = function (d) { const r = _yr.apply(this, arguments); qavPull(); return r; };
+})();
+
 /* ── พิมพ์แผน QAV: สร้างเอกสารสะอาดใน iframe (ไม่พึ่ง CSS ของแอป จึงไม่ว่าง/ไม่ติดธีมมืด) ── */
 function qavPrint() {
   const rows = qavRows();
