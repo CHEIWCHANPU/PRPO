@@ -8532,154 +8532,277 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
  .cs-search-row { display:flex; gap:0.6rem; flex-wrap:wrap; margin-bottom:0.8rem; }
  .cs-search-input { background:var(--surface2); border:1px solid var(--border); border-radius:4px; color:var(--text); font-size:0.82rem; padding:0.45rem 0.7rem; outline:none; width:180px; font-family:'Sarabun',sans-serif; }
  .cs-search-input:focus { border-color:var(--accent); }
+
+ /* ═══ COST SAVING v2 — KPI-aligned layout (prefix csx-) ═══ */
+ #page-costsaving .csx-head { display:flex; align-items:flex-end; justify-content:space-between; gap:.8rem; flex-wrap:wrap; margin-bottom:.9rem; }
+ #page-costsaving .csx-title { font-family:var(--font-display); font-size:1.25rem; font-weight:700; letter-spacing:-.01em; color:var(--text); }
+ #page-costsaving .csx-sub { font-size:.75rem; color:var(--muted); margin-top:.15rem; }
+ #page-costsaving .csx-actions { display:flex; align-items:center; gap:.45rem; flex-wrap:wrap; }
+ #page-costsaving .csx-actions .btn { padding:.45rem .7rem; font-size:.8rem; }
+ #page-costsaving .csx-sel { background:var(--surface2); border:1px solid var(--border); border-radius:var(--r-sm); color:var(--text); font-size:.8rem; padding:.4rem .6rem; font-family:var(--font); cursor:pointer; outline:none; max-width:170px; }
+ #page-costsaving .csx-sel:focus { border-color:var(--accent); }
+
+ /* document control strip */
+ #page-costsaving .csx-doc { display:flex; flex-wrap:wrap; border:1px solid var(--border); border-radius:var(--r-md); background:var(--surface); margin-bottom:1rem; overflow:hidden; }
+ #page-costsaving .csx-doc > div { padding:.55rem .9rem; border-right:1px solid var(--border); display:flex; flex-direction:column; gap:.1rem; min-width:110px; }
+ #page-costsaving .csx-doc > div:last-child { border-right:0; }
+ #page-costsaving .csx-doc .grow { flex:1 1 230px; }
+ #page-costsaving .csx-doc > div > span { font-size:.62rem; color:var(--muted); letter-spacing:.07em; text-transform:uppercase; }
+ #page-costsaving .csx-doc b { font-size:.82rem; color:var(--text); font-weight:600; }
+ #page-costsaving .csx-doc small { font-size:.68rem; color:var(--muted); }
+
+ /* KPI status + cards */
+ #page-costsaving .csx-kpis { display:grid; grid-template-columns:1.8fr 1fr 1fr 1.35fr 1fr; gap:.8rem; margin-bottom:1rem; }
+ @media (max-width:1280px) { #page-costsaving .csx-kpis { grid-template-columns:1fr 1fr; } #page-costsaving .csx-status { grid-column:1/-1; } }
+ #page-costsaving .csx-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:.9rem 1rem; display:flex; flex-direction:column; gap:.28rem; min-width:0; }
+ #page-costsaving .csx-card .lbl { font-size:.7rem; color:var(--muted); line-height:1.3; }
+ #page-costsaving .csx-card .val { font-family:var(--mono); font-size:1.7rem; font-weight:700; letter-spacing:-.02em; line-height:1.1; color:var(--text); }
+ #page-costsaving .csx-card .sub { font-size:.7rem; color:var(--muted); }
+ #page-costsaving .csx-up { color:var(--success); font-size:.7rem; }
+ #page-costsaving .csx-dn { color:var(--danger); font-size:.7rem; }
+ #page-costsaving .csx-status { border:1px solid var(--border); border-left:6px solid var(--muted); border-radius:var(--r-lg); padding:.9rem 1.2rem; background:var(--surface); display:flex; flex-direction:column; gap:.35rem; min-width:0; }
+ #page-costsaving .csx-status.ok { border-left-color:var(--success); background:color-mix(in srgb, var(--success) 8%, var(--surface)); }
+ #page-costsaving .csx-status.warn { border-left-color:var(--warn); background:color-mix(in srgb, var(--warn) 9%, var(--surface)); }
+ #page-costsaving .csx-status.bad { border-left-color:var(--danger); background:color-mix(in srgb, var(--danger) 8%, var(--surface)); }
+ #page-costsaving .csx-st-top { font-size:.7rem; color:var(--muted); }
+ #page-costsaving .csx-st-main { display:flex; align-items:center; gap:.8rem; flex-wrap:wrap; }
+ #page-costsaving .csx-st-rate { font-family:var(--mono); font-size:2.6rem; font-weight:700; letter-spacing:-.03em; line-height:1; color:var(--text); }
+ #page-costsaving .csx-st-badge { font-size:.82rem; font-weight:700; padding:.28rem .7rem; border-radius:var(--r-sm); color:#fff; background:var(--muted); }
+ #page-costsaving .csx-status.ok .csx-st-badge { background:var(--success); }
+ #page-costsaving .csx-status.warn .csx-st-badge { background:var(--warn); }
+ #page-costsaving .csx-status.bad .csx-st-badge { background:var(--danger); }
+ #page-costsaving .csx-meter { position:relative; height:12px; border-radius:3px; background:var(--surface2); border:1px solid var(--border); margin:1.15rem 0 .25rem; }
+ #page-costsaving .csx-meter i { position:absolute; left:0; top:0; bottom:0; border-radius:2px; background:var(--muted); }
+ #page-costsaving .csx-status.ok .csx-meter i { background:var(--success); }
+ #page-costsaving .csx-status.warn .csx-meter i { background:var(--warn); }
+ #page-costsaving .csx-status.bad .csx-meter i { background:var(--danger); }
+ #page-costsaving .csx-meter b { position:absolute; top:-5px; bottom:-5px; width:2px; background:var(--text); }
+ #page-costsaving .csx-meter b em { position:absolute; top:-15px; left:50%; transform:translateX(-50%); font-style:normal; font-size:.62rem; font-family:var(--mono); color:var(--text); white-space:nowrap; }
+ #page-costsaving .csx-st-foot { font-size:.74rem; color:var(--muted); }
+ #page-costsaving .csx-tg { margin-top:.35rem; border-top:1px dashed var(--border); padding-top:.45rem; }
+ #page-costsaving .csx-tgrow { display:flex; align-items:center; justify-content:space-between; gap:.4rem; font-size:.68rem; color:var(--muted); }
+ #page-costsaving .csx-tgrow span { white-space:nowrap; }
+ #page-costsaving .csx-tgrow input { width:88px; background:var(--surface2); border:1px solid var(--border); border-radius:var(--r-xs); color:var(--text); font-family:var(--mono); font-size:.72rem; padding:.15rem .35rem; text-align:right; outline:none; }
+ #page-costsaving .csx-tgbar { height:6px; border-radius:3px; background:var(--surface2); border:1px solid var(--border); margin-top:.3rem; overflow:hidden; }
+ #page-costsaving .csx-tgbar i { display:block; height:100%; background:var(--accent); width:0; transition:width .4s ease; }
+ #page-costsaving .csx-tgsub { font-size:.66rem; color:var(--muted); margin-top:.2rem; text-align:right; font-family:var(--mono); }
+
+ /* panels */
+ #page-costsaving .csx-panel { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:1rem 1.1rem; margin-bottom:1rem; }
+ #page-costsaving .csx-ph { display:flex; align-items:center; justify-content:space-between; gap:.6rem; flex-wrap:wrap; margin-bottom:.7rem; }
+ #page-costsaving .csx-pt { font-size:.85rem; font-weight:700; color:var(--text); }
+ #page-costsaving .csx-ps { font-size:.7rem; color:var(--muted); }
+ #page-costsaving .csx-scroll { overflow:auto; border:1px solid var(--border); border-radius:var(--r-md); }
+ #page-costsaving .csx-two { display:grid; grid-template-columns:1.7fr 1fr; gap:1.1rem; }
+ #page-costsaving .csx-grid2 { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+ @media (max-width:1100px) { #page-costsaving .csx-two, #page-costsaving .csx-grid2 { grid-template-columns:1fr; } }
+ #page-costsaving .csx-chart-card { border:1px solid var(--border); border-radius:var(--r-md); padding:.8rem .9rem; background:var(--surface); }
+
+ /* KPI monitoring table */
+ #page-costsaving table.csx-kt { width:100%; min-width:900px; border-collapse:collapse; font-size:.76rem; font-variant-numeric:tabular-nums; table-layout:fixed; }
+ #page-costsaving .csx-kt th, #page-costsaving .csx-kt td { padding:.5rem .35rem; text-align:right; border-bottom:1px solid var(--border); border-right:1px solid var(--border); font-family:var(--mono); }
+ #page-costsaving .csx-kt th:last-child, #page-costsaving .csx-kt td:last-child { border-right:0; }
+ #page-costsaving .csx-kt th:first-child, #page-costsaving .csx-kt td:first-child { text-align:left; width:250px; padding-left:.8rem; font-family:var(--font); position:sticky; left:0; z-index:2; background:var(--surface); }
+ #page-costsaving .csx-kt thead th { background:var(--surface2); color:var(--muted); font-weight:700; font-size:.7rem; letter-spacing:.05em; }
+ #page-costsaving .csx-kt thead th:first-child { background:var(--surface2); }
+ #page-costsaving .csx-kt th.m { cursor:pointer; user-select:none; }
+ #page-costsaving .csx-kt th.m:hover { color:var(--text); background:color-mix(in srgb, var(--accent) 10%, var(--surface2)); }
+ #page-costsaving .csx-kt .sel { background:color-mix(in srgb, var(--accent) 14%, var(--surface)) !important; }
+ #page-costsaving .csx-kt thead .sel { color:var(--text); box-shadow:inset 0 -2px 0 var(--accent); }
+ #page-costsaving .csx-kt th.tot, #page-costsaving .csx-kt td.tot { width:76px; font-weight:700; background:color-mix(in srgb, var(--accent) 8%, var(--surface)); color:var(--text); }
+ #page-costsaving .csx-kt tr.rate td { font-weight:700; }
+ #page-costsaving .csx-kt tr.rate td.ok { color:var(--success); background:color-mix(in srgb, var(--success) 10%, var(--surface)); }
+ #page-costsaving .csx-kt tr.rate td.bad { color:var(--danger); background:color-mix(in srgb, var(--danger) 9%, var(--surface)); }
+ #page-costsaving .csx-kt tr.tgt td { color:var(--muted); }
+ #page-costsaving .csx-kt td.na { color:var(--muted); opacity:.55; }
+
+ /* summary (สรุปผล / แนวโน้ม) */
+ #page-costsaving .csx-sum h4 { font-size:.74rem; letter-spacing:.05em; color:var(--muted); margin:0 0 .3rem; font-weight:700; text-transform:uppercase; }
+ #page-costsaving .csx-chk { display:flex; gap:.35rem; flex-wrap:wrap; margin-bottom:.9rem; }
+ #page-costsaving .csx-chk span { display:inline-flex; align-items:center; gap:.35rem; padding:.3rem .7rem; border:1px solid var(--border); border-radius:var(--r-sm); font-size:.78rem; color:var(--muted); }
+ #page-costsaving .csx-chk span::before { content:'☐'; }
+ #page-costsaving .csx-chk span.on { color:var(--text); font-weight:700; border-color:var(--accent); background:color-mix(in srgb, var(--accent) 14%, transparent); }
+ #page-costsaving .csx-chk span.on::before { content:'☑'; }
+ #page-costsaving .csx-chk span.on.good { border-color:var(--success); background:color-mix(in srgb, var(--success) 14%, transparent); color:var(--success); }
+ #page-costsaving .csx-chk span.on.badc { border-color:var(--danger); background:color-mix(in srgb, var(--danger) 12%, transparent); color:var(--danger); }
+ #page-costsaving .csx-note { font-size:.78rem; color:var(--text); line-height:1.55; padding:.6rem .75rem; border-left:3px solid var(--accent); background:var(--surface2); border-radius:var(--r-xs); margin-bottom:.6rem; }
+ #page-costsaving .csx-legend { font-size:.66rem; color:var(--muted); line-height:1.5; }
+ #page-costsaving details.csx-plan { margin-top:1rem; border-top:1px dashed var(--border); padding-top:.6rem; }
+ #page-costsaving details.csx-plan summary { cursor:pointer; font-size:.78rem; font-weight:600; color:var(--muted); }
+ #page-costsaving details.csx-plan table { width:100%; border-collapse:collapse; font-size:.76rem; margin-top:.5rem; }
+ #page-costsaving details.csx-plan th, #page-costsaving details.csx-plan td { text-align:left; padding:.35rem .6rem; border-bottom:1px solid var(--border); }
+ #page-costsaving details.csx-plan th { color:var(--muted); font-size:.68rem; }
+
+ /* tabs + list tools */
+ #page-costsaving .csx-tabs { display:flex; gap:.2rem; border-bottom:1px solid var(--border); margin-bottom:.9rem; }
+ #page-costsaving .csx-tab { padding:.6rem 1rem; font-size:.82rem; font-weight:600; color:var(--muted); cursor:pointer; background:none; border:0; border-bottom:2px solid transparent; font-family:var(--font); }
+ #page-costsaving .csx-tab:hover { color:var(--text); }
+ #page-costsaving .csx-tab.on { color:var(--text); border-bottom-color:var(--accent); }
+ #page-costsaving .csx-tools { display:flex; gap:.5rem; flex-wrap:wrap; align-items:center; margin-bottom:.7rem; }
+ #page-costsaving .csx-search { flex:1 1 280px; min-width:200px; background:var(--surface2); border:1px solid var(--border); border-radius:var(--r-sm); color:var(--text); font-size:.82rem; padding:.5rem .75rem; outline:none; font-family:var(--font); }
+ #page-costsaving .csx-search:focus { border-color:var(--accent); }
+ #page-costsaving .csx-seg { display:inline-flex; border:1px solid var(--border); border-radius:var(--r-sm); overflow:hidden; }
+ #page-costsaving .csx-seg button { background:var(--surface2); color:var(--muted); border:0; border-right:1px solid var(--border); padding:.45rem .75rem; font-size:.76rem; font-weight:600; cursor:pointer; font-family:var(--font); }
+ #page-costsaving .csx-seg button:last-child { border-right:0; }
+ #page-costsaving .csx-seg button.on { background:var(--accent); color:#fff; }
+ #page-costsaving .csx-mchips { display:flex; gap:.3rem; flex-wrap:wrap; margin-bottom:.7rem; }
+ #page-costsaving .csx-mc { display:inline-flex; align-items:center; gap:.4rem; padding:.3rem .6rem; border:1px solid var(--border); border-radius:var(--r-sm); background:var(--surface2); font-size:.76rem; color:var(--text); cursor:pointer; font-family:var(--font); }
+ #page-costsaving .csx-mc:hover { border-color:var(--accent); }
+ #page-costsaving .csx-mc em { font-style:normal; font-family:var(--mono); font-size:.68rem; color:var(--muted); }
+ #page-costsaving .csx-mc i { width:7px; height:7px; border-radius:50%; background:var(--border); display:inline-block; }
+ #page-costsaving .csx-mc i.ok { background:var(--success); }
+ #page-costsaving .csx-mc i.bad { background:var(--danger); }
+ #page-costsaving .csx-mc.on { border-color:var(--accent); background:color-mix(in srgb, var(--accent) 18%, transparent); font-weight:700; }
+ #page-costsaving .csx-mc.dim { opacity:.45; }
+ #page-costsaving .csx-info { font-size:.74rem; color:var(--muted); margin-bottom:.5rem; }
+ #page-costsaving .csx-info b { color:var(--text); font-family:var(--mono); }
+
+ /* list table */
+ #page-costsaving .csx-lt-wrap { max-height:640px; overflow:auto; border:1px solid var(--border); border-radius:var(--r-md); }
+ #page-costsaving table.csx-lt { width:100%; min-width:1080px; border-collapse:separate; border-spacing:0; font-size:.76rem; }
+ #page-costsaving .csx-lt th { position:sticky; top:0; z-index:3; background:var(--surface2); color:var(--muted); font-weight:700; text-align:left; padding:.55rem .6rem; border-bottom:1px solid var(--border); white-space:nowrap; font-size:.68rem; letter-spacing:.04em; }
+ #page-costsaving .csx-lt th.r, #page-costsaving .csx-lt td.r { text-align:right; }
+ #page-costsaving .csx-lt th.sort { cursor:pointer; user-select:none; }
+ #page-costsaving .csx-lt th.sort:hover { color:var(--text); }
+ #page-costsaving .csx-lt th.sorted { color:var(--text); }
+ #page-costsaving .csx-lt td { padding:.45rem .6rem; border-bottom:1px solid var(--border); background:var(--surface); vertical-align:middle; }
+ #page-costsaving .csx-lt td.r { font-family:var(--mono); white-space:nowrap; }
+ #page-costsaving .csx-lt tbody tr:hover td { background:var(--surface2); }
+ #page-costsaving .csx-lt td.stripe { box-shadow:inset 3px 0 0 var(--muted); color:var(--muted); font-family:var(--mono); }
+ #page-costsaving .csx-lt tr.ach td.stripe { box-shadow:inset 3px 0 0 var(--success); }
+ #page-costsaving .csx-lt tr.no td.stripe { box-shadow:inset 3px 0 0 var(--danger); }
+ #page-costsaving .csx-pn { font-weight:600; color:var(--text); }
+ #page-costsaving .csx-pno { font-size:.66rem; color:var(--muted); font-family:var(--mono); }
+ #page-costsaving .csx-bd { display:inline-block; padding:.15rem .5rem; border-radius:var(--r-pill); font-size:.64rem; font-weight:700; letter-spacing:.04em; white-space:nowrap; }
+ #page-costsaving .csx-bd.ok { color:var(--success); background:color-mix(in srgb, var(--success) 14%, transparent); }
+ #page-costsaving .csx-bd.no { color:var(--danger); background:color-mix(in srgb, var(--danger) 12%, transparent); }
+ #page-costsaving .csx-pct { min-width:92px; }
+ #page-costsaving .csx-pct b { font-family:var(--mono); font-size:.76rem; }
+ #page-costsaving .csx-pct.ok b { color:var(--success); }
+ #page-costsaving .csx-pct.no b { color:var(--text); }
+ #page-costsaving .csx-pct.neg b { color:var(--danger); }
+ #page-costsaving .csx-bar { position:relative; height:5px; background:var(--surface2); border:1px solid var(--border); border-radius:2px; margin-top:.25rem; }
+ #page-costsaving .csx-bar i { position:absolute; left:0; top:0; bottom:0; background:var(--muted); border-radius:1px; }
+ #page-costsaving .csx-pct.ok .csx-bar i { background:var(--success); }
+ #page-costsaving .csx-bar u { position:absolute; top:-2px; bottom:-2px; width:1px; background:var(--text); opacity:.55; }
+ #page-costsaving .csx-lt tfoot td { position:sticky; bottom:0; z-index:3; background:var(--surface2); font-weight:700; border-top:1px solid var(--border); border-bottom:0; }
+ #page-costsaving .csx-empty { text-align:center; padding:2rem 1rem !important; color:var(--muted); }
+ #page-costsaving .csx-pager { display:flex; align-items:center; justify-content:space-between; gap:.6rem; flex-wrap:wrap; margin-top:.7rem; font-size:.74rem; color:var(--muted); }
+ #page-costsaving .csx-pager .pg { display:flex; align-items:center; gap:.4rem; }
+ #page-costsaving .csx-pager button { background:var(--surface2); border:1px solid var(--border); color:var(--text); border-radius:var(--r-sm); padding:.3rem .65rem; font-size:.74rem; cursor:pointer; font-family:var(--font); }
+ #page-costsaving .csx-pager button:disabled { opacity:.4; cursor:default; }
  </style>
 
- <!-- HEADER -->
- <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;flex-wrap:wrap;gap:0.6rem">
+ <!-- HEADER (v2 · KPI-aligned) -->
+ <div class="csx-head">
  <div>
- <div style="font-size:1.2rem;font-weight:700;color:var(--text);font-family:var(--font-display);letter-spacing:-0.01em">COST SAVING REPORT</div>
- <div style="font-size:0.75rem;color:var(--muted);margin-top:0.15rem">ยอดประหยัดจากการต่อรองราคา — เทียบ KPI ปีต่อปี</div>
+ <div class="csx-title">COST SAVING REPORT</div>
+ <div class="csx-sub">ยอดประหยัดจากการต่อรองราคา · สอดคล้องฟอร์ม KPI Monitoring Report (S QA 02-040)</div>
  </div>
- <div style="display:flex;align-items:center;gap:0.5rem">
- <button class="btn btn-ghost" onclick="exportCsPdf()" style="padding:0.45rem 0.7rem;font-size:0.8rem">Export PDF</button>
- <button class="btn btn-ghost" onclick="openCsUploadModal()" style="padding:0.45rem 0.7rem;font-size:0.8rem">Upload Excel</button>
- <button class="btn btn-ghost" onclick="openCsClearModal()" style="padding:0.45rem 0.7rem;font-size:0.8rem;color:var(--danger)">🗑 ล้างข้อมูลทั้งหมด</button>
- <button class="btn btn-ghost" id="csAllYearsBtn" onclick="toggleCsAllYearsView()" style="padding:0.45rem 0.7rem;font-size:0.8rem">📊 ภาพรวมทุกปี</button>
- <button class="btn btn-ghost" onclick="openCsCompareModal()" style="padding:0.45rem 0.7rem;font-size:0.8rem">⇄ เปรียบเทียบปี</button>
- <select id="csYearSelect" onchange="renderCostSavingPage()" style="
- background:var(--surface2);border:1px solid var(--border);border-radius:4px;
- color:var(--text);font-size:0.82rem;padding:0.4rem 0.7rem;
- font-family:var(--mono);cursor:pointer;outline:none;"></select>
+ <div class="csx-actions">
+ <button class="btn btn-ghost" onclick="exportCsPdf()">Export PDF</button>
+ <button class="btn btn-ghost" onclick="openCsUploadModal()">Upload Excel</button>
+ <button class="btn btn-ghost" id="csAllYearsBtn" onclick="toggleCsAllYearsView()">📊 ภาพรวมทุกปี</button>
+ <button class="btn btn-ghost" onclick="openCsCompareModal()">⇄ เปรียบเทียบปี</button>
+ <button class="btn btn-ghost" onclick="openCsClearModal()" style="color:var(--danger)">🗑 ล้างข้อมูลทั้งหมด</button>
+ <select id="csYearSelect" class="csx-sel" onchange="csxState.page=1;renderCostSavingPage()"></select>
  </div>
  </div>
 
  <!-- PER-YEAR VIEW (ค่าเริ่มต้น) -->
  <div id="csPerYearView">
- <!-- ANNUAL TARGET -->
- <div class="chart-card" style="margin-bottom:1.2rem;padding:1rem 1.4rem !important">
- <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.6rem;flex-wrap:wrap;gap:0.5rem">
+
+ <!-- DOCUMENT CONTROL STRIP (เหมือนหัวฟอร์ม KPI) -->
+ <div class="csx-doc">
+ <div><span>เอกสาร</span><b id="csxDocNo">S QA 02-040</b></div>
+ <div><span>หน่วยงาน</span><b id="csxDept">จัดซื้อ</b></div>
+ <div class="grow"><span>ตัวชี้วัดเรื่อง</span><b>จำนวนรายการที่สามารถต่อรองราคางาน</b><small>เกณฑ์รายการ: Component Part ลดลง ≥ <span id="csxThTxt">10</span>% ของราคาที่ Maker เสนอ</small></div>
+ <div class="grow"><span>เป้าหมาย</span><b>≥ <span id="csxTgTxt">20</span>% ของจำนวนรายการที่เสนอราคา</b><small>Rate = รายการที่ต่อรองได้ ÷ รายการที่ Maker เสนอราคา</small></div>
+ <div><span>ประจำเดือน</span><b id="csxPeriod">—</b></div>
+ <div><span>ผู้จัดทำ</span><b id="csxOwner">—</b></div>
+ </div>
+
+ <!-- KPI STATUS + CARDS -->
+ <div class="csx-kpis" id="csxKpis"></div>
+
+ <!-- KPI MONITORING (เหมือนตารางในฟอร์ม · คลิกหัวเดือนเพื่อกรอง) -->
+ <div class="csx-panel">
+ <div class="csx-ph">
  <div>
- <div style="font-size:0.8rem;font-weight:700;color:var(--text);letter-spacing:0.02em">ANNUAL SAVING TARGET</div>
- <div style="font-size:0.7rem;color:var(--muted)">ตั้งเป้าหมายยอดประหยัดรวมในปีที่เลือก</div>
- </div>
- <div style="display:flex;align-items:center;gap:0.5rem">
- <span style="font-size:0.75rem;color:var(--muted)">Target:</span>
- <input type="number" id="csAnnualTarget" value="5000000" step="100000" min="0" style="
- width:140px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;
- color:var(--text);font-size:0.85rem;padding:0.35rem 0.6rem;font-family:var(--mono);
- text-align:right;outline:none;" oninput="renderCsTargetBar()">
- <span style="font-size:0.75rem;color:var(--muted)">THB</span>
+ <div class="csx-pt">KPI Monitoring — ผลการดำเนินการรายเดือน</div>
+ <div class="csx-ps">คลิกที่หัวคอลัมน์เดือน (หรือแท่งกราฟ) เพื่อดูเฉพาะเดือนนั้น · คลิกซ้ำเพื่อกลับไปดูทั้งปี</div>
  </div>
  </div>
- <div style="display:flex;align-items:center;gap:0.8rem">
- <div style="flex:1;height:14px;border-radius:4px;background:var(--surface2);overflow:hidden;border:1px solid var(--border)">
- <div id="csTargetFill" style="height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;transition:width 0.5s ease"></div>
- </div>
- <div id="csTargetPct" style="font-family:var(--mono);font-size:1rem;font-weight:700;min-width:55px;text-align:right;color:var(--text)">0%</div>
- </div>
- <div id="csTargetSub" style="font-size:0.72rem;color:var(--muted);margin-top:0.4rem;text-align:right"></div>
- </div>
-
- <!-- KPI ROW -->
- <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:1rem;margin-bottom:1.3rem">
- <div class="chart-card cs-hero">
- <div style="width:52px;height:52px;border-radius:4px;display:flex;align-items:center;justify-content:center;background:rgba(34,200,127,0.14);color:var(--success);font-size:1.5rem;flex-shrink:0">$</div>
+ <div class="csx-scroll"><table class="csx-kt" id="csxKpiTable"></table></div>
+ <div class="csx-two" style="margin-top:1rem">
  <div>
- <div class="cs-hero-number" id="cs-kpi-total">—</div>
- <div class="cs-hero-sub">Total Cost Saving (THB)</div>
- <div style="font-size:0.75rem;margin-top:0.3rem" id="cs-kpi-total-trend">—</div>
+ <div class="csx-ps" style="margin-bottom:.4rem">Rate (%) เทียบ Target รายเดือน</div>
+ <div class="chart-wrap" style="height:250px"><canvas id="csxKpiChart"></canvas></div>
  </div>
+ <div class="csx-sum" id="csxSummary"></div>
  </div>
- <div class="chart-card" style="display:flex;flex-direction:column;justify-content:center;padding:1rem 1.2rem !important">
- <div class="cs-mini" id="cs-kpi-count">—</div>
- <div style="font-size:0.72rem;color:var(--muted);margin-top:0.2rem">Items</div>
- <div style="font-size:0.7rem;margin-top:0.2rem" id="cs-kpi-count-trend">—</div>
- </div>
- <div class="chart-card" style="display:flex;flex-direction:column;justify-content:center;padding:1rem 1.2rem !important">
- <div class="cs-mini" id="cs-kpi-onrate">—</div>
- <div style="font-size:0.72rem;color:var(--muted);margin-top:0.2rem">On-Target Rate</div>
- <div style="font-size:0.7rem;margin-top:0.2rem" id="cs-kpi-onrate-trend">—</div>
- </div>
- <div class="chart-card" style="display:flex;flex-direction:column;justify-content:center;padding:1rem 1.2rem !important">
- <div class="cs-mini" id="cs-kpi-avgpct">—</div>
- <div style="font-size:0.72rem;color:var(--muted);margin-top:0.2rem">Avg. Negotiation (%)</div>
- <div style="font-size:0.7rem;margin-top:0.2rem" id="cs-kpi-avgpct-trend">—</div>
- </div>
+ <details class="csx-plan">
+ <summary>แนวทางการดำเนินการ (ตามฟอร์ม S QA 02-040)</summary>
+ <table>
+ <tr><th>ที่</th><th>แนวทางการดำเนินการ</th><th>ผู้รับผิดชอบ</th><th>กำหนดเสร็จ</th></tr>
+ <tr><td>1</td><td>รวบรวมข้อมูล จำนวนรายการที่สามารถต่อรองราคาได้</td><td>ปิยวัฒน์</td><td>ทุกเดือน</td></tr>
+ <tr><td>2</td><td>วิเคราะห์ % รายการที่สามารถต่อรองราคาได้เทียบกับเป้าหมาย</td><td>ปิยวัฒน์</td><td>ทุกเดือน</td></tr>
+ <tr><td>3</td><td>วิเคราะห์สาเหตุของรายการที่ไม่สามารถต่อรองราคาได้</td><td>ปิยวัฒน์</td><td>ทุกเดือน</td></tr>
+ <tr><td>4</td><td>ติดตามผลการดำเนินการและปรับปรุงแนวทางการต่อรองราคา</td><td>ปิยวัฒน์</td><td>ทุกเดือน</td></tr>
+ </table>
+ </details>
  </div>
 
- <!-- CHARTS ROW 1: MONTHLY TREND (LINE) -->
- <div class="chart-card" style="margin-bottom:1.2rem">
- <div class="chart-title" style="font-size:0.85rem">Monthly Saving Trend — Current Year vs Previous Year</div>
- <div class="chart-wrap" style="height:300px"><canvas id="csMonthlyChart"></canvas></div>
+ <!-- TABS: LIST / ANALYSIS -->
+ <div class="csx-panel" style="padding-top:.4rem">
+ <div class="csx-tabs">
+ <button class="csx-tab on" id="csxTabBtnList" onclick="csxSetTab('list')">รายการ Cost Saving</button>
+ <button class="csx-tab" id="csxTabBtnAnalysis" onclick="csxSetTab('analysis')">วิเคราะห์ (Maker / Plant / Model)</button>
  </div>
 
- <!-- CHARTS ROW 2: DONUT + TOP MODEL -->
- <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1.2rem">
- <div class="chart-card">
- <div class="chart-title" style="font-size:0.85rem">Saving by Plant</div>
- <div class="chart-wrap" style="height:280px"><canvas id="csPlantChart"></canvas></div>
+ <!-- LIST -->
+ <div id="csxTabList">
+ <div class="csx-tools">
+ <input type="text" class="csx-search" id="csxSearch" placeholder="🔍 ค้นหา Model / Part Name / Part No / Maker / Plant / Remark" oninput="csxOnSearch(this.value)">
+ <div class="csx-seg" id="csxResSeg">
+ <button data-v="all" class="on" onclick="csxSetRes('all')">ทั้งหมด</button>
+ <button data-v="ach" onclick="csxSetRes('ach')">ACHIEVE ≥10%</button>
+ <button data-v="no" onclick="csxSetRes('no')">NO ACHIEVE</button>
  </div>
- <div class="chart-card">
- <div class="chart-title" style="font-size:0.85rem">Top Model — Highest Saving</div>
- <div class="chart-wrap" style="height:280px"><canvas id="csModelChart"></canvas></div>
+ <select class="csx-sel" id="csxPlantSel" onchange="csxSetFilter('plant',this.value)"></select>
+ <select class="csx-sel" id="csxMakerSel" onchange="csxSetFilter('maker',this.value)"></select>
+ <button class="btn btn-ghost" style="padding:.4rem .7rem;font-size:.78rem" onclick="csxReset()">ล้างตัวกรอง</button>
+ <button class="btn btn-ghost" style="padding:.4rem .7rem;font-size:.78rem" onclick="csxExportList()">⬇ Export Excel</button>
  </div>
- </div>
-
- <!-- CHARTS ROW 3: TOP MAKER + MARGIN ANALYSIS -->
- <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1.2rem">
- <div class="chart-card">
- <div class="chart-title" style="font-size:0.85rem">Top Maker — Highest Saving</div>
- <div class="chart-wrap" style="height:280px"><canvas id="csMakerChart"></canvas></div>
- </div>
- <div class="chart-card">
- <div class="chart-title" style="font-size:0.85rem">Margin Analysis — Cost Customer vs Maker After</div>
- <div class="chart-wrap" style="height:280px"><canvas id="csMarginChart"></canvas></div>
- </div>
- </div>
-
- <!-- KPI MONITORING: MONTHLY RATE vs TARGET -->
- <div class="chart-card" style="margin-bottom:1.2rem">
- <div class="chart-title" style="font-size:0.85rem;margin-bottom:0.8rem">KPI Monitoring Report — Negotiation Rate vs Target</div>
- <div class="cs-table-wrap" style="max-height:none;margin-bottom:1rem;overflow-x:auto">
- <table class="cs-table" id="csKpiTable">
- <thead>
- <tr>
- <th>Metric</th>
- <th>JAN</th><th>FEB</th><th>MAR</th><th>APR</th><th>MAY</th><th>JUN</th>
- <th>JUL</th><th>AUG</th><th>SEP</th><th>OCT</th><th>NOV</th><th>DEC</th>
- <th style="background:var(--accent);color:#fff">TOTAL</th>
- </tr>
- </thead>
- <tbody id="csKpiTableBody"></tbody>
+ <div class="csx-mchips" id="csxMonthChips"></div>
+ <div class="csx-info" id="csxListInfo"></div>
+ <div class="csx-lt-wrap">
+ <table class="csx-lt">
+ <thead id="csxListHead"></thead>
+ <tbody id="csxListBody"></tbody>
+ <tfoot id="csxListFoot"></tfoot>
  </table>
  </div>
- <div class="chart-wrap" style="height:300px"><canvas id="csKpiMonitorChart"></canvas></div>
+ <div class="csx-pager" id="csxPager"></div>
  </div>
 
- <!-- TABLE -->
- <div class="chart-card">
- <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.8rem;flex-wrap:wrap;gap:0.5rem">
- <div class="chart-title" style="font-size:0.85rem">Cost Saving Records</div>
- <div class="cs-search-row" style="margin-bottom:0">
- <input type="text" class="cs-search-input" id="csSearchModel" placeholder="Search MODEL" oninput="renderCsTable(csCurrentRows)">
- <input type="text" class="cs-search-input" id="csSearchMaker" placeholder="Search MAKER" oninput="renderCsTable(csCurrentRows)">
+ <!-- ANALYSIS -->
+ <div id="csxTabAnalysis" style="display:none">
+ <div class="csx-chart-card" style="margin-bottom:1rem">
+ <div class="csx-pt">Monthly Saving Trend — ปีที่เลือก vs ปีก่อน</div>
+ <div class="chart-wrap" style="height:280px"><canvas id="csMonthlyChart"></canvas></div>
  </div>
+ <div class="csx-grid2">
+ <div class="csx-chart-card"><div class="csx-pt">Saving by Plant</div><div class="chart-wrap" style="height:270px"><canvas id="csPlantChart"></canvas></div></div>
+ <div class="csx-chart-card"><div class="csx-pt">Top Model — Highest Saving</div><div class="chart-wrap" style="height:270px"><canvas id="csModelChart"></canvas></div></div>
  </div>
- <div class="cs-table-wrap">
- <table class="cs-table">
- <thead>
- <tr>
- <th class="col-model">Model</th><th class="col-part">Part Name</th><th class="col-partno">Part No</th><th class="col-maker">Maker</th>
- <th class="col-num">Before</th><th class="col-num">After</th><th class="col-num">Save/Unit</th><th class="col-num">Volume</th>
- <th class="col-total">Total Save</th><th class="col-target">Target</th><th class="col-status">ON/OFF</th><th class="col-date">GO Date</th><th class="col-plant">Plant</th><th class="col-act"></th>
- </tr>
- </thead>
- <tbody id="csTableBody"></tbody>
- </table>
+ <div class="csx-chart-card" style="margin-top:1rem"><div class="csx-pt">Top Maker — Highest Saving</div><div class="chart-wrap" style="height:270px"><canvas id="csMakerChart"></canvas></div></div>
+ <div class="csx-ps" style="margin-top:.6rem">กราฟ Plant / Model / Maker แสดงตามช่วงเวลาที่เลือก (ทั้งปี หรือเฉพาะเดือน)</div>
  </div>
  </div>
  </div>
  <!-- /csPerYearView -->
+
 
  <!-- ALL-YEARS OVERVIEW VIEW (ซ่อนไว้ก่อน สลับด้วยปุ่ม "ภาพรวมทุกปี") -->
  <div id="csAllYearsView" style="display:none">
@@ -8770,7 +8893,7 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
  <th style="padding:0.4rem 0.6rem;text-align:left">ปี</th>
  <th style="padding:0.4rem 0.6rem">Total Saving (THB)</th>
  <th style="padding:0.4rem 0.6rem">Items</th>
- <th style="padding:0.4rem 0.6rem">On-Target Rate</th>
+ <th style="padding:0.4rem 0.6rem">Rate ≥10% (KPI)</th>
  <th style="padding:0.4rem 0.6rem">Avg. Negotiation</th>
  <th style="padding:0.4rem 0.6rem;text-align:left">เทียบปีก่อนหน้า</th>
  </tr></thead>
@@ -16055,78 +16178,6 @@ async function loadCostSavingData() {
  renderCostSavingPage();
 }
 
-function csRowSaving(r) {
- const before = parseFloat(r.makerBefore) || 0;
- const after = parseFloat(r.makerAfter) || 0;
- const vol = parseFloat(r.volume) || 0;
- return { before, after, vol, perUnit: before - after, total: (before - after) * vol };
-}
-
-function csComputeYearStats(year) {
- const rows = costSavingData.filter(r => r.goDate && new Date(r.goDate).getFullYear() === year);
- let totalSaving = 0, onCount = 0, offCount = 0, pctSum = 0, pctN = 0;
- rows.forEach(r => {
- const s = csRowSaving(r);
- totalSaving += s.total;
- if (r.onOff === 'ON') onCount++; else if (r.onOff === 'OFF') offCount++;
- if (s.before) { pctSum += (s.before - s.after) / s.before * 100; pctN++; }
- });
- return {
- rows, totalSaving, count: rows.length,
- onRate: (onCount + offCount) ? onCount / (onCount + offCount) * 100 : 0,
- avgPct: pctN ? pctSum / pctN : 0
- };
-}
-
-function renderCostSavingPage() {
- if (!document.getElementById('page-costsaving')) return;
- const yearSelect = document.getElementById('csYearSelect');
- const nowYear = new Date().getFullYear();
- const years = Array.from(new Set(costSavingData.filter(r => r.goDate).map(r => new Date(r.goDate).getFullYear())));
- if (!years.includes(nowYear)) years.push(nowYear);
- years.sort((a, b) => b - a);
- if (yearSelect) {
- const prevVal = yearSelect.value;
- const optsHtml = years.map(y => `<option value="${y}">ปี ${y}</option>`).join('');
- if (yearSelect.innerHTML !== optsHtml) {
- yearSelect.innerHTML = optsHtml;
- yearSelect.value = years.includes(Number(prevVal)) ? prevVal : String(years[0]);
- }
- }
- const year = parseInt(yearSelect ? yearSelect.value : nowYear) || nowYear;
- const cur = csComputeYearStats(year);
- const prev = csComputeYearStats(year - 1);
- const fmt0 = n => Math.round(n).toLocaleString('en-US');
-
- document.getElementById('cs-kpi-total').textContent = fmt0(cur.totalSaving);
- document.getElementById('cs-kpi-count').textContent = cur.count.toLocaleString();
- document.getElementById('cs-kpi-onrate').textContent = cur.count ? Math.round(cur.onRate) + '%' : '—';
- document.getElementById('cs-kpi-avgpct').textContent = cur.count ? cur.avgPct.toFixed(1) + '%' : '—';
-
- const setTrend = (elId, curVal, prevVal, fmtFn, betterUp) => {
- const el = document.getElementById(elId);
- if (!el) return;
- if (!prev.count) { el.textContent = 'ไม่มีข้อมูลปีก่อนเทียบ'; el.style.color = ''; return; }
- const diff = curVal - prevVal;
- const good = betterUp ? diff >= 0 : diff <= 0;
- el.style.color = good ? 'var(--success)' : 'var(--danger)';
- el.textContent = (diff >= 0 ? '▲ +' : '▼ ') + fmtFn(Math.abs(diff)) + ' จากปีก่อน';
- };
- setTrend('cs-kpi-total-trend', cur.totalSaving, prev.totalSaving, v => fmt0(v) + ' บาท', true);
- setTrend('cs-kpi-count-trend', cur.count, prev.count, v => Math.round(v) + ' รายการ', true);
- setTrend('cs-kpi-onrate-trend', cur.onRate, prev.onRate, v => v.toFixed(0) + '%', true);
- setTrend('cs-kpi-avgpct-trend', cur.avgPct, prev.avgPct, v => v.toFixed(1) + '%', true);
-
- renderCsMonthlyChart(year, cur.rows, prev.rows);
- renderCsPlantChart(cur.rows);
- renderCsModelChart(cur.rows);
- renderCsMakerChart(cur.rows);
- renderCsMarginChart(cur.rows);
- renderCsKpiMonitor(cur.rows, year);
- renderCsTargetBar();
- renderCsTable(cur.rows);
-}
-
 /* ══════════════════════════════════════════════════
  ภาพรวมทุกปี (ALL-YEARS OVERVIEW)
 ══════════════════════════════════════════════════ */
@@ -16539,240 +16590,511 @@ function renderCsMarginChart(rows) {
  });
 }
 
-function renderCsTargetBar() {
- const targetInput = document.getElementById('csAnnualTarget');
- const target = parseFloat(targetInput ? targetInput.value : 0) || 0;
- const actual = costSavingData.reduce((s, r) => {
- const yearSel = parseInt(document.getElementById('csYearSelect')?.value || new Date().getFullYear());
- if (!r.goDate || new Date(r.goDate).getFullYear() !== yearSel) return s;
- return s + csRowSaving(r).total;
- }, 0);
- const pct = target > 0 ? Math.min(Math.round(actual / target * 100), 999) : 0;
- const fillEl = document.getElementById('csTargetFill');
- const pctEl = document.getElementById('csTargetPct');
- const subEl = document.getElementById('csTargetSub');
- if (fillEl) fillEl.style.width = Math.min(pct, 100) + '%';
- if (pctEl) { pctEl.textContent = pct + '%'; pctEl.style.color = pct >= 100 ? 'var(--success)' : pct >= 70 ? 'var(--text)' : 'var(--danger)'; }
- if (subEl) subEl.textContent = Math.round(actual).toLocaleString() + ' / ' + Math.round(target).toLocaleString() + ' THB' + (pct >= 100 ? ' — Target achieved' : '');
+/* ══════════════════════════════════════════════════
+ COST SAVING v2 — สอดคล้องฟอร์ม KPI Monitoring (S QA 02-040)
+ นิยาม KPI:
+ • รายการที่ Maker เสนอราคา = ทุกรายการที่มี GO DATE ในช่วงที่เลือก
+ • "ต่อรองได้" = ราคาหลังต่อรอง ลดลง ≥ itemThreshold (10%) ของราคาที่ Maker เสนอ
+ • Rate (%) = ต่อรองได้ ÷ เสนอราคา × 100 เทียบ Target rateTarget (20%)
+ (ไม่ใช้สถานะ ON/OFF จาก Excel ซึ่งอิงเกณฑ์ −20% ต่อรายการ)
+══════════════════════════════════════════════════ */
+const CSX_CFG = {
+ docNo: 'S QA 02-040', dept: 'จัดซื้อ', owner: 'ปิยวัฒน์ วิเศษทอง',
+ rateTarget: 20, // Target ของ KPI (% ของจำนวนรายการที่เสนอราคา)
+ itemThreshold: 10, // เกณฑ์ต่อรายการ (% ที่ลดจากราคา Maker เสนอ)
+ steadyBand: 2, // ต่ำกว่า Target ไม่เกินกี่จุด = "คงที่"
+ defaultAnnualTarget: 5000000
+};
+const CSX_MTH_EN = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+const CSX_MTH_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const CSX_MTH_FULL = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+
+let csxState = { month: -1, q: '', res: 'all', plant: '', maker: '', sort: 'date', dir: -1, page: 1, pageSize: 50, tab: 'list' };
+let csxYear = new Date().getFullYear();
+let csxYearRows = [];
+let csxView = [];
+let csxSearchTimer = null;
+
+/* ── helpers ── */
+function csxEsc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function csxNum(v) { const n = parseFloat(String(v == null ? '' : v).replace(/,/g, '')); return isNaN(n) ? null : n; }
+function csxDate(r) {
+ const s = r && r.goDate; if (!s) return null;
+ const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s));
+ const d = m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(s);
+ return isNaN(d) ? null : d;
+}
+function csxFmt0(n) { return Math.round(n).toLocaleString('en-US'); }
+function csxFmt2(n) { return (+n.toFixed(2)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function csxDateStr(d) { return d ? d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }) : ''; }
+function csxPeriodLabel(year) { return csxState.month >= 0 ? CSX_MTH_FULL[csxState.month] + ' ' + (year + 543) : 'ทั้งปี ' + (year + 543); }
+
+/* ── คำนวณรายการ (ใช้ร่วมกับ All-years / Compare / กราฟเดิม) ── */
+function csRowSaving(r) {
+ const before = csxNum(r.makerBefore) || 0;
+ const afterN = csxNum(r.makerAfter);
+ const after = afterN == null ? before : afterN; // ไม่มีราคาหลังต่อรอง = ไม่ได้ต่อรอง (ไม่นับเป็นยอดประหยัด)
+ const vol = csxNum(r.volume) || 0;
+ const perUnit = before - after;
+ const pct = before > 0 ? perUnit / before * 100 : 0;
+ return { before, after, vol, perUnit, pct, total: perUnit * vol,
+ ach: before > 0 && Math.round(pct * 1e6) / 1e6 >= CSX_CFG.itemThreshold };
+}
+function csxAgg(rows) {
+ let total = 0, ach = 0, pctSum = 0, pctN = 0;
+ rows.forEach(r => { const s = csRowSaving(r); total += s.total; if (s.ach) ach++; if (s.before > 0) { pctSum += s.pct; pctN++; } });
+ const n = rows.length;
+ return { rows, totalSaving: total, count: n, achieved: ach, onRate: n ? ach / n * 100 : 0, avgPct: pctN ? pctSum / pctN : 0 };
+}
+function csComputeYearStats(year) {
+ return csxAgg(costSavingData.filter(r => { const d = csxDate(r); return d && d.getFullYear() === year; }));
+}
+function csxByMonth(rows) {
+ const buckets = Array.from({ length: 12 }, () => []);
+ rows.forEach(r => { const d = csxDate(r); if (d) buckets[d.getMonth()].push(r); });
+ return buckets.map(csxAgg);
+}
+function csxStatusOf(rate, n) {
+ const T = CSX_CFG.rateTarget;
+ if (!n) return { key: 'none', cls: '', label: 'ยังไม่มีข้อมูล' };
+ if (rate >= T) return { key: 'ok', cls: 'ok', label: 'บรรลุเป้าหมาย' };
+ if (rate >= T - CSX_CFG.steadyBand) return { key: 'steady', cls: 'warn', label: 'คงที่ (ใกล้เป้าหมาย)' };
+ return { key: 'bad', cls: 'bad', label: 'ไม่บรรลุเป้าหมาย' };
+}
+function csxTrend(byM) {
+ const idx = byM.map((a, i) => a.count ? i : -1).filter(i => i >= 0);
+ let pos = idx;
+ if (csxState.month >= 0) { if (!byM[csxState.month].count) return { key: 'na' }; pos = idx.filter(i => i <= csxState.month); }
+ if (pos.length < 2) return { key: 'na' };
+ const to = pos[pos.length - 1], from = pos[pos.length - 2];
+ const d = byM[to].onRate - byM[from].onRate;
+ return { key: d > CSX_CFG.steadyBand ? 'up' : d < -CSX_CFG.steadyBand ? 'down' : 'flat', d, from, to };
+}
+function csxDelta(curV, prevV, hasPrev, fmt, year) {
+ if (!hasPrev) return '<span class="sub">ไม่มีข้อมูลปี ' + (year - 1) + ' เทียบ</span>';
+ const diff = curV - prevV;
+ return '<span class="' + (diff >= 0 ? 'csx-up' : 'csx-dn') + '">' + (diff >= 0 ? '▲ +' : '▼ −') + fmt(Math.abs(diff)) + ' vs ปี ' + (year - 1) + '</span>';
+}
+function csxGetTarget(year) {
+ try { const v = parseFloat(localStorage.getItem('csx_target_' + year)); if (!isNaN(v) && v >= 0) return v; } catch (e) { }
+ return CSX_CFG.defaultAnnualTarget;
 }
 
-function exportCsPdf() {
- const yearSel = document.getElementById('csYearSelect')?.value || new Date().getFullYear();
- const cur = csComputeYearStats(parseInt(yearSel));
- const prev = csComputeYearStats(parseInt(yearSel) - 1);
- const fmt0 = n => Math.round(n).toLocaleString('en-US');
+/* ══════════════ MAIN RENDER ══════════════ */
+function renderCostSavingPage() {
+ if (!document.getElementById('page-costsaving')) return;
+ const ys = document.getElementById('csYearSelect');
+ const nowYear = new Date().getFullYear();
+ const years = Array.from(new Set(costSavingData.map(csxDate).filter(Boolean).map(d => d.getFullYear())));
+ if (!years.includes(nowYear)) years.push(nowYear);
+ years.sort((a, b) => b - a);
+ if (ys) {
+ const prevVal = ys.value;
+ const html = years.map(y => `<option value="${y}">ปี ${y}</option>`).join('');
+ if (ys.innerHTML !== html) { ys.innerHTML = html; ys.value = years.includes(Number(prevVal)) ? prevVal : String(years[0]); }
+ }
+ const year = parseInt(ys ? ys.value : nowYear) || nowYear;
+ csxYear = year;
+ const cur = csComputeYearStats(year), prev = csComputeYearStats(year - 1);
+ csxYearRows = cur.rows;
+ const byM = csxByMonth(cur.rows), byMprev = csxByMonth(prev.rows);
+ const m = csxState.month;
+ const per = m >= 0 ? byM[m] : cur;
+ const perPrev = m >= 0 ? byMprev[m] : prev;
 
- const topModels = {};
- cur.rows.forEach(r => { const m = r.model || 'N/A'; topModels[m] = (topModels[m] || 0) + csRowSaving(r).total; });
- const top5Models = Object.entries(topModels).sort((a, b) => b[1] - a[1]).slice(0, 5);
+ const set = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+ set('csxDocNo', CSX_CFG.docNo); set('csxDept', CSX_CFG.dept); set('csxOwner', CSX_CFG.owner);
+ set('csxTgTxt', CSX_CFG.rateTarget); set('csxThTxt', CSX_CFG.itemThreshold);
+ set('csxPeriod', csxPeriodLabel(year));
 
- const topMakers = {};
- cur.rows.forEach(r => { const m = r.goMaker || 'N/A'; topMakers[m] = (topMakers[m] || 0) + csRowSaving(r).total; });
- const top5Makers = Object.entries(topMakers).sort((a, b) => b[1] - a[1]).slice(0, 5);
-
- const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
-<title>Cost Saving Report ${yearSel}</title>
-<style>
- body { font-family: 'Segoe UI', Tahoma, sans-serif; padding: 40px; color: #1a1a2e; max-width: 800px; margin: 0 auto; }
- h1 { font-size: 22px; border-bottom: 3px solid #2E5395; padding-bottom: 8px; margin-bottom: 6px; }
- h2 { font-size: 15px; color: #555; margin-top: 28px; margin-bottom: 10px; border-left: 4px solid #2E5395; padding-left: 10px; }
- .sub { font-size: 12px; color: #888; margin-bottom: 20px; }
- .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0; }
- .kpi { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 14px; text-align: center; }
- .kpi-val { font-size: 22px; font-weight: 700; color: #1e3a8a; }
- .kpi-label { font-size: 11px; color: #64748b; margin-top: 4px; }
- .kpi-trend { font-size: 10px; margin-top: 3px; }
- table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; }
- th { background: #1e3a8a; color: #fff; padding: 7px 10px; text-align: left; }
- td { padding: 6px 10px; border-bottom: 1px solid #e2e8f0; }
- tr:nth-child(even) td { background: #f8fafc; }
- .right { text-align: right; }
- .green { color: #16a34a; font-weight: 700; }
- .footer { margin-top: 30px; text-align: center; font-size: 10px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 10px; }
- @media print { body { padding: 20px; } }
-</style></head><body>
-<h1>COST SAVING REPORT — ${yearSel}</h1>
-<div class="sub">Generated ${new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' })} | PURCHASE-EN-CCIP</div>
-
-<div class="kpi-grid">
- <div class="kpi"><div class="kpi-val">${fmt0(cur.totalSaving)}</div><div class="kpi-label">Total Saving (THB)</div><div class="kpi-trend" style="color:${cur.totalSaving >= prev.totalSaving ? '#16a34a' : '#dc2626'}">${cur.totalSaving >= prev.totalSaving ? '▲' : '▼'} vs ${fmt0(prev.totalSaving)} prev year</div></div>
- <div class="kpi"><div class="kpi-val">${cur.count}</div><div class="kpi-label">Items</div></div>
- <div class="kpi"><div class="kpi-val">${cur.count ? Math.round(cur.onRate) + '%' : '—'}</div><div class="kpi-label">On-Target Rate</div></div>
- <div class="kpi"><div class="kpi-val">${cur.count ? cur.avgPct.toFixed(1) + '%' : '—'}</div><div class="kpi-label">Avg. Negotiation</div></div>
-</div>
-
-<h2>Top 5 Models</h2>
-<table><tr><th>#</th><th>Model</th><th class="right">Total Saving (THB)</th></tr>
-${top5Models.map(([m, v], i) => '<tr><td>' + (i+1) + '</td><td>' + m + '</td><td class="right green">' + fmt0(v) + '</td></tr>').join('')}
-</table>
-
-<h2>Top 5 Makers</h2>
-<table><tr><th>#</th><th>Maker</th><th class="right">Total Saving (THB)</th></tr>
-${top5Makers.map(([m, v], i) => '<tr><td>' + (i+1) + '</td><td>' + m + '</td><td class="right green">' + fmt0(v) + '</td></tr>').join('')}
-</table>
-
-<h2>All Records (${cur.count} items)</h2>
-<table><tr><th>Model</th><th>Part Name</th><th>Maker</th><th class="right">Before</th><th class="right">After</th><th class="right">Saving</th><th class="right">Volume</th><th class="right">Total</th><th>Status</th></tr>
-${cur.rows.sort((a, b) => csRowSaving(b).total - csRowSaving(a).total).map(r => {
- const s = csRowSaving(r);
- return '<tr><td>' + (r.model||'') + '</td><td>' + (r.partName||'') + '</td><td>' + (r.goMaker||'') + '</td><td class="right">' + s.before.toLocaleString() + '</td><td class="right">' + s.after.toLocaleString() + '</td><td class="right">' + s.perUnit.toLocaleString() + '</td><td class="right">' + s.vol.toLocaleString() + '</td><td class="right green">' + Math.round(s.total).toLocaleString() + '</td><td>' + (r.onOff||'') + '</td></tr>';
- }).join('')}
-</table>
-
-<div class="footer">PURCHASE-EN-CCIP | Cost Saving Report | Auto-generated</div>
-</body></html>`;
-
- const w = window.open('', '_blank');
- w.document.write(html);
- w.document.close();
- setTimeout(() => w.print(), 600);
+ csxRenderKpis(year, per, perPrev, cur);
+ csxRenderKpiTable(byM, cur);
+ csxRenderKpiChart(byM);
+ csxRenderSummary(byM, per);
+ csxRenderFilters();
+ csxRenderList();
+ if (csxState.tab === 'analysis') csxRenderAnalysis(year, cur, prev, per);
 }
 
-function renderCsKpiMonitor(rows, year) {
- const body = document.getElementById('csKpiTableBody');
- const canvas = document.getElementById('csKpiMonitorChart');
- if (!body || !canvas) return;
+/* ── สถานะ KPI + การ์ด ── */
+function csxRenderKpis(year, per, perPrev, cur) {
+ const box = document.getElementById('csxKpis'); if (!box) return;
+ const T = CSX_CFG.rateTarget, TH = CSX_CFG.itemThreshold;
+ const st = csxStatusOf(per.onRate, per.count);
+ const hasPrev = perPrev.count > 0;
+ let gap = 'ยังไม่มีรายการในช่วงเวลานี้';
+ if (per.count) {
+ const diff = per.onRate - T;
+ if (diff >= 0) gap = 'สูงกว่าเป้าหมาย ' + diff.toFixed(1) + ' จุด';
+ else {
+ const need = Math.max(1, Math.ceil(T / 100 * per.count - 1e-9) - per.achieved);
+ gap = 'ต่ำกว่าเป้าหมาย ' + Math.abs(diff).toFixed(1) + ' จุด · ต้องต่อรองได้เพิ่มอีก ' + need + ' รายการ จึงถึงเป้า';
+ }
+ }
+ const target = csxGetTarget(year);
+ const pctYear = target > 0 ? Math.round(cur.totalSaving / target * 100) : 0;
+ const tPct = (st.key === 'none') ? '—' : per.onRate.toFixed(1) + '%';
+ box.innerHTML = `
+ <div class="csx-status ${st.cls}">
+ <div class="csx-st-top">ผลตัวชี้วัด · ${csxEsc(csxPeriodLabel(year))}</div>
+ <div class="csx-st-main"><span class="csx-st-rate">${tPct}</span><span class="csx-st-badge">${st.label}</span></div>
+ <div class="csx-meter"><i style="width:${Math.min(per.onRate, 100)}%"></i><b style="left:${T}%"><em>Target ${T}%</em></b></div>
+ <div class="csx-st-foot"><b style="color:var(--text)">${per.achieved} / ${per.count}</b> รายการต่อรองได้ ≥ ${TH}% · ${gap}</div>
+ </div>
+ <div class="csx-card">
+ <div class="lbl">จำนวนรายการที่ Maker เสนอราคา</div>
+ <div class="val">${per.count.toLocaleString()}</div>
+ ${csxDelta(per.count, perPrev.count, hasPrev, v => Math.round(v) + ' รายการ', year)}
+ </div>
+ <div class="csx-card">
+ <div class="lbl">จำนวนที่ต่อรองได้ ≥ ${TH}%</div>
+ <div class="val" style="color:var(--success)">${per.achieved.toLocaleString()}</div>
+ <span class="sub">ไม่ถึงเกณฑ์ ${(per.count - per.achieved).toLocaleString()} รายการ</span>
+ </div>
+ <div class="csx-card">
+ <div class="lbl">Total Cost Saving (THB)${csxState.month >= 0 ? ' · เดือนที่เลือก' : ''}</div>
+ <div class="val">${csxFmt0(per.totalSaving)}</div>
+ ${csxDelta(per.totalSaving, perPrev.totalSaving, hasPrev, v => csxFmt0(v) + ' บาท', year)}
+ <div class="csx-tg">
+ <div class="csx-tgrow"><span>เป้าทั้งปี</span><span><input type="number" id="csAnnualTarget" value="${target}" step="100000" min="0" oninput="csxTargetChanged()"> THB</span></div>
+ <div class="csx-tgbar"><i id="csTargetFill" style="width:${Math.max(0, Math.min(pctYear, 100))}%"></i></div>
+ <div class="csx-tgsub" id="csTargetSub">${csxFmt0(cur.totalSaving)} / ${csxFmt0(target)} · ${pctYear}%</div>
+ </div>
+ </div>
+ <div class="csx-card">
+ <div class="lbl">ส่วนลดเฉลี่ยต่อรายการ (%)</div>
+ <div class="val">${per.count ? per.avgPct.toFixed(1) + '%' : '—'}</div>
+ ${csxDelta(per.avgPct, perPrev.avgPct, hasPrev, v => v.toFixed(1) + ' จุด', year)}
+ </div>`;
+}
+function csxTargetChanged() {
+ const inp = document.getElementById('csAnnualTarget'); if (!inp) return;
+ const target = parseFloat(inp.value) || 0;
+ try { localStorage.setItem('csx_target_' + csxYear, String(target)); } catch (e) { }
+ const total = csComputeYearStats(csxYear).totalSaving;
+ const pct = target > 0 ? Math.round(total / target * 100) : 0;
+ const fill = document.getElementById('csTargetFill'); if (fill) fill.style.width = Math.max(0, Math.min(pct, 100)) + '%';
+ const sub = document.getElementById('csTargetSub'); if (sub) sub.textContent = csxFmt0(total) + ' / ' + csxFmt0(target) + ' · ' + pct + '%';
+}
 
- const TARGET_PCT = 20; // เป้าหมาย % ที่ตั้งไว้ (ปรับได้)
+/* ── ตาราง KPI Monitoring (รูปแบบเดียวกับฟอร์ม) ── */
+function csxRenderKpiTable(byM, cur) {
+ const t = document.getElementById('csxKpiTable'); if (!t) return;
+ const T = CSX_CFG.rateTarget, TH = CSX_CFG.itemThreshold, sel = csxState.month;
+ const sc = i => i === sel ? ' sel' : '';
+ const head = '<thead><tr><th>ผลการดำเนินการ</th>' +
+ CSX_MTH_EN.map((m, i) => `<th class="m${sc(i)}" onclick="csxSetMonth(${i},true)" title="${CSX_MTH_FULL[i]}">${m}</th>`).join('') +
+ '<th class="tot">TOTAL</th></tr></thead>';
+ const row = (label, cells, total, cls) => `<tr class="${cls || ''}"><td>${label}</td>${cells.join('')}<td class="tot">${total}</td></tr>`;
+ const cell = (i, v, extra) => `<td class="${(sc(i) + (extra ? ' ' + extra : '')).trim()}">${v}</td>`;
+ const rowsHtml =
+ row('จำนวนรายการที่ Maker เสนอราคา', byM.map((a, i) => cell(i, a.count || '–', a.count ? '' : 'na')), cur.count) +
+ row('จำนวนที่สามารถต่อรองได้ ≥ ' + TH + '%', byM.map((a, i) => cell(i, a.count ? a.achieved : '–', a.count ? '' : 'na')), cur.achieved) +
+ row('Rate (%)', byM.map((a, i) => cell(i, a.count ? a.onRate.toFixed(1) : '–', a.count ? (a.onRate >= T ? 'ok' : 'bad') : 'na')), cur.count ? cur.onRate.toFixed(1) : '–', 'rate') +
+ row('Target (%)', byM.map((a, i) => cell(i, T)), T, 'tgt') +
+ row('Cost Saving (THB)', byM.map((a, i) => `<td class="${(sc(i) + (a.count ? '' : ' na')).trim()}" title="${csxFmt0(a.totalSaving)} บาท">${a.count ? csFormatBaht(a.totalSaving) : '–'}</td>`), `<span title="${csxFmt0(cur.totalSaving)} บาท">${cur.count ? csFormatBaht(cur.totalSaving) : '–'}</span>`);
+ t.innerHTML = head + '<tbody>' + rowsHtml + '</tbody>';
+}
 
- // จัดกลุ่มรายเดือน
- const monthly = Array.from({ length: 12 }, () => ({ total: 0, onTarget: 0, totalSaving: 0 }));
- rows.forEach(r => {
- if (!r.goDate) return;
- const m = new Date(r.goDate).getMonth();
- monthly[m].total++;
- if (r.onOff === 'ON') monthly[m].onTarget++;
- monthly[m].totalSaving += csRowSaving(r).total;
- });
-
- const rates = monthly.map(m => m.total ? Math.round(m.onTarget / m.total * 1000) / 10 : 0);
- const totals = { total: 0, onTarget: 0, saving: 0 };
- monthly.forEach(m => { totals.total += m.total; totals.onTarget += m.onTarget; totals.saving += m.totalSaving; });
- const totalRate = totals.total ? Math.round(totals.onTarget / totals.total * 1000) / 10 : 0;
-
- const MONTHS_SHORT = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
- const fmtCell = (v, isRate) => isRate ? (v ? v.toFixed(1) : '0.0') : v.toLocaleString();
-
- // render table
- const makeRow = (label, values, totalVal, style) => {
- return `<tr${style ? ' style="'+style+'"' : ''}>
- <td style="font-weight:700">${label}</td>
- ${values.map(v => `<td style="font-family:var(--mono)">${v}</td>`).join('')}
- <td style="font-family:var(--mono);font-weight:700">${totalVal}</td>
- </tr>`;
- };
-
- body.innerHTML =
- makeRow('Items', monthly.map(m => m.total), totals.total) +
- makeRow('On-Target', monthly.map(m => m.onTarget), totals.onTarget) +
- makeRow('Rate (%)',
- rates.map(r => `<span style="color:${r >= TARGET_PCT ? 'var(--success)' : r > 0 ? 'var(--danger)' : 'var(--muted)'};font-weight:700">${r.toFixed(1)}</span>`),
- `<span style="color:${totalRate >= TARGET_PCT ? 'var(--success)' : 'var(--danger)'}; font-weight:700">${totalRate.toFixed(1)}</span>`,
- 'background:color-mix(in srgb, var(--surface2) 60%, transparent)') +
- makeRow('Target (%)', monthly.map(() => TARGET_PCT), TARGET_PCT, 'color:var(--muted)') +
- makeRow('Saving (THB)', monthly.map(m => m.totalSaving ? csFormatBaht(m.totalSaving) : '—'), csFormatBaht(totals.saving));
-
- // render chart: bar = rate, line = target
+/* ── กราฟ Rate vs Target ── */
+function csxRenderKpiChart(byM) {
+ const canvas = document.getElementById('csxKpiChart'); if (!canvas) return;
+ const T = CSX_CFG.rateTarget, sel = csxState.month;
+ const rates = byM.map(a => a.count ? Math.round(a.onRate * 10) / 10 : 0);
  const cs = getComputedStyle(document.body);
  const chartText = cs.getPropertyValue('--muted').trim();
  const gridColor = cs.getPropertyValue('--surface2').trim();
- destroyChart('csKpiMonitor');
- charts.csKpiMonitor = new Chart(canvas, {
+ const alpha = i => (sel < 0 || sel === i) ? 0.85 : 0.35;
+ destroyChart('csxKpi');
+ charts.csxKpi = new Chart(canvas, {
  type: 'bar',
  data: {
- labels: MONTHS_SHORT,
+ labels: CSX_MTH_EN,
  datasets: [
- {
- label: 'Rate (%)',
- data: rates,
- backgroundColor: rates.map(r => r >= TARGET_PCT ? hexToRgba('#2F8F6E', 0.8) : hexToRgba('#2E5395', 0.7)),
- borderRadius: 4,
- maxBarThickness: 32,
- order: 2
- },
- {
- label: 'Target ' + TARGET_PCT + '%',
- data: Array(12).fill(TARGET_PCT),
- type: 'line',
- borderColor: '#A6443C',
- borderWidth: 2,
- borderDash: [6, 3],
- pointRadius: 0,
- fill: false,
- order: 1
- }
+ { label: 'Rate (%)', data: rates, backgroundColor: rates.map((r, i) => hexToRgba(byM[i].count && r >= T ? '#2F8F6E' : '#B3564C', alpha(i))), borderRadius: 4, maxBarThickness: 30, order: 2 },
+ { label: 'Target ' + T + '%', data: Array(12).fill(T), type: 'line', borderColor: '#2E5395', borderWidth: 2, borderDash: [6, 3], pointRadius: 0, fill: false, order: 1 }
  ]
  },
  options: {
  responsive: true, maintainAspectRatio: false, animation: CHART_EASE,
  interaction: { mode: 'index', intersect: false },
  layout: { padding: { top: 18 } },
+ onClick: (e, els) => { if (els && els.length) csxSetMonth(els[0].index, true); },
  plugins: {
  legend: chartLegendCfg(chartText),
- tooltip: Object.assign(chartTooltipCfg(cs), {
- callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + ctx.raw.toFixed(1) + '%' }
- })
+ tooltip: Object.assign(chartTooltipCfg(cs), { callbacks: {
+ label: ctx => ' ' + ctx.dataset.label + ': ' + ctx.raw.toFixed(1) + '%',
+ afterBody: items => { const a = byM[items[0].dataIndex]; return a.count ? ['ต่อรองได้ ' + a.achieved + ' / ' + a.count + ' รายการ'] : ['ไม่มีข้อมูล']; }
+ } })
  },
  scales: {
- x: { ticks: { color: chartText, font: { size: 9.5, family: "'Sarabun',sans-serif", weight: '600' } }, grid: { display: false }, border: { display: false } },
+ x: { ticks: { color: chartText, font: { size: 9.5, weight: '600' } }, grid: { display: false }, border: { display: false } },
  y: { beginAtZero: true, max: 100, ticks: { color: chartText, font: { size: 9, family: "'IBM Plex Mono',monospace" }, callback: v => v + '%', stepSize: 20 }, grid: { color: gridColor, drawTicks: false, lineWidth: 1, borderDash: [3, 4] }, border: { display: false } }
  }
  },
  plugins: [{
- id: 'csKpiValueLabels',
+ id: 'csxValueLabels',
  afterDatasetsDraw(chart) {
- const { ctx } = chart;
- const meta = chart.getDatasetMeta(0); // bar dataset
- meta.data.forEach((point, i) => {
- const val = chart.data.datasets[0].data[i];
- if (!val) return;
- ctx.save();
- ctx.font = "700 10px 'IBM Plex Mono', monospace";
- ctx.fillStyle = val >= TARGET_PCT ? '#2F8F6E' : '#2E5395';
- ctx.textAlign = 'center';
- ctx.fillText(val.toFixed(1) + '%', point.x, point.y - 8);
- ctx.restore();
+ const { ctx } = chart; const meta = chart.getDatasetMeta(0);
+ meta.data.forEach((pt, i) => {
+ if (!byM[i].count) return;
+ ctx.save(); ctx.font = "700 10px 'IBM Plex Mono', monospace";
+ ctx.fillStyle = rates[i] >= T ? '#2F8F6E' : '#B3564C'; ctx.textAlign = 'center';
+ ctx.fillText(rates[i].toFixed(0) + '%', pt.x, pt.y - 6); ctx.restore();
  });
  }
  }]
  });
 }
 
-function renderCsTable(rows) {
- const body = document.getElementById('csTableBody');
- if (!body) return;
- csCurrentRows = rows;
- const qModel = (document.getElementById('csSearchModel') ? document.getElementById('csSearchModel').value : '').toLowerCase().trim();
- const qMaker = (document.getElementById('csSearchMaker') ? document.getElementById('csSearchMaker').value : '').toLowerCase().trim();
- let filtered = rows;
- if (qModel) filtered = filtered.filter(r => (r.model || '').toLowerCase().includes(qModel));
- if (qMaker) filtered = filtered.filter(r => (r.goMaker || '').toLowerCase().includes(qMaker));
- if (!filtered.length) {
- body.innerHTML = '<tr><td colspan="14" style="text-align:center;padding:1.5rem;color:var(--muted)">' + (rows.length ? 'No matching records' : 'No data for selected year') + '</td></tr>';
- return;
+/* ── สรุปผล / แนวโน้ม (เหมือนช่องติ๊กในฟอร์ม) ── */
+function csxRenderSummary(byM, per) {
+ const box = document.getElementById('csxSummary'); if (!box) return;
+ const T = CSX_CFG.rateTarget, band = CSX_CFG.steadyBand;
+ const st = csxStatusOf(per.onRate, per.count);
+ const tr = csxTrend(byM);
+ const chk = (label, on, tone) => `<span class="${on ? 'on ' + (tone || '') : ''}">${label}</span>`;
+ let note;
+ if (!per.count) note = 'ยังไม่มีข้อมูลในช่วงเวลาที่เลือก';
+ else {
+ const diff = per.onRate - T;
+ note = (diff >= 0
+ ? `บรรลุเป้าหมาย <b>${per.onRate.toFixed(1)}%</b> สูงกว่า Target ${T}% (ต่อรองได้ ${per.achieved}/${per.count} รายการ)`
+ : `Rate <b>${per.onRate.toFixed(1)}%</b> ต่ำกว่า Target ${T}% (ต่อรองได้ ${per.achieved}/${per.count} รายการ)`);
+ if (csxState.month < 0) {
+ const low = byM.map((a, i) => a.count && a.onRate < T ? CSX_MTH_TH[i] : null).filter(Boolean);
+ if (low.length) note += `<br>เดือนที่ต่ำกว่าเป้า: ${low.join(', ')} — ควรวิเคราะห์สาเหตุ (แนวทางข้อ 3)`;
  }
- const sorted = filtered.slice().sort((a, b) => csRowSaving(b).total - csRowSaving(a).total);
- body.innerHTML = sorted.map(r => {
- const s = csRowSaving(r);
- const dateStr = r.goDate ? new Date(r.goDate + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
- return '<tr>' +
- '<td>' + (r.model || '') + '</td>' +
- '<td>' + (r.partName || '') + '</td>' +
- '<td>' + (r.partNo || '') + '</td>' +
- '<td>' + (r.goMaker || '') + '</td>' +
- '<td style="text-align:right;font-family:var(--mono)">' + (+s.before.toFixed(2)).toLocaleString() + '</td>' +
- '<td style="text-align:right;font-family:var(--mono)">' + (+s.after.toFixed(2)).toLocaleString() + '</td>' +
- '<td style="text-align:right;font-family:var(--mono);color:' + (s.perUnit > 0 ? 'var(--success)' : s.perUnit < 0 ? 'var(--danger)' : '') + '">' + (+s.perUnit.toFixed(2)).toLocaleString() + '</td>' +
- '<td style="text-align:right;font-family:var(--mono)">' + s.vol.toLocaleString() + '</td>' +
- '<td style="text-align:right;font-family:var(--mono);font-weight:700;color:var(--success)">' + Math.round(s.total).toLocaleString() + '</td>' +
- '<td style="font-family:var(--mono)">' + (r.target ? parseFloat(r.target).toFixed(2) : '') + '</td>' +
- '<td class="' + (r.onOff === 'ON' ? 'cs-on' : 'cs-off') + '">' + (r.onOff || '') + '</td>' +
- '<td>' + dateStr + '</td>' +
- '<td>' + (r.plant || '') + '</td>' +
- '<td style="display:flex;gap:0.3rem"><button class="icon-btn" onclick="openCsEditModal(\'' + r.id + '\')" title="Edit"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button><button class="icon-btn del" onclick="deleteCsItem(\'' + r.id + '\')" title="Delete"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button></td>' +
- '</tr>';
- }).join('');
+ }
+ let trNote = '';
+ if (tr.key !== 'na') trNote = `<br>เดือน ${CSX_MTH_TH[tr.to]} ${byM[tr.to].onRate.toFixed(1)}% เทียบ ${CSX_MTH_TH[tr.from]} ${byM[tr.from].onRate.toFixed(1)}%`;
+ box.innerHTML = `
+ <h4>สรุปผล</h4>
+ <div class="csx-chk">${chk('บรรลุ', st.key === 'ok', 'good')}${chk('คงที่', st.key === 'steady')}${chk('ไม่บรรลุ', st.key === 'bad', 'badc')}</div>
+ <h4>แนวโน้ม</h4>
+ <div class="csx-chk">${chk('ดีขึ้น', tr.key === 'up', 'good')}${chk('คงที่', tr.key === 'flat')}${chk('ต่ำลง', tr.key === 'down', 'badc')}</div>
+ <div class="csx-note">${note}${trNote}</div>
+ <div class="csx-legend">บรรลุ = Rate ≥ Target · คงที่ = ต่ำกว่า Target ไม่เกิน ${band} จุด · ไม่บรรลุ = ต่ำกว่านั้น<br>แนวโน้ม = เทียบเดือนล่าสุดกับเดือนก่อนหน้าที่มีข้อมูล (ต่างกันไม่เกิน ±${band} จุด = คงที่)</div>`;
 }
+
+/* ══════════════ LIST: ค้นหา / กรอง / เรียง ══════════════ */
+function csxEnrich(rows) { return rows.map(r => ({ r, s: csRowSaving(r), d: csxDate(r) })); }
+function csxApplyFilters(items, ignoreMonth) {
+ const S = csxState, q = S.q.trim().toLowerCase();
+ let out = items;
+ if (!ignoreMonth && S.month >= 0) out = out.filter(x => x.d && x.d.getMonth() === S.month);
+ if (S.res === 'ach') out = out.filter(x => x.s.ach); else if (S.res === 'no') out = out.filter(x => !x.s.ach);
+ if (S.plant) out = out.filter(x => String(x.r.plant || '').trim() === S.plant);
+ if (S.maker) out = out.filter(x => String(x.r.goMaker || '').trim() === S.maker);
+ if (q) out = out.filter(x => [x.r.model, x.r.partName, x.r.partNo, x.r.goMaker, x.r.plant, x.r.remark].some(v => String(v == null ? '' : v).toLowerCase().includes(q)));
+ return out;
+}
+function csxSortItems(items) {
+ const k = csxState.sort, dir = csxState.dir;
+ const acc = {
+ date: x => x.d ? x.d.getTime() : 0, model: x => String(x.r.model || '').toLowerCase(), part: x => String(x.r.partName || '').toLowerCase(),
+ maker: x => String(x.r.goMaker || '').toLowerCase(), plant: x => String(x.r.plant || '').toLowerCase(),
+ before: x => x.s.before, after: x => x.s.after, pct: x => x.s.pct, vol: x => x.s.vol, total: x => x.s.total, res: x => (x.s.ach ? 1 : 0)
+ }[k] || (x => 0);
+ return items.slice().sort((a, b) => { const va = acc(a), vb = acc(b); return (va < vb ? -1 : va > vb ? 1 : 0) * dir; });
+}
+function csxRenderFilters() {
+ const fill = (id, dataKey, stateKey, label) => {
+ const el = document.getElementById(id); if (!el) return;
+ const vals = Array.from(new Set(csxYearRows.map(r => String(r[dataKey] || '').trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'th'));
+ if (csxState[stateKey] && !vals.includes(csxState[stateKey])) csxState[stateKey] = '';
+ el.innerHTML = '<option value="">' + label + '</option>' + vals.map(v => `<option value="${csxEsc(v)}"${v === csxState[stateKey] ? ' selected' : ''}>${csxEsc(v)}</option>`).join('');
+ };
+ fill('csxPlantSel', 'plant', 'plant', 'ทุก Plant');
+ fill('csxMakerSel', 'goMaker', 'maker', 'ทุก Maker');
+}
+function csxRenderList() {
+ const body = document.getElementById('csxListBody'); if (!body) return;
+ const S = csxState;
+ const all = csxEnrich(csxYearRows);
+
+ // ชิปเดือน: นับตามตัวกรองอื่น ๆ (ยกเว้นเดือน)
+ const base = csxApplyFilters(all, true);
+ const cnt = Array(12).fill(0), ach = Array(12).fill(0);
+ base.forEach(x => { if (x.d) { const m = x.d.getMonth(); cnt[m]++; if (x.s.ach) ach[m]++; } });
+ const chipsEl = document.getElementById('csxMonthChips');
+ if (chipsEl) {
+ chipsEl.innerHTML = `<button class="csx-mc${S.month < 0 ? ' on' : ''}" onclick="csxSetMonth(-1)">ทั้งปี <em>${base.length}</em></button>` +
+ CSX_MTH_TH.map((m, i) => {
+ const rate = cnt[i] ? ach[i] / cnt[i] * 100 : null;
+ const dot = rate == null ? '' : (rate >= CSX_CFG.rateTarget ? 'ok' : 'bad');
+ return `<button class="csx-mc${S.month === i ? ' on' : ''}${cnt[i] ? '' : ' dim'}" onclick="csxSetMonth(${i})" title="${rate == null ? 'ไม่มีข้อมูล' : 'Rate ' + rate.toFixed(1) + '%'}"><i class="${dot}"></i>${m} <em>${cnt[i]}</em></button>`;
+ }).join('');
+ }
+
+ // ตัวกรองทั้งหมด + เรียง
+ const rows = csxSortItems(csxApplyFilters(all, false));
+ csxView = rows;
+ const agg = csxAgg(rows.map(x => x.r));
+ const info = document.getElementById('csxListInfo');
+ if (info) info.innerHTML = `แสดง <b>${rows.length.toLocaleString()}</b> จาก <b>${all.length.toLocaleString()}</b> รายการ` +
+ (rows.length ? ` · ต่อรองได้ ≥ ${CSX_CFG.itemThreshold}% : <b>${agg.achieved}</b> รายการ (${agg.onRate.toFixed(1)}%) · รวมประหยัด <b>${csxFmt0(agg.totalSaving)}</b> บาท` : '');
+
+ // หัวตาราง (คลิกเรียงได้)
+ const th = (key, label, cls) => `<th class="${cls || ''} sort${S.sort === key ? ' sorted' : ''}" onclick="csxSort('${key}')">${label}${S.sort === key ? (S.dir > 0 ? ' ▲' : ' ▼') : ''}</th>`;
+ document.getElementById('csxListHead').innerHTML = '<tr><th style="width:44px">No.</th>' +
+ th('date', 'GO DATE') + th('model', 'MODEL') + th('part', 'PART NAME / PART NO') + th('maker', 'MAKER') + th('plant', 'PLANT') +
+ th('before', 'ก่อนต่อรอง', 'r') + th('after', 'หลังต่อรอง', 'r') + th('pct', 'ลด (%)') + th('vol', 'VOLUME', 'r') + th('total', 'SAVING (THB)', 'r') + th('res', 'RESULT') + '<th style="width:64px"></th></tr>';
+
+ // แบ่งหน้า
+ const size = S.pageSize === 0 ? (rows.length || 1) : S.pageSize;
+ const pages = Math.max(1, Math.ceil(rows.length / size));
+ if (S.page > pages) S.page = pages; if (S.page < 1) S.page = 1;
+ const start = (S.page - 1) * size;
+ const pageRows = rows.slice(start, start + size);
+
+ if (!rows.length) {
+ body.innerHTML = `<tr><td colspan="13" class="csx-empty">${all.length ? 'ไม่พบรายการตามตัวกรองที่เลือก' : 'ยังไม่มีข้อมูลในปีที่เลือก — กด Upload Excel เพื่อนำเข้า'}</td></tr>`;
+ } else {
+ const thr = CSX_CFG.itemThreshold;
+ body.innerHTML = pageRows.map((x, i) => {
+ const r = x.r, s = x.s;
+ const cls = s.ach ? 'ach' : 'no';
+ const pcls = s.pct < 0 ? 'neg' : (s.ach ? 'ok' : 'no');
+ const barW = Math.max(0, Math.min(s.pct, thr * 3)) / (thr * 3) * 100;
+ const id = csxEsc(r.id);
+ return `<tr class="${cls}">
+ <td class="stripe">${start + i + 1}</td>
+ <td style="white-space:nowrap">${csxEsc(csxDateStr(x.d))}</td>
+ <td>${csxEsc(r.model)}</td>
+ <td><div class="csx-pn">${csxEsc(r.partName)}</div><div class="csx-pno">${csxEsc(r.partNo)}</div></td>
+ <td>${csxEsc(r.goMaker)}</td>
+ <td>${csxEsc(r.plant)}</td>
+ <td class="r">${csxFmt2(s.before)}</td>
+ <td class="r">${csxFmt2(s.after)}</td>
+ <td class="csx-pct ${pcls}"><b>${s.before > 0 ? s.pct.toFixed(1) + '%' : '—'}</b><div class="csx-bar"><i style="width:${barW}%"></i><u style="left:33.33%"></u></div></td>
+ <td class="r">${s.vol.toLocaleString()}</td>
+ <td class="r" style="font-weight:700;color:${s.total > 0 ? 'var(--success)' : s.total < 0 ? 'var(--danger)' : 'var(--muted)'}">${csxFmt0(s.total)}</td>
+ <td><span class="csx-bd ${s.ach ? 'ok' : 'no'}">${s.ach ? 'ACHIEVE' : 'NO ACHIEVE'}</span></td>
+ <td style="white-space:nowrap"><div style="display:flex;gap:.3rem">
+ <button class="icon-btn" onclick="openCsEditModal('${id}')" title="แก้ไข"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+ <button class="icon-btn" onclick="deleteCsItem('${id}')" title="ลบ" style="color:var(--danger)"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
+ </div></td></tr>`;
+ }).join('');
+ }
+ // สรุปท้ายตาราง (รวมทุกหน้าตามตัวกรอง)
+ const foot = document.getElementById('csxListFoot');
+ if (foot) foot.innerHTML = rows.length ? `<tr><td colspan="8" style="text-align:right">รวม ${rows.length.toLocaleString()} รายการ</td><td>${agg.avgPct.toFixed(1)}% เฉลี่ย</td><td></td><td class="r" style="color:var(--success)">${csxFmt0(agg.totalSaving)}</td><td>${agg.achieved}/${rows.length}</td><td></td></tr>` : '';
+
+ // Pager
+ const pg = document.getElementById('csxPager');
+ if (pg) pg.innerHTML = rows.length ? `<div>รายการที่ ${start + 1}–${Math.min(start + size, rows.length)} จาก ${rows.length.toLocaleString()}</div>
+ <div class="pg"><span>แสดงหน้าละ</span>
+ <select class="csx-sel" onchange="csxSetPageSize(this.value)">${[25, 50, 100, 0].map(n => `<option value="${n}"${S.pageSize === n ? ' selected' : ''}>${n === 0 ? 'ทั้งหมด' : n}</option>`).join('')}</select>
+ <button ${S.page <= 1 ? 'disabled' : ''} onclick="csxGoPage(-1)">‹ ก่อนหน้า</button>
+ <span>${S.page} / ${pages}</span>
+ <button ${S.page >= pages ? 'disabled' : ''} onclick="csxGoPage(1)">ถัดไป ›</button></div>` : '';
+
+ // sync ปุ่ม Result + ช่องค้นหา
+ document.querySelectorAll('#csxResSeg button').forEach(b => b.classList.toggle('on', b.dataset.v === S.res));
+ const sIn = document.getElementById('csxSearch'); if (sIn && sIn.value !== S.q) sIn.value = S.q;
+}
+
+/* ── ตัวควบคุม ── */
+function csxSetMonth(i, toggle) {
+ csxState.month = (toggle && csxState.month === i) ? -1 : i;
+ csxState.page = 1;
+ renderCostSavingPage();
+}
+function csxOnSearch(v) { clearTimeout(csxSearchTimer); csxSearchTimer = setTimeout(() => { csxState.q = v; csxState.page = 1; csxRenderList(); }, 180); }
+function csxSetRes(v) { csxState.res = v; csxState.page = 1; csxRenderList(); }
+function csxSetFilter(key, v) { csxState[key === 'maker' ? 'maker' : 'plant'] = v; csxState.page = 1; csxRenderList(); }
+function csxSort(key) {
+ if (csxState.sort === key) csxState.dir = -csxState.dir; else { csxState.sort = key; csxState.dir = (key === 'model' || key === 'part' || key === 'maker' || key === 'plant') ? 1 : -1; }
+ csxState.page = 1; csxRenderList();
+}
+function csxGoPage(d) { csxState.page += d; csxRenderList(); const w = document.querySelector('#page-costsaving .csx-lt-wrap'); if (w) w.scrollTop = 0; }
+function csxSetPageSize(v) { csxState.pageSize = parseInt(v) || 0; csxState.page = 1; csxRenderList(); }
+function csxReset() { Object.assign(csxState, { month: -1, q: '', res: 'all', plant: '', maker: '', page: 1 }); renderCostSavingPage(); }
+function csxSetTab(tab) {
+ csxState.tab = tab;
+ document.getElementById('csxTabList').style.display = tab === 'list' ? '' : 'none';
+ document.getElementById('csxTabAnalysis').style.display = tab === 'analysis' ? '' : 'none';
+ document.getElementById('csxTabBtnList').classList.toggle('on', tab === 'list');
+ document.getElementById('csxTabBtnAnalysis').classList.toggle('on', tab === 'analysis');
+ if (tab === 'analysis') renderCostSavingPage();
+}
+function csxRenderAnalysis(year, cur, prev, per) {
+ renderCsMonthlyChart(year, cur.rows, prev.rows);
+ renderCsPlantChart(per.rows);
+ renderCsModelChart(per.rows);
+ renderCsMakerChart(per.rows);
+}
+
+/* ── Export Excel (ตามตัวกรองที่เลือก) ── */
+function csxExportList() {
+ if (!csxView.length) { showToast('ไม่มีรายการให้ Export', 'info'); return; }
+ const pad = n => String(n).padStart(2, '0');
+ const data = csxView.map((x, i) => ({
+ 'No.': i + 1,
+ 'GO DATE': x.d ? x.d.getFullYear() + '-' + pad(x.d.getMonth() + 1) + '-' + pad(x.d.getDate()) : '',
+ 'MODEL': x.r.model || '', 'PART NAME': x.r.partName || '', 'PART NO': x.r.partNo || '',
+ 'MAKER': x.r.goMaker || '', 'PLANT': x.r.plant || '',
+ 'ก่อนต่อรอง': +x.s.before.toFixed(2), 'หลังต่อรอง': +x.s.after.toFixed(2), 'ลด/หน่วย': +x.s.perUnit.toFixed(2),
+ 'ลด (%)': +x.s.pct.toFixed(2), 'VOLUME': x.s.vol, 'COST SAVING (THB)': Math.round(x.s.total),
+ ['RESULT (≥' + CSX_CFG.itemThreshold + '%)']: x.s.ach ? 'ACHIEVE' : 'NO ACHIEVE', 'REMARK': x.r.remark || ''
+ }));
+ const ws = XLSX.utils.json_to_sheet(data);
+ const wb = XLSX.utils.book_new();
+ XLSX.utils.book_append_sheet(wb, ws, 'Cost Saving');
+ XLSX.writeFile(wb, 'CostSaving_' + csxYear + (csxState.month >= 0 ? '_' + pad(csxState.month + 1) : '') + '.xlsx');
+}
+
+/* ── Export PDF (รูปแบบฟอร์ม KPI Monitoring Report) ── */
+function exportCsPdf() {
+ const year = csxYear, T = CSX_CFG.rateTarget, TH = CSX_CFG.itemThreshold;
+ const cur = csComputeYearStats(year);
+ const byM = csxByMonth(cur.rows);
+ const per = csxState.month >= 0 ? byM[csxState.month] : cur;
+ const st = csxStatusOf(per.onRate, per.count), tr = csxTrend(byM);
+ const box = on => on ? '☑' : '☐';
+ const items = csxEnrich(per.rows).sort((a, b) => (a.d ? a.d.getTime() : 0) - (b.d ? b.d.getTime() : 0));
+ const mrow = (label, f, tot, cls) => `<tr class="${cls || ''}"><td class="l">${label}</td>${byM.map(a => `<td>${f(a)}</td>`).join('')}<td><b>${tot}</b></td></tr>`;
+ const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>KPI Monitoring Report ${year + 543}</title>
+<style>
+ body{font-family:'Sarabun','Segoe UI',Tahoma,sans-serif;padding:28px;color:#111;font-size:12px}
+ h1{font-size:17px;margin:0 0 2px} .sub{color:#555;margin-bottom:10px}
+ table{width:100%;border-collapse:collapse;margin-top:8px} th,td{border:1px solid #444;padding:4px 6px;text-align:right}
+ th{background:#e8edf5} td.l,th.l{text-align:left} .info td{text-align:left;border:1px solid #444}
+ .ok{color:#15803d;font-weight:700} .bad{color:#b91c1c;font-weight:700}
+ .sum{display:flex;gap:24px;margin-top:10px} .sum div{flex:1;border:1px solid #444;padding:8px}
+ .sig{display:flex;gap:0;margin-top:22px;border:1px solid #444} .sig div{flex:1;height:72px;padding:6px;border-right:1px solid #444;text-align:center} .sig div:last-child{border-right:0}
+ .foot{margin-top:16px;text-align:right;color:#555;font-size:11px}
+ h2{font-size:13px;margin:18px 0 4px} .list td,.list th{font-size:10.5px}
+ @media print{body{padding:12px} tr{page-break-inside:avoid}}
+</style></head><body>
+<h1>บันทึกผลการวัดผลตัวชี้วัด : KPI Monitoring Report</h1>
+<div class="sub">${csxEsc(CSX_CFG.docNo)}</div>
+<table class="info"><tr><td><b>หน่วยงาน :</b> ${csxEsc(CSX_CFG.dept)}</td><td><b>ประจำเดือน :</b> ${csxEsc(csxPeriodLabel(year))}</td></tr>
+<tr><td><b>ตัวชี้วัดเรื่อง :</b> จำนวนรายการที่สามารถต่อรองราคางาน</td><td><b>ผู้จัดทำ :</b> ${csxEsc(CSX_CFG.owner)}</td></tr>
+<tr><td colspan="2"><b>เป้าหมาย :</b> ≥ ${T}% ของจำนวนรายการที่เสนอราคา (Component Part ลดลง ≥ ${TH}% ของราคาที่ Maker เสนอ)</td></tr></table>
+<table><tr><th class="l">ผลการดำเนินการ</th>${CSX_MTH_EN.map(m => `<th>${m}</th>`).join('')}<th>TOTAL</th></tr>
+${mrow('จำนวนรายการที่ Maker เสนอราคา', a => a.count || '', cur.count)}
+${mrow('จำนวนที่สามารถต่อรองได้ ≥ ' + TH + '%', a => a.count ? a.achieved : '', cur.achieved)}
+${mrow('Rate (%)', a => a.count ? `<span class="${a.onRate >= T ? 'ok' : 'bad'}">${a.onRate.toFixed(1)}</span>` : '', cur.count ? cur.onRate.toFixed(1) : '')}
+${mrow('Target (%)', a => T, T)}
+${mrow('Cost Saving (THB)', a => a.count ? csxFmt0(a.totalSaving) : '', csxFmt0(cur.totalSaving))}
+</table>
+<div class="sum"><div><b>สรุปผล (${csxEsc(csxPeriodLabel(year))}: ${per.count ? per.onRate.toFixed(1) + '%' : '—'})</b><br>${box(st.key === 'ok')} บรรลุ &nbsp; ${box(st.key === 'steady')} คงที่ &nbsp; ${box(st.key === 'bad')} ไม่บรรลุ</div>
+<div><b>แนวโน้ม</b><br>${box(tr.key === 'up')} ดีขึ้น &nbsp; ${box(tr.key === 'flat')} คงที่ &nbsp; ${box(tr.key === 'down')} ต่ำลง</div></div>
+<div class="sig"><div>จัดทำ<br><br><br>${csxEsc(CSX_CFG.owner)}</div><div>ตรวจสอบ</div><div>อนุมัติ</div></div>
+<h2>รายการต่อรองราคา — ${csxEsc(csxPeriodLabel(year))} (${items.length} รายการ)</h2>
+<table class="list"><tr><th>No.</th><th class="l">GO DATE</th><th class="l">MODEL</th><th class="l">PART NAME</th><th class="l">PART NO</th><th class="l">MAKER</th><th>ก่อนต่อรอง</th><th>หลังต่อรอง</th><th>ลด %</th><th>VOLUME</th><th>SAVING (THB)</th><th>RESULT</th></tr>
+${items.map((x, i) => `<tr><td>${i + 1}</td><td class="l">${csxEsc(csxDateStr(x.d))}</td><td class="l">${csxEsc(x.r.model)}</td><td class="l">${csxEsc(x.r.partName)}</td><td class="l">${csxEsc(x.r.partNo)}</td><td class="l">${csxEsc(x.r.goMaker)}</td><td>${csxFmt2(x.s.before)}</td><td>${csxFmt2(x.s.after)}</td><td>${x.s.pct.toFixed(1)}</td><td>${x.s.vol.toLocaleString()}</td><td>${csxFmt0(x.s.total)}</td><td class="${x.s.ach ? 'ok' : 'bad'}">${x.s.ach ? 'ACHIEVE' : 'NO ACHIEVE'}</td></tr>`).join('')}
+</table>
+<div class="foot">${csxEsc(CSX_CFG.docNo)} · พิมพ์เมื่อ ${new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+</body></html>`;
+ const w = window.open('', '_blank');
+ if (!w) { showToast('เบราว์เซอร์บล็อกหน้าต่างใหม่ — โปรดอนุญาต Pop-up', 'info'); return; }
+ w.document.write(html); w.document.close();
+ setTimeout(() => w.print(), 600);
+}
+
 
 /* ── อัปโหลด/นำเข้าจาก Excel ── */
 function openCsUploadModal() {
