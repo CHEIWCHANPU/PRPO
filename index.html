@@ -17163,10 +17163,13 @@ function csToggleSheet(name, el) {
  csUpdatePreview();
 }
 
-// สร้าง key เฉพาะของแต่ละรายการ ใช้เช็คว่าซ้ำกับที่มีอยู่แล้วหรือไม่ (MODEL + PART NO + GO DATE)
+// สร้าง key เฉพาะของแต่ละรายการ ใช้เช็คว่าซ้ำกับที่มีอยู่แล้วหรือไม่
+// (MODEL + PART NO + GO DATE + PART NAME + ราคาก่อนต่อรอง) — เพิ่ม PART NAME และราคาก่อนต่อรอง
+// เพราะบางรายการใช้ MODEL/PART NO/วันที่เดียวกัน แต่เป็นคนละรายการ (ราคาหรือชื่อชิ้นงานต่างกัน)
 function csRowKey(r) {
  const norm = v => String(v == null ? '' : v).trim().toLowerCase();
- return norm(r.model) + '|' + norm(r.partNo) + '|' + norm(r.goDate);
+ const normNum = v => { const s = norm(v).replace(/,/g, ''); const n = parseFloat(s); return (s !== '' && !isNaN(n) && isFinite(s)) ? String(n) : s; };
+ return norm(r.model) + '|' + norm(r.partNo) + '|' + norm(r.goDate) + '|' + norm(r.partName) + '|' + normNum(r.makerBefore);
 }
 
 function csUpdatePreview() {
