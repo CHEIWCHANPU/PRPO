@@ -15387,14 +15387,14 @@ async function qavApi(payload, silent) {
 /* ดึงจากชีต → แทนแคชของปีนั้น; ถ้าชีตว่างแต่เครื่องมีข้อมูลจริง (ไม่ใช่ตัวอย่าง) ให้ย้ายขึ้นชีตครั้งแรก */
 async function qavPull() {
   const yr = qavYear;
-  const j = await qavApi({ action: 'getQavPlan', year: yr }, true);
+  const j = await qavApi({ action: 'qavGetPlan', year: yr }, true);
   if (!j) return;
   const store = qavLoad(), key = String(yr);
   if (j.rows.length) {
     store.years[key] = j.rows.map(r => ({ id: r.id, name: r.name, type: r.type, plan: r.plan, actual: r.actual, note: r.note }));
     store.sample = false;
   } else if (!store.sample && (store.years[key] || []).length) {
-    await qavApi({ action: 'bulkImportQav', year: yr, rows: store.years[key], _quiet: 1 }, true);
+    await qavApi({ action: 'qavBulkImport', year: yr, rows: store.years[key], _quiet: 1 }, true);
   }
   store.meta = store.meta || {};
   if (j.meta['m' + yr]) store.meta['m' + yr] = j.meta['m' + yr];
@@ -15417,7 +15417,7 @@ function qavSave() {
   if (i >= 0) rows[i] = rec; else rows.push(rec);
   qavPersist(); qavClose(); qavRender();
   showToast('บันทึกแผน QAV แล้ว', 'success');
-  qavApi(Object.assign({ action: 'saveQavRow', year: qavYear }, rec));
+  qavApi(Object.assign({ action: 'qavSaveRow', year: qavYear }, rec));
 }
 
 async function qavDelete() {
@@ -15433,7 +15433,7 @@ async function qavDelete() {
   store.years[key] = (store.years[key] || []).filter(x => String(x.id) !== String(id));
   qavPersist(); qavClose(); qavRender();
   showToast('ลบออกจากแผน QAV แล้ว', 'success');
-  qavApi({ action: 'delQavRow', year: qavYear, id: id });
+  qavApi({ action: 'qavDelRow', year: qavYear, id: id });
 }
 
 let _qavMetaTimer = null;
@@ -15447,7 +15447,7 @@ function qavMeta() {
   document.getElementById('qvs-ap').textContent = m.ap;
   clearTimeout(_qavMetaTimer);                       // หน่วง 800ms กันยิงทุกตัวอักษร
   const yr = qavYear;
-  _qavMetaTimer = setTimeout(() => qavApi({ action: 'saveQavMeta', year: yr, meta: m, _quiet: 1 }), 800);
+  _qavMetaTimer = setTimeout(() => qavApi({ action: 'qavSaveMeta', year: yr, meta: m, _quiet: 1 }), 800);
 }
 
 /* ดึงจากชีตเมื่อเปิดแท็บ PLAN QAV และเมื่อเปลี่ยนปี */
