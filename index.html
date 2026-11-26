@@ -16849,32 +16849,65 @@ function csxRenderKpiChart(byM) {
 
 /* ── สรุปผล / แนวโน้ม (เหมือนช่องติ๊กในฟอร์ม) ── */
 function csxRenderSummary(byM, per) {
- const box = document.getElementById('csxSummary'); if (!box) return;
- const T = CSX_CFG.rateTarget, band = CSX_CFG.steadyBand;
- const st = csxStatusOf(per.onRate, per.count);
- const tr = csxTrend(byM);
- const chk = (label, on, tone) => `<span class="${on ? 'on ' + (tone || '') : ''}">${label}</span>`;
- let note;
- if (!per.count) note = 'ยังไม่มีข้อมูลในช่วงเวลาที่เลือก';
- else {
- const diff = per.onRate - T;
- note = (diff >= 0
- ? `บรรลุเป้าหมาย <b>${per.onRate.toFixed(1)}%</b> สูงกว่า Target ${T}% (ต่อรองได้ ${per.achieved}/${per.count} รายการ)`
- : `Rate <b>${per.onRate.toFixed(1)}%</b> ต่ำกว่า Target ${T}% (ต่อรองได้ ${per.achieved}/${per.count} รายการ)`);
- if (csxState.month < 0) {
- const low = byM.map((a, i) => a.count && a.onRate < T ? CSX_MTH_TH[i] : null).filter(Boolean);
- if (low.length) note += `<br>เดือนที่ต่ำกว่าเป้า: ${low.join(', ')} — ควรวิเคราะห์สาเหตุ (แนวทางข้อ 3)`;
- }
- }
- let trNote = '';
- if (tr.key !== 'na') trNote = `<br>เดือน ${CSX_MTH_TH[tr.to]} ${byM[tr.to].onRate.toFixed(1)}% เทียบ ${CSX_MTH_TH[tr.from]} ${byM[tr.from].onRate.toFixed(1)}%`;
- box.innerHTML = `
- <h4>สรุปผล</h4>
- <div class="csx-chk">${chk('บรรลุ', st.key === 'ok', 'good')}${chk('คงที่', st.key === 'steady')}${chk('ไม่บรรลุ', st.key === 'bad', 'badc')}</div>
- <h4>แนวโน้ม</h4>
- <div class="csx-chk">${chk('ดีขึ้น', tr.key === 'up', 'good')}${chk('คงที่', tr.key === 'flat')}${chk('ต่ำลง', tr.key === 'down', 'badc')}</div>
- <div class="csx-note">${note}${trNote}</div>
- <div class="csx-legend">บรรลุ = Rate ≥ Target · คงที่ = ต่ำกว่า Target ไม่เกิน ${band} จุด · ไม่บรรลุ = ต่ำกว่านั้น<br>แนวโน้ม = เทียบเดือนล่าสุดกับเดือนก่อนหน้าที่มีข้อมูล (ต่างกันไม่เกิน ±${band} จุด = คงที่)</div>`;
+  const box = document.getElementById('csxSummary'); if (!box) return;
+  const T = CSX_CFG.rateTarget, band = CSX_CFG.steadyBand;
+  const chk = (label, on, tone) => `<span class="${on ? 'on ' + (tone || '') : ''}">${label}</span>`;
+  // ช่วงที่เลือกไม่มีข้อมูล (เช่น เดือนที่ยังไม่ถึง) -> สรุปจากเดือนล่าสุดที่มีข้อมูลแทน (ไม่เกินเดือนที่เลือก)
+  let eff = per, effIdx = -1, fallback = false;
+  if (!per.count) {
+    const lim = csxState.month >= 0 ? csxState.month : 11;
+    for (let i = lim; i >= 0; i--) { if (byM[i] && byM[i].count) { effIdx = i; break; } }
+    if (effIdx < 0) {
+      box.innerHTML = `
+        <h4>สรุปผล</h4>
+        <div class="csx-chk">${chk('บรรลุ', false)}${chk('คงที่', false)}${chk('ไม่บรรลุ', false)}</div>
+        <h4>แนวโน้ม</h4>
+        <div class="csx-chk">${chk('ดีขึ้น', false)}${chk('คงที่', false)}${chk('ต่ำลง', false)}</div>
+        <div class="csx-note">ยังไม่มีข้อมูลในช่วงเวลาที่เลือก และยังไม่มีเดือนก่อนหน้าให้ใช้สรุป</div>
+        <div class="csx-legend">บรรลุ = Rate ≥ Target · คงที่ = ต่ำกว่า Target ไม่เกิน ${band} จุด · ไม่บรรลุ = ต่ำกว่านั้น<br>แนวโน้ม = เทียบเดือนล่าสุดกับเดือนก่อนหน้าที่มีข้อมูล (ต่างกันไม่เกิน ±${band} จุด = คงที่)</div>`;
+      return;
+    }
+    eff = byM[effIdx]; fallback = true;
+  }
+  const st = csxStatusOf(eff.onRate, eff.count);
+  // แนวโน้ม: ปกติใช้ csxTrend; ถ้าเป็นกรณี fallback ให้เทียบเดือนที่มีข้อมูลล่าสุดกับเดือนก่อนหน้านั้น
+  let tr;
+  if (!fallback) tr = csxTrend(byM);
+  else {
+    const pos = byM.map((a, i) => a.count && i <= effIdx ? i : -1).filter(i => i >= 0);
+    if (pos.length < 2) tr = { key: 'na' };
+    else {
+      const to = pos[pos.length - 1], from = pos[pos.length - 2], d = byM[to].onRate - byM[from].onRate;
+      tr = { key: d > band ? 'up' : d < -band ? 'down' : 'flat', d, from, to };
+    }
+  }
+  const diff = eff.onRate - T;
+  const core = diff >= 0
+    ? `บรรลุเป้าหมาย <b>${eff.onRate.toFixed(1)}%</b> สูงกว่า Target ${T}% (ต่อรองได้ ${eff.achieved}/${eff.count} รายการ)`
+    : `Rate <b>${eff.onRate.toFixed(1)}%</b> ต่ำกว่า Target ${T}% (ต่อรองได้ ${eff.achieved}/${eff.count} รายการ)`;
+  let note;
+  if (fallback) {
+    const selTxt = csxState.month >= 0 ? CSX_MTH_TH[csxState.month] : 'ช่วงที่เลือก';
+    const yc = byM.reduce((a, m) => a + m.count, 0), ya = byM.reduce((a, m) => a + m.achieved, 0);
+    const yr = yc ? ya / yc * 100 : 0;
+    note = `<span style="color:var(--muted)">${selTxt} ยังไม่มีข้อมูล — สรุปจากเดือนล่าสุดที่มีข้อมูล (${CSX_MTH_TH[effIdx]})</span><br>${core}`;
+    note += `<br>สะสมทั้งปี ${yr.toFixed(1)}% (${ya}/${yc} รายการ) ${yr >= T ? 'สูงกว่า' : 'ต่ำกว่า'} Target ${T}%`;
+  } else {
+    note = core;
+    if (csxState.month < 0) {
+      const low = byM.map((a, i) => a.count && a.onRate < T ? CSX_MTH_TH[i] : null).filter(Boolean);
+      if (low.length) note += `<br>เดือนที่ต่ำกว่าเป้า: ${low.join(', ')} — ควรวิเคราะห์สาเหตุ (แนวทางข้อ 3)`;
+    }
+  }
+  let trNote = '';
+  if (tr.key !== 'na') trNote = `<br>เดือน ${CSX_MTH_TH[tr.to]} ${byM[tr.to].onRate.toFixed(1)}% เทียบ ${CSX_MTH_TH[tr.from]} ${byM[tr.from].onRate.toFixed(1)}%`;
+  box.innerHTML = `
+    <h4>สรุปผล</h4>
+    <div class="csx-chk">${chk('บรรลุ', st.key === 'ok', 'good')}${chk('คงที่', st.key === 'steady')}${chk('ไม่บรรลุ', st.key === 'bad', 'badc')}</div>
+    <h4>แนวโน้ม</h4>
+    <div class="csx-chk">${chk('ดีขึ้น', tr.key === 'up', 'good')}${chk('คงที่', tr.key === 'flat')}${chk('ต่ำลง', tr.key === 'down', 'badc')}</div>
+    <div class="csx-note">${note}${trNote}</div>
+    <div class="csx-legend">บรรลุ = Rate ≥ Target · คงที่ = ต่ำกว่า Target ไม่เกิน ${band} จุด · ไม่บรรลุ = ต่ำกว่านั้น<br>แนวโน้ม = เทียบเดือนล่าสุดกับเดือนก่อนหน้าที่มีข้อมูล (ต่างกันไม่เกิน ±${band} จุด = คงที่)</div>`;
 }
 
 /* ══════════════ LIST: ค้นหา / กรอง / เรียง ══════════════ */
