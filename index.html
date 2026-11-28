@@ -6657,11 +6657,17 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
  <button class="nav-item" id="nav-gwdash" onclick="showPage('gwdash',this)">
  <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></span><span class="nav-text" data-i18n="nav_gwdash">Dashboard GO WORK</span>
  </button>
+ 
+ </div>
+ </div>
+
+<div class="nav-group" id="navGroup-stripwork">
+ <div class="nav-label" onclick="toggleNavGroup('stripwork')">
+ <span class="nav-label-text"><span class="nav-label-icon"><svg viewBox="0 0 24 24"><path d="M12 2 2 7l10 5 10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></span><span data-i18n="group_stripwork">ลอกผิวชุบ</span></span><span class="nav-label-chevron">▾</span>
+ </div>
+ <div class="nav-group-items">
  <button class="nav-item" id="nav-gwstrip" onclick="showPage('gwstrip',this)">
-<span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 2 2 7l10 5 10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></span><span class="nav-text" data-i18n="nav_gwstrip">รายการ ลอกผิวชุบ</span>
-</button>
-<button class="nav-item" id="nav-gwstripsum" onclick="showPage('gwstripsum',this)">
-<span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M21.2 15.9A10 10 0 1 1 8 2.8"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg></span><span class="nav-text" data-i18n="nav_gwstripsum">สรุป ลอกผิวชุบ</span>
+<span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 2 2 7l10 5 10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></span><span class="nav-text" data-i18n="nav_gwstrip">ลอกผิวชุบ</span>
 </button>
  </div>
  </div>
@@ -9361,14 +9367,25 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
     </style>
   </div>
 
-  <!-- ═══════════ รายการ ลอกผิวชุบ ═══════════ -->
+  <!-- ═══════════ ลอกผิวชุบ (สรุปด้านบน · รายการด้านล่าง) ═══════════ -->
   <div class="page" id="page-gwstrip">
     <section class="ex-hero">
       <div>
-        <h1>รายการ ลอกผิวชุบ</h1>
-        <p>กรอกรายการงานลอกผิวชุบเอง — เพิ่ม / แก้ไข / ลบ ค้นหา กรองตามปี · Model · Maker และ Export เป็นไฟล์ Excel (ตอนนี้เก็บข้อมูลในเครื่องนี้ก่อน · เชื่อม Apps Script ภายหลัง)</p>
+        <h1>ลอกผิวชุบ</h1>
+        <p>สรุปงานลอกผิวชุบอยู่ด้านบน เลื่อนลงมาเป็นรายการ — เพิ่ม / แก้ไข / ลบ ค้นหา กรองตามปี · Model · Maker และ Export เป็นไฟล์ Excel (ข้อมูลเก็บในชีต STRIP_WORK ของ Google Sheet ผ่าน Apps Script)</p>
       </div>
     </section>
+
+    <!-- ── สรุป ── -->
+    <section id="gsSummary">
+      <div class="ex-slide-title"><h2>สรุป</h2><span>จำนวนงานรายปี · Maker · Model · ลูกค้า</span></div>
+      <div class="ex-bar" id="gssBar"></div>
+      <div id="gssBody"><div class="gx-skel tall"></div></div>
+    </section>
+
+    <!-- ── รายการ ── -->
+    <section id="gsList" style="margin-top:2rem">
+      <div class="ex-slide-title"><h2>รายการ</h2><span id="gsStatus">กรอก / แก้ไข / ลบ รายการงานลอกผิวชุบ</span></div>
     <div class="ex-bar" id="gsBar">
       <div class="ex-filters" id="gsFilters"></div>
       <div class="ex-filters">
@@ -9378,20 +9395,9 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
         <button class="ex-btn" style="background:var(--surface2);color:var(--text);border:1px solid var(--border)" onclick="StripWork.exportCsv()">Export CSV</button>
       </div>
     </div>
-    <div id="gsBody"><div class="gx-skel tall"></div></div>
-  </div>
-
-  <!-- ═══════════ สรุป ลอกผิวชุบ ═══════════ -->
-  <div class="page" id="page-gwstripsum">
-    <section class="ex-hero">
-      <div>
-        <h1>สรุป ลอกผิวชุบ</h1>
-        <p>สรุปงานลอกผิวชุบ จากรายการที่กรอกในหน้า "รายการ ลอกผิวชุบ" — จำนวนงานรายปี · Maker · Model · ลูกค้า</p>
-      </div>
+      <div id="gsBody"><div class="gx-skel tall"></div></div>
     </section>
-    <div class="ex-bar" id="gssBar"></div>
-    <div id="gssBody"><div class="gx-skel tall"></div></div>
-    <style>#page-gwstrip,#page-gwstripsum{--ex-a:#2E5395;--ex-up:#A6443C;--ex-dn:#2F8F6E}#page-gwstrip .ex-scroll{max-height:68vh}#page-gwstrip tr.gs-canc td{background:rgba(201,162,39,.14)}</style>
+    <style>#page-gwstrip{--ex-a:#2E5395;--ex-up:#A6443C;--ex-dn:#2F8F6E}#page-gwstrip .ex-scroll{max-height:68vh}#page-gwstrip tr.gs-canc td{background:rgba(201,162,39,.14)}#page-gwstrip #gssBar{position:static}</style>
   </div>
 
   <!-- ═══════════ SUMMARY MEETING ═══════════ -->
@@ -15320,18 +15326,6 @@ async function openIsoFolder(btn) {
    ══════════════════════════════════════════════════ */
 const QAV_KEY = 'qav_plan_v1';
 const QAV_MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-const QAV_SEED_2026 = [
-  ['CNN PART','Existing','2026-05-21',''],
-  ['ทริปเปิ้ลพาวเวอร์พาร์ท','Existing','2026-05-30',''],
-  ['เอนวิทย์การช่าง (ห.จ.ก.)','Existing','2026-06-21',''],
-  ['ดิเจริญยนต์','Existing','2026-07-05',''],
-  ['เจริมอวัลดิ์เมพาร์ท','Existing','2026-07-14',''],
-  ['ทรูอุสเอ็นจีเนียริ่ง จำกัด','New Supplier','2026-08-06','2026-08-06'],
-  ['จี.วี.เอส อินดัสทรี จำกัด','Existing','2026-10-31',''],
-  ['แซน วายดีท (ห้างหุ้นส่วนจำกัด)','Existing','2026-11-07',''],
-  ['39 พาร์ท แอนด์ เซอร์วิส จำกัด','Existing','',''],
-  ['โอเรียนเต็ล ไวร์เทค','Existing','2026-11-14','']
-];
 let qavYear = new Date().getFullYear();
 let qavFilter = 'all';
 let qavStore = null;
@@ -15340,7 +15334,13 @@ function qavLoad() {
   if (qavStore) return qavStore;
   try { qavStore = JSON.parse(localStorage.getItem(QAV_KEY) || 'null'); } catch (e) { qavStore = null; }
   if (!qavStore || typeof qavStore !== 'object' || !qavStore.years) {
-    qavStore = { sample: true, years: { '2026': QAV_SEED_2026.map((s, i) => ({ id: 'q' + (i + 1), name: s[0], type: s[1], plan: s[2], actual: s[3], note: '' })) } };
+    qavStore = { years: {} };
+    qavPersist();
+  }
+  /* เคลียร์ข้อมูลตัวอย่างตั้งต้น (id q1–q10) ที่เวอร์ชันเก่าเคยฝังไว้และค้างอยู่ในเครื่อง — ข้อมูลจริงจากชีตดึงกลับมาเองตอนเปิดแท็บ */
+  if (qavStore.sample) {
+    if (qavStore.years['2026']) qavStore.years['2026'] = qavStore.years['2026'].filter(r => !/^q([1-9]|10)$/.test(String(r.id)));
+    delete qavStore.sample;
     qavPersist();
   }
   return qavStore;
@@ -15408,8 +15408,7 @@ function qavRender() {
   document.getElementById('qvPct').textContent = pct + '%';
   document.getElementById('qvProg').style.width = pct + '%';
   qavMetaLoad();
-  document.getElementById('qvNote').innerHTML = (store.sample && qavYear === 2026)
-    ? '<div class="qv-note"><span>⚠ ข้อมูลตั้งต้นอ่านจากรูปแผนเดิม — กรุณาตรวจชื่อ Supplier และวันที่ Plan / Actual ก่อนใช้งานจริง</span><button onclick="qavDismissSample()" title="ปิด">✕</button></div>' : '';
+  document.getElementById('qvNote').innerHTML = '';
 
   const q = (document.getElementById('qvSearch')?.value || '').trim().toLowerCase();
   const list = withSt.filter(x => {
@@ -15481,7 +15480,6 @@ function qavMeta() {
   document.getElementById('qvs-by').textContent = g('qvm-by');
   document.getElementById('qvs-ap').textContent = g('qvm-ap');
 }
-function qavDismissSample() { qavLoad().sample = false; qavPersist(); qavRender(); }
 
 function qavOpen(id) {
   const r = id ? qavRows().find(x => String(x.id) === String(id)) : null;
@@ -15554,8 +15552,7 @@ async function qavPull() {
   const store = qavLoad(), key = String(yr);
   if (j.rows.length) {
     store.years[key] = j.rows.map(r => ({ id: r.id, name: r.name, type: r.type, plan: r.plan, actual: r.actual, note: r.note }));
-    store.sample = false;
-  } else if (!store.sample && (store.years[key] || []).length) {
+  } else if ((store.years[key] || []).length) {
     await qavApi({ action: 'qavBulkImport', year: yr, rows: store.years[key], _quiet: 1 }, true);
   }
   store.meta = store.meta || {};
@@ -24475,8 +24472,7 @@ function endTour() {
     CMDK_ITEMS.splice(at < 0 ? CMDK_ITEMS.length : at, 0,
       { key: 'gowork', label: 'รายการ GO WORK', group: 'งาน GO WORK', icon: TRUCK },
       { key: 'gwdash', label: 'Dashboard GO WORK (เทียบรายปี)', group: 'งาน GO WORK', icon: svg('<path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/>') },
-      { key: 'gwstrip', label: 'รายการ ลอกผิวชุบ', group: 'งาน GO WORK', icon: svg('<path d="M12 2 2 7l10 5 10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>') },
-      { key: 'gwstripsum', label: 'สรุป ลอกผิวชุบ', group: 'งาน GO WORK', icon: svg('<path d="M21.2 15.9A10 10 0 1 1 8 2.8"/><path d="M22 12A10 10 0 0 0 12 2v10z"/>') },
+      { key: 'gwstrip', label: 'ลอกผิวชุบ (สรุป + รายการ)', group: 'ลอกผิวชุบ', icon: svg('<path d="M12 2 2 7l10 5 10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>') },
       { key: 'meeting', label: 'บันทึกการประชุม', group: 'Summary Meeting', icon: CHAT },
       { key: 'rfq', label: 'RFQ ขอใบเสนอราคา (E-Form)', group: 'RFQ', icon: svg('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/>') },
       { key: 'costsaving', label: 'Cost Saving Report', group: 'COST SAVING', icon: COIN },
@@ -24511,7 +24507,9 @@ function endTour() {
 
 
   /* ══════════════════════ ลอกผิวชุบ — รายการ + สรุป (ข้อมูลของตัวเอง กรอกเอง · ตอนนี้เก็บในเครื่อง/เบราว์เซอร์ — Apps Script จะเชื่อมภายหลัง) ══════════════════════ */
-  const STRIP_KEY = 'ccip_stripwork_v1';
+  const STRIP_KEY = 'ccip_stripwork_v1';                 // ที่เก็บเดิม (ในเครื่อง) — ใช้เป็นต้นทางย้ายขึ้น Google Sheet ครั้งเดียว และเป็นที่เก็บสำรองถ้ายังเชื่อมชีตไม่ได้
+  const STRIP_CACHE_KEY = 'ccip_stripwork_cache_v2';     // แคชของข้อมูลจากชีต STRIP_WORK (ไว้เปิดหน้าให้เร็ว/ใช้ตอนออฟไลน์)
+  const STRIP_MIGRATED_KEY = 'ccip_stripwork_migrated_v1';
   const STRIP_FIELDS = [['date', 'วันที่', 'date'], ['model', 'Model', 'text'], ['cus', 'ลูกค้า', 'text'], ['partNo', 'Part No.', 'text'], ['partName', 'Part Name', 'text'], ['maker', 'Maker', 'text'], ['qty', 'จำนวน (ชิ้น)', 'number'], ['remark', 'หมายเหตุ', 'text']];
   const stripYear = r => { const m = String(r.date || '').match(/^(\d{4})-\d{2}-\d{2}/); return m ? +m[1] : null; };
   const stripDate = r => { const m = String(r.date || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[3]}/${m[2]}/${+m[1] + 543}` : ''; };
@@ -24523,11 +24521,51 @@ function endTour() {
   const stripLocalISO = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
   const StripWork = {
     rows: [], q: '', year: 'all', model: 'all', maker: 'all', page: 1, per: 100,
-    /* ชั้นเก็บข้อมูล: ตอนต่อ Apps Script ให้เปลี่ยนเฉพาะ load() / save() */
-    load() { try { const c = JSON.parse(localStorage.getItem(STRIP_KEY) || '[]'); this.rows = Array.isArray(c) ? c : []; } catch (e) { this.rows = []; } },
-    save() { try { localStorage.setItem(STRIP_KEY, JSON.stringify(this.rows)); } catch (e) { alert('บันทึกข้อมูลลงเครื่องไม่สำเร็จ'); } },
+    sheet: false,   // true = ต่อชีต STRIP_WORK ได้ (Apps Script ไฟล์ 26_StripWork.gs) · false = เก็บในเครื่องนี้ก่อน
+    /* ชั้นเก็บข้อมูล: อ่านแคช/ที่เก็บเดิมในเครื่องก่อนให้หน้าขึ้นเร็ว แล้วซิงค์กับชีต (refresh) */
+    loadLocal() {
+      for (const k of [STRIP_CACHE_KEY, STRIP_KEY]) {
+        try { const c = JSON.parse(localStorage.getItem(k) || 'null'); if (Array.isArray(c)) { this.rows = c; return; } } catch (e) {}
+      }
+      this.rows = [];
+    },
+    load() { this.loadLocal(); return this.refresh(); },
+    save() {
+      try { localStorage.setItem(STRIP_CACHE_KEY, JSON.stringify(this.rows)); if (!this.sheet) localStorage.setItem(STRIP_KEY, JSON.stringify(this.rows)); }
+      catch (e) { alert('บันทึกข้อมูลลงเครื่องไม่สำเร็จ'); }
+    },
+    by() { return localStorage.getItem('prpo_username') || ''; },
+    status() {
+      const el = $('#gsStatus'); if (!el) return;
+      el.textContent = this.sheet ? 'ซิงค์กับ Google Sheet (ชีต STRIP_WORK) แล้ว' : 'ตอนนี้เก็บในเครื่องนี้ก่อน — วาง 26_StripWork.gs แล้ว Deploy ใหม่ เพื่อเก็บลง Google Sheet';
+      el.style.color = this.sheet ? '' : '#A6443C';
+    },
+    async refresh() {
+      if (this._busy) return; this._busy = true;
+      try {
+        let j = await api.get('getStripWork');
+        if (!Array.isArray(j.data)) throw new Error('unknown action');
+        this.sheet = true;
+        /* ย้ายข้อมูลเดิมที่เก็บในเครื่องขึ้นชีต 1 ครั้ง (ข้าม id ที่มีอยู่แล้ว กดซ้ำไม่เกิดแถวซ้ำ) */
+        if (localStorage.getItem(STRIP_MIGRATED_KEY) !== '1') {
+          let old = []; try { old = JSON.parse(localStorage.getItem(STRIP_KEY) || '[]'); } catch (e) {}
+          const have = new Set(j.data.map(r => r.id));
+          const todo = (Array.isArray(old) ? old : []).filter(r => r && r.id && !have.has(r.id));
+          if (todo.length) { await api.post({ action: 'bulkImportStripWork', by: this.by(), rows: todo }); j = await api.get('getStripWork'); }
+          localStorage.setItem(STRIP_MIGRATED_KEY, '1');
+          if (todo.length) toast('ย้ายรายการ ลอกผิวชุบ ที่เก็บในเครื่อง ' + todo.length + ' รายการ ขึ้น Google Sheet แล้ว', 'success');
+        }
+        const raw = JSON.stringify(j.data), changed = raw !== this._raw;
+        this._raw = raw; this.rows = j.data; this.save();
+        this.status();
+        if (changed && this.active()) { this.render(); StripSum.render(); }
+      } catch (e) {
+        if (/unknown|ไม่รู้จัก|invalid action/i.test(e.message)) { this.sheet = false; }
+        this.status();   // ข้อผิดพลาดอื่น (ออฟไลน์/ยังไม่ตั้ง URL) → ใช้ข้อมูลในเครื่องต่อไป ไม่รบกวนผู้ใช้
+      } finally { this._busy = false; }
+    },
     active() { const e = $('#page-gwstrip'); return !!e && e.classList.contains('active'); },
-    open() { this.load(); this.render(); },
+    open() { this.loadLocal(); this.render(); StripSum.render(); this.status(); this.refresh(); },
     set(k, v) { this[k] = (k === 'year' && v !== 'all') ? +v : v; this.page = 1; this.render(); },
     go(d) { this.page = Math.max(1, this.page + d); this.render(); },
     view() {
@@ -24580,23 +24618,32 @@ function endTour() {
       $('#gsSave').onclick = save;
       f.addEventListener('submit', e => { e.preventDefault(); save(); });
     },
-    saveForm(r, f) {
+    async saveForm(r, f) {
       const rec = {}; STRIP_FIELDS.forEach(([k]) => { rec[k] = f.elements[k].value.trim(); });
       const rawDate = rec.date; rec.date = stripDmyToIso(rawDate);
       const miss = [['date', 'วันที่'], ['partNo', 'Part No.'], ['partName', 'Part Name']].filter(([k]) => !rec[k]);
       f.querySelectorAll('input').forEach(i => i.classList.toggle('bad', miss.some(([k]) => k === i.name)));
       if (rawDate && !rec.date) { f.elements.date.classList.add('bad'); $('#gsErr').textContent = 'รูปแบบวันที่ไม่ถูกต้อง — ใช้ วว/ดด/ปปปป เช่น 28/11/2026'; return; }
       if (miss.length) { $('#gsErr').textContent = 'กรอกให้ครบ: ' + miss.map(m => m[1]).join(', '); return; }
-      if (r) this.rows = this.rows.map(x => x.id === r.id ? Object.assign({}, x, rec) : x);
-      else this.rows.push(Object.assign({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6) }, rec));
-      this.save(); closeModal(); this.render();
+      let saved = r ? Object.assign({}, r, rec) : Object.assign({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6) }, rec);
+      if (this.sheet) {   /* เขียนลงชีตก่อน สำเร็จแล้วค่อยอัปเดตหน้าจอ — ถ้าไม่สำเร็จ ฟอร์มยังเปิดอยู่ ข้อมูลไม่หาย */
+        const btn = $('#gsSave'); setBusy(btn, true, 'กำลังบันทึก');
+        try {
+          const j = await api.post(Object.assign({ action: r ? 'updateStripWork' : 'addStripWork', id: saved.id, by: this.by() }, rec));
+          if (j.data && typeof j.data === 'object') saved = Object.assign({}, saved, j.data);
+        } catch (e) { setBusy(btn, false); $('#gsErr').textContent = 'บันทึกลง Google Sheet ไม่สำเร็จ: ' + e.message; return; }
+      }
+      if (r) this.rows = this.rows.map(x => x.id === r.id ? saved : x); else this.rows.push(saved);
+      this._raw = JSON.stringify(this.rows);
+      this.save(); closeModal(); this.render(); StripSum.render();
       if (typeof addHistoryLog === 'function') addHistoryLog(r ? 'edit' : 'add', rec.partNo, rec.partName, 'ลอกผิวชุบ: ' + [rec.model, rec.maker].filter(Boolean).join(' · '));
       toast(r ? 'บันทึกการแก้ไขแล้ว' : 'เพิ่มรายการ ลอกผิวชุบ แล้ว', 'success');
     },
     async remove(id) {
       const r = this.rows.find(x => x.id === id); if (!r) return;
       if (!await confirmBox('ลบรายการนี้?', `${r.partNo || ''} · ${r.partName || r.model || ''} จะถูกลบถาวร`, 'ลบรายการ')) return;
-      this.rows = this.rows.filter(x => x.id !== id); this.save(); this.render();
+      if (this.sheet) { try { await api.post({ action: 'deleteStripWork', id, by: this.by() }); } catch (e) { toast('ลบไม่สำเร็จ: ' + e.message, 'error'); return; } }
+      this.rows = this.rows.filter(x => x.id !== id); this._raw = JSON.stringify(this.rows); this.save(); this.render(); StripSum.render();
       if (typeof addHistoryLog === 'function') addHistoryLog('delete', r.partNo, r.partName, 'ลอกผิวชุบ');
       toast('ลบรายการแล้ว', 'success');
     },
@@ -24645,12 +24692,12 @@ function endTour() {
       XLSX.writeFile(wb, `ลอกผิวชุบ_${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}.xlsx`);
     }
   };
-  StripWork.load();
+  StripWork.loadLocal();
 
   const StripSum = {
     year: 'all',
-    active() { const e = $('#page-gwstripsum'); return !!e && e.classList.contains('active'); },
-    open() { StripWork.load(); this.render(); },
+    active() { const e = $('#page-gwstrip'); return !!e && e.classList.contains('active'); },
+    open() { this.render(); },
     setYear(v) { this.year = v === 'all' ? 'all' : +v; this.render(); },
     /* Export สรุปเป็น Excel หลายชีต: รายปี / Maker / Model / ลูกค้า (ตามปีที่เลือก · รายปีแสดงทุกปีในช่วงที่แสดง) */
     exportXlsx() {
@@ -24676,7 +24723,7 @@ function endTour() {
       const bar = $('#gssBar');
       if (bar) bar.innerHTML = `<div class="ex-filters"><label>ปี<select onchange="StripSum.setYear(this.value)"><option value="all">${D.maxYears > 0 ? years.length + ' ปีล่าสุด' : 'ทุกปี'}</option>${years.slice().reverse().map(y => `<option value="${y}"${this.year === y ? ' selected' : ''}>${y + 543}</option>`).join('')}</select></label></div><div class="ex-filters"><button class="ex-btn" style="background:#2F8F6E;color:#fff" onclick="StripSum.exportXlsx()">Export Excel</button></div>`;
       D.kill('exSwYear'); D.kill('exSwMaker'); this._x = null;
-      if (!raw.length) { host.innerHTML = `<div class="gx-empty"><strong>ยังไม่มีข้อมูล ลอกผิวชุบ</strong><span>กรอกรายการที่หน้า "รายการ ลอกผิวชุบ" (ต้องใส่วันที่) แล้วสรุปจะขึ้นให้อัตโนมัติ</span></div>`; return; }
+      if (!raw.length) { host.innerHTML = `<div class="gx-empty"><strong>ยังไม่มีข้อมูล ลอกผิวชุบ</strong><span>กรอกรายการที่ส่วน "รายการ" ด้านล่าง (ต้องใส่วันที่) แล้วสรุปจะขึ้นให้อัตโนมัติ</span></div>`; return; }
       const cur = raw.filter(x => keep.has(x.y) && (this.year === 'all' || x.y === this.year));
       const uq = k => new Set(cur.map(x => x[k]).filter(v => v && v !== '(ไม่ระบุ)')).size;
       const vol = cur.reduce((a, x) => a + x.vol, 0);
@@ -24713,11 +24760,11 @@ function endTour() {
 
   // หน้าใหม่ + ชื่อหัวข้อ + เมนู 2 ภาษา
   try {
-    Object.assign(PAGE_TITLES.th, { gwstrip: 'รายการ ลอกผิวชุบ', gwstripsum: 'สรุป ลอกผิวชุบ', gwdash: 'Dashboard GO WORK', gowork: 'GO WORK', meeting: 'Summary Meeting', rfq: 'RFQ ขอใบเสนอราคา' });
-    Object.assign(PAGE_TITLES.en, { gwstrip: 'Strip Plating List', gwstripsum: 'Strip Plating Summary', gwdash: 'GO WORK Dashboard', gowork: 'GO WORK', meeting: 'Summary Meeting', rfq: 'RFQ Request for Quotation' });
-    Object.assign(I18N.th, { group_gowork: 'งาน GO WORK', nav_gowork: 'รายการ GO WORK', nav_gwdash: 'Dashboard GO WORK', nav_gwstrip: 'รายการ ลอกผิวชุบ', nav_gwstripsum: 'สรุป ลอกผิวชุบ', group_meeting: 'Summary Meeting', nav_meeting: 'บันทึกการประชุม', group_rfq: 'RFQ ขอใบเสนอราคา', nav_rfq: 'สร้างใบขอราคา (E-Form)' });
-    Object.assign(I18N.en, { group_gowork: 'GO WORK', nav_gowork: 'GO WORK List', nav_gwdash: 'GO WORK Dashboard', nav_gwstrip: 'Strip Plating List', nav_gwstripsum: 'Strip Plating Summary', group_meeting: 'Summary Meeting', nav_meeting: 'Meeting Notes', group_rfq: 'RFQ', nav_rfq: 'Create RFQ (E-Form)' });
-    DEFAULT_COLLAPSED_NAV_GROUPS.push('gowork', 'meeting', 'rfq');
+    Object.assign(PAGE_TITLES.th, { gwstrip: 'ลอกผิวชุบ', gwstripsum: 'ลอกผิวชุบ', gwdash: 'Dashboard GO WORK', gowork: 'GO WORK', meeting: 'Summary Meeting', rfq: 'RFQ ขอใบเสนอราคา' });
+    Object.assign(PAGE_TITLES.en, { gwstrip: 'Strip Plating', gwstripsum: 'Strip Plating', gwdash: 'GO WORK Dashboard', gowork: 'GO WORK', meeting: 'Summary Meeting', rfq: 'RFQ Request for Quotation' });
+    Object.assign(I18N.th, { group_gowork: 'งาน GO WORK', group_stripwork: 'ลอกผิวชุบ', nav_gowork: 'รายการ GO WORK', nav_gwdash: 'Dashboard GO WORK', nav_gwstrip: 'ลอกผิวชุบ', nav_gwstripsum: 'ลอกผิวชุบ', group_meeting: 'Summary Meeting', nav_meeting: 'บันทึกการประชุม', group_rfq: 'RFQ ขอใบเสนอราคา', nav_rfq: 'สร้างใบขอราคา (E-Form)' });
+    Object.assign(I18N.en, { group_gowork: 'GO WORK', group_stripwork: 'Strip Plating', nav_gowork: 'GO WORK List', nav_gwdash: 'GO WORK Dashboard', nav_gwstrip: 'Strip Plating', nav_gwstripsum: 'Strip Plating', group_meeting: 'Summary Meeting', nav_meeting: 'Meeting Notes', group_rfq: 'RFQ', nav_rfq: 'Create RFQ (E-Form)' });
+    DEFAULT_COLLAPSED_NAV_GROUPS.push('gowork', 'stripwork', 'meeting', 'rfq');
   } catch (e) {}
 
   // ฟังก์ชันที่ถูกนำออก (Timeline / Gantt, Lead Time, Leaderboard) — ปิดไว้เพื่อไม่ให้โค้ดเดิมเรียกแล้ว error
@@ -24726,22 +24773,22 @@ function endTour() {
 
   const origShowPage = window.showPage;
   window.showPage = function (name, btn) {
+    if (name === 'gwstripsum') name = 'gwstrip', btn = document.getElementById('nav-gwstrip');   // รวมหน้าสรุปเข้ากับหน้ารายการแล้ว
     if (!document.getElementById('page-' + name)) name = 'home', btn = document.getElementById('nav-home');
     origShowPage(name, btn);
     if (name === 'gowork') GoWork.open();
     if (name === 'gwdash') GWDash.open();
-    if (name === 'gwstrip') StripWork.open();
-    if (name === 'gwstripsum') StripSum.open();
+    if (name === 'gwstrip') StripWork.open();   // เปิดทั้งสรุป (บน) + รายการ (ล่าง)
     if (name === 'meeting') Meeting.open();
     if (name === 'rfq') RFQ.open();
     document.querySelector('main') && document.querySelector('main').scrollTo && document.querySelector('main').scrollTo(0, 0);
   };
   // ซิงค์ GO WORK / Meeting ไปพร้อมกับข้อมูลชุดอื่นในคำขอเดียวกัน (ถูกรวมเป็น getAll)
   const origSync = window.syncData;
-  window.syncData = function () { const p = origSync.apply(this, arguments); GoWork.load(); Meeting.load(); try { CCIPCerFiles.load(); } catch (e) {} return p; };
+  window.syncData = function () { const p = origSync.apply(this, arguments); GoWork.load(); Meeting.load(); StripWork.refresh(); try { CCIPCerFiles.load(); } catch (e) {} return p; };
   const origTick = window.autoSyncTick;
   if (typeof origTick === 'function') {
-    window.autoSyncTick = function () { const p = origTick.apply(this, arguments); if (!document.hidden && url()) { GoWork.refresh(); Meeting.refresh(); } return p; };
+    window.autoSyncTick = function () { const p = origTick.apply(this, arguments); if (!document.hidden && url()) { GoWork.refresh(); Meeting.refresh(); StripWork.refresh(); } return p; };
   }
   // แถบตัวเลขบน Dashboard: ความยาวแถบตาม % และสีสถานะของ On-Time
   (function heroStats() {
