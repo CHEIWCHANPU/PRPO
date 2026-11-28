@@ -22273,7 +22273,9 @@ function endTour() {
 
   /* ══════════════════════ DASHBOARD GO WORK v3 — มุมมองผู้บริหาร (รายปี · Model/ลูกค้า · Maker ปรับราคา) ══════════════════════ */
   const GWDash = {
-    charts: {}, tab: 'overview', year: 'all', base: null, work: 'all', cus: 'all', model: 'all', basis: 'go', present: false, mkSel: 'all', q: '',
+    charts: {}, tab: 'overview', year: 'all', base: null, work: 'all', cus: 'all', model: 'all', basis: 'go', present: false, mkSel: 'all', cpsSel: 'all', q: '',
+    decRule: false,      /* true = NO ทศนิยม (เช่น 4295.1) นับเป็นงานปรับราคา · false = ปิดกฎนี้ (ค่าตอนนี้) */
+    cancelRule: true,    /* true = จับงานปรับราคาจากแถว REMARK "ยกเลิก GO" + แถวใหม่ราคาต่าง (กฎเดิมของระบบ) */
     PAL: ['#2E5395', '#2F8F6E', '#C9A227', '#B0673A', '#7A4FA3', '#2A9DB5', '#A6443C', '#8A94A6', '#3F7D53', '#D17B9B'],
     TABS: [['overview', 'ภาพรวมรายปี'], ['model', 'Model / ลูกค้า / ประเภทงาน'], ['matrix', 'Model แยกตามลูกค้า'], ['price', 'Maker ปรับราคา']],
     active() { return $('#page-gwdash') && $('#page-gwdash').classList.contains('active'); },
@@ -22285,6 +22287,7 @@ function endTour() {
     setCus(v) { this.cus = v; this.model = 'all'; this.mkSel = 'all'; this.render(); },
     setModel(v) { this.model = v; this.mkSel = 'all'; this.render(); },
     setBasis(b) { this.basis = b; this.year = 'all'; this.base = null; this.render(); },
+    setCps(v) { this.cpsSel = v; this.mkSel = 'all'; this.render(); },
     setMaker(v) { this.mkSel = v; this.render(); },
     setQ(v) { this.q = v; this.renderModelTable(); },
     togglePresent(on) {
@@ -22317,7 +22320,7 @@ function endTour() {
         const d = parseDMY(r.goDate);
         const clean = v => { const s = String(v == null ? '' : v).trim(); return !s || s === '-' ? '' : s; };
         const x = {
-          i, no: numOf(r.no), dec: /^\d+\.\d+$/.test(String(r.no == null ? '' : r.no).trim()), canc: gwIsCancel(r), y: this.yearOf(r), m: d ? d.getMonth() : null, ts: d ? d.getTime() : null,
+          i, no: numOf(r.no), dec: this.decRule && /^\d+\.\d+$/.test(String(r.no == null ? '' : r.no).trim()), canc: gwIsCancel(r), y: this.yearOf(r), m: d ? d.getMonth() : null, ts: d ? d.getTime() : null,
           model: clean(r.model).toUpperCase() || '(ไม่ระบุ)', cus: gwCusPrefix(r.cusCode) || '(ไม่ระบุ)',
           maker: clean(r.maker) || '(ไม่ระบุ)', work: clean(r.work) || '(ไม่ระบุ)',
           partNo: clean(r.partNo), partName: clean(r.partName), rev: clean(r.rev),
@@ -22385,7 +22388,7 @@ function endTour() {
     /* ── ตรวจจับ Maker ปรับราคา (แบบง่าย): แถว REMARK "ยกเลิก GO" = ราคาเดิม → แถวถัดไปของรายการเดียวกัน (Part No. + Model + Work + Maker) = ราคาใหม่ ── */
     priceChanges(rowsAll) {
       const K = x => [x.maker, x.partNo, x.model, x.work].map(v => String(v).toUpperCase().replace(/\s+/g, ' ').trim()).join('|');
-      const g = new Map();   /* ปิดกฎจับคู่ "ยกเลิก GO" → นับงานปรับราคาจาก NO ทศนิยมเท่านั้น */
+      const g = this.cancelRule ? this.group(rowsAll.filter(x => x.partNo && x.maker !== '(ไม่ระบุ)'), K) : new Map();
       const ev = [];
       g.forEach(list => {
         list.sort((a, b) => (a.ts == null ? 1e15 : a.ts) - (b.ts == null ? 1e15 : b.ts) || (a.no == null || b.no == null ? 0 : a.no - b.no) || a.i - b.i);
@@ -22398,7 +22401,7 @@ function endTour() {
         }
       });
       /* NO ทศนิยม (เช่น 4295.1) = ปรับราคาใหม่ของงานเดิม (NO 4295) → 1 แถว = 1 ครั้งที่ปรับราคา · เทียบราคากับแถวก่อนหน้าในกลุ่ม NO เดียวกัน */
-      { const have = new Set(ev.map(e => e.iNew)), fam = new Map();
+      if (this.decRule) { const have = new Set(ev.map(e => e.iNew)), fam = new Map();
         rowsAll.forEach(x => { if (x.no == null) return; const k = Math.floor(x.no + 1e-9); if (!fam.has(k)) fam.set(k, []); fam.get(k).push(x); });
         fam.forEach(list => {
           list.sort((a, b) => a.no - b.no || (a.ts == null ? 1e15 : a.ts) - (b.ts == null ? 1e15 : b.ts) || a.i - b.i);
@@ -22478,7 +22481,7 @@ function endTour() {
       const wt = this.tbl(['ประเภทงาน (WORK)', 'รายการ GO', '%', 'Part No.'], grp('work').map(([k, l]) => [esc(k), `<b>${this.n(l.length)}</b>`, this.pct(l.length, cur.length), this.n(pn(l))]));
       const ct = this.tbl(['ลูกค้า', 'รายการ GO', '%', 'Model', 'Maker'], grp('cus').map(([k, l]) => [esc(k), `<b>${this.n(l.length)}</b>`, this.pct(l.length, cur.length), this.n(sz(l, 'model')), this.n(sz(l, 'maker'))]));
       const nw = hasPrior ? `<div class="ex-newgrid"><div><h4>Maker ใหม่ (${fm.length})</h4>${chips(fm)}</div><div><h4>Model ใหม่ (${fo.length})</h4>${chips(fo)}</div><div><h4>ลูกค้าใหม่ (${fc.length})</h4>${chips(fc)}</div></div>` : '<p class="ex-note">ปีนี้เป็นปีแรกในข้อมูล จึงยังไม่มีปีก่อนให้เทียบ</p>';
-      const rc = this.tbl(['ที่มาของยอด (ทั้งชีต GO WORK · ทุกปี · ไม่ขึ้นกับตัวกรอง)', 'รายการ'], [['แถวทั้งหมดในชีต GO WORK', this.n(raw.length)], ['− งานลอกผิวชุบ (WORK = ลอกผิวชุบ)', this.n(strip)], ['− ยกเลิก GO (REMARK มีคำว่า ยกเลิก · ไม่รวมกรณีปรับราคา)', this.n(cancOnly)], ['− งานปรับราคา (แถว NO ทศนิยม เช่น 4295.1 · แยกเป็นหมวดปรับราคา)', this.n(adjRows)], ['− ไม่มีปี/วันที่ GO', this.n(P.noYear)], ['<b>= นับเป็นงาน GO</b>', `<b>${this.n(P.all.length)}</b>`]]);
+      const rc = this.tbl(['ที่มาของยอด (ทั้งชีต GO WORK · ทุกปี · ไม่ขึ้นกับตัวกรอง)', 'รายการ'], [['แถวทั้งหมดในชีต GO WORK', this.n(raw.length)], ['− งานลอกผิวชุบ (WORK = ลอกผิวชุบ)', this.n(strip)], ['− ยกเลิก GO (REMARK มีคำว่า ยกเลิก · ไม่รวมกรณีปรับราคา)', this.n(cancOnly)], [this.decRule ? '− งานปรับราคา (แถว NO ทศนิยม เช่น 4295.1 · แยกเป็นหมวดปรับราคา)' : '− งานปรับราคา (แถวราคาเดิม + แถวราคาใหม่ · แยกเป็นหมวดปรับราคา)', this.n(adjRows)], ['− ไม่มีปี/วันที่ GO', this.n(P.noYear)], ['<b>= นับเป็นงาน GO</b>', `<b>${this.n(P.all.length)}</b>`]]);
       return this.card(`สรุปประจำปี ${y + 543} — ตรวจสอบกับระบบได้`, 'นับจากชีต GO WORK โดยตรง · ตามตัวกรองด้านบน (ประเภทงาน / ลูกค้า / Model)',
         `<div class="ex-kpis">${kp.join('')}</div><div class="ex-grid g2">${this.card('แบ่งตามประเภทงาน', 'กี่รายการ แยกเป็นงานอะไร', wt)}${this.card('แบ่งตามลูกค้า', 'ตัวอักษรนำหน้ารหัส CUS', ct)}</div>${this.card('Maker / Model / ลูกค้าใหม่', 'ใหม่ = ไม่เคยมีงาน GO (รวมที่ยกเลิก) ในปีก่อนหน้า · ตัวเลขข้างชื่อ = จำนวนรายการ GO ปีนี้', nw, 'ex-wide')}${this.card('ที่มาของยอดรวม', 'ไล่จากแถวทั้งหมดในชีตจนเหลือยอดที่นับ', rc)}`, 'ex-wide');
     },
@@ -22536,7 +22539,7 @@ function endTour() {
         ${this.yearSummary(c)}
         ${cmpCard}
         <div class="ex-grid g2">
-          ${this.card('งาน GO แต่ละปี (รายการ)', 'สีทอง = ปีที่เลือก · สีเทา = ปีที่เปรียบเทียบ · ไม่รวมแถวปรับราคา (NO ทศนิยม)', '<div class="ex-chart"><canvas id="exYear"></canvas></div>')}
+          ${this.card('งาน GO แต่ละปี (รายการ)', 'สีทอง = ปีที่เลือก · สีเทา = ปีที่เปรียบเทียบ' + (this.decRule ? ' · ไม่รวมแถวปรับราคา (NO ทศนิยม)' : ''), '<div class="ex-chart"><canvas id="exYear"></canvas></div>')}
           ${this.card('สัดส่วนประเภทงานในแต่ละปี', 'แยกตามคอลัมน์ WORK', '<div class="ex-chart"><canvas id="exWorkYear"></canvas></div>')}
         </div>
         <div class="ex-grid g2">
@@ -22630,7 +22633,9 @@ function endTour() {
     /* ═════════ 4) Maker ปรับราคา ═════════ */
     tabPrice(c) {
       const { all, years, bs, events, adj } = c;
-      const evAll = events;   // รายการปรับราคา (ตรวจใน prep() แล้ว — แยกออกจากยอดงาน GO)
+      const cpsKey = e => e.cps === 'NON CPS' ? 'NON CPS' : (e.cps === '(ไม่ระบุ)' ? 'ไม่ระบุ' : 'CPS');
+      const evYr = this.year === 'all' ? events : events.filter(e => e.y === this.year);   // ก่อนกรอง CPS (ใช้ในตารางแยกประเภท)
+      const evAll = this.cpsSel === 'all' ? events : events.filter(e => cpsKey(e) === this.cpsSel);   // รายการปรับราคา (แยกออกจากยอดงาน GO)
       const ev = this.year === 'all' ? evAll : evAll.filter(e => e.y === this.year);
       const evB = bs ? evAll.filter(e => e.y === this.base) : null;
       const mkList = [...new Set(ev.map(e => e.maker))].sort();
@@ -22660,7 +22665,7 @@ function endTour() {
         this.chart('exMkYear', { type: 'bar', data: { labels: years.map(y => y + 543), datasets: [{ label: 'ขึ้นราคา', data: byYr.map(l => l.filter(x => x.pct > 0).length), backgroundColor: '#A6443C', maxBarThickness: 48 }, { label: 'ลดราคา', data: byYr.map(l => l.filter(x => x.pct < 0).length), backgroundColor: '#2F8F6E', maxBarThickness: 48 }] },
           options: { plugins: { legend: { position: 'bottom' } }, scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, beginAtZero: true } } } });
       };
-      if (!ev.length) return `${this.card('ยังไม่พบการปรับราคา', null, `<p class="ex-note">ระบบนับจากแถวที่ NO มีทศนิยม (เช่น 4295.1) — ในช่วง/ตัวกรองที่เลือกยังไม่พบ</p>`, 'ex-wide')}`;
+      if (!ev.length) return `${this.card('ยังไม่พบการปรับราคา', null, `<p class="ex-note">${this.decRule ? 'ระบบนับจากแถวที่ NO มีทศนิยม (เช่น 4295.1) — ในช่วง/ตัวกรองที่เลือกยังไม่พบ' : 'ระบบนับจากรายการที่ REMARK = "ยกเลิก GO" แล้วมีรายการใหม่ของ Part เดียวกัน (Maker + Part No. + Model + Work) ที่ <b>ราคา Maker</b> ต่างกัน — ในช่วง/ตัวกรองที่เลือกยังไม่พบ'}</p>${this.cpsSel !== 'all' ? '<p class="ex-note"><button class="ex-btn" onclick="GWDash.setCps(\'all\')">แสดงทุกประเภท (CPS + NON CPS)</button></p>' : ''}`, 'ex-wide')}`;
       return `
         <div class="ex-kpis">
           ${this.kpi('Maker ที่ปรับราคา', this.n(byMk.length), `จาก ${this.n(this.uniq(this.year === 'all' ? all : all.filter(x => x.y === this.year), 'maker').size)} Maker`, 'primary')}
@@ -22669,15 +22674,19 @@ function endTour() {
           ${this.kpi('ลดราคา', this.n(dns.length), dns.length ? `เฉลี่ย ${(dns.reduce((s, x) => s + x.pct, 0) / dns.length).toFixed(1)}%` : '', 'good')}
           ${this.kpi('ชิ้นงานที่ได้รับผล', this.n(new Set(ev.map(e => e.maker + e.partNo)).size), 'Part No. ไม่ซ้ำ')}
         </div>
-        ${this.card('สรุปสำหรับผู้บริหาร', 'วิธีนับ: แถวที่ NO มีทศนิยม (เช่น 4295.1) = ปรับราคาใหม่ของงาน NO 4295 (เทียบราคากับแถวก่อนหน้าในกลุ่มเดียวกัน) · งานกลุ่มนี้ไม่นับเป็นงาน GO (แยกเป็นหมวดปรับราคา)', `<ul class="ex-ins">${ins.map(t => `<li>${t}</li>`).join('')}</ul>`, 'ex-wide')}
+        ${this.card('สรุปสำหรับผู้บริหาร', (this.decRule ? 'วิธีนับ: แถวที่ NO มีทศนิยม (เช่น 4295.1) = ปรับราคาใหม่ของงาน NO 4295 (เทียบราคากับแถวก่อนหน้าในกลุ่มเดียวกัน) · งานกลุ่มนี้ไม่นับเป็นงาน GO (แยกเป็นหมวดปรับราคา)' : 'วิธีนับ: แถว REMARK "ยกเลิก GO" (สีเหลือง) = ราคาเดิม · แถวใหม่ของรายการเดียวกัน (สีเขียว) = ราคาใหม่ · นับเฉพาะที่ราคา Maker ต่างกัน · งานกลุ่มนี้ไม่นับเป็นงาน GO (แยกเป็นหมวดปรับราคา)'), `<ul class="ex-ins">${ins.map(t => `<li>${t}</li>`).join('')}</ul>`, 'ex-wide')}
         <div class="ex-grid g3">
           ${this.card('จำนวนครั้งที่ปรับราคา ต่อ Maker', 'Top 15', '<div class="ex-chart tall"><canvas id="exMkCnt"></canvas></div>')}
           ${this.card('% ปรับราคาเฉลี่ย ต่อ Maker', 'แดง = ขึ้น · เขียว = ลด', '<div class="ex-chart tall"><canvas id="exMkAvg"></canvas></div>')}
           ${this.card('การปรับราคารายปี', 'ทุกปีที่มีข้อมูล', '<div class="ex-chart tall"><canvas id="exMkYear"></canvas></div>')}
         </div>
+        ${this.card('แยกตามประเภท CPS / NON CPS', 'ตามปี/ตัวกรองที่เลือก · ไม่ขึ้นกับตัวเลือก "ประเภท" ในตารางรายละเอียด', (() => {
+          const rowsC = ['CPS', 'NON CPS', 'ไม่ระบุ'].map(k => { const l = evYr.filter(e => cpsKey(e) === k), u = l.filter(x => x.pct > 0), d = l.filter(x => x.pct < 0); return { k, n: l.length, u: u.length, d: d.length, f: l.length - u.length - d.length, parts: new Set(l.map(x => x.maker + x.partNo)).size, avg: u.length ? u.reduce((a, x) => a + x.pct, 0) / u.length : 0 }; }).filter(r => r.n);
+          return this.tbl(['ประเภท', 'ครั้งที่ปรับ', 'ขึ้นราคา', 'ลดราคา', 'ราคาเท่าเดิม', 'ชิ้นงาน', '% ขึ้นเฉลี่ย'], rowsC.map(r => [`<b>${r.k}</b>`, this.n(r.n), this.n(r.u), this.n(r.d), this.n(r.f), this.n(r.parts), r.u ? '+' + r.avg.toFixed(1) + '%' : '—']), 'ex-left');
+        })(), 'ex-wide')}
         ${this.card('สรุปตาม Maker', null, this.tbl(['Maker', 'ครั้งที่ปรับ', 'ขึ้น', 'ลด', 'ชิ้นงาน', '% เฉลี่ย', '% สูงสุด'], byMk.map(x => [`<b>${esc(x.m)}</b>`, this.n(x.n), this.n(x.up), this.n(x.dn), this.n(x.parts), `<span class="ex-d ${x.avg >= 0 ? 'up' : 'down'}">${x.avg >= 0 ? '+' : ''}${x.avg.toFixed(1)}%</span>`, `${x.max >= 0 ? '+' : ''}${x.max.toFixed(1)}%`]), 'ex-left'), 'ex-wide')}
-        ${this.card('รายละเอียดการปรับราคา', `<label class="ex-inl">เลือก Maker <select onchange="GWDash.setMaker(this.value)"><option value="all">ทั้งหมด (${mkList.length})</option>${mkList.map(m => `<option value="${esc(m)}"${this.mkSel === m ? ' selected' : ''}>${esc(m)}</option>`).join('')}</select></label>`,
-          this.tbl(['วันที่ GO', 'Maker', 'Part No.', 'Part Name', 'Model', 'CPS', 'Work', 'ราคาเดิม', 'ราคาใหม่', '% เปลี่ยน'], shown.slice(0, 300).map(e => [dt(e.ts), `<b>${esc(e.maker)}</b>`, esc(e.partNo), esc(e.partName), esc(e.model), e.cps === '(ไม่ระบุ)' ? '—' : `<span class="ex-chip ${e.cps === 'NON CPS' ? '' : 'c'}">${e.cps === 'NON CPS' ? 'NON CPS' : 'CPS'}</span>`, esc(e.work), fp(e.from), fp(e.to), `<span class="ex-d ${e.pct >= 0 ? 'up' : 'down'}">${e.pct >= 0 ? '▲ +' : '▼ '}${e.pct.toFixed(1)}%</span>`]), 'ex-left') + `<div class="ex-foot">แสดง ${Math.min(shown.length, 300).toLocaleString('th-TH')} จาก ${shown.length.toLocaleString('th-TH')} รายการ</div>`, 'ex-wide')}`;
+        ${this.card('รายละเอียดการปรับราคา', `<label class="ex-inl">ประเภท <select onchange="GWDash.setCps(this.value)">${[['all', 'ทั้งหมด'], ['CPS', 'CPS'], ['NON CPS', 'NON CPS']].map(([v, l]) => `<option value="${v}"${this.cpsSel === v ? ' selected' : ''}>${l}</option>`).join('')}</select></label> <label class="ex-inl">เลือก Maker <select onchange="GWDash.setMaker(this.value)"><option value="all">ทั้งหมด (${mkList.length})</option>${mkList.map(m => `<option value="${esc(m)}"${this.mkSel === m ? ' selected' : ''}>${esc(m)}</option>`).join('')}</select></label>`,
+          this.tbl(['วันที่ GO', 'Maker', 'Part No.', 'Part Name', 'Model', 'CPS', 'Work', 'ราคาเดิม', 'ราคาใหม่', '% เปลี่ยน'], shown.slice(0, 300).map(e => [dt(e.ts), `<b>${esc(e.maker)}</b>`, esc(e.partNo), esc(e.partName), esc(e.model), e.cps === '(ไม่ระบุ)' ? '—' : `<span class="ex-chip ${e.cps === 'NON CPS' ? '' : 'c'}">${e.cps === 'NON CPS' ? 'NON CPS' : 'CPS'}</span>`, esc(e.work), fp(e.from), fp(e.to), (e.pct === 0 ? '<span class="ex-d">0.0%</span>' : `<span class="ex-d ${e.pct > 0 ? 'up' : 'down'}">${e.pct > 0 ? '▲ +' : '▼ '}${e.pct.toFixed(1)}%</span>`)]), 'ex-left') + `<div class="ex-foot">แสดง ${Math.min(shown.length, 300).toLocaleString('th-TH')} จาก ${shown.length.toLocaleString('th-TH')} รายการ</div>`, 'ex-wide')}`;
     }
   };
   document.addEventListener('keydown', e => GWDash.keys(e));
