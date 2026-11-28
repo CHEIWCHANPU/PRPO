@@ -6657,6 +6657,12 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
  <button class="nav-item" id="nav-gwdash" onclick="showPage('gwdash',this)">
  <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></span><span class="nav-text" data-i18n="nav_gwdash">Dashboard GO WORK</span>
  </button>
+ <button class="nav-item" id="nav-gwstrip" onclick="showPage('gwstrip',this)">
+<span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 2 2 7l10 5 10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></span><span class="nav-text" data-i18n="nav_gwstrip">รายการ ลอกผิวชุบ</span>
+</button>
+<button class="nav-item" id="nav-gwstripsum" onclick="showPage('gwstripsum',this)">
+<span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M21.2 15.9A10 10 0 1 1 8 2.8"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg></span><span class="nav-text" data-i18n="nav_gwstripsum">สรุป ลอกผิวชุบ</span>
+</button>
  </div>
  </div>
 
@@ -9353,6 +9359,37 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
       #page-gwdash.ex-present .ex-ins{font-size:1.15rem}#page-gwdash.ex-present .ex-slide-title h2{font-size:1.7rem}#page-gwdash.ex-present .ex-table{font-size:.95rem}
       @media print{.ex-bar{display:none}#page-gwdash .ex-card{break-inside:avoid}}
     </style>
+  </div>
+
+  <!-- ═══════════ รายการ ลอกผิวชุบ ═══════════ -->
+  <div class="page" id="page-gwstrip">
+    <section class="ex-hero">
+      <div>
+        <h1>รายการ ลอกผิวชุบ</h1>
+        <p>งานที่ WORK = ลอกผิวชุบ จากชีต GO WORK — ค้นหา กรองตามปี / Model / Maker และ Export Excel (ส่วนเพิ่ม/แก้ไขรายการจะเชื่อม Apps Script ภายหลัง)</p>
+      </div>
+    </section>
+    <div class="ex-bar" id="gsBar">
+      <div class="ex-filters" id="gsFilters"></div>
+      <div class="ex-filters">
+        <label>ค้นหา<input class="ex-search" id="gsSearch" type="search" placeholder="Part No, Part Name, Model, Maker…" oninput="StripWork.set('q',this.value)" style="margin:0"></label>
+        <button class="ex-btn" onclick="StripWork.exportXlsx()">Export Excel</button>
+      </div>
+    </div>
+    <div id="gsBody"><div class="gx-skel tall"></div></div>
+  </div>
+
+  <!-- ═══════════ สรุป ลอกผิวชุบ ═══════════ -->
+  <div class="page" id="page-gwstripsum">
+    <section class="ex-hero">
+      <div>
+        <h1>สรุป ลอกผิวชุบ</h1>
+        <p>สรุปงานลอกผิวชุบ — จำนวนงานรายปี · Maker · Model · ลูกค้า (ไม่นับแถว REMARK = ยกเลิก GO)</p>
+      </div>
+    </section>
+    <div class="ex-bar" id="gssBar"></div>
+    <div id="gssBody"><div class="gx-skel tall"></div></div>
+    <style>#page-gwstrip,#page-gwstripsum{--ex-a:#2E5395;--ex-up:#A6443C;--ex-dn:#2F8F6E}#page-gwstrip .ex-scroll{max-height:68vh}#page-gwstrip tr.gs-canc td{background:rgba(201,162,39,.14)}</style>
   </div>
 
   <!-- ═══════════ SUMMARY MEETING ═══════════ -->
@@ -24436,6 +24473,8 @@ function endTour() {
     CMDK_ITEMS.splice(at < 0 ? CMDK_ITEMS.length : at, 0,
       { key: 'gowork', label: 'รายการ GO WORK', group: 'งาน GO WORK', icon: TRUCK },
       { key: 'gwdash', label: 'Dashboard GO WORK (เทียบรายปี)', group: 'งาน GO WORK', icon: svg('<path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/>') },
+      { key: 'gwstrip', label: 'รายการ ลอกผิวชุบ', group: 'งาน GO WORK', icon: svg('<path d="M12 2 2 7l10 5 10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>') },
+      { key: 'gwstripsum', label: 'สรุป ลอกผิวชุบ', group: 'งาน GO WORK', icon: svg('<path d="M21.2 15.9A10 10 0 1 1 8 2.8"/><path d="M22 12A10 10 0 0 0 12 2v10z"/>') },
       { key: 'meeting', label: 'บันทึกการประชุม', group: 'Summary Meeting', icon: CHAT },
       { key: 'rfq', label: 'RFQ ขอใบเสนอราคา (E-Form)', group: 'RFQ', icon: svg('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/>') },
       { key: 'costsaving', label: 'Cost Saving Report', group: 'COST SAVING', icon: COIN },
@@ -24468,12 +24507,118 @@ function endTour() {
   /* ══════════════════════ เชื่อมกับระบบเดิม ══════════════════════ */
   window.GoWork = GoWork; window.GWDash = GWDash; window.Meeting = Meeting; window.RFQ = RFQ;
 
+
+  /* ══════════════════════ ลอกผิวชุบ — รายการ + สรุป (ดึงจากแถว GO WORK ที่ WORK = ลอกผิวชุบ · Apps Script เฉพาะงานนี้ทำภายหลัง) ══════════════════════ */
+  const gsClean = v => { const t = String(v == null ? '' : v).trim(); return !t || t === '-' ? '' : t; };
+  const StripWork = {
+    q: '', year: 'all', model: 'all', maker: 'all', page: 1, per: 100,
+    active() { const e = $('#page-gwstrip'); return !!e && e.classList.contains('active'); },
+    all() { return GoWork.rows.filter(gwIsStrip).map(r => ({ r, y: GWDash.yearOf(r), model: gsClean(r.model).toUpperCase(), maker: gsClean(r.maker) })); },
+    open() { this.render(); GoWork.load(); },
+    set(k, v) { this[k] = (k === 'year' && v !== 'all') ? +v : v; this.page = 1; this.render(); },
+    go(d) { this.page = Math.max(1, this.page + d); this.render(); },
+    view() {
+      const q = this.q.trim().toLowerCase();
+      return this.all().filter(x => (this.year === 'all' || x.y === this.year) && (this.model === 'all' || x.model === this.model) && (this.maker === 'all' || x.maker === this.maker)
+        && (!q || GW_FIELDS.some(([k]) => String(x.r[k] == null ? '' : x.r[k]).toLowerCase().includes(q))))
+        .sort((a, b) => ((numOf(a.r.no) ?? 1e12) - (numOf(b.r.no) ?? 1e12)));
+    },
+    cell(k, v) { return k === 'customer' || k === 'custMaker' ? fmtPrice(v) : k === 'volume' ? fmtNum(v) : esc(v); },
+    render() {
+      const host = $('#gsBody'); if (!host) return;
+      const base = this.all();
+      if (!base.length) {
+        const f = $('#gsFilters'); if (f) f.innerHTML = '';
+        host.innerHTML = `<div class="gx-empty"><strong>${GoWork.loaded ? 'ยังไม่มีรายการที่ WORK = ลอกผิวชุบ ในชีต GO WORK' : 'กำลังโหลดข้อมูล GO WORK…'}</strong><span>เพิ่มรายการที่คอลัมน์ WORK เป็น "ลอกผิวชุบ" ในหน้า รายการ GO WORK หรือนำเข้า Excel</span></div>`;
+        return;
+      }
+      const years = [...new Set(base.map(x => x.y).filter(Boolean))].sort((a, b) => b - a);
+      const models = [...new Set(base.map(x => x.model).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'th', { numeric: true }));
+      const makers = [...new Set(base.map(x => x.maker).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'th', { numeric: true }));
+      if (this.year !== 'all' && !years.includes(this.year)) this.year = 'all';
+      if (this.model !== 'all' && !models.includes(this.model)) this.model = 'all';
+      if (this.maker !== 'all' && !makers.includes(this.maker)) this.maker = 'all';
+      const opt = (v, l, sel) => `<option value="${esc(v)}"${sel ? ' selected' : ''}>${esc(l)}</option>`;
+      $('#gsFilters').innerHTML = `
+        <label>ปี<select onchange="StripWork.set('year',this.value)">${opt('all', 'ทุกปี', this.year === 'all')}${years.map(y => opt(y, y + 543, this.year === y)).join('')}</select></label>
+        <label>Model<select onchange="StripWork.set('model',this.value)">${opt('all', 'ทั้งหมด', this.model === 'all')}${models.map(m => opt(m, m, this.model === m)).join('')}</select></label>
+        <label>Maker<select onchange="StripWork.set('maker',this.value)">${opt('all', 'ทั้งหมด', this.maker === 'all')}${makers.map(m => opt(m, m, this.maker === m)).join('')}</select></label>`;
+      const list = this.view(), pages = Math.max(1, Math.ceil(list.length / this.per));
+      if (this.page > pages) this.page = pages;
+      const from = (this.page - 1) * this.per, cols = GoWork.cols();
+      const body = list.slice(from, from + this.per).map(x => `<tr class="${gwIsCancel(x.r) ? 'gs-canc' : ''}">${cols.map(([k]) => `<td>${this.cell(k, x.r[k])}</td>`).join('')}</tr>`).join('');
+      host.innerHTML = `<section class="ex-card"><div class="ex-scroll"><table class="ex-table ex-left"><thead><tr>${cols.map(([, l]) => `<th>${esc(l)}</th>`).join('')}</tr></thead><tbody>${body || `<tr><td colspan="${cols.length}">ไม่พบรายการตามตัวกรอง</td></tr>`}</tbody></table></div>
+        <div class="ex-foot">แสดง ${list.length ? (from + 1).toLocaleString('th-TH') : 0}–${Math.min(from + this.per, list.length).toLocaleString('th-TH')} จาก ${list.length.toLocaleString('th-TH')} รายการ · แถวสีเหลือง = ยกเลิก GO
+          ${pages > 1 ? ` · <button class="ex-btn" onclick="StripWork.go(-1)" ${this.page <= 1 ? 'disabled' : ''}>‹</button> หน้า ${this.page}/${pages} <button class="ex-btn" onclick="StripWork.go(1)" ${this.page >= pages ? 'disabled' : ''}>›</button>` : ''}</div></section>`;
+    },
+    exportXlsx() {
+      if (typeof XLSX === 'undefined') { alert('ยังโหลดตัว Export Excel ไม่เสร็จ ลองใหม่อีกครั้ง'); return; }
+      const cols = GoWork.cols(), list = this.view();
+      const ws = XLSX.utils.aoa_to_sheet([cols.map(([, l]) => l), ...list.map(x => cols.map(([k]) => x.r[k] == null ? '' : x.r[k]))]);
+      const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'ลอกผิวชุบ');
+      XLSX.writeFile(wb, 'ลอกผิวชุบ.xlsx');
+    }
+  };
+
+  const StripSum = {
+    year: 'all',
+    active() { const e = $('#page-gwstripsum'); return !!e && e.classList.contains('active'); },
+    open() { this.render(); GoWork.load(); },
+    setYear(v) { this.year = v === 'all' ? 'all' : +v; this.render(); },
+    render() {
+      const host = $('#gssBody'); if (!host) return;
+      const D = GWDash, n = v => D.n(v);
+      const raw = GoWork.rows.filter(gwIsStrip).map(r => ({ y: D.yearOf(r), canc: gwIsCancel(r), model: gsClean(r.model).toUpperCase() || '(ไม่ระบุ)', maker: gsClean(r.maker) || '(ไม่ระบุ)',
+        cus: gwCusPrefix(r.cusCode) || '(ไม่ระบุ)', vol: numOf(r.volume) || 0, part: gsClean(r.partNo) })).filter(x => x.y);
+      let years = [...new Set(raw.map(x => x.y))].sort((a, b) => a - b);
+      if (D.maxYears > 0) years = years.slice(-D.maxYears);
+      const keep = new Set(years);
+      if (this.year !== 'all' && !keep.has(this.year)) this.year = 'all';
+      const bar = $('#gssBar');
+      if (bar) bar.innerHTML = `<div class="ex-filters"><label>ปี<select onchange="StripSum.setYear(this.value)"><option value="all">${D.maxYears > 0 ? years.length + ' ปีล่าสุด' : 'ทุกปี'}</option>${years.slice().reverse().map(y => `<option value="${y}"${this.year === y ? ' selected' : ''}>${y + 543}</option>`).join('')}</select></label></div>`;
+      D.kill('exSwYear'); D.kill('exSwMaker');
+      if (!raw.length) { host.innerHTML = `<div class="gx-empty"><strong>${GoWork.loaded ? 'ยังไม่มีรายการที่ WORK = ลอกผิวชุบ ในชีต GO WORK' : 'กำลังโหลดข้อมูล GO WORK…'}</strong><span>เมื่อมีแถว WORK = ลอกผิวชุบ ระบบจะสรุปให้อัตโนมัติ</span></div>`; return; }
+      const inY = raw.filter(x => keep.has(x.y) && (this.year === 'all' || x.y === this.year));
+      const cur = inY.filter(x => !x.canc), canc = inY.length - cur.length;
+      const uq = k => new Set(cur.map(x => x[k]).filter(v => v && v !== '(ไม่ระบุ)')).size;
+      const vol = cur.reduce((a, x) => a + x.vol, 0);
+      const agg = key => [...D.group(cur, key)].map(([k, l]) => ({ k, n: l.length, vol: l.reduce((a, x) => a + x.vol, 0), models: new Set(l.map(x => x.model)).size, makers: new Set(l.map(x => x.maker)).size, cus: new Set(l.map(x => x.cus)).size, parts: new Set(l.map(x => x.part).filter(Boolean)).size })).sort((a, b) => b.n - a.n || b.vol - a.vol);
+      const byMk = agg('maker'), byMd = agg('model'), byCus = agg('cus');
+      const byY = years.map((y, i) => { const l = raw.filter(x => x.y === y && !x.canc); return { y, n: l.length, vol: l.reduce((a, x) => a + x.vol, 0), models: new Set(l.map(x => x.model)).size, makers: new Set(l.map(x => x.maker)).size }; });
+      host.innerHTML = `
+        <div class="ex-kpis">
+          ${D.kpi('งานลอกผิวชุบ', n(cur.length), 'รายการ · ' + (this.year === 'all' ? years.map(y => y + 543).join(', ') : 'ปี ' + (this.year + 543)), 'primary')}
+          ${D.kpi('VOLUME รวม', n(vol), 'ชิ้น')}
+          ${D.kpi('Model', n(uq('model')), 'ไม่ซ้ำกัน')}
+          ${D.kpi('ลูกค้า', n(uq('cus')), 'ไม่ซ้ำกัน')}
+          ${D.kpi('Maker', n(uq('maker')), 'ไม่ซ้ำกัน')}
+        </div>
+        <div class="ex-grid g2">
+          ${D.card('งานลอกผิวชุบแต่ละปี (รายการ)', canc ? `ไม่รวมยกเลิก GO ${n(canc)} รายการ` : null, '<div class="ex-chart"><canvas id="exSwYear"></canvas></div>')}
+          ${D.card('Maker ที่มีงานลอกผิวชุบมากสุด', 'Top 10 (รายการ)', '<div class="ex-chart"><canvas id="exSwMaker"></canvas></div>')}
+        </div>
+        ${D.card('ตารางสรุปรายปี', 'เทียบ % กับปีก่อนหน้า', D.tbl(['ปี', 'รายการ', '% เทียบปีก่อน', 'VOLUME', 'Model', 'Maker'], byY.slice().reverse().map((r, i, a) => { const prev = byY[byY.indexOf(r) - 1]; return [`<b>${r.y + 543}</b>`, `<b>${n(r.n)}</b>`, prev ? D.dl(r.n, prev.n) : '—', n(r.vol), n(r.models), n(r.makers)]; })))}
+        <div class="ex-grid g2" style="margin-top:1rem">
+          ${D.card('สรุปตาม Maker', null, D.tbl(['Maker', 'รายการ', 'VOLUME', 'Model', 'ชิ้นงาน'], byMk.map(x => [`<b>${esc(x.k)}</b>`, n(x.n), n(x.vol), n(x.models), n(x.parts)]), 'ex-left'))}
+          ${D.card('สรุปตาม Model', null, D.tbl(['Model', 'รายการ', 'VOLUME', 'ลูกค้า', 'Maker'], byMd.map(x => [`<b>${esc(x.k)}</b>`, n(x.n), n(x.vol), n(x.cus), n(x.makers)]), 'ex-left'))}
+        </div>
+        <div style="margin-top:1rem">${D.card('สรุปตามลูกค้า', 'ตัวอักษรนำหน้ารหัส CUS', D.tbl(['ลูกค้า', 'รายการ', 'VOLUME', 'Model', 'Maker'], byCus.map(x => [`<b>${esc(x.k)}</b>`, n(x.n), n(x.vol), n(x.models), n(x.makers)]), 'ex-left'))}</div>`;
+      D.chart('exSwYear', { type: 'bar', plugins: [D.valLabels], data: { labels: byY.map(r => r.y + 543), datasets: [{ label: 'รายการ', data: byY.map(r => r.n), backgroundColor: byY.map(r => (this.year !== 'all' && r.y === this.year) ? '#C9A227' : '#2E5395'), borderRadius: 6 }] },
+        options: { plugins: Object.assign({ legend: { display: false } }, D.vl(0)), scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
+      const top = byMk.slice(0, 10);
+      D.chart('exSwMaker', { type: 'bar', plugins: [D.valLabels], data: { labels: top.map(x => x.k), datasets: [{ label: 'รายการ', data: top.map(x => x.n), backgroundColor: '#2F8F6E', borderRadius: 6 }] },
+        options: { indexAxis: 'y', plugins: Object.assign({ legend: { display: false } }, D.vl(0)), scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } } });
+    }
+  };
+  /* GO WORK ซิงค์ข้อมูลใหม่ → รีเฟรชหน้าลอกผิวชุบที่เปิดอยู่ */
+  { const origRef = GoWork.refresh; GoWork.refresh = async function () { const r = await origRef.apply(this, arguments); try { if (StripWork.active()) StripWork.render(); if (StripSum.active()) StripSum.render(); } catch (e) {} return r; }; }
+
   // หน้าใหม่ + ชื่อหัวข้อ + เมนู 2 ภาษา
   try {
-    Object.assign(PAGE_TITLES.th, { gwdash: 'Dashboard GO WORK', gowork: 'GO WORK', meeting: 'Summary Meeting', rfq: 'RFQ ขอใบเสนอราคา' });
-    Object.assign(PAGE_TITLES.en, { gwdash: 'GO WORK Dashboard', gowork: 'GO WORK', meeting: 'Summary Meeting', rfq: 'RFQ Request for Quotation' });
-    Object.assign(I18N.th, { group_gowork: 'งาน GO WORK', nav_gowork: 'รายการ GO WORK', nav_gwdash: 'Dashboard GO WORK', group_meeting: 'Summary Meeting', nav_meeting: 'บันทึกการประชุม', group_rfq: 'RFQ ขอใบเสนอราคา', nav_rfq: 'สร้างใบขอราคา (E-Form)' });
-    Object.assign(I18N.en, { group_gowork: 'GO WORK', nav_gowork: 'GO WORK List', nav_gwdash: 'GO WORK Dashboard', group_meeting: 'Summary Meeting', nav_meeting: 'Meeting Notes', group_rfq: 'RFQ', nav_rfq: 'Create RFQ (E-Form)' });
+    Object.assign(PAGE_TITLES.th, { gwstrip: 'รายการ ลอกผิวชุบ', gwstripsum: 'สรุป ลอกผิวชุบ', gwdash: 'Dashboard GO WORK', gowork: 'GO WORK', meeting: 'Summary Meeting', rfq: 'RFQ ขอใบเสนอราคา' });
+    Object.assign(PAGE_TITLES.en, { gwstrip: 'Strip Plating List', gwstripsum: 'Strip Plating Summary', gwdash: 'GO WORK Dashboard', gowork: 'GO WORK', meeting: 'Summary Meeting', rfq: 'RFQ Request for Quotation' });
+    Object.assign(I18N.th, { group_gowork: 'งาน GO WORK', nav_gowork: 'รายการ GO WORK', nav_gwdash: 'Dashboard GO WORK', nav_gwstrip: 'รายการ ลอกผิวชุบ', nav_gwstripsum: 'สรุป ลอกผิวชุบ', group_meeting: 'Summary Meeting', nav_meeting: 'บันทึกการประชุม', group_rfq: 'RFQ ขอใบเสนอราคา', nav_rfq: 'สร้างใบขอราคา (E-Form)' });
+    Object.assign(I18N.en, { group_gowork: 'GO WORK', nav_gowork: 'GO WORK List', nav_gwdash: 'GO WORK Dashboard', nav_gwstrip: 'Strip Plating List', nav_gwstripsum: 'Strip Plating Summary', group_meeting: 'Summary Meeting', nav_meeting: 'Meeting Notes', group_rfq: 'RFQ', nav_rfq: 'Create RFQ (E-Form)' });
     DEFAULT_COLLAPSED_NAV_GROUPS.push('gowork', 'meeting', 'rfq');
   } catch (e) {}
 
@@ -24487,6 +24632,8 @@ function endTour() {
     origShowPage(name, btn);
     if (name === 'gowork') GoWork.open();
     if (name === 'gwdash') GWDash.open();
+    if (name === 'gwstrip') StripWork.open();
+    if (name === 'gwstripsum') StripSum.open();
     if (name === 'meeting') Meeting.open();
     if (name === 'rfq') RFQ.open();
     document.querySelector('main') && document.querySelector('main').scrollTo && document.querySelector('main').scrollTo(0, 0);
