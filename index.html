@@ -22327,7 +22327,12 @@ function endTour() {
         };
         (gwIsCancel(r) ? cancelled : out).push(x);
       });
-      return { all: out.filter(x => x.y), cancelled: cancelled.filter(x => x.y), noYear: out.filter(x => !x.y).length };
+      /* แยก "งานปรับราคา" ออกจากงาน GO: แถวราคาเดิม (ยกเลิก GO) + แถวราคาใหม่ ของรายการที่ Maker ปรับราคา → เข้าหมวด adj ไม่นับใน all / cancelled */
+      const outY = out.filter(x => x.y), cancY = cancelled.filter(x => x.y);
+      const events = this.priceChanges([...outY, ...cancY]);
+      const adjSet = new Set(); events.forEach(e => { adjSet.add(e.iOld); adjSet.add(e.iNew); });
+      const isAdj = x => adjSet.has(x.i);
+      return { all: outY.filter(x => !isAdj(x)), cancelled: cancY.filter(x => !isAdj(x)), adj: [...outY, ...cancY].filter(isAdj), events, noYear: out.filter(x => !x.y).length };
     },
     n(v) { return Math.round(v).toLocaleString('th-TH'); },
     pct(a, b) { return b ? (a / b * 100).toFixed(1) + '%' : '—'; },
@@ -22389,7 +22394,7 @@ function endTour() {
           if (!a.canc || a.mkPrice == null || b.mkPrice == null || !(a.mkPrice > 0)) continue;
           if (Math.abs(b.mkPrice - a.mkPrice) < 1e-6) continue;
           ev.push({ maker: b.maker, partNo: b.partNo, partName: b.partName || a.partName, model: b.model, cus: b.cus, work: b.work, cps: b.cpc !== '(ไม่ระบุ)' ? b.cpc : a.cpc, from: a.mkPrice, to: b.mkPrice,
-            pct: (b.mkPrice - a.mkPrice) / a.mkPrice * 100, y: b.y || a.y, ts: b.ts || a.ts, rev: b.rev, volume: b.volume, viaCancel: true });
+            pct: (b.mkPrice - a.mkPrice) / a.mkPrice * 100, y: b.y || a.y, ts: b.ts || a.ts, rev: b.rev, volume: b.volume, viaCancel: true, iOld: a.i, iNew: b.i });
         }
       });
       return ev;
@@ -22398,7 +22403,7 @@ function endTour() {
     render() {
       const host = $('#gdBody'); if (!host) return;
       const P = this.prep();
-      const years = [...new Set(P.all.map(x => x.y))].sort((a, b) => a - b);
+      const years = [...new Set([...P.all, ...P.adj].map(x => x.y))].sort((a, b) => a - b);
       const works = [...new Set(P.all.filter(x => this.year === 'all' || x.y === this.year).map(x => x.work))].sort((a, b) => a.localeCompare(b, 'th', { numeric: true }));
       if (this.work !== 'all' && !works.includes(this.work)) this.work = 'all';   // ปีที่เลือกไม่มีงานนี้ → กลับเป็น "ทั้งหมด"
       /* ลูกค้า (ตัวอักษรนำหน้า Cus Code) — ตามปี/ประเภทงานที่เลือก แล้วกรอง Model ต่อจากลูกค้า */
@@ -22428,12 +22433,12 @@ function endTour() {
         return;
       }
       const wf = x => (this.work === 'all' || x.work === this.work) && (this.cus === 'all' || x.cus === this.cus) && (this.model === 'all' || x.model === this.model);
-      const all = P.all.filter(wf), cancelled = P.cancelled.filter(wf);
+      const all = P.all.filter(wf), cancelled = P.cancelled.filter(wf), adj = P.adj.filter(wf), events = P.events.filter(wf);
       const sel = this.year === 'all' ? all : all.filter(x => x.y === this.year);
       const ylabel = this.year === 'all' ? `ทุกปี (${years[0] + 543}–${years[years.length - 1] + 543})` : `ปี ${this.year + 543}`;
       if (this.base != null && (this.year === 'all' || !years.includes(this.base))) this.base = null;
       this.bs = this.base != null ? all.filter(x => x.y === this.base) : null;
-      const ctx = { P, all, cancelled, sel, years, ylabel, bs: this.bs };
+      const ctx = { P, all, cancelled, adj, events, sel, years, ylabel, bs: this.bs };
       const fn = { overview: 'tabOverview', model: 'tabModel', matrix: 'tabMatrix', price: 'tabPrice' }[this.tab];
       host.innerHTML = `<div class="ex-slide-title"><h2>${this.TABS.find(t => t[0] === this.tab)[1]}</h2><span>${ylabel}${this.bs ? ` เทียบกับปี ${this.base + 543}` : ''}${this.work !== 'all' ? ' · ' + esc(this.work) : ''}${this.cus !== 'all' ? ' · ลูกค้า ' + esc(this.cus) : ''}${this.model !== 'all' ? ' · Model ' + esc(this.model) : ''}${P.noYear ? ` · ไม่นับ ${P.noYear} รายการที่ไม่มีปี/วันที่ GO` : ''}</span></div>` + this[fn](ctx);
       this.afterRender(ctx);
@@ -22446,28 +22451,29 @@ function endTour() {
       const { P, years, all, cancelled } = c, raw = GoWork.rows;
       const y = this.year === 'all' ? years[years.length - 1] : this.year;
       const strip = raw.filter(gwIsStrip).length, canc = raw.filter(r => !gwIsStrip(r) && gwIsCancel(r)).length;
+      const adjRows = P.adj.length, adjCanc = P.adj.filter(x => x.canc).length, cancOnly = canc - adjCanc, adjY = c.events.filter(e => e.y === y).length;   // งานปรับราคาแยกออกจากยอด GO / ยกเลิก
       const cur = all.filter(x => x.y === y), cc = cancelled.filter(x => x.y === y);
-      const hasPrior = years.some(v => v < y), hist = [...P.all, ...P.cancelled].filter(x => x.y < y);
+      const hasPrior = years.some(v => v < y), hist = [...P.all, ...P.cancelled, ...P.adj].filter(x => x.y < y);
       const fresh = k => { const seen = new Set(hist.map(x => x[k])), m = new Map(); cur.forEach(x => { if (x[k] !== '(ไม่ระบุ)' && !seen.has(x[k])) m.set(x[k], (m.get(x[k]) || 0) + 1); }); return [...m].sort((a, b) => b[1] - a[1]); };
       const fm = hasPrior ? fresh('maker') : [], fo = hasPrior ? fresh('model') : [], fc = hasPrior ? fresh('cus') : [];
       const chips = l => l.length ? l.map(([k, n]) => `<span class="ex-chip m">${esc(k)}<em>${n}</em></span>`).join('') : '—';
       const grp = k => [...this.group(cur, k)].sort((a, b) => b[1].length - a[1].length);
       const sz = (l, k) => this.uniq(l, k).size, pn = l => new Set(l.map(x => x.partNo).filter(Boolean)).size;
       const kp = [this.kpi('งาน GO ปี ' + (y + 543), this.n(cur.length), 'รายการ (แถวในชีต)', 'primary'), this.kpi('Part No. ไม่ซ้ำ', this.n(pn(cur)), 'ชิ้นงานที่ GO'),
-        this.kpi('Maker ใหม่', hasPrior ? this.n(fm.length) : '—', hasPrior ? 'ไม่เคยมี GO ปีก่อนๆ' : 'ปีแรกในข้อมูล', 'good'), this.kpi('ยกเลิก GO ปีนี้', this.n(cc.length), 'ไม่รวมในยอดด้านซ้าย', cc.length ? 'bad' : '')];
+        this.kpi('Maker ใหม่', hasPrior ? this.n(fm.length) : '—', hasPrior ? 'ไม่เคยมี GO ปีก่อนๆ' : 'ปีแรกในข้อมูล', 'good'), this.kpi('ยกเลิก GO ปีนี้', this.n(cc.length), 'ไม่รวมในยอด GO (ไม่รวมงานปรับราคา)', cc.length ? 'bad' : ''), this.kpi('ปรับราคาปีนี้', this.n(adjY), 'ครั้ง · แยกจากยอด GO (ดูแท็บ 4)', adjY ? 'bad' : '')];
       const wt = this.tbl(['ประเภทงาน (WORK)', 'รายการ GO', '%', 'Part No.'], grp('work').map(([k, l]) => [esc(k), `<b>${this.n(l.length)}</b>`, this.pct(l.length, cur.length), this.n(pn(l))]));
       const ct = this.tbl(['ลูกค้า', 'รายการ GO', '%', 'Model', 'Maker'], grp('cus').map(([k, l]) => [esc(k), `<b>${this.n(l.length)}</b>`, this.pct(l.length, cur.length), this.n(sz(l, 'model')), this.n(sz(l, 'maker'))]));
       const nw = hasPrior ? `<div class="ex-newgrid"><div><h4>Maker ใหม่ (${fm.length})</h4>${chips(fm)}</div><div><h4>Model ใหม่ (${fo.length})</h4>${chips(fo)}</div><div><h4>ลูกค้าใหม่ (${fc.length})</h4>${chips(fc)}</div></div>` : '<p class="ex-note">ปีนี้เป็นปีแรกในข้อมูล จึงยังไม่มีปีก่อนให้เทียบ</p>';
-      const rc = this.tbl(['ที่มาของยอด (ทั้งชีต GO WORK · ทุกปี · ไม่ขึ้นกับตัวกรอง)', 'รายการ'], [['แถวทั้งหมดในชีต GO WORK', this.n(raw.length)], ['− งานลอกผิวชุบ (WORK = ลอกผิวชุบ)', this.n(strip)], ['− ยกเลิก GO (REMARK มีคำว่า ยกเลิก)', this.n(canc)], ['− ไม่มีปี/วันที่ GO', this.n(P.noYear)], ['<b>= นับเป็นงาน GO</b>', `<b>${this.n(P.all.length)}</b>`]]);
+      const rc = this.tbl(['ที่มาของยอด (ทั้งชีต GO WORK · ทุกปี · ไม่ขึ้นกับตัวกรอง)', 'รายการ'], [['แถวทั้งหมดในชีต GO WORK', this.n(raw.length)], ['− งานลอกผิวชุบ (WORK = ลอกผิวชุบ)', this.n(strip)], ['− ยกเลิก GO (REMARK มีคำว่า ยกเลิก · ไม่รวมกรณีปรับราคา)', this.n(cancOnly)], ['− งานปรับราคา (แถวราคาเดิม + แถวราคาใหม่ · แยกเป็นหมวดปรับราคา)', this.n(adjRows)], ['− ไม่มีปี/วันที่ GO', this.n(P.noYear)], ['<b>= นับเป็นงาน GO</b>', `<b>${this.n(P.all.length)}</b>`]]);
       return this.card(`สรุปประจำปี ${y + 543} — ตรวจสอบกับระบบได้`, 'นับจากชีต GO WORK โดยตรง · ตามตัวกรองด้านบน (ประเภทงาน / ลูกค้า / Model)',
         `<div class="ex-kpis">${kp.join('')}</div><div class="ex-grid g2">${this.card('แบ่งตามประเภทงาน', 'กี่รายการ แยกเป็นงานอะไร', wt)}${this.card('แบ่งตามลูกค้า', 'ตัวอักษรนำหน้ารหัส CUS', ct)}</div>${this.card('Maker / Model / ลูกค้าใหม่', 'ใหม่ = ไม่เคยมีงาน GO (รวมที่ยกเลิก) ในปีก่อนหน้า · ตัวเลขข้างชื่อ = จำนวนรายการ GO ปีนี้', nw, 'ex-wide')}${this.card('ที่มาของยอดรวม', 'ไล่จากแถวทั้งหมดในชีตจนเหลือยอดที่นับ', rc)}`, 'ex-wide');
     },
     tabOverview(c) {
-      const { all, cancelled, years, sel, bs } = c;
-      const byY = this.group(all, 'y'), cancY = this.group(cancelled, 'y');
+      const { all, cancelled, years, sel, bs, events } = c;
+      const byY = this.group(all, 'y'), cancY = this.group(cancelled, 'y'), evY = this.group(events, 'y');
       const rows = years.map((y, i) => {
         const l = byY.get(y) || [], prev = i ? (byY.get(years[i - 1]) || []).length : null;
-        return { y, n: l.length, models: this.uniq(l, 'model').size, cus: this.uniq(l, 'cus').size, makers: this.uniq(l, 'maker').size, vol: l.reduce((s, x) => s + x.volume, 0), canc: (cancY.get(y) || []).length, d: prev == null ? null : (prev ? (l.length - prev) / prev * 100 : null) };
+        return { y, n: l.length, models: this.uniq(l, 'model').size, cus: this.uniq(l, 'cus').size, makers: this.uniq(l, 'maker').size, vol: l.reduce((s, x) => s + x.volume, 0), canc: (cancY.get(y) || []).length, adj: (evY.get(y) || []).length, d: prev == null ? null : (prev ? (l.length - prev) / prev * 100 : null) };
       });
       const total = all.length, best = rows.reduce((a, b) => (b.n > a.n ? b : a), rows[0]);
       const last = rows[rows.length - 1], prevR = rows[rows.length - 2];
@@ -22478,6 +22484,7 @@ function endTour() {
       ins.push(`ปีที่มีงาน GO มากที่สุดคือ <b>${best.y + 543}</b> จำนวน ${this.n(best.n)} รายการ`);
       if (prevR) ins.push(`ปี ${last.y + 543} มี ${this.n(last.n)} รายการ ${last.d == null ? '' : `(${last.d >= 0 ? 'เพิ่มขึ้น' : 'ลดลง'} ${Math.abs(last.d).toFixed(1)}% จากปี ${prevR.y + 543})`}${last.y === new Date().getFullYear() ? ' — ปีนี้ยังไม่จบ' : ''}`);
       if (wk[0]) ins.push(`ประเภทงานหลัก: <b>${esc(wk[0][0])}</b> ${this.pct(wk[0][1].length, sel.length)} ของงานทั้งหมด`);
+      { const adjEv = this.year === 'all' ? events : events.filter(e => e.y === this.year); if (adjEv.length) ins.push(`งานปรับราคา <b>${this.n(adjEv.length)}</b> ครั้ง (${this.n(new Set(adjEv.map(e => e.maker + '|' + e.partNo)).size)} ชิ้นงาน) — <b>แยกออกจากยอดงาน GO แล้ว</b> ดูรายละเอียดที่แท็บ "Maker ปรับราคา"`); }
       let cmpCard = '';
       if (bs) {
         const f = (l, k) => k === 'n' ? l.length : k === 'vol' ? l.reduce((a, x) => a + x.volume, 0) : this.uniq(l, k).size;
@@ -22505,7 +22512,7 @@ function endTour() {
       };
       return `
         <div class="ex-kpis">
-          ${this.kpi('งาน GO ทั้งหมด', this.n(sel.length), this.year === 'all' ? 'รายการ (ไม่รวมยกเลิก/ลอกผิวชุบ) · ทุกปี' : `รายการ · ปี ${this.year + 543}`, 'primary', bs && this.cmpTxt(sel.length, bs.length))}
+          ${this.kpi('งาน GO ทั้งหมด', this.n(sel.length), this.year === 'all' ? 'รายการ (ไม่รวมยกเลิก/ลอกผิวชุบ/ปรับราคา) · ทุกปี' : `รายการ · ปี ${this.year + 543}`, 'primary', bs && this.cmpTxt(sel.length, bs.length))}
           ${this.kpi(this.year === 'all' ? 'จำนวนปี' : 'VOLUME รวม', this.year === 'all' ? years.length : this.n(sel.reduce((a, x) => a + x.volume, 0)), this.year === 'all' ? `${years[0] + 543} – ${years[years.length - 1] + 543}` : 'ชิ้น', '', bs && this.year !== 'all' && this.cmpTxt(sel.reduce((a, x) => a + x.volume, 0), bs.reduce((a, x) => a + x.volume, 0)))}
           ${this.kpi('Model', this.n(this.uniq(sel, 'model').size), 'ไม่ซ้ำกัน', '', bs && this.cmpTxt(this.uniq(sel, 'model').size, this.uniq(bs, 'model').size))}
           ${this.kpi('ลูกค้า', this.n(this.uniq(sel, 'cus').size), 'ไม่ซ้ำกัน', '', bs && this.cmpTxt(this.uniq(sel, 'cus').size, this.uniq(bs, 'cus').size))}
@@ -22519,7 +22526,7 @@ function endTour() {
           ${this.card('สัดส่วนประเภทงานในแต่ละปี', 'แยกตามคอลัมน์ WORK', '<div class="ex-chart"><canvas id="exWorkYear"></canvas></div>')}
         </div>
         <div class="ex-grid g2">
-          ${this.card('ตารางสรุปรายปี', 'เทียบ % กับปีก่อนหน้า', this.tbl(['ปี', 'รายการ GO', '% เทียบปีก่อน', 'Model', 'ลูกค้า', 'Maker', 'VOLUME'], rows.slice().reverse().map(r => [`<b>${r.y + 543}</b>`, `<b>${this.n(r.n)}</b>`, r.d == null ? '—' : `<span class="ex-d ${r.d >= 0 ? 'up' : 'down'}">${r.d >= 0 ? '▲' : '▼'} ${Math.abs(r.d).toFixed(1)}%</span>`, this.n(r.models), this.n(r.cus), this.n(r.makers), this.n(r.vol)])))}
+          ${this.card('ตารางสรุปรายปี', 'เทียบ % กับปีก่อนหน้า', this.tbl(['ปี', 'รายการ GO', '% เทียบปีก่อน', 'Model', 'ลูกค้า', 'Maker', 'VOLUME', 'ปรับราคา (ครั้ง · ไม่นับใน GO)'], rows.slice().reverse().map(r => [`<b>${r.y + 543}</b>`, `<b>${this.n(r.n)}</b>`, r.d == null ? '—' : `<span class="ex-d ${r.d >= 0 ? 'up' : 'down'}">${r.d >= 0 ? '▲' : '▼'} ${Math.abs(r.d).toFixed(1)}%</span>`, this.n(r.models), this.n(r.cus), this.n(r.makers), this.n(r.vol), r.adj ? `<span class="ex-d up">${this.n(r.adj)}</span>` : '—'])))}
           ${this.card('จำนวน Model / ลูกค้า / Maker รายปี', 'ความกว้างของฐานงานในแต่ละปี', '<div class="ex-chart"><canvas id="exEntity"></canvas></div>')}
         </div>`;
     },
@@ -22608,8 +22615,8 @@ function endTour() {
 
     /* ═════════ 4) Maker ปรับราคา ═════════ */
     tabPrice(c) {
-      const { all, years, bs, cancelled } = c;
-      const evAll = this.priceChanges([...all, ...cancelled]);   // รวมแถวที่ยกเลิก (= ราคาเดิมที่ถูกแทนด้วยราคาใหม่)
+      const { all, years, bs, events, adj } = c;
+      const evAll = events;   // รายการปรับราคา (ตรวจใน prep() แล้ว — แยกออกจากยอดงาน GO)
       const ev = this.year === 'all' ? evAll : evAll.filter(e => e.y === this.year);
       const evB = bs ? evAll.filter(e => e.y === this.base) : null;
       const mkList = [...new Set(ev.map(e => e.maker))].sort();
@@ -22624,6 +22631,7 @@ function endTour() {
       const ins = [];
       if (ev.length) {
         ins.push(`พบการปรับราคาจาก <b>${byMk.length}</b> Maker รวม <b>${this.n(ev.length)}</b> ครั้ง (<b>${this.n(new Set(ev.map(e => e.maker + e.partNo)).size)}</b> ชิ้นงาน) — ขึ้นราคา ${this.n(ups.length)} ครั้ง · ลดราคา ${this.n(dns.length)} ครั้ง`);
+        ins.push(`แถวในชีตที่จัดเป็นงานปรับราคา <b>${this.n((this.year === 'all' ? adj : adj.filter(x => x.y === this.year)).length)}</b> แถว (ราคาเดิม + ราคาใหม่) — <b>ไม่นับเป็นงาน GO</b>`);
         if (ups.length) ins.push(`ขึ้นราคาเฉลี่ย <b>+${avgUp.toFixed(1)}%</b> ต่อครั้ง`);
         const top = byMk[0]; ins.push(`Maker ที่ปรับราคาบ่อยที่สุด: <b>${esc(top.m)}</b> (${top.n} ครั้ง, ${top.parts} ชิ้นงาน)`);
         const big = ev.slice().sort((a, b) => b.pct - a.pct)[0]; if (big.pct > 0) ins.push(`ขึ้นสูงสุด <b>+${big.pct.toFixed(1)}%</b> — ${esc(big.maker)} · ${esc(big.partNo)} (${fp(big.from)} → ${fp(big.to)})`);
@@ -22647,7 +22655,7 @@ function endTour() {
           ${this.kpi('ลดราคา', this.n(dns.length), dns.length ? `เฉลี่ย ${(dns.reduce((s, x) => s + x.pct, 0) / dns.length).toFixed(1)}%` : '', 'good')}
           ${this.kpi('ชิ้นงานที่ได้รับผล', this.n(new Set(ev.map(e => e.maker + e.partNo)).size), 'Part No. ไม่ซ้ำ')}
         </div>
-        ${this.card('สรุปสำหรับผู้บริหาร', 'วิธีนับ: แถว REMARK "ยกเลิก GO" (สีเหลือง) = ราคาเดิม · แถวใหม่ของรายการเดียวกัน (สีเขียว) = ราคาใหม่ · นับเฉพาะที่ราคา Maker ต่างกัน', `<ul class="ex-ins">${ins.map(t => `<li>${t}</li>`).join('')}</ul>`, 'ex-wide')}
+        ${this.card('สรุปสำหรับผู้บริหาร', 'วิธีนับ: แถว REMARK "ยกเลิก GO" (สีเหลือง) = ราคาเดิม · แถวใหม่ของรายการเดียวกัน (สีเขียว) = ราคาใหม่ · นับเฉพาะที่ราคา Maker ต่างกัน · งานกลุ่มนี้ไม่นับเป็นงาน GO (แยกเป็นหมวดปรับราคา)', `<ul class="ex-ins">${ins.map(t => `<li>${t}</li>`).join('')}</ul>`, 'ex-wide')}
         <div class="ex-grid g3">
           ${this.card('จำนวนครั้งที่ปรับราคา ต่อ Maker', 'Top 15', '<div class="ex-chart tall"><canvas id="exMkCnt"></canvas></div>')}
           ${this.card('% ปรับราคาเฉลี่ย ต่อ Maker', 'แดง = ขึ้น · เขียว = ลด', '<div class="ex-chart tall"><canvas id="exMkAvg"></canvas></div>')}
