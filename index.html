@@ -24512,7 +24512,7 @@ function endTour() {
 
   /* ══════════════════════ ลอกผิวชุบ — รายการ + สรุป (ข้อมูลของตัวเอง กรอกเอง · ตอนนี้เก็บในเครื่อง/เบราว์เซอร์ — Apps Script จะเชื่อมภายหลัง) ══════════════════════ */
   const STRIP_KEY = 'ccip_stripwork_v1';
-  const STRIP_FIELDS = [['date', 'วันที่', 'date'], ['model', 'Model', 'text'], ['cus', 'ลูกค้า', 'text'], ['partNo', 'Part No.', 'text'], ['partName', 'Part Name', 'text'], ['maker', 'Maker', 'text'], ['qty', 'จำนวน (ชิ้น)', 'number'], ['price', 'ราคาลอก (บาท/ชิ้น)', 'number'], ['remark', 'หมายเหตุ', 'text']];
+  const STRIP_FIELDS = [['date', 'วันที่', 'date'], ['model', 'Model', 'text'], ['cus', 'ลูกค้า', 'text'], ['partNo', 'Part No.', 'text'], ['partName', 'Part Name', 'text'], ['maker', 'Maker', 'text'], ['qty', 'จำนวน (ชิ้น)', 'number'], ['remark', 'หมายเหตุ', 'text']];
   const stripYear = r => { const m = String(r.date || '').match(/^(\d{4})-\d{2}-\d{2}/); return m ? +m[1] : null; };
   const stripDate = r => { const m = String(r.date || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[3]}/${m[2]}/${+m[1] + 543}` : ''; };
   const stripUp = v => String(v == null ? '' : v).trim().toUpperCase();
@@ -24521,7 +24521,6 @@ function endTour() {
   const stripDmyToIso = s => { const n = normDMY(s); if (!n) return ''; const [d, mo, y] = n.split('/').map(Number); return `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`; };
   const stripDateField = (name, iso) => dateField(name, stripIsoToDMY(iso)).replace('placeholder="d/m/yyyy"', 'placeholder="dd/mm/yyyy" maxlength="10"');
   const stripLocalISO = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
-  const stripCost = r => { const q = numOf(r.qty), p = numOf(r.price); return q != null && p != null ? q * p : null; };   /* ต้นทุนค่าลอก = จำนวน × ราคาลอก/ชิ้น */
   const StripWork = {
     rows: [], q: '', year: 'all', model: 'all', maker: 'all', page: 1, per: 100,
     /* ชั้นเก็บข้อมูล: ตอนต่อ Apps Script ให้เปลี่ยนเฉพาะ load() / save() */
@@ -24554,7 +24553,7 @@ function endTour() {
         sub: r ? `${r.partNo || ''} · ${r.partName || ''}` : 'กรอกข้อมูลงานลอกผิวชุบ — ช่องที่มี * จำเป็นต้องกรอก',
         body: `<form class="gx-form gw-form" id="gsForm" novalidate>
           <fieldset><legend>ข้อมูลงาน</legend><div class="gw-grid">${field('date', ...F.date)}${field('model', ...F.model)}${field('cus', ...F.cus)}${field('maker', ...F.maker)}</div></fieldset>
-          <fieldset><legend>ชิ้นงาน</legend><div class="gw-grid">${field('partNo', ...F.partNo)}${field('partName', ...F.partName, 'span2')}${field('qty', ...F.qty)}${field('price', ...F.price)}<label><span>ต้นทุนค่าลอก (บาท) <small class="gx-hint">จำนวน × ราคา</small></span><input id="gsCost" type="text" readonly tabindex="-1" style="font-weight:700;background:var(--surface2);color:var(--danger)"></label>${field('remark', ...F.remark, 'span2')}</div></fieldset>
+          <fieldset><legend>ชิ้นงาน</legend><div class="gw-grid">${field('partNo', ...F.partNo)}${field('partName', ...F.partName, 'span2')}${field('qty', ...F.qty)}${field('remark', ...F.remark, 'span2')}</div></fieldset>
           ${['model', 'cus', 'maker', 'partNo'].map(k => `<datalist id="gsl-${k}">${opts(k)}</datalist>`).join('')}
           <p class="gx-form-err" id="gsErr" role="alert"></p>
         </form>`,
@@ -24563,11 +24562,9 @@ function endTour() {
       el.querySelector('[data-close2]').onclick = closeModal;
       const f = $('#gsForm');
       wireDateFields(el);
-      { const calc = () => { const c = stripCost({ qty: f.elements.qty.value, price: f.elements.price.value }); $('#gsCost').value = c == null ? '—' : baht(c) + ' บาท'; };
-        ['qty', 'price'].forEach(k => f.elements[k].addEventListener('input', calc)); calc(); }
       { const box = el.querySelector('.gx-date'), txt = box.querySelector('input[type=text]'), nat = box.querySelector('.gx-date-native');
         nat.onchange = () => { if (nat.value) { txt.value = stripIsoToDMY(nat.value); txt.classList.remove('bad'); } };
-        txt.addEventListener('input', e => {            // พิมพ์เลขล้วน → ใส่ / ให้อัตโนมัติ
+        txt.addEventListener('input', e => {
           if (e.inputType && e.inputType.startsWith('delete')) return;
           if (txt.value.includes('/')) return;
           const d = txt.value.replace(/\D/g, '').slice(0, 8);
@@ -24603,7 +24600,7 @@ function endTour() {
       if (typeof addHistoryLog === 'function') addHistoryLog('delete', r.partNo, r.partName, 'ลอกผิวชุบ');
       toast('ลบรายการแล้ว', 'success');
     },
-    cell(k, r) { return k === 'date' ? esc(stripDate(r)) : k === 'qty' ? (r.qty === '' || r.qty == null ? '' : fmtNum(r.qty)) : k === 'price' ? (r.price === '' || r.price == null ? '' : baht(numOf(r.price))) : esc(r[k]); },
+    cell(k, r) { return k === 'date' ? esc(stripDate(r)) : k === 'qty' ? (r.qty === '' || r.qty == null ? '' : fmtNum(r.qty)) : esc(r[k]); },
     render() {
       const host = $('#gsBody'); if (!host) return;
       const years = [...new Set(this.rows.map(stripYear).filter(Boolean))].sort((a, b) => b - a);
@@ -24618,20 +24615,19 @@ function endTour() {
         <label>Model<select onchange="StripWork.set('model',this.value)">${opt('all', 'ทั้งหมด', this.model === 'all')}${models.map(m => opt(m, m, this.model === m)).join('')}</select></label>
         <label>Maker<select onchange="StripWork.set('maker',this.value)">${opt('all', 'ทั้งหมด', this.maker === 'all')}${makers.map(m => opt(m, m, this.maker === m)).join('')}</select></label>`;
       if (!this.rows.length) { host.innerHTML = `<div class="gx-empty"><strong>ยังไม่มีรายการ ลอกผิวชุบ</strong><span>กดปุ่ม "เพิ่มรายการ" เพื่อกรอกข้อมูลได้เลย</span></div>`; return; }
-      const list = this.view(), pages = Math.max(1, Math.ceil(list.length / this.per)), totalCost = list.reduce((a, r) => a + (stripCost(r) || 0), 0);
+      const list = this.view(), pages = Math.max(1, Math.ceil(list.length / this.per));
       if (this.page > pages) this.page = pages;
       const from = (this.page - 1) * this.per;
-      const body = list.slice(from, from + this.per).map((r, i) => `<tr><td class="r">${from + i + 1}</td>${STRIP_FIELDS.map(([k]) => `<td>${this.cell(k, r)}</td>`).join('')}<td><b>${stripCost(r) == null ? '' : baht(stripCost(r))}</b></td><td class="act" style="white-space:nowrap"><button class="gx-icon-btn" title="แก้ไข" aria-label="แก้ไข ${esc(r.partNo)}" onclick="StripWork.openForm('${esc(r.id)}')">${ICON.edit}</button> <button class="gx-icon-btn danger" title="ลบ" aria-label="ลบ ${esc(r.partNo)}" onclick="StripWork.remove('${esc(r.id)}')">${ICON.trash}</button></td></tr>`).join('');
-      host.innerHTML = `<section class="ex-card"><div class="ex-scroll"><table class="ex-table ex-left"><thead><tr><th>#</th>${STRIP_FIELDS.map(([, l]) => `<th>${esc(l)}</th>`).join('')}<th>ต้นทุนค่าลอก (บาท)</th><th></th></tr></thead><tbody>${body || `<tr><td colspan="${STRIP_FIELDS.length + 3}">ไม่พบรายการตามตัวกรอง</td></tr>`}</tbody></table></div>
+      const body = list.slice(from, from + this.per).map((r, i) => `<tr><td class="r">${from + i + 1}</td>${STRIP_FIELDS.map(([k]) => `<td>${this.cell(k, r)}</td>`).join('')}<td class="act" style="white-space:nowrap"><button class="gx-icon-btn" title="แก้ไข" aria-label="แก้ไข ${esc(r.partNo)}" onclick="StripWork.openForm('${esc(r.id)}')">${ICON.edit}</button> <button class="gx-icon-btn danger" title="ลบ" aria-label="ลบ ${esc(r.partNo)}" onclick="StripWork.remove('${esc(r.id)}')">${ICON.trash}</button></td></tr>`).join('');
+      host.innerHTML = `<section class="ex-card"><div class="ex-scroll"><table class="ex-table ex-left"><thead><tr><th>#</th>${STRIP_FIELDS.map(([, l]) => `<th>${esc(l)}</th>`).join('')}<th></th></tr></thead><tbody>${body || `<tr><td colspan="${STRIP_FIELDS.length + 2}">ไม่พบรายการตามตัวกรอง</td></tr>`}</tbody></table></div>
         <div class="ex-foot">แสดง ${list.length ? (from + 1).toLocaleString('th-TH') : 0}–${Math.min(from + this.per, list.length).toLocaleString('th-TH')} จาก ${list.length.toLocaleString('th-TH')} รายการ${list.length !== this.rows.length ? ` (ทั้งหมด ${this.rows.length.toLocaleString('th-TH')})` : ''}
-          · ต้นทุนค่าลอกรวม <b>${baht(totalCost)}</b> บาท
           ${pages > 1 ? ` · <button class="ex-btn" onclick="StripWork.go(-1)" ${this.page <= 1 ? 'disabled' : ''}>‹</button> หน้า ${this.page}/${pages} <button class="ex-btn" onclick="StripWork.go(1)" ${this.page >= pages ? 'disabled' : ''}>›</button>` : ''}</div></section>`;
     },
     /* Export CSV (UTF-8 มี BOM เปิดใน Excel ภาษาไทยได้) — ตามตัวกรองที่เลือกอยู่ */
     exportCsv() {
       const list = this.view(); if (!list.length) { alert('ยังไม่มีรายการให้ Export'); return; }
       const q = v => { const t = String(v == null ? '' : v); return /[",\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
-      const rows = [['ลำดับ', ...STRIP_FIELDS.map(([, l]) => l), 'ต้นทุนค่าลอก (บาท)'], ...list.map((r, i) => [i + 1, ...STRIP_FIELDS.map(([k]) => k === 'date' ? stripDate(r) : r[k]), stripCost(r) == null ? '' : stripCost(r)])];
+      const rows = [['ลำดับ', ...STRIP_FIELDS.map(([, l]) => l)], ...list.map((r, i) => [i + 1, ...STRIP_FIELDS.map(([k]) => k === 'date' ? stripDate(r) : r[k])])];
       const blob = new Blob(['\ufeff' + rows.map(r => r.map(q).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
       const d = new Date(), pad = v => String(v).padStart(2, '0'), a = document.createElement('a');
       a.href = URL.createObjectURL(blob); a.download = `ลอกผิวชุบ_${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}.csv`;
@@ -24642,8 +24638,8 @@ function endTour() {
       const list = this.view();
       if (!list.length) { alert('ยังไม่มีรายการให้ Export'); return; }
       if (typeof XLSX === 'undefined') { alert('ยังโหลดตัว Export Excel ไม่เสร็จ ลองใหม่อีกครั้ง'); return; }
-      const ws = XLSX.utils.aoa_to_sheet([['ลำดับ', ...STRIP_FIELDS.map(([, l]) => l), 'ต้นทุนค่าลอก (บาท)'], ...list.map((r, i) => [i + 1, ...STRIP_FIELDS.map(([k]) => k === 'date' ? stripDate(r) : (k === 'qty' || k === 'price') ? (r[k] === '' || r[k] == null ? '' : (numOf(r[k]) ?? r[k])) : (r[k] == null ? '' : r[k])), stripCost(r) == null ? '' : stripCost(r)])]);
-      ws['!cols'] = [{ wch: 7 }, { wch: 13 }, { wch: 16 }, { wch: 12 }, { wch: 20 }, { wch: 28 }, { wch: 18 }, { wch: 14 }, { wch: 16 }, { wch: 28 }, { wch: 18 }];
+      const ws = XLSX.utils.aoa_to_sheet([['ลำดับ', ...STRIP_FIELDS.map(([, l]) => l)], ...list.map((r, i) => [i + 1, ...STRIP_FIELDS.map(([k]) => k === 'date' ? stripDate(r) : k === 'qty' ? (r.qty === '' || r.qty == null ? '' : (numOf(r.qty) ?? r.qty)) : (r[k] == null ? '' : r[k]))])]);
+      ws['!cols'] = [{ wch: 7 }, { wch: 13 }, { wch: 16 }, { wch: 12 }, { wch: 20 }, { wch: 28 }, { wch: 18 }, { wch: 14 }, { wch: 28 }];
       const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'ลอกผิวชุบ');
       const d = new Date(), pad = x => String(x).padStart(2, '0');
       XLSX.writeFile(wb, `ลอกผิวชุบ_${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}.xlsx`);
@@ -24662,17 +24658,17 @@ function endTour() {
       if (typeof XLSX === 'undefined') { alert('ยังโหลดตัว Export Excel ไม่เสร็จ ลองใหม่อีกครั้ง'); return; }
       const wb = XLSX.utils.book_new();
       const sheet = (name, head, rows) => { const ws = XLSX.utils.aoa_to_sheet([head, ...rows]); ws['!cols'] = head.map((h, i) => ({ wch: i ? 14 : 24 })); XLSX.utils.book_append_sheet(wb, ws, name); };
-      sheet('สรุปรายปี', ['ปี', 'รายการ', 'จำนวน (ชิ้น)', 'ต้นทุนค่าลอก (บาท)', 'Model', 'Maker'], x.byY.map(r => [r.y + 543, r.n, r.vol, r.cost, r.models, r.makers]));
-      sheet('Maker', ['Maker', 'รายการ', 'จำนวน (ชิ้น)', 'ต้นทุนค่าลอก (บาท)', 'Model', 'ชิ้นงาน'], x.byMk.map(r => [r.k, r.n, r.vol, r.cost, r.models, r.parts]));
-      sheet('Model', ['Model', 'รายการ', 'จำนวน (ชิ้น)', 'ต้นทุนค่าลอก (บาท)', 'ลูกค้า', 'Maker'], x.byMd.map(r => [r.k, r.n, r.vol, r.cost, r.cus, r.makers]));
-      sheet('ลูกค้า', ['ลูกค้า', 'รายการ', 'จำนวน (ชิ้น)', 'ต้นทุนค่าลอก (บาท)', 'Model', 'Maker'], x.byCus.map(r => [r.k, r.n, r.vol, r.cost, r.models, r.makers]));
+      sheet('สรุปรายปี', ['ปี', 'รายการ', 'จำนวน (ชิ้น)', 'Model', 'Maker'], x.byY.map(r => [r.y + 543, r.n, r.vol, r.models, r.makers]));
+      sheet('Maker', ['Maker', 'รายการ', 'จำนวน (ชิ้น)', 'Model', 'ชิ้นงาน'], x.byMk.map(r => [r.k, r.n, r.vol, r.models, r.parts]));
+      sheet('Model', ['Model', 'รายการ', 'จำนวน (ชิ้น)', 'ลูกค้า', 'Maker'], x.byMd.map(r => [r.k, r.n, r.vol, r.cus, r.makers]));
+      sheet('ลูกค้า', ['ลูกค้า', 'รายการ', 'จำนวน (ชิ้น)', 'Model', 'Maker'], x.byCus.map(r => [r.k, r.n, r.vol, r.models, r.makers]));
       const d = new Date(), pad = v => String(v).padStart(2, '0');
       XLSX.writeFile(wb, `สรุป_ลอกผิวชุบ${this.year === 'all' ? '' : '_' + (this.year + 543)}_${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}.xlsx`);
     },
     render() {
       const host = $('#gssBody'); if (!host) return;
       const D = GWDash, n = v => D.n(v);
-      const raw = StripWork.rows.map(r => ({ y: stripYear(r), model: stripUp(r.model) || '(ไม่ระบุ)', maker: stripUp(r.maker) || '(ไม่ระบุ)', cus: stripUp(r.cus) || '(ไม่ระบุ)', vol: numOf(r.qty) || 0, cost: stripCost(r) || 0, part: stripUp(r.partNo) })).filter(x => x.y);
+      const raw = StripWork.rows.map(r => ({ y: stripYear(r), model: stripUp(r.model) || '(ไม่ระบุ)', maker: stripUp(r.maker) || '(ไม่ระบุ)', cus: stripUp(r.cus) || '(ไม่ระบุ)', vol: numOf(r.qty) || 0, part: stripUp(r.partNo) })).filter(x => x.y);
       let years = [...new Set(raw.map(x => x.y))].sort((a, b) => a - b);
       if (D.maxYears > 0) years = years.slice(-D.maxYears);
       const keep = new Set(years);
@@ -24683,16 +24679,15 @@ function endTour() {
       if (!raw.length) { host.innerHTML = `<div class="gx-empty"><strong>ยังไม่มีข้อมูล ลอกผิวชุบ</strong><span>กรอกรายการที่หน้า "รายการ ลอกผิวชุบ" (ต้องใส่วันที่) แล้วสรุปจะขึ้นให้อัตโนมัติ</span></div>`; return; }
       const cur = raw.filter(x => keep.has(x.y) && (this.year === 'all' || x.y === this.year));
       const uq = k => new Set(cur.map(x => x[k]).filter(v => v && v !== '(ไม่ระบุ)')).size;
-      const vol = cur.reduce((a, x) => a + x.vol, 0), cost = cur.reduce((a, x) => a + x.cost, 0);
-      const agg = key => [...D.group(cur, key)].map(([k, l]) => ({ k, n: l.length, vol: l.reduce((a, x) => a + x.vol, 0), cost: l.reduce((a, x) => a + x.cost, 0), models: new Set(l.map(x => x.model)).size, makers: new Set(l.map(x => x.maker)).size, cus: new Set(l.map(x => x.cus)).size, parts: new Set(l.map(x => x.part).filter(Boolean)).size })).sort((a, b) => b.n - a.n || b.vol - a.vol);
+      const vol = cur.reduce((a, x) => a + x.vol, 0);
+      const agg = key => [...D.group(cur, key)].map(([k, l]) => ({ k, n: l.length, vol: l.reduce((a, x) => a + x.vol, 0), models: new Set(l.map(x => x.model)).size, makers: new Set(l.map(x => x.maker)).size, cus: new Set(l.map(x => x.cus)).size, parts: new Set(l.map(x => x.part).filter(Boolean)).size })).sort((a, b) => b.n - a.n || b.vol - a.vol);
       const byMk = agg('maker'), byMd = agg('model'), byCus = agg('cus');
-      const byY = years.map(y => { const l = raw.filter(x => x.y === y); return { y, n: l.length, vol: l.reduce((a, x) => a + x.vol, 0), cost: l.reduce((a, x) => a + x.cost, 0), models: new Set(l.map(x => x.model)).size, makers: new Set(l.map(x => x.maker)).size }; });
+      const byY = years.map(y => { const l = raw.filter(x => x.y === y); return { y, n: l.length, vol: l.reduce((a, x) => a + x.vol, 0), models: new Set(l.map(x => x.model)).size, makers: new Set(l.map(x => x.maker)).size }; });
       this._x = { byY, byMk, byMd, byCus };
       host.innerHTML = `
         <div class="ex-kpis">
           ${D.kpi('งานลอกผิวชุบ', n(cur.length), 'รายการ · ' + (this.year === 'all' ? years.map(y => y + 543).join(', ') : 'ปี ' + (this.year + 543)), 'primary')}
           ${D.kpi('จำนวนรวม', n(vol), 'ชิ้น')}
-          ${D.kpi('ต้นทุนค่าลอกรวม', baht(cost), 'บาท · บริษัทรับผิดชอบเอง')}
           ${D.kpi('Model', n(uq('model')), 'ไม่ซ้ำกัน')}
           ${D.kpi('ลูกค้า', n(uq('cus')), 'ไม่ซ้ำกัน')}
           ${D.kpi('Maker', n(uq('maker')), 'ไม่ซ้ำกัน')}
@@ -24701,12 +24696,12 @@ function endTour() {
           ${D.card('งานลอกผิวชุบแต่ละปี (รายการ)', null, '<div class="ex-chart"><canvas id="exSwYear"></canvas></div>')}
           ${D.card('Maker ที่มีงานลอกผิวชุบมากสุด', 'Top 10 (รายการ)', '<div class="ex-chart"><canvas id="exSwMaker"></canvas></div>')}
         </div>
-        ${D.card('ตารางสรุปรายปี', 'เทียบ % กับปีก่อนหน้า', D.tbl(['ปี', 'รายการ', '% เทียบปีก่อน', 'จำนวน (ชิ้น)', 'ต้นทุนค่าลอก (บาท)', 'Model', 'Maker'], byY.slice().reverse().map(r => { const prev = byY[byY.indexOf(r) - 1]; return [`<b>${r.y + 543}</b>`, `<b>${n(r.n)}</b>`, prev ? D.dl(r.n, prev.n) : '—', n(r.vol), baht(r.cost), n(r.models), n(r.makers)]; })))}
+        ${D.card('ตารางสรุปรายปี', 'เทียบ % กับปีก่อนหน้า', D.tbl(['ปี', 'รายการ', '% เทียบปีก่อน', 'จำนวน (ชิ้น)', 'Model', 'Maker'], byY.slice().reverse().map(r => { const prev = byY[byY.indexOf(r) - 1]; return [`<b>${r.y + 543}</b>`, `<b>${n(r.n)}</b>`, prev ? D.dl(r.n, prev.n) : '—', n(r.vol), n(r.models), n(r.makers)]; })))}
         <div class="ex-grid g2" style="margin-top:1rem">
-          ${D.card('สรุปตาม Maker', null, D.tbl(['Maker', 'รายการ', 'จำนวน (ชิ้น)', 'ต้นทุนค่าลอก (บาท)', 'Model', 'ชิ้นงาน'], byMk.map(x => [`<b>${esc(x.k)}</b>`, n(x.n), n(x.vol), baht(x.cost), n(x.models), n(x.parts)]), 'ex-left'))}
-          ${D.card('สรุปตาม Model', null, D.tbl(['Model', 'รายการ', 'จำนวน (ชิ้น)', 'ต้นทุนค่าลอก (บาท)', 'ลูกค้า', 'Maker'], byMd.map(x => [`<b>${esc(x.k)}</b>`, n(x.n), n(x.vol), baht(x.cost), n(x.cus), n(x.makers)]), 'ex-left'))}
+          ${D.card('สรุปตาม Maker', null, D.tbl(['Maker', 'รายการ', 'จำนวน (ชิ้น)', 'Model', 'ชิ้นงาน'], byMk.map(x => [`<b>${esc(x.k)}</b>`, n(x.n), n(x.vol), n(x.models), n(x.parts)]), 'ex-left'))}
+          ${D.card('สรุปตาม Model', null, D.tbl(['Model', 'รายการ', 'จำนวน (ชิ้น)', 'ลูกค้า', 'Maker'], byMd.map(x => [`<b>${esc(x.k)}</b>`, n(x.n), n(x.vol), n(x.cus), n(x.makers)]), 'ex-left'))}
         </div>
-        <div style="margin-top:1rem">${D.card('สรุปตามลูกค้า', null, D.tbl(['ลูกค้า', 'รายการ', 'จำนวน (ชิ้น)', 'ต้นทุนค่าลอก (บาท)', 'Model', 'Maker'], byCus.map(x => [`<b>${esc(x.k)}</b>`, n(x.n), n(x.vol), baht(x.cost), n(x.models), n(x.makers)]), 'ex-left'))}</div>`;
+        <div style="margin-top:1rem">${D.card('สรุปตามลูกค้า', null, D.tbl(['ลูกค้า', 'รายการ', 'จำนวน (ชิ้น)', 'Model', 'Maker'], byCus.map(x => [`<b>${esc(x.k)}</b>`, n(x.n), n(x.vol), n(x.models), n(x.makers)]), 'ex-left'))}</div>`;
       D.chart('exSwYear', { type: 'bar', plugins: [D.valLabels], data: { labels: byY.map(r => r.y + 543), datasets: [{ label: 'รายการ', data: byY.map(r => r.n), backgroundColor: byY.map(r => (this.year !== 'all' && r.y === this.year) ? '#C9A227' : '#2E5395'), borderRadius: 6 }] },
         options: { plugins: Object.assign({ legend: { display: false } }, D.vl(0)), scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
       const top = byMk.slice(0, 10);
