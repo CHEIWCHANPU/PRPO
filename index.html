@@ -22275,6 +22275,7 @@ function endTour() {
   const GWDash = {
     charts: {}, tab: 'overview', year: 'all', base: null, work: 'all', cus: 'all', model: 'all', basis: 'go', present: false, mkSel: 'all', cpsSel: 'all', q: '',
     decRule: false,      /* true = NO ทศนิยม (เช่น 4295.1) นับเป็นงานปรับราคา · false = ปิดกฎนี้ (ค่าตอนนี้) */
+    maxYears: 3,         /* แสดง/เปรียบเทียบเฉพาะ N ปีล่าสุดที่มีข้อมูล (0 = ทุกปี) · ข้อมูลเก่ากว่านั้นยังใช้เช็ก "Maker ใหม่" อยู่ */
     cancelRule: true,    /* true = จับงานปรับราคาจากแถว REMARK "ยกเลิก GO" + แถวใหม่ราคาต่าง (กฎเดิมของระบบ) */
     PAL: ['#2E5395', '#2F8F6E', '#C9A227', '#B0673A', '#7A4FA3', '#2A9DB5', '#A6443C', '#8A94A6', '#3F7D53', '#D17B9B'],
     TABS: [['overview', 'ภาพรวมรายปี'], ['model', 'Model / ลูกค้า / ประเภทงาน'], ['matrix', 'Model แยกตามลูกค้า'], ['price', 'Maker ปรับราคา']],
@@ -22420,7 +22421,11 @@ function endTour() {
     render() {
       const host = $('#gdBody'); if (!host) return;
       const P = this.prep();
-      const years = [...new Set([...P.all, ...P.adj].map(x => x.y))].sort((a, b) => a - b);
+      let years = [...new Set([...P.all, ...P.adj].map(x => x.y))].sort((a, b) => a - b);
+      if (this.maxYears > 0) years = years.slice(-this.maxYears);   // เอาแค่ N ปีล่าสุด
+      const keepY = new Set(years);
+      if (this.year !== 'all' && !keepY.has(this.year)) this.year = 'all';
+      if (this.base != null && !keepY.has(this.base)) this.base = null;
       const works = [...new Set(P.all.filter(x => this.year === 'all' || x.y === this.year).map(x => x.work))].sort((a, b) => a.localeCompare(b, 'th', { numeric: true }));
       if (this.work !== 'all' && !works.includes(this.work)) this.work = 'all';   // ปีที่เลือกไม่มีงานนี้ → กลับเป็น "ทั้งหมด"
       /* ลูกค้า (ตัวอักษรนำหน้า Cus Code) — ตามปี/ประเภทงานที่เลือก แล้วกรอง Model ต่อจากลูกค้า */
@@ -22449,10 +22454,10 @@ function endTour() {
           <span>${GoWork.rows.length ? 'ต้องมีวันที่ในคอลัมน์ GO หรือปีในคอลัมน์ YEAR' : 'นำเข้าไฟล์ Excel หลักในหน้า รายการ GO WORK'}</span></div>`;
         return;
       }
-      const wf = x => (this.work === 'all' || x.work === this.work) && (this.cus === 'all' || x.cus === this.cus) && (this.model === 'all' || x.model === this.model);
+      const wf = x => keepY.has(x.y) && (this.work === 'all' || x.work === this.work) && (this.cus === 'all' || x.cus === this.cus) && (this.model === 'all' || x.model === this.model);
       const all = P.all.filter(wf), cancelled = P.cancelled.filter(wf), adj = P.adj.filter(wf), events = P.events.filter(wf);
       const sel = this.year === 'all' ? all : all.filter(x => x.y === this.year);
-      const ylabel = this.year === 'all' ? `ทุกปี (${years[0] + 543}–${years[years.length - 1] + 543})` : `ปี ${this.year + 543}`;
+      const ylabel = this.year === 'all' ? `${this.maxYears > 0 ? years.length + ' ปีล่าสุด' : 'ทุกปี'} (${years[0] + 543}–${years[years.length - 1] + 543})` : `ปี ${this.year + 543}`;
       if (this.base != null && (this.year === 'all' || !years.includes(this.base))) this.base = null;
       this.bs = this.base != null ? all.filter(x => x.y === this.base) : null;
       const ctx = { P, all, cancelled, adj, events, sel, years, ylabel, bs: this.bs };
