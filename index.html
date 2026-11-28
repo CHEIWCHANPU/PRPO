@@ -9393,7 +9393,7 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
         <button class="ex-btn" onclick="StripWork.openForm()">+ เพิ่มรายการ</button>
         <button class="ex-btn" style="background:#2F8F6E;color:#fff" onclick="StripWork.exportXlsx()">Export Excel</button>
         <button class="ex-btn" style="background:var(--surface2);color:var(--text);border:1px solid var(--border)" onclick="StripWork.exportCsv()">Export CSV</button>
-        <button class="ex-btn" style="background:#C9A227;color:#fff" onclick="document.getElementById('gsCsvIn').click()">นำเข้า CSV</button><input type="file" id="gsCsvIn" accept=".csv,.tsv,.txt" hidden onchange="StripWork.importCsv(this)">
+        <button class="ex-btn" style="background:#C9A227;color:#fff" onclick="StripWork.openImport()">นำเข้า CSV</button>
       </div>
     </div>
       <div id="gsBody"><div class="gx-skel tall"></div></div>
@@ -24719,16 +24719,29 @@ function endTour() {
         <div class="ex-foot"><b>รวมตามตัวกรอง ${sumQ.toLocaleString('th-TH')} ชิ้น · ${stripMoney(sumV)} บาท</b> · แสดง ${list.length ? (from + 1).toLocaleString('th-TH') : 0}–${Math.min(from + this.per, list.length).toLocaleString('th-TH')} จาก ${list.length.toLocaleString('th-TH')} รายการ${list.length !== this.rows.length ? ` (ทั้งหมด ${this.rows.length.toLocaleString('th-TH')})` : ''}
           ${pages > 1 ? ` · <button class="ex-btn" onclick="StripWork.go(-1)" ${this.page <= 1 ? 'disabled' : ''}>‹</button> หน้า ${this.page}/${pages} <button class="ex-btn" onclick="StripWork.go(1)" ${this.page >= pages ? 'disabled' : ''}>›</button>` : ''}</div></section>`;
     },
-    /* นำเข้าจากไฟล์ CSV (แท็บ/คอมมา · UTF-8 หรือ Thai Windows-874 · วันที่ พ.ศ. หรือ ค.ศ.) — ข้ามรายการที่ซ้ำกับที่มีอยู่ จึงนำเข้าไฟล์เดิมซ้ำได้ */
-    async importCsv(input) {
-      const file = input.files && input.files[0]; input.value = ''; if (!file) return;
-      try {
-        const buf = await file.arrayBuffer(); let txt;
-        try { txt = new TextDecoder('utf-8', { fatal: true }).decode(buf); } catch (e) { txt = new TextDecoder('windows-874').decode(buf); }
+    /* ── นำเข้า CSV (Popup เหมือน GO WORK: ลากไฟล์/คลิก → ดูตัวอย่าง + เทียบรายการซ้ำ → นำเข้า) ── */
+    openImport() {
+      let parsed = null, fname = '';
+      const el = openModal({
+        wide: true, title: 'นำเข้าข้อมูลลอกผิวชุบจาก CSV',
+        sub: 'ใช้ไฟล์ CSV / แท็บ (UTF-8 หรือ Excel ไทย) — ระบบจับคู่คอลัมน์ให้เอง รองรับวันที่ พ.ศ./ค.ศ. และคำนวณราคาจากช่อง "รวม" ถ้าไม่มีราคาต่อชิ้น',
+        body: `<div class="mt-drop" id="gsDrop" tabindex="0" role="button" aria-label="เลือกไฟล์ CSV">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13l3 4M11 13l-3 4M14 13h2M14 17h2"/></svg>
+            <b>ลากไฟล์ CSV มาวาง หรือคลิกเพื่อเลือก</b><span>.csv · .tsv · .txt</span>
+            <input type="file" id="gsFile" accept=".csv,.tsv,.txt" hidden></div>
+          <div id="gsPreview"></div>
+          <div class="mt-progress" id="gsProg" hidden><div><i id="gsBarI"></i></div><span id="gsProgText"></span></div>
+          <p class="gx-form-err" id="gsImpErr" role="alert"></p>`,
+        foot: `<button class="gx-btn ghost" data-close2>ยกเลิก</button><button class="gx-btn primary" id="gsImport" disabled>นำเข้า</button>`
+      });
+      el.querySelector('[data-close2]').onclick = closeModal;
+      const drop = $('#gsDrop'), input = $('#gsFile'), prev = $('#gsPreview'), err = $('#gsImpErr'), btn = $('#gsImport');
+      const fmtN = v => Number(v).toLocaleString('th-TH');
+      const parse = txt => {
         const rows = stripParseCsv(txt);
-        if (rows.length < 2) { toast('ไม่พบข้อมูลในไฟล์ CSV', 'error'); return; }
+        if (rows.length < 2) return { error: 'ไม่พบข้อมูลในไฟล์' };
         const keys = rows[0].map(stripCsvKey);
-        if (!keys.includes('date') || !keys.includes('partNo')) { toast('หัวตารางไม่ตรง — ต้องมีคอลัมน์ วันที่ และ Part No.', 'error'); return; }
+        if (!keys.includes('date') || !keys.includes('partNo')) return { error: 'หัวตารางไม่ตรง — ต้องมีคอลัมน์ วันที่ และ Part No.' };
         const recs = [], bad = [];
         rows.slice(1).forEach((cells, i) => {
           const o = {}; keys.forEach((k, j) => { if (k && o[k] === undefined) o[k] = String(cells[j] == null ? '' : cells[j]).trim(); });
@@ -24740,22 +24753,87 @@ function endTour() {
         });
         const keyOf = r => [r.date, stripUp(r.partNo), stripUp(r.maker), numOf(r.qty) || 0, numOf(r.price) || 0].join('|');
         const have = {}; this.rows.forEach(r => { const k = keyOf(r); have[k] = (have[k] || 0) + 1; });
-        const seen = {}, fresh = [];
-        recs.forEach(r => { const k = keyOf(r); seen[k] = (seen[k] || 0) + 1; if (seen[k] > (have[k] || 0)) fresh.push(r); });
-        if (!fresh.length) { toast(`ไม่มีรายการใหม่ — ซ้ำกับที่มีอยู่แล้ว ${recs.length} รายการ` + (bad.length ? ` · ข้ามแถวที่ข้อมูลไม่ครบ ${bad.length}` : '')); return; }
-        const val = fresh.reduce((a, r) => a + (numOf(r.qty) || 0) * (numOf(r.price) || 0), 0);
-        if (!await confirmBox('นำเข้าจาก CSV?', `พบ ${fresh.length} รายการใหม่ · มูลค่ารวม ${stripMoney(val)} บาท` + (bad.length ? ` · ข้ามแถวที่ข้อมูลไม่ครบ ${bad.length} แถว (แถวที่ ${bad.slice(0, 8).join(', ')})` : ''), 'นำเข้า')) return;
-        if (this.sheet) {
-          const j = await api.post({ action: 'bulkImportStripWork', by: this.by(), rows: fresh });
-          if (j && j.success === false) throw new Error(j.error || 'นำเข้าไม่สำเร็จ');
-          this._raw = null; await this.refresh();
-          toast(`นำเข้า ${j && j.added != null ? j.added : fresh.length} รายการ ลงชีต STRIP_WORK แล้ว`, 'success');
-        } else {
-          fresh.forEach(r => this.rows.push(Object.assign({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6) }, r)));
-          this._raw = JSON.stringify(this.rows); this.save(); this.render(); StripSum.render();
-          toast(`นำเข้า ${fresh.length} รายการ แล้ว (เก็บในเครื่องนี้ — Deploy 26_StripWork.gs เพื่อเก็บลง Google Sheet)`, 'success');
+        const seen = {}, fresh = []; let same = 0;
+        recs.forEach(r => { const k = keyOf(r); seen[k] = (seen[k] || 0) + 1; if (seen[k] > (have[k] || 0)) fresh.push(r); else same++; });
+        return { recs, fresh, same, bad, keys };
+      };
+      const show = () => {
+        const P = parsed, found = STRIP_FIELDS.filter(([k]) => P.keys.includes(k)), vol = x => x.reduce((a, r) => a + (numOf(r.qty) || 0), 0), val = x => x.reduce((a, r) => a + (numOf(r.qty) || 0) * (numOf(r.price) || 0), 0);
+        prev.innerHTML = `<div class="gw-imp-head"><span class="gw-file">${esc(fname)}</span></div>
+          <div class="gw-imp-stats">
+            <div><b>${fmtN(P.recs.length)}</b><span>รายการในไฟล์</span></div>
+            <div><b>${fmtN(vol(P.recs))}</b><span>ของเสีย (ชิ้น)</span></div>
+            <div><b>${stripMoney(val(P.recs))}</b><span>มูลค่ารวม (บาท)</span></div>
+            <div><b>${found.length}/${STRIP_FIELDS.length}</b><span>คอลัมน์ที่จับคู่ได้</span></div>
+            ${P.bad.length ? `<div><b>${P.bad.length}</b><span>แถวข้าม (ไม่มีวันที่/Part No/Part Name)</span></div>` : ''}
+          </div>
+          <div class="gw-map">${STRIP_FIELDS.map(([k, l]) => `<span class="${P.keys.includes(k) ? 'ok' : 'miss'}">${esc(l)}</span>`).join('')}</div>
+          <div class="gw-sample"><table class="gx-table"><thead><tr>${STRIP_COLS.map(([, l]) => `<th>${esc(l)}</th>`).join('')}</tr></thead>
+            <tbody>${P.recs.slice(0, 6).map(r => `<tr>${STRIP_COLS.map(([k]) => `<td>${this.cell(k, r)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+          <div class="gw-diff">
+            <div class="new"><b>${fmtN(P.fresh.length)}</b><span>รายการใหม่ (ยังไม่มีในระบบ)</span></div>
+            <div class="same"><b>${fmtN(P.same)}</b><span>มีอยู่แล้ว (วันที่ + Part No + Maker + จำนวน + ราคา ตรงกัน)</span></div>
+          </div>
+          <div class="gw-mode" role="radiogroup" aria-label="วิธีนำเข้า">
+            <label><input type="radio" name="gsMode" value="merge" checked><span><b>เพิ่มเฉพาะรายการใหม่</b><small>รายการที่มีอยู่แล้วจะไม่ถูกเพิ่มซ้ำ — นำเข้าไฟล์เดิมซ้ำได้</small></span></label>
+            <label><input type="radio" name="gsMode" value="append"><span><b>เพิ่มทุกแถวต่อท้าย</b><small>ไม่ตรวจรายการซ้ำ</small></span></label>
+          </div>`;
+        const label = () => {
+          const mode = (el.querySelector('input[name=gsMode]:checked') || {}).value, n = mode === 'merge' ? P.fresh.length : P.recs.length;
+          btn.disabled = !n; btn.textContent = !n ? 'ข้อมูลเป็นปัจจุบันแล้ว' : `นำเข้า ${fmtN(n)} รายการ`;
+        };
+        el.querySelectorAll('input[name=gsMode]').forEach(i => i.addEventListener('change', label)); label();
+      };
+      const load = async file => {
+        err.textContent = ''; btn.disabled = true;
+        try {
+          const buf = await file.arrayBuffer(); let txt;
+          try { txt = new TextDecoder('utf-8', { fatal: true }).decode(buf); } catch (e) { txt = new TextDecoder('windows-874').decode(buf); }
+          prev.innerHTML = '<div class="gx-skel"></div>';
+          try { this._raw = ''; await this.refresh(); } catch (e) {}   // เทียบกับข้อมูลล่าสุดในชีต
+          const P = parse(txt);
+          if (P.error) { prev.innerHTML = `<div class="gx-empty warn"><strong>${esc(P.error)}</strong><span>ตรวจหัวตารางแถวแรกของไฟล์ แล้วลองใหม่</span></div>`; return; }
+          parsed = P; fname = file.name; drop.classList.add('compact'); show();
+        } catch (e) { err.textContent = 'อ่านไฟล์ไม่ได้: ' + e.message; }
+      };
+      drop.onclick = () => input.click();
+      drop.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); } };
+      input.onchange = () => { if (input.files[0]) load(input.files[0]); input.value = ''; };
+      ['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add('over'); }));
+      ['dragleave', 'drop'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove('over'); }));
+      drop.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) load(f); });
+
+      btn.onclick = async () => {
+        if (!parsed) return;
+        const mode = (el.querySelector('input[name=gsMode]:checked') || {}).value || 'merge';
+        const adds = mode === 'merge' ? parsed.fresh : parsed.recs, CH = 400;
+        if (!adds.length) return;
+        setBusy(btn, true, 'กำลังนำเข้า'); el._busy = true; err.textContent = ''; $('#gsProg').hidden = false;
+        let sent = 0;
+        try {
+          if (this.sheet) {
+            for (let i = 0; i < adds.length; i += CH) {
+              const chunk = adds.slice(i, i + CH);
+              $('#gsProgText').textContent = `กำลังเพิ่มรายการ ${fmtN(Math.min(adds.length, i + CH))}/${fmtN(adds.length)}`;
+              const j = await api.post({ action: 'bulkImportStripWork', by: this.by(), rows: chunk });
+              if (j && j.success === false) throw new Error(j.error || 'นำเข้าไม่สำเร็จ');
+              sent += chunk.length; $('#gsBarI').style.width = Math.round(sent / adds.length * 100) + '%';
+            }
+          } else {
+            adds.forEach(r => this.rows.push(Object.assign({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6) }, r)));
+            sent = adds.length; this._raw = JSON.stringify(this.rows); this.save();
+          }
+          el._busy = false; closeModal();
+          if (typeof addHistoryLog === 'function') addHistoryLog('add', 'ลอกผิวชุบ', fname, 'นำเข้า CSV: ' + adds.length + ' รายการ');
+          toast(`นำเข้าลอกผิวชุบแล้ว — เพิ่ม ${fmtN(adds.length)} รายการ` + (mode === 'merge' && parsed.same ? ` · ข้ามซ้ำ ${fmtN(parsed.same)}` : '') + (this.sheet ? '' : ' (เก็บในเครื่องนี้ — Deploy 26_StripWork.gs เพื่อเก็บลง Google Sheet)'), 'success');
+          this._raw = ''; this.page = 1; if (this.sheet) await this.refresh(); this.render(); StripSum.render();
+        } catch (e) {
+          el._busy = false; setBusy(btn, false);
+          err.textContent = 'นำเข้าไม่สำเร็จ: ' + e.message + (sent ? ` (ทำไปแล้ว ${sent} รายการ — เปิดไฟล์เดิมแล้วเลือก "เพิ่มเฉพาะรายการใหม่" ซ้ำได้ ระบบจะไม่เพิ่มซ้ำ)` : '');
+          if (sent) { this._raw = ''; this.refresh(); }
         }
-      } catch (e) { toast('นำเข้า CSV ไม่สำเร็จ: ' + (e.message || e), 'error'); }
+      };
+      setTimeout(() => drop.focus(), 80);
     },
     /* Export CSV (UTF-8 มี BOM เปิดใน Excel ภาษาไทยได้) — ตามตัวกรองที่เลือกอยู่ */
     exportCsv() {
