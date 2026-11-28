@@ -9375,9 +9375,9 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
         <label>ค้นหา<input class="ex-search" id="gsSearch" type="search" placeholder="Part No, Part Name, Model, Maker…" oninput="StripWork.set('q',this.value)" style="margin:0"></label>
         <button class="ex-btn" onclick="StripWork.openForm()">+ เพิ่มรายการ</button>
         <button class="ex-btn" style="background:#2F8F6E;color:#fff" onclick="StripWork.exportXlsx()">Export Excel</button>
+        <button class="ex-btn" style="background:var(--surface2);color:var(--text);border:1px solid var(--border)" onclick="StripWork.exportCsv()">Export CSV</button>
       </div>
     </div>
-    <div id="gsForm"></div>
     <div id="gsBody"><div class="gx-skel tall"></div></div>
   </div>
 
@@ -24517,7 +24517,7 @@ function endTour() {
   const stripDate = r => { const m = String(r.date || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[3]}/${m[2]}/${+m[1] + 543}` : ''; };
   const stripUp = v => String(v == null ? '' : v).trim().toUpperCase();
   const StripWork = {
-    rows: [], q: '', year: 'all', model: 'all', maker: 'all', page: 1, per: 100, editing: null,
+    rows: [], q: '', year: 'all', model: 'all', maker: 'all', page: 1, per: 100,
     /* ชั้นเก็บข้อมูล: ตอนต่อ Apps Script ให้เปลี่ยนเฉพาะ load() / save() */
     load() { try { const c = JSON.parse(localStorage.getItem(STRIP_KEY) || '[]'); this.rows = Array.isArray(c) ? c : []; } catch (e) { this.rows = []; } },
     save() { try { localStorage.setItem(STRIP_KEY, JSON.stringify(this.rows)); } catch (e) { alert('บันทึกข้อมูลลงเครื่องไม่สำเร็จ'); } },
@@ -24531,31 +24531,58 @@ function endTour() {
         && (!q || STRIP_FIELDS.some(([k]) => String(r[k] == null ? '' : r[k]).toLowerCase().includes(q))))
         .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')) || String(b.id).localeCompare(String(a.id)));
     },
-    openForm(id) { this.editing = id || 'new'; this.renderForm(); const f = $('#gsf_date'); if (f) f.scrollIntoView({ block: 'center' }); },
-    closeForm() { this.editing = null; this.renderForm(); },
-    renderForm() {
-      const h = $('#gsForm'); if (!h) return;
-      if (this.editing == null) { h.innerHTML = ''; return; }
-      const r = this.editing === 'new' ? { date: new Date().toISOString().slice(0, 10) } : (this.rows.find(x => x.id === this.editing) || {});
-      h.innerHTML = `<section class="ex-card" style="margin-bottom:1rem"><header><h3>${this.editing === 'new' ? 'เพิ่มรายการ ลอกผิวชุบ' : 'แก้ไขรายการ'}</h3></header>
-        <div class="ex-filters" style="gap:.8rem">${STRIP_FIELDS.map(([k, l, t]) => `<label style="min-width:${k === 'partName' || k === 'remark' ? '230px' : '140px'}">${l}<input id="gsf_${k}" type="${t}" ${t === 'number' ? 'min="0" step="any"' : ''} value="${esc(r[k] == null ? '' : r[k])}" class="ex-search" style="margin:0;max-width:none" onkeydown="if(event.key==='Enter')StripWork.saveForm()"></label>`).join('')}</div>
-        <div style="margin-top:.8rem;display:flex;gap:.5rem"><button class="ex-btn" onclick="StripWork.saveForm()">บันทึก</button><button class="ex-btn" style="background:var(--surface2);color:var(--text)" onclick="StripWork.closeForm()">ยกเลิก</button></div></section>`;
+    /* ── Popup เพิ่ม / แก้ไข (ใช้ openModal เดียวกับหมวดอื่น) ── */
+    openForm(id) {
+      const r = id ? this.rows.find(x => x.id === id) : null;
+      const opts = k => [...new Set(this.rows.map(x => x[k]).filter(Boolean))].slice(0, 400).map(v => `<option value="${esc(v)}">`).join('');
+      const req = ['date', 'partNo', 'partName'];
+      const field = (k, l, t, cls) => {
+        const val = r ? r[k] : (k === 'date' ? new Date().toISOString().slice(0, 10) : '');
+        const list = ['model', 'cus', 'maker', 'partNo'].includes(k) ? ` list="gsl-${k}"` : '';
+        return `<label class="${cls || ''}"><span>${esc(l)}${req.includes(k) ? ' <em>*</em>' : ''}</span><input name="${k}" type="${t}"${t === 'number' ? ' min="0" step="any" inputmode="decimal"' : ''}${list} value="${esc(val == null ? '' : val)}" autocomplete="off"></label>`;
+      };
+      const F = Object.fromEntries(STRIP_FIELDS.map(([k, l, t]) => [k, [l, t]]));
+      const el = openModal({
+        wide: true, title: r ? 'แก้ไขรายการ ลอกผิวชุบ' : 'เพิ่มรายการ ลอกผิวชุบ',
+        sub: r ? `${r.partNo || ''} · ${r.partName || ''}` : 'กรอกข้อมูลงานลอกผิวชุบ — ช่องที่มี * จำเป็นต้องกรอก',
+        body: `<form class="gx-form gw-form" id="gsForm" novalidate>
+          <fieldset><legend>ข้อมูลงาน</legend><div class="gw-grid">${field('date', ...F.date)}${field('model', ...F.model)}${field('cus', ...F.cus)}${field('maker', ...F.maker)}</div></fieldset>
+          <fieldset><legend>ชิ้นงาน</legend><div class="gw-grid">${field('partNo', ...F.partNo)}${field('partName', ...F.partName, 'span2')}${field('qty', ...F.qty)}${field('remark', ...F.remark, 'span2')}</div></fieldset>
+          ${['model', 'cus', 'maker', 'partNo'].map(k => `<datalist id="gsl-${k}">${opts(k)}</datalist>`).join('')}
+          <p class="gx-form-err" id="gsErr" role="alert"></p>
+        </form>`,
+        foot: `<button class="gx-btn ghost" data-close2>ยกเลิก</button><button class="gx-btn primary" id="gsSave">${r ? 'บันทึกการแก้ไข' : 'เพิ่มรายการ'}</button>`
+      });
+      el.querySelector('[data-close2]').onclick = closeModal;
+      const f = $('#gsForm');
+      f.elements.partNo.addEventListener('change', () => {   // พิมพ์ Part No. ที่เคยมีแล้ว → เติมข้อมูลที่ว่างให้
+        const hit = this.rows.find(x => stripUp(x.partNo) === stripUp(f.elements.partNo.value) && x.id !== (r && r.id)); if (!hit) return;
+        ['partName', 'model', 'cus', 'maker'].forEach(k => { if (!f.elements[k].value && hit[k]) f.elements[k].value = hit[k]; });
+      });
+      const save = () => this.saveForm(r, f);
+      $('#gsSave').onclick = save;
+      f.addEventListener('submit', e => { e.preventDefault(); save(); });
     },
-    saveForm() {
-      const rec = {}; STRIP_FIELDS.forEach(([k]) => { const e = $('#gsf_' + k); rec[k] = e ? e.value.trim() : ''; });
-      if (!rec.partNo && !rec.partName && !rec.model) { alert('กรอกอย่างน้อย Model, Part No. หรือ Part Name'); return; }
-      if (this.editing === 'new') this.rows.push(Object.assign({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6) }, rec));
-      else { const i = this.rows.findIndex(x => x.id === this.editing); if (i >= 0) this.rows[i] = Object.assign({}, this.rows[i], rec); }
-      this.save(); this.editing = null; this.render();
+    saveForm(r, f) {
+      const rec = {}; STRIP_FIELDS.forEach(([k]) => { rec[k] = f.elements[k].value.trim(); });
+      const miss = [['date', 'วันที่'], ['partNo', 'Part No.'], ['partName', 'Part Name']].filter(([k]) => !rec[k]);
+      f.querySelectorAll('input').forEach(i => i.classList.toggle('bad', miss.some(([k]) => k === i.name)));
+      if (miss.length) { $('#gsErr').textContent = 'กรอกให้ครบ: ' + miss.map(m => m[1]).join(', '); return; }
+      if (r) this.rows = this.rows.map(x => x.id === r.id ? Object.assign({}, x, rec) : x);
+      else this.rows.push(Object.assign({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6) }, rec));
+      this.save(); closeModal(); this.render();
+      if (typeof addHistoryLog === 'function') addHistoryLog(r ? 'edit' : 'add', rec.partNo, rec.partName, 'ลอกผิวชุบ: ' + [rec.model, rec.maker].filter(Boolean).join(' · '));
+      toast(r ? 'บันทึกการแก้ไขแล้ว' : 'เพิ่มรายการ ลอกผิวชุบ แล้ว', 'success');
     },
-    del(id) {
+    async remove(id) {
       const r = this.rows.find(x => x.id === id); if (!r) return;
-      if (!confirm(`ลบรายการนี้?\n${r.partNo || ''} ${r.partName || r.model || ''}`)) return;
+      if (!await confirmBox('ลบรายการนี้?', `${r.partNo || ''} · ${r.partName || r.model || ''} จะถูกลบถาวร`, 'ลบรายการ')) return;
       this.rows = this.rows.filter(x => x.id !== id); this.save(); this.render();
+      if (typeof addHistoryLog === 'function') addHistoryLog('delete', r.partNo, r.partName, 'ลอกผิวชุบ');
+      toast('ลบรายการแล้ว', 'success');
     },
     cell(k, r) { return k === 'date' ? esc(stripDate(r)) : k === 'qty' ? (r.qty === '' || r.qty == null ? '' : fmtNum(r.qty)) : esc(r[k]); },
     render() {
-      this.renderForm();
       const host = $('#gsBody'); if (!host) return;
       const years = [...new Set(this.rows.map(stripYear).filter(Boolean))].sort((a, b) => b - a);
       const models = [...new Set(this.rows.map(r => stripUp(r.model)).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'th', { numeric: true }));
@@ -24572,10 +24599,20 @@ function endTour() {
       const list = this.view(), pages = Math.max(1, Math.ceil(list.length / this.per));
       if (this.page > pages) this.page = pages;
       const from = (this.page - 1) * this.per;
-      const body = list.slice(from, from + this.per).map((r, i) => `<tr><td class="r">${from + i + 1}</td>${STRIP_FIELDS.map(([k]) => `<td>${this.cell(k, r)}</td>`).join('')}<td style="white-space:nowrap"><a href="javascript:void(0)" onclick="StripWork.openForm('${r.id}')">แก้ไข</a> · <a href="javascript:void(0)" style="color:var(--ex-up)" onclick="StripWork.del('${r.id}')">ลบ</a></td></tr>`).join('');
+      const body = list.slice(from, from + this.per).map((r, i) => `<tr><td class="r">${from + i + 1}</td>${STRIP_FIELDS.map(([k]) => `<td>${this.cell(k, r)}</td>`).join('')}<td class="act" style="white-space:nowrap"><button class="gx-icon-btn" title="แก้ไข" aria-label="แก้ไข ${esc(r.partNo)}" onclick="StripWork.openForm('${esc(r.id)}')">${ICON.edit}</button> <button class="gx-icon-btn danger" title="ลบ" aria-label="ลบ ${esc(r.partNo)}" onclick="StripWork.remove('${esc(r.id)}')">${ICON.trash}</button></td></tr>`).join('');
       host.innerHTML = `<section class="ex-card"><div class="ex-scroll"><table class="ex-table ex-left"><thead><tr><th>#</th>${STRIP_FIELDS.map(([, l]) => `<th>${esc(l)}</th>`).join('')}<th></th></tr></thead><tbody>${body || `<tr><td colspan="${STRIP_FIELDS.length + 2}">ไม่พบรายการตามตัวกรอง</td></tr>`}</tbody></table></div>
         <div class="ex-foot">แสดง ${list.length ? (from + 1).toLocaleString('th-TH') : 0}–${Math.min(from + this.per, list.length).toLocaleString('th-TH')} จาก ${list.length.toLocaleString('th-TH')} รายการ${list.length !== this.rows.length ? ` (ทั้งหมด ${this.rows.length.toLocaleString('th-TH')})` : ''}
           ${pages > 1 ? ` · <button class="ex-btn" onclick="StripWork.go(-1)" ${this.page <= 1 ? 'disabled' : ''}>‹</button> หน้า ${this.page}/${pages} <button class="ex-btn" onclick="StripWork.go(1)" ${this.page >= pages ? 'disabled' : ''}>›</button>` : ''}</div></section>`;
+    },
+    /* Export CSV (UTF-8 มี BOM เปิดใน Excel ภาษาไทยได้) — ตามตัวกรองที่เลือกอยู่ */
+    exportCsv() {
+      const list = this.view(); if (!list.length) { alert('ยังไม่มีรายการให้ Export'); return; }
+      const q = v => { const t = String(v == null ? '' : v); return /[",\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+      const rows = [['ลำดับ', ...STRIP_FIELDS.map(([, l]) => l)], ...list.map((r, i) => [i + 1, ...STRIP_FIELDS.map(([k]) => k === 'date' ? stripDate(r) : r[k])])];
+      const blob = new Blob(['\ufeff' + rows.map(r => r.map(q).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+      const d = new Date(), pad = v => String(v).padStart(2, '0'), a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = `ลอกผิวชุบ_${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}.csv`;
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     },
     /* Export เป็นไฟล์ Excel (.xlsx) — ตามตัวกรองที่เลือกอยู่ (ไม่กรอง = ทั้งหมด) */
     exportXlsx() {
@@ -24596,6 +24633,19 @@ function endTour() {
     active() { const e = $('#page-gwstripsum'); return !!e && e.classList.contains('active'); },
     open() { StripWork.load(); this.render(); },
     setYear(v) { this.year = v === 'all' ? 'all' : +v; this.render(); },
+    /* Export สรุปเป็น Excel หลายชีต: รายปี / Maker / Model / ลูกค้า (ตามปีที่เลือก · รายปีแสดงทุกปีในช่วงที่แสดง) */
+    exportXlsx() {
+      const x = this._x; if (!x) { alert('ยังไม่มีข้อมูลสรุปให้ Export'); return; }
+      if (typeof XLSX === 'undefined') { alert('ยังโหลดตัว Export Excel ไม่เสร็จ ลองใหม่อีกครั้ง'); return; }
+      const wb = XLSX.utils.book_new();
+      const sheet = (name, head, rows) => { const ws = XLSX.utils.aoa_to_sheet([head, ...rows]); ws['!cols'] = head.map((h, i) => ({ wch: i ? 14 : 24 })); XLSX.utils.book_append_sheet(wb, ws, name); };
+      sheet('สรุปรายปี', ['ปี', 'รายการ', 'จำนวน (ชิ้น)', 'Model', 'Maker'], x.byY.map(r => [r.y + 543, r.n, r.vol, r.models, r.makers]));
+      sheet('Maker', ['Maker', 'รายการ', 'จำนวน (ชิ้น)', 'Model', 'ชิ้นงาน'], x.byMk.map(r => [r.k, r.n, r.vol, r.models, r.parts]));
+      sheet('Model', ['Model', 'รายการ', 'จำนวน (ชิ้น)', 'ลูกค้า', 'Maker'], x.byMd.map(r => [r.k, r.n, r.vol, r.cus, r.makers]));
+      sheet('ลูกค้า', ['ลูกค้า', 'รายการ', 'จำนวน (ชิ้น)', 'Model', 'Maker'], x.byCus.map(r => [r.k, r.n, r.vol, r.models, r.makers]));
+      const d = new Date(), pad = v => String(v).padStart(2, '0');
+      XLSX.writeFile(wb, `สรุป_ลอกผิวชุบ${this.year === 'all' ? '' : '_' + (this.year + 543)}_${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}.xlsx`);
+    },
     render() {
       const host = $('#gssBody'); if (!host) return;
       const D = GWDash, n = v => D.n(v);
@@ -24605,8 +24655,8 @@ function endTour() {
       const keep = new Set(years);
       if (this.year !== 'all' && !keep.has(this.year)) this.year = 'all';
       const bar = $('#gssBar');
-      if (bar) bar.innerHTML = `<div class="ex-filters"><label>ปี<select onchange="StripSum.setYear(this.value)"><option value="all">${D.maxYears > 0 ? years.length + ' ปีล่าสุด' : 'ทุกปี'}</option>${years.slice().reverse().map(y => `<option value="${y}"${this.year === y ? ' selected' : ''}>${y + 543}</option>`).join('')}</select></label></div>`;
-      D.kill('exSwYear'); D.kill('exSwMaker');
+      if (bar) bar.innerHTML = `<div class="ex-filters"><label>ปี<select onchange="StripSum.setYear(this.value)"><option value="all">${D.maxYears > 0 ? years.length + ' ปีล่าสุด' : 'ทุกปี'}</option>${years.slice().reverse().map(y => `<option value="${y}"${this.year === y ? ' selected' : ''}>${y + 543}</option>`).join('')}</select></label></div><div class="ex-filters"><button class="ex-btn" style="background:#2F8F6E;color:#fff" onclick="StripSum.exportXlsx()">Export Excel</button></div>`;
+      D.kill('exSwYear'); D.kill('exSwMaker'); this._x = null;
       if (!raw.length) { host.innerHTML = `<div class="gx-empty"><strong>ยังไม่มีข้อมูล ลอกผิวชุบ</strong><span>กรอกรายการที่หน้า "รายการ ลอกผิวชุบ" (ต้องใส่วันที่) แล้วสรุปจะขึ้นให้อัตโนมัติ</span></div>`; return; }
       const cur = raw.filter(x => keep.has(x.y) && (this.year === 'all' || x.y === this.year));
       const uq = k => new Set(cur.map(x => x[k]).filter(v => v && v !== '(ไม่ระบุ)')).size;
@@ -24614,6 +24664,7 @@ function endTour() {
       const agg = key => [...D.group(cur, key)].map(([k, l]) => ({ k, n: l.length, vol: l.reduce((a, x) => a + x.vol, 0), models: new Set(l.map(x => x.model)).size, makers: new Set(l.map(x => x.maker)).size, cus: new Set(l.map(x => x.cus)).size, parts: new Set(l.map(x => x.part).filter(Boolean)).size })).sort((a, b) => b.n - a.n || b.vol - a.vol);
       const byMk = agg('maker'), byMd = agg('model'), byCus = agg('cus');
       const byY = years.map(y => { const l = raw.filter(x => x.y === y); return { y, n: l.length, vol: l.reduce((a, x) => a + x.vol, 0), models: new Set(l.map(x => x.model)).size, makers: new Set(l.map(x => x.maker)).size }; });
+      this._x = { byY, byMk, byMd, byCus };
       host.innerHTML = `
         <div class="ex-kpis">
           ${D.kpi('งานลอกผิวชุบ', n(cur.length), 'รายการ · ' + (this.year === 'all' ? years.map(y => y + 543).join(', ') : 'ปี ' + (this.year + 543)), 'primary')}
