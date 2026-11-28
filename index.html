@@ -24610,6 +24610,7 @@ function endTour() {
         options: { indexAxis: 'y', plugins: Object.assign({ legend: { display: false } }, D.vl(0)), scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } } });
     }
   };
+  window.StripWork = StripWork; window.StripSum = StripSum;
   /* GO WORK ซิงค์ข้อมูลใหม่ → รีเฟรชหน้าลอกผิวชุบที่เปิดอยู่ */
   { const origRef = GoWork.refresh; GoWork.refresh = async function () { const r = await origRef.apply(this, arguments); try { if (StripWork.active()) StripWork.render(); if (StripSum.active()) StripSum.render(); } catch (e) {} return r; }; }
 
