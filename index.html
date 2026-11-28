@@ -22317,7 +22317,7 @@ function endTour() {
         const d = parseDMY(r.goDate);
         const clean = v => { const s = String(v == null ? '' : v).trim(); return !s || s === '-' ? '' : s; };
         const x = {
-          i, no: numOf(r.no), canc: gwIsCancel(r), y: this.yearOf(r), m: d ? d.getMonth() : null, ts: d ? d.getTime() : null,
+          i, no: numOf(r.no), dec: /^\d+\.\d+$/.test(String(r.no == null ? '' : r.no).trim()), canc: gwIsCancel(r), y: this.yearOf(r), m: d ? d.getMonth() : null, ts: d ? d.getTime() : null,
           model: clean(r.model).toUpperCase() || '(ไม่ระบุ)', cus: gwCusPrefix(r.cusCode) || '(ไม่ระบุ)',
           maker: clean(r.maker) || '(ไม่ระบุ)', work: clean(r.work) || '(ไม่ระบุ)',
           partNo: clean(r.partNo), partName: clean(r.partName), rev: clean(r.rev),
@@ -22331,7 +22331,7 @@ function endTour() {
       const outY = out.filter(x => x.y), cancY = cancelled.filter(x => x.y);
       const events = this.priceChanges([...outY, ...cancY]);
       const adjSet = new Set(); events.forEach(e => { adjSet.add(e.iOld); adjSet.add(e.iNew); });
-      const isAdj = x => adjSet.has(x.i);
+      const isAdj = x => adjSet.has(x.i) || x.dec;   // NO ทศนิยม (เช่น 646.15) = แถวปรับราคาของงานเดิม ไม่นับเป็น GO ใหม่
       return { all: outY.filter(x => !isAdj(x)), cancelled: cancY.filter(x => !isAdj(x)), adj: [...outY, ...cancY].filter(isAdj), events, noYear: out.filter(x => !x.y).length };
     },
     n(v) { return Math.round(v).toLocaleString('th-TH'); },
@@ -22385,7 +22385,7 @@ function endTour() {
     /* ── ตรวจจับ Maker ปรับราคา (แบบง่าย): แถว REMARK "ยกเลิก GO" = ราคาเดิม → แถวถัดไปของรายการเดียวกัน (Part No. + Model + Work + Maker) = ราคาใหม่ ── */
     priceChanges(rowsAll) {
       const K = x => [x.maker, x.partNo, x.model, x.work].map(v => String(v).toUpperCase().replace(/\s+/g, ' ').trim()).join('|');
-      const g = this.group(rowsAll.filter(x => x.partNo && x.maker !== '(ไม่ระบุ)'), K);
+      const g = new Map();   /* ปิดกฎจับคู่ "ยกเลิก GO" → นับงานปรับราคาจาก NO ทศนิยมเท่านั้น */
       const ev = [];
       g.forEach(list => {
         list.sort((a, b) => (a.ts == null ? 1e15 : a.ts) - (b.ts == null ? 1e15 : b.ts) || (a.no == null || b.no == null ? 0 : a.no - b.no) || a.i - b.i);
@@ -22397,6 +22397,20 @@ function endTour() {
             pct: (b.mkPrice - a.mkPrice) / a.mkPrice * 100, y: b.y || a.y, ts: b.ts || a.ts, rev: b.rev, volume: b.volume, viaCancel: true, iOld: a.i, iNew: b.i });
         }
       });
+      /* NO ทศนิยม (เช่น 4295.1) = ปรับราคาใหม่ของงานเดิม (NO 4295) → 1 แถว = 1 ครั้งที่ปรับราคา · เทียบราคากับแถวก่อนหน้าในกลุ่ม NO เดียวกัน */
+      { const have = new Set(ev.map(e => e.iNew)), fam = new Map();
+        rowsAll.forEach(x => { if (x.no == null) return; const k = Math.floor(x.no + 1e-9); if (!fam.has(k)) fam.set(k, []); fam.get(k).push(x); });
+        fam.forEach(list => {
+          list.sort((a, b) => a.no - b.no || (a.ts == null ? 1e15 : a.ts) - (b.ts == null ? 1e15 : b.ts) || a.i - b.i);
+          for (let k = 1; k < list.length; k++) {
+            const a = list[k - 1], b = list[k];
+            if (!b.dec || have.has(b.i)) continue;
+            const pa = a.mkPrice != null ? a.mkPrice : a.cusPrice, pb = b.mkPrice != null ? b.mkPrice : b.cusPrice, ok = pa != null && pb != null && pa > 0;
+            ev.push({ maker: b.maker, partNo: b.partNo || a.partNo, partName: b.partName || a.partName, model: b.model, cus: b.cus, work: b.work, cps: b.cpc !== '(ไม่ระบุ)' ? b.cpc : a.cpc, from: ok ? pa : 0, to: ok ? pb : 0,
+              pct: ok ? (pb - pa) / pa * 100 : 0, y: b.y || a.y, ts: b.ts || a.ts, rev: b.rev, volume: b.volume, viaCancel: false, viaNo: true, iOld: null, iNew: b.i });
+          }
+        });
+      }
       return ev;
     },
 
@@ -22464,7 +22478,7 @@ function endTour() {
       const wt = this.tbl(['ประเภทงาน (WORK)', 'รายการ GO', '%', 'Part No.'], grp('work').map(([k, l]) => [esc(k), `<b>${this.n(l.length)}</b>`, this.pct(l.length, cur.length), this.n(pn(l))]));
       const ct = this.tbl(['ลูกค้า', 'รายการ GO', '%', 'Model', 'Maker'], grp('cus').map(([k, l]) => [esc(k), `<b>${this.n(l.length)}</b>`, this.pct(l.length, cur.length), this.n(sz(l, 'model')), this.n(sz(l, 'maker'))]));
       const nw = hasPrior ? `<div class="ex-newgrid"><div><h4>Maker ใหม่ (${fm.length})</h4>${chips(fm)}</div><div><h4>Model ใหม่ (${fo.length})</h4>${chips(fo)}</div><div><h4>ลูกค้าใหม่ (${fc.length})</h4>${chips(fc)}</div></div>` : '<p class="ex-note">ปีนี้เป็นปีแรกในข้อมูล จึงยังไม่มีปีก่อนให้เทียบ</p>';
-      const rc = this.tbl(['ที่มาของยอด (ทั้งชีต GO WORK · ทุกปี · ไม่ขึ้นกับตัวกรอง)', 'รายการ'], [['แถวทั้งหมดในชีต GO WORK', this.n(raw.length)], ['− งานลอกผิวชุบ (WORK = ลอกผิวชุบ)', this.n(strip)], ['− ยกเลิก GO (REMARK มีคำว่า ยกเลิก · ไม่รวมกรณีปรับราคา)', this.n(cancOnly)], ['− งานปรับราคา (แถวราคาเดิม + แถวราคาใหม่ · แยกเป็นหมวดปรับราคา)', this.n(adjRows)], ['− ไม่มีปี/วันที่ GO', this.n(P.noYear)], ['<b>= นับเป็นงาน GO</b>', `<b>${this.n(P.all.length)}</b>`]]);
+      const rc = this.tbl(['ที่มาของยอด (ทั้งชีต GO WORK · ทุกปี · ไม่ขึ้นกับตัวกรอง)', 'รายการ'], [['แถวทั้งหมดในชีต GO WORK', this.n(raw.length)], ['− งานลอกผิวชุบ (WORK = ลอกผิวชุบ)', this.n(strip)], ['− ยกเลิก GO (REMARK มีคำว่า ยกเลิก · ไม่รวมกรณีปรับราคา)', this.n(cancOnly)], ['− งานปรับราคา (แถว NO ทศนิยม เช่น 4295.1 · แยกเป็นหมวดปรับราคา)', this.n(adjRows)], ['− ไม่มีปี/วันที่ GO', this.n(P.noYear)], ['<b>= นับเป็นงาน GO</b>', `<b>${this.n(P.all.length)}</b>`]]);
       return this.card(`สรุปประจำปี ${y + 543} — ตรวจสอบกับระบบได้`, 'นับจากชีต GO WORK โดยตรง · ตามตัวกรองด้านบน (ประเภทงาน / ลูกค้า / Model)',
         `<div class="ex-kpis">${kp.join('')}</div><div class="ex-grid g2">${this.card('แบ่งตามประเภทงาน', 'กี่รายการ แยกเป็นงานอะไร', wt)}${this.card('แบ่งตามลูกค้า', 'ตัวอักษรนำหน้ารหัส CUS', ct)}</div>${this.card('Maker / Model / ลูกค้าใหม่', 'ใหม่ = ไม่เคยมีงาน GO (รวมที่ยกเลิก) ในปีก่อนหน้า · ตัวเลขข้างชื่อ = จำนวนรายการ GO ปีนี้', nw, 'ex-wide')}${this.card('ที่มาของยอดรวม', 'ไล่จากแถวทั้งหมดในชีตจนเหลือยอดที่นับ', rc)}`, 'ex-wide');
     },
@@ -22522,7 +22536,7 @@ function endTour() {
         ${this.yearSummary(c)}
         ${cmpCard}
         <div class="ex-grid g2">
-          ${this.card('งาน GO แต่ละปี (รายการ)', 'สีทอง = ปีที่เลือก · สีเทา = ปีที่เปรียบเทียบ', '<div class="ex-chart"><canvas id="exYear"></canvas></div>')}
+          ${this.card('งาน GO แต่ละปี (รายการ)', 'สีทอง = ปีที่เลือก · สีเทา = ปีที่เปรียบเทียบ · ไม่รวมแถวปรับราคา (NO ทศนิยม)', '<div class="ex-chart"><canvas id="exYear"></canvas></div>')}
           ${this.card('สัดส่วนประเภทงานในแต่ละปี', 'แยกตามคอลัมน์ WORK', '<div class="ex-chart"><canvas id="exWorkYear"></canvas></div>')}
         </div>
         <div class="ex-grid g2">
@@ -22621,7 +22635,7 @@ function endTour() {
       const evB = bs ? evAll.filter(e => e.y === this.base) : null;
       const mkList = [...new Set(ev.map(e => e.maker))].sort();
       if (this.mkSel !== 'all' && !mkList.includes(this.mkSel)) this.mkSel = 'all';
-      const byMk = [...this.group(ev, 'maker')].map(([m, l]) => ({ m, n: l.length, up: l.filter(x => x.pct > 0).length, dn: l.filter(x => x.pct < 0).length, avg: l.reduce((s, x) => s + x.pct, 0) / l.length, parts: new Set(l.map(x => x.partNo)).size, max: Math.max(...l.map(x => x.pct)) })).sort((a, b) => b.n - a.n);
+      const byMk = [...this.group(ev, 'maker')].map(([m, l]) => ({ m, n: l.length, up: l.filter(x => x.pct > 0).length, dn: l.filter(x => x.pct < 0).length, avg: (() => { const k = l.filter(x => x.pct !== 0); return k.length ? k.reduce((s, x) => s + x.pct, 0) / k.length : 0; })(), parts: new Set(l.map(x => x.partNo)).size, max: Math.max(...l.map(x => x.pct)) })).sort((a, b) => b.n - a.n);
       const ups = ev.filter(x => x.pct > 0), dns = ev.filter(x => x.pct < 0);
       const avgUp = ups.length ? ups.reduce((s, x) => s + x.pct, 0) / ups.length : 0;
       const byYr = years.map(y => evAll.filter(e => e.y === y));
@@ -22646,7 +22660,7 @@ function endTour() {
         this.chart('exMkYear', { type: 'bar', data: { labels: years.map(y => y + 543), datasets: [{ label: 'ขึ้นราคา', data: byYr.map(l => l.filter(x => x.pct > 0).length), backgroundColor: '#A6443C', maxBarThickness: 48 }, { label: 'ลดราคา', data: byYr.map(l => l.filter(x => x.pct < 0).length), backgroundColor: '#2F8F6E', maxBarThickness: 48 }] },
           options: { plugins: { legend: { position: 'bottom' } }, scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, beginAtZero: true } } } });
       };
-      if (!ev.length) return `${this.card('ยังไม่พบการปรับราคา', null, `<p class="ex-note">ระบบนับจากรายการที่ REMARK = "ยกเลิก GO" แล้วมีรายการใหม่ของ Part เดียวกัน (Maker + Part No. + Model + Work) ที่ <b>ราคา Maker</b> ต่างกัน — ในช่วง/ตัวกรองที่เลือกยังไม่พบ</p>`, 'ex-wide')}`;
+      if (!ev.length) return `${this.card('ยังไม่พบการปรับราคา', null, `<p class="ex-note">ระบบนับจากแถวที่ NO มีทศนิยม (เช่น 4295.1) — ในช่วง/ตัวกรองที่เลือกยังไม่พบ</p>`, 'ex-wide')}`;
       return `
         <div class="ex-kpis">
           ${this.kpi('Maker ที่ปรับราคา', this.n(byMk.length), `จาก ${this.n(this.uniq(this.year === 'all' ? all : all.filter(x => x.y === this.year), 'maker').size)} Maker`, 'primary')}
@@ -22655,7 +22669,7 @@ function endTour() {
           ${this.kpi('ลดราคา', this.n(dns.length), dns.length ? `เฉลี่ย ${(dns.reduce((s, x) => s + x.pct, 0) / dns.length).toFixed(1)}%` : '', 'good')}
           ${this.kpi('ชิ้นงานที่ได้รับผล', this.n(new Set(ev.map(e => e.maker + e.partNo)).size), 'Part No. ไม่ซ้ำ')}
         </div>
-        ${this.card('สรุปสำหรับผู้บริหาร', 'วิธีนับ: แถว REMARK "ยกเลิก GO" (สีเหลือง) = ราคาเดิม · แถวใหม่ของรายการเดียวกัน (สีเขียว) = ราคาใหม่ · นับเฉพาะที่ราคา Maker ต่างกัน · งานกลุ่มนี้ไม่นับเป็นงาน GO (แยกเป็นหมวดปรับราคา)', `<ul class="ex-ins">${ins.map(t => `<li>${t}</li>`).join('')}</ul>`, 'ex-wide')}
+        ${this.card('สรุปสำหรับผู้บริหาร', 'วิธีนับ: แถวที่ NO มีทศนิยม (เช่น 4295.1) = ปรับราคาใหม่ของงาน NO 4295 (เทียบราคากับแถวก่อนหน้าในกลุ่มเดียวกัน) · งานกลุ่มนี้ไม่นับเป็นงาน GO (แยกเป็นหมวดปรับราคา)', `<ul class="ex-ins">${ins.map(t => `<li>${t}</li>`).join('')}</ul>`, 'ex-wide')}
         <div class="ex-grid g3">
           ${this.card('จำนวนครั้งที่ปรับราคา ต่อ Maker', 'Top 15', '<div class="ex-chart tall"><canvas id="exMkCnt"></canvas></div>')}
           ${this.card('% ปรับราคาเฉลี่ย ต่อ Maker', 'แดง = ขึ้น · เขียว = ลด', '<div class="ex-chart tall"><canvas id="exMkAvg"></canvas></div>')}
