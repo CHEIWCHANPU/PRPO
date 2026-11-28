@@ -9372,13 +9372,13 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
     <section class="ex-hero">
       <div>
         <h1>ลอกผิวชุบ</h1>
-        <p>สรุปงานลอกผิวชุบอยู่ด้านบน เลื่อนลงมาเป็นรายการ — เพิ่ม / แก้ไข / ลบ ค้นหา กรองตามปี · Model · Maker และ Export เป็นไฟล์ Excel (ข้อมูลเก็บในชีต STRIP_WORK ของ Google Sheet ผ่าน Apps Script)</p>
+        <p>สรุปรายเดือน/รายปี (จำนวนรายการ · ของเสียที่ต้องลอกผิว · มูลค่า) อยู่ด้านบน เลื่อนลงมาเป็นรายการ — เพิ่ม / แก้ไข / ลบ ค้นหา กรองตามปี · Model · Maker และ Export เป็นไฟล์ Excel (ข้อมูลเก็บในชีต STRIP_WORK ของ Google Sheet ผ่าน Apps Script)</p>
       </div>
     </section>
 
     <!-- ── สรุป ── -->
     <section id="gsSummary">
-      <div class="ex-slide-title"><h2>สรุป</h2><span>จำนวนงานรายปี · Maker · Model · ลูกค้า</span></div>
+      <div class="ex-slide-title"><h2>สรุป</h2><span>รายเดือน · รายปี · จำนวนของเสีย · มูลค่า · Maker · Model · ลูกค้า</span></div>
       <div class="ex-bar" id="gssBar"></div>
       <div id="gssBody"><div class="gx-skel tall"></div></div>
     </section>
@@ -9393,11 +9393,12 @@ html body .topbar.tb2 .account-pill .account-pill-label { max-width: 190px !impo
         <button class="ex-btn" onclick="StripWork.openForm()">+ เพิ่มรายการ</button>
         <button class="ex-btn" style="background:#2F8F6E;color:#fff" onclick="StripWork.exportXlsx()">Export Excel</button>
         <button class="ex-btn" style="background:var(--surface2);color:var(--text);border:1px solid var(--border)" onclick="StripWork.exportCsv()">Export CSV</button>
+        <button class="ex-btn" style="background:#C9A227;color:#fff" onclick="document.getElementById('gsCsvIn').click()">นำเข้า CSV</button><input type="file" id="gsCsvIn" accept=".csv,.tsv,.txt" hidden onchange="StripWork.importCsv(this)">
       </div>
     </div>
       <div id="gsBody"><div class="gx-skel tall"></div></div>
     </section>
-    <style>#page-gwstrip{--ex-a:#2E5395;--ex-up:#A6443C;--ex-dn:#2F8F6E}#page-gwstrip .ex-scroll{max-height:68vh}#page-gwstrip tr.gs-canc td{background:rgba(201,162,39,.14)}#page-gwstrip #gssBar{position:static}</style>
+    <style>#page-gwstrip{--ex-a:#2E5395;--ex-up:#A6443C;--ex-dn:#2F8F6E}#page-gwstrip .ex-scroll{max-height:68vh}#page-gwstrip tr.gs-canc td{background:rgba(201,162,39,.14)}#page-gwstrip #gssBar{position:static}#page-gwstrip .gs-yr{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin:1.1rem 0 .4rem;padding:.55rem .9rem;border-radius:10px;background:var(--surface2);font-size:.95rem}#page-gwstrip details.gs-mo{border:1px solid var(--border);border-radius:10px;margin:.4rem 0;background:var(--surface)}#page-gwstrip details.gs-mo>summary{cursor:pointer;display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;padding:.6rem .9rem;list-style:none}#page-gwstrip details.gs-mo>summary::-webkit-details-marker{display:none}#page-gwstrip details.gs-mo[open]>summary{border-bottom:1px solid var(--border)}#page-gwstrip details.gs-mo>summary span{color:var(--text-muted,#667)}</style>
   </div>
 
   <!-- ═══════════ SUMMARY MEETING ═══════════ -->
@@ -24510,10 +24511,57 @@ function endTour() {
   const STRIP_KEY = 'ccip_stripwork_v1';                 // ที่เก็บเดิม (ในเครื่อง) — ใช้เป็นต้นทางย้ายขึ้น Google Sheet ครั้งเดียว และเป็นที่เก็บสำรองถ้ายังเชื่อมชีตไม่ได้
   const STRIP_CACHE_KEY = 'ccip_stripwork_cache_v2';     // แคชของข้อมูลจากชีต STRIP_WORK (ไว้เปิดหน้าให้เร็ว/ใช้ตอนออฟไลน์)
   const STRIP_MIGRATED_KEY = 'ccip_stripwork_migrated_v1';
-  const STRIP_FIELDS = [['date', 'วันที่', 'date'], ['model', 'Model', 'text'], ['cus', 'ลูกค้า', 'text'], ['partNo', 'Part No.', 'text'], ['partName', 'Part Name', 'text'], ['maker', 'Maker', 'text'], ['qty', 'จำนวน (ชิ้น)', 'number'], ['remark', 'หมายเหตุ', 'text']];
+  const STRIP_FIELDS = [['date', 'วันที่', 'date'], ['model', 'Model', 'text'], ['cus', 'ลูกค้า', 'text'], ['partNo', 'Part No.', 'text'], ['partName', 'Part Name', 'text'], ['maker', 'Maker', 'text'], ['qty', 'จำนวน (ชิ้น)', 'number'], ['price', 'ราคาลอกผิวชุบ (บาท/ชิ้น)', 'number'], ['remark', 'หมายเหตุ', 'text']];
   const stripYear = r => { const m = String(r.date || '').match(/^(\d{4})-\d{2}-\d{2}/); return m ? +m[1] : null; };
   const stripDate = r => { const m = String(r.date || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[3]}/${m[2]}/${+m[1] + 543}` : ''; };
   const stripUp = v => String(v == null ? '' : v).trim().toUpperCase();
+
+  /* ── ราคา / มูลค่า / เดือน / นำเข้า CSV ── */
+  const STRIP_MONTHS = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+  const STRIP_MONTHS_FULL = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+  const stripMoney = v => (Number(v) || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const stripPrice = r => { const p = numOf(r.price); return p == null ? 0 : p; };
+  const stripTotal = r => (numOf(r.qty) || 0) * stripPrice(r);                 // มูลค่า = จำนวนชิ้น × ราคาลอกผิวชุบ/ชิ้น
+  const stripMonthOf = r => { const m = String(r.date || '').match(/^\d{4}-(\d{2})-\d{2}/); return m ? +m[1] : null; };
+  const STRIP_COLS = STRIP_FIELDS.flatMap(f => f[0] === 'price' ? [f, ['total', 'รวม (บาท)', 'calc']] : [f]);
+  const stripVal = (k, r) => k === 'date' ? stripDate(r) : k === 'total' ? (stripTotal(r) || '') : (k === 'qty' || k === 'price') ? (r[k] === '' || r[k] == null ? '' : (numOf(r[k]) ?? r[k])) : (r[k] == null ? '' : r[k]);
+  const stripParseCsv = text => {
+    text = String(text).replace(/^\ufeff/, '');
+    const first = text.split(/\r?\n/, 1)[0], cnt = c => first.split(c).length - 1;
+    const delim = cnt('\t') > 0 && cnt('\t') >= Math.max(cnt(','), cnt(';')) ? '\t' : (cnt(';') > cnt(',') ? ';' : ',');
+    const rows = []; let row = [], cur = '', q = false;
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (q) { if (ch === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += ch; }
+      else if (ch === '"') q = true;
+      else if (ch === delim) { row.push(cur); cur = ''; }
+      else if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; row.push(cur); rows.push(row); row = []; cur = ''; }
+      else cur += ch;
+    }
+    if (cur !== '' || row.length) { row.push(cur); rows.push(row); }
+    return rows.filter(r => r.some(c => String(c).trim() !== ''));
+  };
+  const stripCsvDate = s => {
+    s = String(s || '').trim(); let y, mo, d, m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})/);
+    if (m) { d = +m[1]; mo = +m[2]; y = +m[3]; } else { m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/); if (!m) return ''; y = +m[1]; mo = +m[2]; d = +m[3]; }
+    if (y > 2400) y -= 543;   // พ.ศ. → ค.ศ.
+    const t = new Date(y, mo - 1, d); if (t.getFullYear() !== y || t.getMonth() !== mo - 1 || t.getDate() !== d) return '';
+    return `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  };
+  const stripCsvKey = h => {
+    h = String(h || '').trim().toLowerCase().replace(/\s+/g, ' ');
+    if (/^วันที่|^date/.test(h)) return 'date';
+    if (h.startsWith('model')) return 'model';
+    if (/ลูกค้า|customer|^cus/.test(h)) return 'cus';
+    if (/part ?no/.test(h)) return 'partNo';
+    if (/part ?name/.test(h)) return 'partName';
+    if (/maker/.test(h)) return 'maker';
+    if (/จำนวน|qty|quantity/.test(h)) return 'qty';
+    if (/ราคา|price/.test(h)) return 'price';
+    if (/^รวม|total/.test(h)) return 'total';
+    if (/หมายเหตุ|remark/.test(h)) return 'remark';
+    return null;
+  };
   /* ── ช่องวันที่ dd/mm/yyyy (ค.ศ.) สำหรับฟอร์มลอกผิวชุบ — เก็บเป็น yyyy-mm-dd เหมือนเดิม ── */
   const stripIsoToDMY = iso => { const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[3]}/${m[2]}/${m[1]}` : ''; };
   const stripDmyToIso = s => { const n = normDMY(s); if (!n) return ''; const [d, mo, y] = n.split('/').map(Number); return `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`; };
@@ -24591,7 +24639,7 @@ function endTour() {
         sub: r ? `${r.partNo || ''} · ${r.partName || ''}` : 'กรอกข้อมูลงานลอกผิวชุบ — ช่องที่มี * จำเป็นต้องกรอก',
         body: `<form class="gx-form gw-form" id="gsForm" novalidate>
           <fieldset><legend>ข้อมูลงาน</legend><div class="gw-grid">${field('date', ...F.date)}${field('model', ...F.model)}${field('cus', ...F.cus)}${field('maker', ...F.maker)}</div></fieldset>
-          <fieldset><legend>ชิ้นงาน</legend><div class="gw-grid">${field('partNo', ...F.partNo)}${field('partName', ...F.partName, 'span2')}${field('qty', ...F.qty)}${field('remark', ...F.remark, 'span2')}</div></fieldset>
+          <fieldset><legend>ชิ้นงาน</legend><div class="gw-grid">${field('partNo', ...F.partNo)}${field('partName', ...F.partName, 'span2')}${field('qty', ...F.qty)}${field('price', ...F.price)}${field('remark', ...F.remark, 'span2')}</div></fieldset>
           ${['model', 'cus', 'maker', 'partNo'].map(k => `<datalist id="gsl-${k}">${opts(k)}</datalist>`).join('')}
           <p class="gx-form-err" id="gsErr" role="alert"></p>
         </form>`,
@@ -24647,7 +24695,7 @@ function endTour() {
       if (typeof addHistoryLog === 'function') addHistoryLog('delete', r.partNo, r.partName, 'ลอกผิวชุบ');
       toast('ลบรายการแล้ว', 'success');
     },
-    cell(k, r) { return k === 'date' ? esc(stripDate(r)) : k === 'qty' ? (r.qty === '' || r.qty == null ? '' : fmtNum(r.qty)) : esc(r[k]); },
+    cell(k, r) { return k === 'date' ? esc(stripDate(r)) : k === 'qty' ? (r.qty === '' || r.qty == null ? '' : fmtNum(r.qty)) : k === 'price' ? (r.price === '' || r.price == null ? '' : stripMoney(r.price)) : k === 'total' ? (stripTotal(r) ? '<b>' + stripMoney(stripTotal(r)) + '</b>' : '') : esc(r[k]); },
     render() {
       const host = $('#gsBody'); if (!host) return;
       const years = [...new Set(this.rows.map(stripYear).filter(Boolean))].sort((a, b) => b - a);
@@ -24665,16 +24713,55 @@ function endTour() {
       const list = this.view(), pages = Math.max(1, Math.ceil(list.length / this.per));
       if (this.page > pages) this.page = pages;
       const from = (this.page - 1) * this.per;
-      const body = list.slice(from, from + this.per).map((r, i) => `<tr><td class="r">${from + i + 1}</td>${STRIP_FIELDS.map(([k]) => `<td>${this.cell(k, r)}</td>`).join('')}<td class="act" style="white-space:nowrap"><button class="gx-icon-btn" title="แก้ไข" aria-label="แก้ไข ${esc(r.partNo)}" onclick="StripWork.openForm('${esc(r.id)}')">${ICON.edit}</button> <button class="gx-icon-btn danger" title="ลบ" aria-label="ลบ ${esc(r.partNo)}" onclick="StripWork.remove('${esc(r.id)}')">${ICON.trash}</button></td></tr>`).join('');
-      host.innerHTML = `<section class="ex-card"><div class="ex-scroll"><table class="ex-table ex-left"><thead><tr><th>#</th>${STRIP_FIELDS.map(([, l]) => `<th>${esc(l)}</th>`).join('')}<th></th></tr></thead><tbody>${body || `<tr><td colspan="${STRIP_FIELDS.length + 2}">ไม่พบรายการตามตัวกรอง</td></tr>`}</tbody></table></div>
-        <div class="ex-foot">แสดง ${list.length ? (from + 1).toLocaleString('th-TH') : 0}–${Math.min(from + this.per, list.length).toLocaleString('th-TH')} จาก ${list.length.toLocaleString('th-TH')} รายการ${list.length !== this.rows.length ? ` (ทั้งหมด ${this.rows.length.toLocaleString('th-TH')})` : ''}
+      const sumQ = list.reduce((a, r) => a + (numOf(r.qty) || 0), 0), sumV = list.reduce((a, r) => a + stripTotal(r), 0);
+      const body = list.slice(from, from + this.per).map((r, i) => `<tr><td class="r">${from + i + 1}</td>${STRIP_COLS.map(([k]) => `<td${(k === 'qty' || k === 'price' || k === 'total') ? ' style="text-align:right"' : ''}>${this.cell(k, r)}</td>`).join('')}<td class="act" style="white-space:nowrap"><button class="gx-icon-btn" title="แก้ไข" aria-label="แก้ไข ${esc(r.partNo)}" onclick="StripWork.openForm('${esc(r.id)}')">${ICON.edit}</button> <button class="gx-icon-btn danger" title="ลบ" aria-label="ลบ ${esc(r.partNo)}" onclick="StripWork.remove('${esc(r.id)}')">${ICON.trash}</button></td></tr>`).join('');
+      host.innerHTML = `<section class="ex-card"><div class="ex-scroll"><table class="ex-table ex-left"><thead><tr><th>#</th>${STRIP_COLS.map(([, l]) => `<th>${esc(l)}</th>`).join('')}<th></th></tr></thead><tbody>${body || `<tr><td colspan="${STRIP_COLS.length + 2}">ไม่พบรายการตามตัวกรอง</td></tr>`}</tbody></table></div>
+        <div class="ex-foot"><b>รวมตามตัวกรอง ${sumQ.toLocaleString('th-TH')} ชิ้น · ${stripMoney(sumV)} บาท</b> · แสดง ${list.length ? (from + 1).toLocaleString('th-TH') : 0}–${Math.min(from + this.per, list.length).toLocaleString('th-TH')} จาก ${list.length.toLocaleString('th-TH')} รายการ${list.length !== this.rows.length ? ` (ทั้งหมด ${this.rows.length.toLocaleString('th-TH')})` : ''}
           ${pages > 1 ? ` · <button class="ex-btn" onclick="StripWork.go(-1)" ${this.page <= 1 ? 'disabled' : ''}>‹</button> หน้า ${this.page}/${pages} <button class="ex-btn" onclick="StripWork.go(1)" ${this.page >= pages ? 'disabled' : ''}>›</button>` : ''}</div></section>`;
+    },
+    /* นำเข้าจากไฟล์ CSV (แท็บ/คอมมา · UTF-8 หรือ Thai Windows-874 · วันที่ พ.ศ. หรือ ค.ศ.) — ข้ามรายการที่ซ้ำกับที่มีอยู่ จึงนำเข้าไฟล์เดิมซ้ำได้ */
+    async importCsv(input) {
+      const file = input.files && input.files[0]; input.value = ''; if (!file) return;
+      try {
+        const buf = await file.arrayBuffer(); let txt;
+        try { txt = new TextDecoder('utf-8', { fatal: true }).decode(buf); } catch (e) { txt = new TextDecoder('windows-874').decode(buf); }
+        const rows = stripParseCsv(txt);
+        if (rows.length < 2) { toast('ไม่พบข้อมูลในไฟล์ CSV', 'error'); return; }
+        const keys = rows[0].map(stripCsvKey);
+        if (!keys.includes('date') || !keys.includes('partNo')) { toast('หัวตารางไม่ตรง — ต้องมีคอลัมน์ วันที่ และ Part No.', 'error'); return; }
+        const recs = [], bad = [];
+        rows.slice(1).forEach((cells, i) => {
+          const o = {}; keys.forEach((k, j) => { if (k && o[k] === undefined) o[k] = String(cells[j] == null ? '' : cells[j]).trim(); });
+          const qty = numOf(o.qty), price = numOf(o.price), total = numOf(o.total);
+          const rec = { date: stripCsvDate(o.date), model: o.model || '', cus: o.cus || '', partNo: o.partNo || '', partName: o.partName || '', maker: o.maker || '', remark: o.remark || '',
+            qty: qty == null ? '' : qty, price: price != null ? price : (total != null && qty ? Math.round(total / qty * 10000) / 10000 : '') };
+          if (!rec.date || !rec.partNo || !rec.partName) { bad.push(i + 2); return; }
+          recs.push(rec);
+        });
+        const keyOf = r => [r.date, stripUp(r.partNo), stripUp(r.maker), numOf(r.qty) || 0, numOf(r.price) || 0].join('|');
+        const have = {}; this.rows.forEach(r => { const k = keyOf(r); have[k] = (have[k] || 0) + 1; });
+        const seen = {}, fresh = [];
+        recs.forEach(r => { const k = keyOf(r); seen[k] = (seen[k] || 0) + 1; if (seen[k] > (have[k] || 0)) fresh.push(r); });
+        if (!fresh.length) { toast(`ไม่มีรายการใหม่ — ซ้ำกับที่มีอยู่แล้ว ${recs.length} รายการ` + (bad.length ? ` · ข้ามแถวที่ข้อมูลไม่ครบ ${bad.length}` : '')); return; }
+        const val = fresh.reduce((a, r) => a + (numOf(r.qty) || 0) * (numOf(r.price) || 0), 0);
+        if (!await confirmBox('นำเข้าจาก CSV?', `พบ ${fresh.length} รายการใหม่ · มูลค่ารวม ${stripMoney(val)} บาท` + (bad.length ? ` · ข้ามแถวที่ข้อมูลไม่ครบ ${bad.length} แถว (แถวที่ ${bad.slice(0, 8).join(', ')})` : ''), 'นำเข้า')) return;
+        if (this.sheet) {
+          const j = await api.post({ action: 'bulkImportStripWork', by: this.by(), rows: fresh });
+          if (j && j.success === false) throw new Error(j.error || 'นำเข้าไม่สำเร็จ');
+          this._raw = null; await this.refresh();
+          toast(`นำเข้า ${j && j.added != null ? j.added : fresh.length} รายการ ลงชีต STRIP_WORK แล้ว`, 'success');
+        } else {
+          fresh.forEach(r => this.rows.push(Object.assign({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6) }, r)));
+          this._raw = JSON.stringify(this.rows); this.save(); this.render(); StripSum.render();
+          toast(`นำเข้า ${fresh.length} รายการ แล้ว (เก็บในเครื่องนี้ — Deploy 26_StripWork.gs เพื่อเก็บลง Google Sheet)`, 'success');
+        }
+      } catch (e) { toast('นำเข้า CSV ไม่สำเร็จ: ' + (e.message || e), 'error'); }
     },
     /* Export CSV (UTF-8 มี BOM เปิดใน Excel ภาษาไทยได้) — ตามตัวกรองที่เลือกอยู่ */
     exportCsv() {
       const list = this.view(); if (!list.length) { alert('ยังไม่มีรายการให้ Export'); return; }
       const q = v => { const t = String(v == null ? '' : v); return /[",\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
-      const rows = [['ลำดับ', ...STRIP_FIELDS.map(([, l]) => l)], ...list.map((r, i) => [i + 1, ...STRIP_FIELDS.map(([k]) => k === 'date' ? stripDate(r) : r[k])])];
+      const rows = [['ลำดับ', ...STRIP_COLS.map(([, l]) => l)], ...list.map((r, i) => [i + 1, ...STRIP_COLS.map(([k]) => stripVal(k, r))])];
       const blob = new Blob(['\ufeff' + rows.map(r => r.map(q).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
       const d = new Date(), pad = v => String(v).padStart(2, '0'), a = document.createElement('a');
       a.href = URL.createObjectURL(blob); a.download = `ลอกผิวชุบ_${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}.csv`;
@@ -24685,8 +24772,8 @@ function endTour() {
       const list = this.view();
       if (!list.length) { alert('ยังไม่มีรายการให้ Export'); return; }
       if (typeof XLSX === 'undefined') { alert('ยังโหลดตัว Export Excel ไม่เสร็จ ลองใหม่อีกครั้ง'); return; }
-      const ws = XLSX.utils.aoa_to_sheet([['ลำดับ', ...STRIP_FIELDS.map(([, l]) => l)], ...list.map((r, i) => [i + 1, ...STRIP_FIELDS.map(([k]) => k === 'date' ? stripDate(r) : k === 'qty' ? (r.qty === '' || r.qty == null ? '' : (numOf(r.qty) ?? r.qty)) : (r[k] == null ? '' : r[k]))])]);
-      ws['!cols'] = [{ wch: 7 }, { wch: 13 }, { wch: 16 }, { wch: 12 }, { wch: 20 }, { wch: 28 }, { wch: 18 }, { wch: 14 }, { wch: 28 }];
+      const ws = XLSX.utils.aoa_to_sheet([['ลำดับ', ...STRIP_COLS.map(([, l]) => l)], ...list.map((r, i) => [i + 1, ...STRIP_COLS.map(([k]) => stripVal(k, r))])]);
+      ws['!cols'] = [{ wch: 7 }, { wch: 13 }, { wch: 16 }, { wch: 12 }, { wch: 20 }, { wch: 28 }, { wch: 18 }, { wch: 14 }, { wch: 20 }, { wch: 14 }, { wch: 28 }];
       const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'ลอกผิวชุบ');
       const d = new Date(), pad = x => String(x).padStart(2, '0');
       XLSX.writeFile(wb, `ลอกผิวชุบ_${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}.xlsx`);
@@ -24699,59 +24786,92 @@ function endTour() {
     active() { const e = $('#page-gwstrip'); return !!e && e.classList.contains('active'); },
     open() { this.render(); },
     setYear(v) { this.year = v === 'all' ? 'all' : +v; this.render(); },
-    /* Export สรุปเป็น Excel หลายชีต: รายปี / Maker / Model / ลูกค้า (ตามปีที่เลือก · รายปีแสดงทุกปีในช่วงที่แสดง) */
+    /* Export สรุปเป็น Excel หลายชีต: รายเดือน / รายปี / รายการแยกเดือน / Maker / Model / ลูกค้า */
     exportXlsx() {
       const x = this._x; if (!x) { alert('ยังไม่มีข้อมูลสรุปให้ Export'); return; }
       if (typeof XLSX === 'undefined') { alert('ยังโหลดตัว Export Excel ไม่เสร็จ ลองใหม่อีกครั้ง'); return; }
       const wb = XLSX.utils.book_new();
-      const sheet = (name, head, rows) => { const ws = XLSX.utils.aoa_to_sheet([head, ...rows]); ws['!cols'] = head.map((h, i) => ({ wch: i ? 14 : 24 })); XLSX.utils.book_append_sheet(wb, ws, name); };
-      sheet('สรุปรายปี', ['ปี', 'รายการ', 'จำนวน (ชิ้น)', 'Model', 'Maker'], x.byY.map(r => [r.y + 543, r.n, r.vol, r.models, r.makers]));
-      sheet('Maker', ['Maker', 'รายการ', 'จำนวน (ชิ้น)', 'Model', 'ชิ้นงาน'], x.byMk.map(r => [r.k, r.n, r.vol, r.models, r.parts]));
-      sheet('Model', ['Model', 'รายการ', 'จำนวน (ชิ้น)', 'ลูกค้า', 'Maker'], x.byMd.map(r => [r.k, r.n, r.vol, r.cus, r.makers]));
-      sheet('ลูกค้า', ['ลูกค้า', 'รายการ', 'จำนวน (ชิ้น)', 'Model', 'Maker'], x.byCus.map(r => [r.k, r.n, r.vol, r.models, r.makers]));
+      const sheet = (name, head, rows) => { const ws = XLSX.utils.aoa_to_sheet([head, ...rows]); ws['!cols'] = head.map((h, i) => ({ wch: i ? 16 : 24 })); XLSX.utils.book_append_sheet(wb, ws, name); };
+      sheet('สรุปรายเดือน', ['ปี', 'เดือน', 'รายการ', 'ของเสีย (ชิ้น)', 'มูลค่า (บาท)'], x.byM.map(r => [r.y + 543, STRIP_MONTHS_FULL[r.m - 1], r.n, r.vol, r.val]));
+      sheet('สรุปรายปี', ['ปี', 'รายการ', 'ของเสีย (ชิ้น)', 'มูลค่า (บาท)', 'Model', 'Maker'], x.byY.map(r => [r.y + 543, r.n, r.vol, r.val, r.models, r.makers]));
+      sheet('รายการแยกเดือน', ['ปี', 'เดือน', 'วันที่', 'Model', 'ลูกค้า', 'Part No.', 'Part Name', 'Maker', 'จำนวน (ชิ้น)', 'ราคา/ชิ้น (บาท)', 'รวม (บาท)'],
+        x.items.map(i => [i.y + 543, STRIP_MONTHS_FULL[i.mo - 1], stripDate(i.r), i.r.model, i.r.cus, i.r.partNo, i.r.partName, i.r.maker, i.vol, i.price, i.val]));
+      sheet('Maker', ['Maker', 'รายการ', 'จำนวน (ชิ้น)', 'มูลค่า (บาท)', 'Model', 'ชิ้นงาน'], x.byMk.map(r => [r.k, r.n, r.vol, r.val, r.models, r.parts]));
+      sheet('Model', ['Model', 'รายการ', 'จำนวน (ชิ้น)', 'มูลค่า (บาท)', 'ลูกค้า', 'Maker'], x.byMd.map(r => [r.k, r.n, r.vol, r.val, r.cus, r.makers]));
+      sheet('ลูกค้า', ['ลูกค้า', 'รายการ', 'จำนวน (ชิ้น)', 'มูลค่า (บาท)', 'Model', 'Maker'], x.byCus.map(r => [r.k, r.n, r.vol, r.val, r.models, r.makers]));
       const d = new Date(), pad = v => String(v).padStart(2, '0');
       XLSX.writeFile(wb, `สรุป_ลอกผิวชุบ${this.year === 'all' ? '' : '_' + (this.year + 543)}_${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}.xlsx`);
     },
     render() {
       const host = $('#gssBody'); if (!host) return;
-      const D = GWDash, n = v => D.n(v);
-      const raw = StripWork.rows.map(r => ({ y: stripYear(r), model: stripUp(r.model) || '(ไม่ระบุ)', maker: stripUp(r.maker) || '(ไม่ระบุ)', cus: stripUp(r.cus) || '(ไม่ระบุ)', vol: numOf(r.qty) || 0, part: stripUp(r.partNo) })).filter(x => x.y);
+      const D = GWDash, n = v => D.n(v), money = stripMoney;
+      const raw = StripWork.rows.map(r => ({ r, y: stripYear(r), mo: stripMonthOf(r), model: stripUp(r.model) || '(ไม่ระบุ)', maker: stripUp(r.maker) || '(ไม่ระบุ)', cus: stripUp(r.cus) || '(ไม่ระบุ)', vol: numOf(r.qty) || 0, price: stripPrice(r), val: stripTotal(r), part: stripUp(r.partNo) })).filter(x => x.y);
       let years = [...new Set(raw.map(x => x.y))].sort((a, b) => a - b);
       if (D.maxYears > 0) years = years.slice(-D.maxYears);
       const keep = new Set(years);
       if (this.year !== 'all' && !keep.has(this.year)) this.year = 'all';
       const bar = $('#gssBar');
       if (bar) bar.innerHTML = `<div class="ex-filters"><label>ปี<select onchange="StripSum.setYear(this.value)"><option value="all">${D.maxYears > 0 ? years.length + ' ปีล่าสุด' : 'ทุกปี'}</option>${years.slice().reverse().map(y => `<option value="${y}"${this.year === y ? ' selected' : ''}>${y + 543}</option>`).join('')}</select></label></div><div class="ex-filters"><button class="ex-btn" style="background:#2F8F6E;color:#fff" onclick="StripSum.exportXlsx()">Export Excel</button></div>`;
-      D.kill('exSwYear'); D.kill('exSwMaker'); this._x = null;
-      if (!raw.length) { host.innerHTML = `<div class="gx-empty"><strong>ยังไม่มีข้อมูล ลอกผิวชุบ</strong><span>กรอกรายการที่ส่วน "รายการ" ด้านล่าง (ต้องใส่วันที่) แล้วสรุปจะขึ้นให้อัตโนมัติ</span></div>`; return; }
+      D.kill('exSwYear'); D.kill('exSwMaker'); D.kill('exSwMonth'); this._x = null;
+      if (!raw.length) { host.innerHTML = `<div class="gx-empty"><strong>ยังไม่มีข้อมูล ลอกผิวชุบ</strong><span>กรอกรายการที่ส่วน "รายการ" ด้านล่าง หรือกด "นำเข้า CSV" (ต้องมีวันที่) แล้วสรุปจะขึ้นให้อัตโนมัติ</span></div>`; return; }
       const cur = raw.filter(x => keep.has(x.y) && (this.year === 'all' || x.y === this.year));
+      const sum = (l, k) => l.reduce((a, x) => a + x[k], 0);
       const uq = k => new Set(cur.map(x => x[k]).filter(v => v && v !== '(ไม่ระบุ)')).size;
-      const vol = cur.reduce((a, x) => a + x.vol, 0);
-      const agg = key => [...D.group(cur, key)].map(([k, l]) => ({ k, n: l.length, vol: l.reduce((a, x) => a + x.vol, 0), models: new Set(l.map(x => x.model)).size, makers: new Set(l.map(x => x.maker)).size, cus: new Set(l.map(x => x.cus)).size, parts: new Set(l.map(x => x.part).filter(Boolean)).size })).sort((a, b) => b.n - a.n || b.vol - a.vol);
+      const vol = sum(cur, 'vol'), val = sum(cur, 'val');
+      const agg = key => [...D.group(cur, key)].map(([k, l]) => ({ k, n: l.length, vol: sum(l, 'vol'), val: sum(l, 'val'), models: new Set(l.map(x => x.model)).size, makers: new Set(l.map(x => x.maker)).size, cus: new Set(l.map(x => x.cus)).size, parts: new Set(l.map(x => x.part).filter(Boolean)).size })).sort((a, b) => b.val - a.val || b.n - a.n || b.vol - a.vol);
       const byMk = agg('maker'), byMd = agg('model'), byCus = agg('cus');
-      const byY = years.map(y => { const l = raw.filter(x => x.y === y); return { y, n: l.length, vol: l.reduce((a, x) => a + x.vol, 0), models: new Set(l.map(x => x.model)).size, makers: new Set(l.map(x => x.maker)).size }; });
-      this._x = { byY, byMk, byMd, byCus };
+      const byY = years.map(y => { const l = raw.filter(x => x.y === y); return { y, n: l.length, vol: sum(l, 'vol'), val: sum(l, 'val'), models: new Set(l.map(x => x.model)).size, makers: new Set(l.map(x => x.maker)).size }; });
+      /* รายเดือน (เฉพาะเดือนที่มีงาน) — เรียงเก่า→ใหม่ */
+      const byM = [...D.group(cur.filter(x => x.mo), x => x.y * 100 + x.mo)].map(([k, l]) => ({ y: l[0].y, m: l[0].mo, n: l.length, vol: sum(l, 'vol'), val: sum(l, 'val'), items: l.slice().sort((a, b) => String(b.r.date).localeCompare(String(a.r.date)) || String(b.r.id).localeCompare(String(a.r.id))) })).sort((a, b) => a.y - b.y || a.m - b.m);
+      const items = byM.flatMap(m => m.items);
+      this._x = { byY, byM, byMk, byMd, byCus, items };
+      const yearsDesc = [...new Set(byM.map(m => m.y))].sort((a, b) => b - a);
+      const monthRows = yearsDesc.flatMap(y => {
+        const ms = byM.filter(m => m.y === y).slice().reverse();
+        return [...ms.map(m => [`${STRIP_MONTHS_FULL[m.m - 1]} ${y + 543}`, n(m.n), n(m.vol), money(m.val)]),
+          [`<b>รวมปี ${y + 543}</b>`, `<b>${n(sum(ms, 'n'))}</b>`, `<b>${n(sum(ms, 'vol'))}</b>`, `<b>${money(sum(ms, 'val'))}</b>`]];
+      });
+      const detail = yearsDesc.map((y, yi) => {
+        const ms = byM.filter(m => m.y === y).slice().reverse();
+        return `<div class="gs-yr"><b>ปี ${y + 543}</b><span>${n(sum(ms, 'n'))} รายการ · ของเสีย ${n(sum(ms, 'vol'))} ชิ้น · <b>${money(sum(ms, 'val'))} บาท</b></span></div>` + ms.map((m, mi) =>
+          `<details class="gs-mo"${yi === 0 && mi === 0 ? ' open' : ''}><summary><b>${STRIP_MONTHS_FULL[m.m - 1]} ${y + 543}</b><span>${n(m.n)} รายการ · ${n(m.vol)} ชิ้น · <b>${money(m.val)} บาท</b></span></summary>`
+          + D.tbl(['วันที่', 'Model', 'ลูกค้า', 'Part No.', 'Part Name', 'Maker', 'จำนวน (ชิ้น)', 'ราคา/ชิ้น', 'รวม (บาท)'],
+            m.items.map(i => [esc(stripDate(i.r)), esc(i.r.model), esc(i.r.cus), esc(i.r.partNo), esc(i.r.partName), esc(i.r.maker), n(i.vol), i.price ? money(i.price) : '', i.val ? '<b>' + money(i.val) + '</b>' : '']), 'ex-left') + `</details>`).join('');
+      }).join('');
       host.innerHTML = `
         <div class="ex-kpis">
           ${D.kpi('งานลอกผิวชุบ', n(cur.length), 'รายการ · ' + (this.year === 'all' ? years.map(y => y + 543).join(', ') : 'ปี ' + (this.year + 543)), 'primary')}
-          ${D.kpi('จำนวนรวม', n(vol), 'ชิ้น')}
+          ${D.kpi('ของเสียที่ต้องลอกผิว', n(vol), 'ชิ้น')}
+          ${D.kpi('มูลค่าลอกผิวรวม', money(val), 'บาท')}
           ${D.kpi('Model', n(uq('model')), 'ไม่ซ้ำกัน')}
           ${D.kpi('ลูกค้า', n(uq('cus')), 'ไม่ซ้ำกัน')}
           ${D.kpi('Maker', n(uq('maker')), 'ไม่ซ้ำกัน')}
         </div>
         <div class="ex-grid g2">
+          ${D.card('มูลค่าลอกผิวชุบรายเดือน (บาท) + ของเสีย (ชิ้น)', 'แท่ง = มูลค่า · เส้น = จำนวนชิ้น', '<div class="ex-chart"><canvas id="exSwMonth"></canvas></div>')}
           ${D.card('งานลอกผิวชุบแต่ละปี (รายการ)', null, '<div class="ex-chart"><canvas id="exSwYear"></canvas></div>')}
-          ${D.card('Maker ที่มีงานลอกผิวชุบมากสุด', 'Top 10 (รายการ)', '<div class="ex-chart"><canvas id="exSwMaker"></canvas></div>')}
         </div>
-        ${D.card('ตารางสรุปรายปี', 'เทียบ % กับปีก่อนหน้า', D.tbl(['ปี', 'รายการ', '% เทียบปีก่อน', 'จำนวน (ชิ้น)', 'Model', 'Maker'], byY.slice().reverse().map(r => { const prev = byY[byY.indexOf(r) - 1]; return [`<b>${r.y + 543}</b>`, `<b>${n(r.n)}</b>`, prev ? D.dl(r.n, prev.n) : '—', n(r.vol), n(r.models), n(r.makers)]; })))}
         <div class="ex-grid g2" style="margin-top:1rem">
-          ${D.card('สรุปตาม Maker', null, D.tbl(['Maker', 'รายการ', 'จำนวน (ชิ้น)', 'Model', 'ชิ้นงาน'], byMk.map(x => [`<b>${esc(x.k)}</b>`, n(x.n), n(x.vol), n(x.models), n(x.parts)]), 'ex-left'))}
-          ${D.card('สรุปตาม Model', null, D.tbl(['Model', 'รายการ', 'จำนวน (ชิ้น)', 'ลูกค้า', 'Maker'], byMd.map(x => [`<b>${esc(x.k)}</b>`, n(x.n), n(x.vol), n(x.cus), n(x.makers)]), 'ex-left'))}
+          ${D.card('สรุปรายเดือน', 'จำนวนรายการ · ของเสีย · มูลค่า (รวมแต่ละปีท้ายตาราง)', D.tbl(['เดือน', 'รายการ', 'ของเสีย (ชิ้น)', 'มูลค่า (บาท)'], monthRows, 'ex-left'))}
+          ${D.card('ตารางสรุปรายปี', 'เทียบ % กับปีก่อนหน้า', D.tbl(['ปี', 'รายการ', '% เทียบปีก่อน', 'ของเสีย (ชิ้น)', 'มูลค่า (บาท)'], byY.slice().reverse().map(r => { const prev = byY[byY.indexOf(r) - 1]; return [`<b>${r.y + 543}</b>`, `<b>${n(r.n)}</b>`, prev ? D.dl(r.val, prev.val) : '—', n(r.vol), `<b>${money(r.val)}</b>`]; })))}
         </div>
-        <div style="margin-top:1rem">${D.card('สรุปตามลูกค้า', null, D.tbl(['ลูกค้า', 'รายการ', 'จำนวน (ชิ้น)', 'Model', 'Maker'], byCus.map(x => [`<b>${esc(x.k)}</b>`, n(x.n), n(x.vol), n(x.models), n(x.makers)]), 'ex-left'))}</div>`;
+        <div style="margin-top:1rem">${D.card('รายการแยกตามเดือน', 'กดที่เดือนเพื่อดูรายการ · สรุปรวมแต่ละเดือนและแต่ละปี', detail)}</div>
+        <div class="ex-grid g2" style="margin-top:1rem">
+          ${D.card('Maker ที่มีงานลอกผิวชุบมากสุด', 'Top 10 (รายการ)', '<div class="ex-chart"><canvas id="exSwMaker"></canvas></div>')}
+          ${D.card('สรุปตาม Maker', null, D.tbl(['Maker', 'รายการ', 'จำนวน (ชิ้น)', 'มูลค่า (บาท)', 'Model', 'ชิ้นงาน'], byMk.map(x => [`<b>${esc(x.k)}</b>`, n(x.n), n(x.vol), money(x.val), n(x.models), n(x.parts)]), 'ex-left'))}
+        </div>
+        <div class="ex-grid g2" style="margin-top:1rem">
+          ${D.card('สรุปตาม Model', null, D.tbl(['Model', 'รายการ', 'จำนวน (ชิ้น)', 'มูลค่า (บาท)', 'ลูกค้า', 'Maker'], byMd.map(x => [`<b>${esc(x.k)}</b>`, n(x.n), n(x.vol), money(x.val), n(x.cus), n(x.makers)]), 'ex-left'))}
+          ${D.card('สรุปตามลูกค้า', null, D.tbl(['ลูกค้า', 'รายการ', 'จำนวน (ชิ้น)', 'มูลค่า (บาท)', 'Model', 'Maker'], byCus.map(x => [`<b>${esc(x.k)}</b>`, n(x.n), n(x.vol), money(x.val), n(x.models), n(x.makers)]), 'ex-left'))}
+        </div>`;
+      const mm = byM.slice(-24);
+      D.chart('exSwMonth', { type: 'bar', data: { labels: mm.map(m => STRIP_MONTHS[m.m - 1] + ' ' + String(m.y + 543).slice(-2)), datasets: [
+        { type: 'bar', label: 'มูลค่า (บาท)', data: mm.map(m => m.val), backgroundColor: '#2E5395', borderRadius: 6, yAxisID: 'y', order: 2 },
+        { type: 'line', label: 'ของเสีย (ชิ้น)', data: mm.map(m => m.vol), borderColor: '#C9A227', backgroundColor: '#C9A227', tension: .25, yAxisID: 'y1', order: 1 }] },
+        options: { plugins: { legend: { display: true } }, scales: { y: { beginAtZero: true }, y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false } } } } });
       D.chart('exSwYear', { type: 'bar', plugins: [D.valLabels], data: { labels: byY.map(r => r.y + 543), datasets: [{ label: 'รายการ', data: byY.map(r => r.n), backgroundColor: byY.map(r => (this.year !== 'all' && r.y === this.year) ? '#C9A227' : '#2E5395'), borderRadius: 6 }] },
         options: { plugins: Object.assign({ legend: { display: false } }, D.vl(0)), scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
-      const top = byMk.slice(0, 10);
+      const top = byMk.slice().sort((a, b) => b.n - a.n).slice(0, 10);
       D.chart('exSwMaker', { type: 'bar', plugins: [D.valLabels], data: { labels: top.map(x => x.k), datasets: [{ label: 'รายการ', data: top.map(x => x.n), backgroundColor: '#2F8F6E', borderRadius: 6 }] },
         options: { indexAxis: 'y', plugins: Object.assign({ legend: { display: false } }, D.vl(0)), scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } } });
     }
